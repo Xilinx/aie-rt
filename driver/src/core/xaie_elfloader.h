@@ -50,8 +50,15 @@
 #include "xaiegbl_defs.h"
 #include "xaielib.h"
 
+#ifdef __AIESIM__
+#include "xaiesim.h"
+#endif
 /************************** Constant Definitions *****************************/
 /************************** Variable Definitions *****************************/
+typedef struct {
+	u32 start;	/**< Stack start address */
+	u32 end;	/**< Stack end address */
+} XAieSim_StackSz;
 /************************** Function Prototypes  *****************************/
 AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
 		u8 LoadSym);

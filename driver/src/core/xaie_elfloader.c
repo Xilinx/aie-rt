@@ -50,6 +50,58 @@
 /*****************************************************************************/
 /**
 *
+* This is the routine to derive the stack start and end addresses from the
+* specified map file. This function basically looks for the line
+* <b><init_address>..<final_address> ( <num> items) : Stack</b> in the
+* map file to derive the stack address range.
+*
+* @param	MapPtr: Path to the Map file.
+* @param	StackSzPtr: Pointer to the stack range structure.
+*
+* @return	XAIESIM_SUCCESS on success, else XAIESIM_FAILURE.
+*
+* @note		None.
+*
+*******************************************************************************/
+static u32 XAieSim_GetStackRange(u8 *MapPtr, XAieSim_StackSz *StackSzPtr)
+{
+#ifdef __AIESIM__
+	FILE *Fd;
+	u8 buffer[200U];
+
+	/*
+	 * Read map file and look for line:
+	 * <init_address>..<final_address> ( <num> items) : Stack
+	 */
+	StackSzPtr->start = 0xFFFFFFFFU;
+	StackSzPtr->end = 0U;
+
+	Fd = fopen(MapPtr, "r");
+	if(Fd == NULL) {
+		XAieSim_print("ERROR: Invalid Map file\n");
+		return XAIESIM_FAILURE;
+	}
+
+	while(fgets(buffer, 200U, Fd) != NULL) {
+		if(strstr(buffer, "items) : Stack") != NULL) {
+			sscanf(buffer, "    0x%8x..0x%8x (%*s",
+					&StackSzPtr->start, &StackSzPtr->end);
+			break;
+		}
+	}
+
+	if(StackSzPtr->start == 0xFFFFFFFFU) {
+		return XAIESIM_FAILURE;
+	} else {
+		return XAIESIM_SUCCESS;
+	}
+	fclose(Fd);
+#endif
+}
+
+/*****************************************************************************/
+/**
+*
 * This routine is used to get the actual tile data memory address based on the
 * section's loadable address. The actual tile address is derived from the
 * cardinal direction the secton's loadable address points to.
@@ -334,6 +386,35 @@ AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
+
+#ifdef __AIESIM__
+
+	XAieSim_StackSz StackSz;
+	/* Get the stack range */
+	strcpy(MapPath, ElfPtr);
+	strcat(MapPath, ".map");
+	Status = XAieSim_GetStackRange(MapPath, &StackSz);
+	XAieLib_print("Stack start:%08x, end:%08x\n",
+					StackSz.start, StackSz.end);
+	if(Status != XAIESIM_SUCCESS) {
+		XAieSim_print("ERROR: Stack range definition failed\n");
+		return Status;
+	}
+
+	for(int R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
+		for(int C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
+			/* Send the stack range set command */
+			XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_SETSTACK, C, R,
+					StackSz.start, StackSz.end, XAIE_NULL);
+			/* Load symbols if enabled */
+			if(LoadSym == XAIE_ENABLE) {
+				XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_LOADSYM, C,
+						R, 0, 0, ElfPtr);
+			}
+		}
+	}
+
+#endif
 
 	/* Open the ELF file for reading */
 	Fd = fopen(ElfPtr, "r");
