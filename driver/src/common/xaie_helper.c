@@ -1,0 +1,143 @@
+/******************************************************************************
+*
+* Copyright (C) 2019 Xilinx, Inc.  All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMANGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*
+******************************************************************************/
+
+/*****************************************************************************/
+/**
+* @file xaie_helper.c
+* @{
+*
+* This file contains inline helper functions for AIE drivers.
+*
+* <pre>
+* MODIFICATION HISTORY:
+*
+* Ver   Who     Date     Changes
+* ----- ------  -------- -----------------------------------------------------
+* 1.0   Tejus   09/24/2019  Initial creation
+* </pre>
+*
+******************************************************************************/
+/***************************** Include Files *********************************/
+#include "xaie_helper.h"
+
+/************************** Variable Definitions *****************************/
+/***************************** Macro Definitions *****************************/
+/************************** Function Definitions *****************************/
+/*****************************************************************************/
+/**
+*
+* This is the function used to get the tile type for a given device instance
+* and range
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @return	TileType (AIETILE/MEMTILE/SHIMPL/SHIMNOC on success and MAX on
+		error)
+*
+* @note		Internal API only. Returns based on start of the range only.
+*
+******************************************************************************/
+u8 _XAie_GetTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
+{
+	u8 ColType;
+	u8 StartRow = Range.Start.Row;
+	u8 StartCol = Range.Start.Col;
+
+	if(StartRow == 0) {
+		ColType = StartCol % 4;
+		if((ColType == 0) || (ColType == 1)) {
+			return XAIEGBL_TILE_TYPE_SHIMPL;
+		}
+
+		return XAIEGBL_TILE_TYPE_SHIMNOC;
+
+	} else if(StartRow >= DevInst->MemTileRowStart &&
+			(StartRow < (DevInst->MemTileRowStart +
+				     DevInst->MemTileNumRows))) {
+		return XAIEGBL_TILE_TYPE_MEMTILE;
+	} else if (StartRow >= DevInst->AieTileRowStart &&
+			(StartRow < (DevInst->AieTileRowStart +
+				     DevInst->AieTileNumRows))) {
+		return XAIEGBL_TILE_TYPE_AIETILE;
+	}
+
+	XAieLib_print("Error %d: Cannot find Tile Type\n", XAIE_INVALID_TILE);
+
+	return XAIEGBL_TILE_TYPE_MAX;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function checks if all the tile types in the given range are the
+* same.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @return	XAIE_OK on success and error code on failure
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+AieRC _XAie_CheckRangeTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
+{
+	u8 StartRow = Range.Start.Row;
+	u8 StartCol = Range.Start.Col;
+	u8 EndRow = Range.End.Row;
+	u8 EndCol = Range.End.Col;
+
+	/* Return AIE_OK if range is one tile */
+	if((StartRow == EndRow) && (StartCol == EndCol))
+		return XAIE_OK;
+
+	if((StartRow == 0) && ((EndRow != 0) || (EndCol - StartCol > 1))) {
+		/* Range check for Shim Row.*/
+		XAieLib_print("Invalid Shim Row Range\n");
+		return XAIE_INVALID_RANGE;
+	} else if(StartRow >= DevInst->MemTileRowStart &&
+			(StartRow < (DevInst->MemTileRowStart +
+				     DevInst->MemTileNumRows))) {
+		/* Range check for MemTile Rows*/
+		if(Range.End.Row >= Range.Start.Row + DevInst->MemTileNumRows){
+			XAieLib_print("Invalid MemTile Range\n");
+			return XAIE_INVALID_RANGE;
+		}
+	} else if (StartRow >= DevInst->AieTileRowStart &&
+			(StartRow < (DevInst->AieTileRowStart +
+				     DevInst->AieTileNumRows))) {
+		/* Range check for Aie Tile Rows*/
+		if(Range.End.Row >= Range.Start.Row + DevInst->AieTileNumRows){
+			XAieLib_print("Invalid AieTile Range\n");
+			return XAIEGBL_TILE_TYPE_AIETILE;
+		}
+	} else {
+		XAieLib_print("Error %d: Cannot find Tile Type\n",
+				XAIE_INVALID_RANGE);
+		return XAIE_INVALID_RANGE;
+	}
+
+	return XAIE_OK;
+}
+
+/** @} */
