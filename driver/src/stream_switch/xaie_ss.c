@@ -220,7 +220,8 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 	const XAie_StrmMstr *MstrPort;
 	const XAie_StrmSlv  *SlvPort;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;

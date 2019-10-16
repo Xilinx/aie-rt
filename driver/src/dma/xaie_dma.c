@@ -97,7 +97,8 @@ AieRC XAie_DmaBdConfig(XAie_DevInst *DevInst, XAie_LocRange Range, u8 BdNum,
 	const XAie_DmaMod *DmaMod;
 	const XAie_DmaBdProp *BdProp;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;
@@ -334,7 +335,8 @@ AieRC XAie_DmaEnChannelRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 	u64 BaseAddr;
 	u64 Addr;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;

@@ -115,7 +115,8 @@ AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 	u8 TileType;
 	u32 RangeLen;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;
@@ -198,7 +199,8 @@ AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr, u32
 	u32 RangeLen;
 	u32 Count;
 
-	if((DevInst == XAIE_NULL) || (Data == XAIE_NULL)) {
+	if((DevInst == XAIE_NULL) || (Data == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;

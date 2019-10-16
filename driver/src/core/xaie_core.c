@@ -205,7 +205,8 @@ static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;
@@ -341,7 +342,8 @@ AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range, u8 Enable,
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;

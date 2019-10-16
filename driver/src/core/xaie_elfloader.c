@@ -360,7 +360,8 @@ AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
 	const XAie_CoreMod *CoreMod;
 	XAie_LocType Loc;
 
-	if(DevInst == XAIE_NULL) {
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
 		return RC;
