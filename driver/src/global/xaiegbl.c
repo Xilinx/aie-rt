@@ -36,6 +36,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   10/22/2019  Enable AIE initilization
 * </pre>
 *
 ******************************************************************************/
@@ -52,6 +53,7 @@
 /**************************** Macro Definitions ******************************/
 
 /************************** Variable Definitions *****************************/
+extern XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_TileMod Aie2Mod[XAIEGBL_TILE_TYPE_MAX];
 
 /************************** Function Definitions *****************************/
@@ -86,6 +88,9 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2) {
 		InstPtr->DevProp.DevMod = Aie2Mod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE) {
+		InstPtr->DevProp.DevMod = AieMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 	} else {
 		XAieLib_print("Error %d: Invalid device\n",
 				XAIE_INVALID_DEVICE);
@@ -103,7 +108,6 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
-
 
 	XAieLib_InitDev();
 
