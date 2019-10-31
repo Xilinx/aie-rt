@@ -104,6 +104,14 @@ AieRC XAie_DmaBdConfig(XAie_DevInst *DevInst, XAie_LocRange Range, u8 BdNum,
 		return RC;
 	}
 
+	/* NOTE: Temporary check until AIE1 dma operations are supported */
+	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		RC = XAIE_ERR;
+		XAieLib_print("Error: Operation not supported for device\
+				version %d\n", XAIE_DEV_GEN_AIE);
+		return RC;
+	}
+
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
 		RC = XAIE_INVALID_RANGE;
 		XAieLib_print("Error %d: Invalid Device Range\n", RC);
@@ -339,6 +347,14 @@ AieRC XAie_DmaEnChannelRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		RC = XAIE_INVALID_ARGS;
 		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
+		return RC;
+	}
+
+	/* NOTE: Temporary check until AIE1 dma operations are supported */
+	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		RC = XAIE_ERR;
+		XAieLib_print("Error: Operation not supported for device\
+				version %d\n", XAIE_DEV_GEN_AIE);
 		return RC;
 	}
 
