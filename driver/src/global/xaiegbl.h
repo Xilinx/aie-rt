@@ -36,6 +36,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   10/28/2019  Add error type for pl interface apis
 * </pre>
 *
 ******************************************************************************/
@@ -176,6 +177,7 @@ typedef enum{
 	XAIE_INVALID_CHANNEL_NUM,
 	XAIE_INVALID_LOCK,
 	XAIE_INVALID_DMA_DIRECTION,
+	XAIE_INVALID_PLIF_WIDTH,
 	XAIE_ERR_MAX
 } AieRC;
 /**************************** Function prototypes ***************************/
