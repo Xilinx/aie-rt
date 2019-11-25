@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   09/24/2019  Fix range check logic for shim row
 * </pre>
 *
 ******************************************************************************/
@@ -97,11 +98,14 @@ u8 _XAie_GetTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
 * @param	Range: Range of AIE Tiles
 * @return	XAIE_OK on success and error code on failure
 *
-* @note		Internal API only.
+* @note		Internal API only. For Shim Row, the range operation is
+*		supported with stride 4 only.
 *
 ******************************************************************************/
 AieRC _XAie_CheckRangeTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
 {
+	u8 StartColType;
+	u8 EndColType;
 	u8 StartRow = Range.Start.Row;
 	u8 StartCol = Range.Start.Col;
 	u8 EndRow = Range.End.Row;
@@ -111,10 +115,37 @@ AieRC _XAie_CheckRangeTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
 	if((StartRow == EndRow) && (StartCol == EndCol))
 		return XAIE_OK;
 
-	if((StartRow == 0) && ((EndRow != 0) || (EndCol - StartCol > 1))) {
-		/* Range check for Shim Row.*/
-		XAieLib_print("Invalid Shim Row Range\n");
-		return XAIE_INVALID_RANGE;
+	if(StartRow == 0U) {
+		if(EndRow != 0U) {
+			XAieLib_print("Invalid shim row range\n");
+			return XAIE_INVALID_RANGE;
+		}
+		/*
+		 * TODO: For Shim Tiles, Support Range access only when the
+		 * stride is 1 or a multiple of 4. Further combinations can be
+		 * supported in future if required..
+		 */
+
+		/* Checks for valid range when stride is 1 */
+		if((Range.Stride.Col == 1U) && (EndCol - StartCol == 1U)) {
+			StartColType = StartCol % 4U;
+			EndColType = EndCol % 4U;
+			/*
+			 * For SHIMPL, sum should be 1 and for SHIMNOC, sum
+			 * should be 5
+			 */
+			if(((StartColType + EndColType) != 1U) &&
+					((StartColType + EndColType) != 5U)) {
+				XAieLib_print("Range has different shim tiles\n");
+				return XAIE_INVALID_RANGE;
+			}
+
+			return XAIE_OK;
+		}
+		if((Range.Stride.Col % 4U) != 0U) {
+			XAieLib_print("Invalid stride for shim row range\n");
+			return XAIE_INVALID_RANGE;
+		}
 	} else if(StartRow >= DevInst->MemTileRowStart &&
 			(StartRow < (DevInst->MemTileRowStart +
 				     DevInst->MemTileNumRows))) {
