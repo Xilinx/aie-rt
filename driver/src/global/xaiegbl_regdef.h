@@ -37,6 +37,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus  09/26/2019  Initial creation
 * 1.1   Tejus  10/21/2019  Optimize stream switch data structures
+* 1.2   Tejus  10/28/2019  Add data structures for pl interface module
 * </pre>
 *
 ******************************************************************************/
@@ -201,6 +202,25 @@ typedef struct {
 } XAie_MemMod;
 
 /*
+ * The typedef contains attributes of PL interface module
+ */
+typedef struct {
+	u32 UpSzrOff;
+	u32 DownSzrOff;
+	u32 DownSzrEnOff;
+	u32 DownSzrByPassOff;
+	u8  NumUpSzrPorts;
+	u8  MaxByPassPortNum;
+	u8  NumDownSzrPorts;
+	const XAie_RegFldAttr	*UpSzr32_64Bit;
+	const XAie_RegFldAttr *UpSzr128Bit;
+	const XAie_RegFldAttr	*DownSzr32_64Bit;
+	const XAie_RegFldAttr *DownSzr128Bit;
+	const XAie_RegFldAttr *DownSzrEn;
+	const XAie_RegFldAttr *DownSzrByPass;
+} XAie_PlIfMod;
+
+/*
  * This typedef contains all the modules for a Tile type
  */
 typedef struct {
@@ -208,6 +228,7 @@ typedef struct {
 	const XAie_StrmMod *StrmSw;
 	const XAie_DmaMod  *DmaMod;
 	const XAie_MemMod  *MemMod;
+	const XAie_PlIfMod *PlIfMod;
 } XAie_TileMod;
 
 /*
