@@ -37,6 +37,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus	01/04/2020  Cleanup error messages
 * </pre>
 *
 ******************************************************************************/
@@ -333,7 +334,6 @@ AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
 	FILE *Fd;
 	Elf32_Ehdr ElfHdr;
 	Elf32_Shdr SectHdr[XAIE_ELF_SECTION_NUMMAX];
-	AieRC RC = XAIE_OK;
 	u8 TileType;
 
 	u8 MapPath[256U];
@@ -362,28 +362,24 @@ AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
@@ -420,7 +416,7 @@ AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
 	/* Open the ELF file for reading */
 	Fd = fopen(ElfPtr, "r");
 	if(Fd == NULL) {
-		XAieLib_print("Error %d: Invalid ELF file\n", XAIE_INVALID_ELF);
+		XAieLib_print("Error: Invalid ELF file\n");
 		return XAIE_INVALID_ELF;
 	}
 

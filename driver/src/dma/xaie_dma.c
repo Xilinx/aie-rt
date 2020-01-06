@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus	01/04/2020  Cleanup error messages
 * </pre>
 *
 ******************************************************************************/
@@ -88,7 +89,6 @@ AieRC XAie_DmaBdConfig(XAie_DevInst *DevInst, XAie_LocRange Range, u8 BdNum,
 		XAie_LockDesc Rel, XAie_DmaBdAttr Attr)
 {
 
-	AieRC RC = XAIE_OK;
 	u32 BdBuf[8] = {0};
 	u64 Addr;
 	u64 BdBaseAddr;
@@ -99,23 +99,20 @@ AieRC XAie_DmaBdConfig(XAie_DevInst *DevInst, XAie_LocRange Range, u8 BdNum,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	/* NOTE: Temporary check until AIE1 dma operations are supported */
 	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-		RC = XAIE_ERR;
 		XAieLib_print("Error: Operation not supported for device\
 				version %d\n", XAIE_DEV_GEN_AIE);
-		return RC;
+		return XAIE_ERR;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
@@ -123,28 +120,24 @@ AieRC XAie_DmaBdConfig(XAie_DevInst *DevInst, XAie_LocRange Range, u8 BdNum,
 	/* Supports only Tile Dma and Mem Tile Dma for now */
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)){
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum >= DmaMod->NumBds) {
-		RC = XAIE_INVALID_BD_NUM;
-		XAieLib_print("Error %d: Invalid BD\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid BD\n");
+		return XAIE_INVALID_BD_NUM;
 	}
 
 	if(_XAie_IsValidLock(Rel, DmaMod->NumLocks)) {
-		RC = XAIE_INVALID_LOCK;
-		XAieLib_print("Error %d: Invalid Release lock\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Release lock\n");
+		return XAIE_INVALID_LOCK;
 	}
 
 	/* Calculate the Base address of the Bd */
@@ -217,7 +210,7 @@ AieRC XAie_DmaBdConfig(XAie_DevInst *DevInst, XAie_LocRange Range, u8 BdNum,
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -335,7 +328,6 @@ AieRC XAie_DmaEnChannelRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 	 * The Arm runtime simulator does not set/reset the reset field
 	 */
 
-	AieRC RC = XAIE_OK;
 	u32 ChData[2] = {0};
 	u8 TileType;
 	const XAie_DmaMod *DmaMod;
@@ -345,57 +337,50 @@ AieRC XAie_DmaEnChannelRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	/* NOTE: Temporary check until AIE1 dma operations are supported */
 	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-		RC = XAIE_ERR;
 		XAieLib_print("Error: Operation not supported for device\
 				version %d\n", XAIE_DEV_GEN_AIE);
-		return RC;
+		return XAIE_ERR;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	/* Supports only Tile Dma and Mem Tile Dma for now */
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)){
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	if(Dir >= DMA_MAX) {
-		RC = XAIE_INVALID_DMA_DIRECTION;
-		XAieLib_print("Error %d: DMA supports only MM2S/S2MM\n", RC);
+		XAieLib_print("Error: DMA supports only MM2S/S2MM\n");
+		return XAIE_INVALID_DMA_DIRECTION;
 	}
 
 	/* Get dma module pointer from device instance */
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(StartBd >= DmaMod->NumBds) {
-		RC = XAIE_INVALID_BD_NUM;
-		XAieLib_print("Error %d: Invalid BD\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid BD\n");
+		return XAIE_INVALID_BD_NUM;
 	}
 
 	if(ChNum >= DmaMod->NumChannels) {
-		RC = XAIE_INVALID_CHANNEL_NUM;
-		XAieLib_print("Error %d: Invalid Channel\n");
-		return RC;
+		XAieLib_print("Error: Invalid Channel\n");
+		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
 	/* Get channel propert pointer from dma module */
@@ -433,7 +418,7 @@ AieRC XAie_DmaEnChannelRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 }
 
 /** @} */

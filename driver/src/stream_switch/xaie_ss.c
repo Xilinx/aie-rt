@@ -36,6 +36,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   10/21/2019  Optimize stream switch data structures
+* 1.2   Tejus	01/04/2020  Cleanup error messages
 * </pre>
 *
 ******************************************************************************/
@@ -74,8 +75,7 @@ static AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave
 
 	/* Return error if the Slave Port Type is not valid */
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		XAieLib_print("Error %d: Invalid Slave Port\n",
-				XAIE_ERR_STREAM_PORT);
+		XAieLib_print("Error: Invalid Slave Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -108,7 +108,6 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 		StrmSwPortType PortType, u8 PortNum, u8 Enable, u8 PktEnable,
 		u32 *RegVal, u32 *RegOff)
 {
-	AieRC RC = XAIE_OK;
 	*RegVal = 0U;
 	const XAie_StrmPort  *PortPtr;
 
@@ -116,15 +115,14 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 	PortPtr = &StrmMod->SlvConfig[PortType];
 
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		RC = XAIE_ERR_STREAM_PORT;
-		XAieLib_print("Error %d: Invalid Slave Port\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Slave Port\n");
+		return XAIE_ERR_STREAM_PORT;
 	}
 
 	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
 
 	if(Enable != XAIE_ENABLE)
-		return RC;
+		return XAIE_OK;
 
 	/* Frame the 32-bit reg value */
 	*RegVal = XAie_SetField(Enable, StrmMod->SlvEn.Lsb,
@@ -132,7 +130,7 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 		XAie_SetField(PktEnable,
 				StrmMod->SlvPktEn.Lsb, StrmMod->SlvEn.Mask);
 
-	return RC;
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -159,7 +157,6 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 		u8 Config, u32 *RegVal, u32 *RegOff)
 {
 
-	AieRC RC = XAIE_OK;
 	u8 DropHdr;
 	*RegVal = 0U;
 	const XAie_StrmPort *PortPtr;
@@ -167,14 +164,13 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 	PortPtr = &StrmMod->MstrConfig[PortType];
 
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		RC = XAIE_ERR_STREAM_PORT;
-		XAieLib_print("Error %d: Invalid Stream Port\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Stream Port\n");
+		return XAIE_ERR_STREAM_PORT;
 	}
 
 	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
 	if(Enable != XAIE_ENABLE)
-		return RC;
+		return XAIE_OK;
 
 	/* Extract the drop header field */
 	DropHdr = XAie_GetField(Config, StrmMod->DrpHdr.Lsb,
@@ -190,7 +186,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 		XAie_SetField(Config, StrmMod->Config.Lsb,
 				StrmMod->Config.Mask);
 
-	return RC;
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -216,7 +212,7 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum, u8 Enable)
 {
-	AieRC RC = XAIE_OK;
+	AieRC RC;
 	u64 MstrAddr;
 	u64 SlvAddr;
 	u32 MstrOff;
@@ -229,34 +225,29 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	if((Slave >= SS_PORT_TYPE_MAX) || (Master >= SS_PORT_TYPE_MAX)) {
-		RC = XAIE_ERR_STREAM_PORT;
-		XAieLib_print("Error %d: Invalid Stream Switch Ports\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Stream Switch Ports\n");
+		return XAIE_ERR_STREAM_PORT;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	/* Get stream switch module pointer from device instance */
@@ -264,7 +255,7 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 
 	RC = _XAie_GetSlaveIdx(StrmMod, Slave, SlvPortNum, &SlaveIdx);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error %d: Unable to compute Slave Index\n", RC);
+		XAieLib_print("Error: Unable to compute Slave Index\n");
 		return RC;
 	}
 
@@ -272,7 +263,7 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 	RC = _StrmConfigMstr(StrmMod, Master, MstrPortNum, Enable, XAIE_DISABLE,
 			SlaveIdx, &MstrVal, &MstrOff);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error %d: Master config error\n", RC);
+		XAieLib_print("Error: Master config error\n");
 		return RC;
 	}
 
@@ -280,7 +271,7 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 	RC = _XAie_StrmConfigSlv(StrmMod, Slave, SlvPortNum, Enable,
 			XAIE_DISABLE, &SlvVal, &SlvOff);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error %d: Slave config error\n", RC);
+		XAieLib_print("Error: Slave config error\n");
 		return RC;
 	}
 
@@ -298,7 +289,7 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 }
 
 /*****************************************************************************/

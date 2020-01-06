@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus	01/04/2020  Cleanup error messages
 * </pre>
 *
 ******************************************************************************/
@@ -109,7 +110,6 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 		u32 Len, u32 Data)
 {
-	AieRC RC = XAIE_OK;
 	u64 RegAddr;
 	const XAie_MemMod *MemMod;
 	u8 TileType;
@@ -117,44 +117,38 @@ AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	RangeLen = _XAie_GetLenFromRange(Range);
 	if(RangeLen != Len) {
-		RC = XAIE_ERR_OUTOFBOUND;
-		XAieLib_print("Error %d: AIE array index out of bound\n", RC);
-		return RC;
+		XAieLib_print("Error: AIE array index out of bound\n");
+		return XAIE_ERR_OUTOFBOUND;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)){
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
 
 	if(Addr + Len >= MemMod->Size) {
-		RC = XAIE_INVALID_DATA_MEM_ADDR;
-		XAieLib_print("Error %d: Address out of range\n", RC);
-		return RC;
+		XAieLib_print("Error: Address out of range\n");
+		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
 	for(u8 R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
@@ -168,7 +162,7 @@ AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 }
 
 
@@ -192,7 +186,6 @@ AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr, u32 Len,
 		u32 *Data)
 {
-	AieRC RC = XAIE_OK;
 	u64 RegAddr;
 	const XAie_MemMod *MemMod;
 	u8 TileType;
@@ -201,44 +194,38 @@ AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr, u32
 
 	if((DevInst == XAIE_NULL) || (Data == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	RangeLen = _XAie_GetLenFromRange(Range);
 	if(RangeLen != Len) {
-		RC = XAIE_ERR_OUTOFBOUND;
-		XAieLib_print("Error %d: AIE array index out of bound\n", RC);
-		return RC;
+		XAieLib_print("Error: AIE array index out of bound\n");
+		return XAIE_ERR_OUTOFBOUND;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)){
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
 
 	if(Addr + Len >= MemMod->Size) {
-		RC = XAIE_INVALID_DATA_MEM_ADDR;
-		XAieLib_print("Error %d: Address out of range\n");
-		return RC;
+		XAieLib_print("Error: Address out of range\n");
+		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
 	Count = 0;
@@ -254,7 +241,7 @@ AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr, u32
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 }
 
 /** @} */

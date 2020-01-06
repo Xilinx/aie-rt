@@ -36,6 +36,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   09/24/2019  Fix range check logic for shim row
+* 1.2   Tejus   01/04/2020  Cleanup error messages
 * </pre>
 *
 ******************************************************************************/
@@ -83,7 +84,7 @@ u8 _XAie_GetTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAieLib_print("Error %d: Cannot find Tile Type\n", XAIE_INVALID_TILE);
+	XAieLib_print("Error: Cannot find Tile Type\n");
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
@@ -163,8 +164,7 @@ AieRC _XAie_CheckRangeTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
 			return XAIEGBL_TILE_TYPE_AIETILE;
 		}
 	} else {
-		XAieLib_print("Error %d: Cannot find Tile Type\n",
-				XAIE_INVALID_RANGE);
+		XAieLib_print("Error: Cannot find Tile Type\n");
 		return XAIE_INVALID_RANGE;
 	}
 

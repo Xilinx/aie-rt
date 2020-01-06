@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus	01/04/2020  Cleanup error messages
 * </pre>
 *
 ******************************************************************************/
@@ -200,35 +201,30 @@ static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
 		u32 TimeOut,u32 Mask, u32 Value)
 {
 
-	AieRC RC = XAIE_OK;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
@@ -247,17 +243,16 @@ static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
 				+ CoreMod->CoreSts->RegOff;
 			if(XAieGbl_MaskPoll(RegAddr, Mask, Value, TimeOut) !=
 					XAIE_SUCCESS) {
-				RC = XAIE_CORE_STATUS_TIMEOUT;
-				XAieLib_print("Error %d: Status poll time out"\
-						"for Col %d, Row %d\n", RC, R, C);
-				return RC;
+				XAieLib_print("Error: Status poll time out"\
+						"for Col %d, Row %d\n", R, C);
+				return XAIE_CORE_STATUS_TIMEOUT;
 			} else {
 				continue;
 			}
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 
 }
 
@@ -337,35 +332,30 @@ AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range, u8 Enable,
 		u8 Reset)
 {
-	AieRC RC = XAIE_OK;
 	u32 RegVal;
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		RC = XAIE_INVALID_ARGS;
-		XAieLib_print("Error %d: Invalid Device Instance\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Invalid Device Range\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	TileType = _XAie_GetTileType(DevInst, Range);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		RC = XAIE_INVALID_TILE;
-		XAieLib_print("Error %d: Invalid Tile Type\n", RC);
-		return RC;
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
 	}
 
 	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		RC = XAIE_INVALID_RANGE;
-		XAieLib_print("Error %d: Range has different Tile Types\n", RC);
-		return RC;
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
 	}
 
 	/* Get core module pointer from device instance */
@@ -389,7 +379,7 @@ AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range, u8 Enable,
 		}
 	}
 
-	return RC;
+	return XAIE_OK;
 }
 
 /** @} */
