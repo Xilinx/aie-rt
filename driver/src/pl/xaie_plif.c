@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   10/28/2019  Initial creation
+* 1.1   Tejus   03/16/2020  Implementation of apis for Mux/Demux configuration
 * </pre>
 *
 ******************************************************************************/
@@ -45,6 +46,17 @@
 
 /************************** Constant Definitions *****************************/
 #define XAIE_PLIF_WIDTH_64SHIFT 6U
+#define XAIE_MUX_DEMUX_CONFIG_TYPE_PL	0x0
+#define XAIE_MUX_DEMUX_CONFIG_TYPE_DMA	0x1
+#define XAIE_MUX_DEMUX_CONFIG_TYPE_NOC	0x2
+
+#define XAIE_STREAM_SOUTH_PORT_2	2U
+#define XAIE_STREAM_SOUTH_PORT_3	3U
+#define XAIE_STREAM_SOUTH_PORT_4	4U
+#define XAIE_STREAM_SOUTH_PORT_5	5U
+#define XAIE_STREAM_SOUTH_PORT_6	6U
+#define XAIE_STREAM_SOUTH_PORT_7	7U
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -835,3 +847,454 @@ AieRC XAie_PlIfBliBypassDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
 	return XAie_PlIfBliBypassRangeDisable(DevInst, Range, PortNum);
 }
+
+/*****************************************************************************/
+/**
+*
+* This API configures the Mux registers in the AIE Shim NoC tiles. The input
+* stream switch ports for incoming data from PL, NoC or DMA can be enabled using
+* this API.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
+* @param	InputConnectionType: XAIE_MUX_DEMUX_CONFIG_TYPE_PL,
+*		XAIE_MUX_DEMUX_CONFIG_TYPE_DMA or XAIE_MUX_DEMUX_CONFIG_TYPE_NOC
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal API Only.
+*
+******************************************************************************/
+static AieRC _XAie_ConfigShimNocMuxRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum, u8 InputConnectionType)
+{
+	u8 TileType;
+	u32 FldVal;
+	u32 FldMask;
+	u64 RegAddr;
+	const XAie_PlIfMod *PlIfMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
+	}
+
+	TileType = _XAie_GetTileType(DevInst, Range);
+	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
+	}
+
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_6) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
+		XAieLib_print("Error: Invalid port number for Mux\n");
+		return XAIE_ERR_STREAM_PORT;
+	}
+
+	/* Map the port numbers to 0, 1, 2, 3 */
+	if(PortNum > 3U) {
+		PortNum -= 4U;
+	} else {
+		PortNum -= 2U;
+	}
+
+	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
+
+	FldVal = InputConnectionType << PlIfMod->ShimNocMux[PortNum].Lsb;
+	FldMask = PlIfMod->ShimNocMux[PortNum].Mask;
+
+	/* Iteration over Row is not needed */
+	for(u8 C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
+
+		RegAddr = DevInst->BaseAddr +
+			_XAie_GetTileAddr(DevInst, 0U, C) +
+			PlIfMod->ShimNocMuxOff;
+		/* Mask write to the Mux register */
+		XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API configures the DeMux registers in the AIE Shim NoC tiles. The output
+* stream switch ports for outgoing data to PL, NoC or DMA can be enabled using
+* this API.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
+* @param	OutputConnectionType: XAIE_MUX_DEMUX_CONFIG_TYPE_PL,
+*		XAIE_MUX_DEMUX_CONFIG_TYPE_DMA or XAIE_MUX_DEMUX_CONFIG_TYPE_NOC
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal API Only.
+*
+******************************************************************************/
+static AieRC _XAie_ConfigShimNocDeMuxRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum, u8 OutputConnectionType)
+{
+	u8 TileType;
+	u32 FldVal;
+	u32 FldMask;
+	u64 RegAddr;
+	const XAie_PlIfMod *PlIfMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
+		XAieLib_print("Error: Invalid Device Range\n");
+		return XAIE_INVALID_RANGE;
+	}
+
+	TileType = _XAie_GetTileType(DevInst, Range);
+	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
+		XAieLib_print("Error: Range has different Tile Types\n");
+		return XAIE_INVALID_RANGE;
+	}
+
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_4) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_5)) {
+		XAieLib_print("Error: Invalid port number\n");
+		return XAIE_ERR_STREAM_PORT;
+	}
+
+	/* Map the port numbers to 0, 1, 2, 3 */
+	PortNum -= 2U;
+
+	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
+
+	FldVal = OutputConnectionType << PlIfMod->ShimNocDeMux[PortNum].Lsb;
+	FldMask = PlIfMod->ShimNocDeMux[PortNum].Mask;
+
+	/* Iteration over Row is not needed */
+	for(u8 C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
+
+		RegAddr = DevInst->BaseAddr +
+			_XAie_GetTileAddr(DevInst, 0U, C) +
+			PlIfMod->ShimNocDeMuxOff;
+		/* Mask write to the Mux register */
+		XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the Shim DMA to input stream switch port connection in the
+* Mux configuration register for a given range of tiles.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (3, 7)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableShimDmaToAieStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
+{
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
+		XAieLib_print("Error: Invalid port number\n");
+		return XAIE_ERR_STREAM_PORT;
+	}
+
+	return _XAie_ConfigShimNocMuxRange(DevInst, Range, PortNum,
+			XAIE_MUX_DEMUX_CONFIG_TYPE_DMA);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the Shim DMA to input stream switch portconnection in the Mux
+* configuration register for a given AIE Tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Loc of AIE Tiles
+* @param        PortNum: Stream Port Number (3, 7)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
+	return XAie_EnableShimDmaToAieStrmPortRange(DevInst, Range, PortNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the stream switch port to Shim DMA connection (for data
+* going outside of AIE) in the DeMux configuration register for a given range
+* of tiles.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableAieToShimDmaStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
+{
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_3)) {
+		return XAIE_ERR_STREAM_PORT;
+	}
+
+	return _XAie_ConfigShimNocDeMuxRange(DevInst, Range, PortNum,
+			XAIE_MUX_DEMUX_CONFIG_TYPE_DMA);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the stream switch port to Shim DMA connection (for data
+* going outside of AIE) in the DeMux configuration register for a given AIE
+* tile.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
+	return XAie_EnableAieToShimDmaStrmPortRange(DevInst, Range, PortNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the NoC to input stream switch port connection in the
+* Mux configuration register for a given range of tiles.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableNoCToAieStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
+{
+	return _XAie_ConfigShimNocMuxRange(DevInst, Range, PortNum,
+			XAIE_MUX_DEMUX_CONFIG_TYPE_NOC);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the NoC to input stream switch portconnection in the Mux
+* configuration register for a given AIE Tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Loc of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableNoCToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
+	return XAie_EnableNoCToAieStrmPortRange(DevInst, Range, PortNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the stream switch port to Noc connection (for data going
+* outside of AIE) in the DeMux configuration register for a given range
+* of tiles.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableAieToNoCStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
+{
+	return _XAie_ConfigShimNocDeMuxRange(DevInst, Range, PortNum,
+			XAIE_MUX_DEMUX_CONFIG_TYPE_NOC);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the stream switch port to NoC connection (for data
+* going outside of AIE) in the DeMux configuration register for a given AIE
+* tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EnableAieToNoCStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
+	return XAie_EnableAieToNoCStrmPortRange(DevInst, Range, PortNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the PL to input stream switch port connection in the
+* Mux configuration register for a given range of tiles.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		After a device reset, AIE<->PL connections are enabled by
+*		default. This API has to be called only if AIE<->SHIMDMA or
+*		AIE<->NOC connections have been enabled after a device reset.
+*
+******************************************************************************/
+AieRC XAie_EnablePlToAieStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
+{
+	return _XAie_ConfigShimNocMuxRange(DevInst, Range, PortNum,
+			XAIE_MUX_DEMUX_CONFIG_TYPE_PL);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the PL to input stream switch portconnection in the Mux
+* configuration register for a given AIE Tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Loc of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		After a device reset, AIE<->PL connections are enabled by
+*		default. This API has to be called only if AIE<->SHIMDMA or
+*		AIE<->NOC connections have been enabled after a device reset.
+*
+******************************************************************************/
+AieRC XAie_EnablePlToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
+	return XAie_EnablePlToAieStrmPortRange(DevInst, Range, PortNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the stream switch port to PL connection (for data going
+* outside of AIE) in the DeMux configuration register for a given range
+* of tiles.
+*
+* @param	DevInst: Device Instance
+* @param	Range: Range of AIE Tiles
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		After a device reset, AIE<->PL connections are enabled by
+*		default. This API has to be called only if AIE<->SHIMDMA or
+*		AIE<->NOC connections have been enabled after a device reset.
+*
+******************************************************************************/
+AieRC XAie_EnableAieToPlStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
+{
+	return _XAie_ConfigShimNocDeMuxRange(DevInst, Range, PortNum,
+			XAIE_MUX_DEMUX_CONFIG_TYPE_PL);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables the stream switch port to PL connection (for data
+* going outside of AIE) in the DeMux configuration register for a given AIE
+* tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		After a device reset, AIE<->PL connections are enabled by
+*		default. This API has to be called only if AIE<->SHIMDMA or
+*		AIE<->NOC connections have been enabled after a device reset.
+*
+******************************************************************************/
+AieRC XAie_EnableAieToPlStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
+	return XAie_EnableAieToPlStrmPortRange(DevInst, Range, PortNum);
+}
+
+/** @} */

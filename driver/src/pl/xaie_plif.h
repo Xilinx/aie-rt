@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   10/28/2019  Initial creation
+* 1.1   Tejus   03/16/2020  Implementation of apis for Mux/Demux configuration
 * </pre>
 *
 ******************************************************************************/
@@ -87,4 +88,28 @@ AieRC XAie_AieToPlIntfEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum, XAie_PlIfWidth Width);
 AieRC XAie_AieToPlIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum, XAie_PlIfWidth Width);
+AieRC XAie_EnableShimDmaToAieStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum);
+AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum);
+AieRC XAie_EnableAieToShimDmaStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum);
+AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum);
+AieRC XAie_EnableNoCToAieStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum);
+AieRC XAie_EnableNoCToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum);
+AieRC XAie_EnableAieToNoCStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum);
+AieRC XAie_EnableAieToNoCStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum);
+AieRC XAie_EnablePlToAieStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum);
+AieRC XAie_EnablePlToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum);
+AieRC XAie_EnableAieToPlStrmPortRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum);
+AieRC XAie_EnableAieToPlStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 PortNum);
 #endif		/* end of protection macro */
