@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   03/20/2020  Remove range apis
 * </pre>
 *
 ******************************************************************************/
@@ -47,15 +48,8 @@
 #include "xaielib.h"
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
-		u32 Len, u32 Data);
-
 AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 Addr, u32 Data);
-
-AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
-		u32 Len, u32 *Data);
-
 AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 Addr, u32 *Data);
 

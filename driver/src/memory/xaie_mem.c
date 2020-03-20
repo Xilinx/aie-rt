@@ -37,6 +37,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus	01/04/2020  Cleanup error messages
 * 1.2   Tejus   03/20/2020  Reorder range apis
+* 1.3   Tejus   03/20/2020  Make internal functions static
 * </pre>
 *
 ******************************************************************************/
@@ -58,11 +59,11 @@
 *
 * @return	XAIE_OK on success and error code on failure
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
-AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
-		u32 Len, u32 Data)
+static AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range,
+		u32 Addr, u32 Len, u32 Data)
 {
 	u64 RegAddr;
 	const XAie_MemMod *MemMod;
@@ -133,11 +134,11 @@ AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 *
 * @return	XAIE_OK on success and error code on failure
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
-AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr, u32 Len,
-		u32 *Data)
+static AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range,
+		u32 Addr, u32 Len, u32 *Data)
 {
 	u64 RegAddr;
 	const XAie_MemMod *MemMod;
