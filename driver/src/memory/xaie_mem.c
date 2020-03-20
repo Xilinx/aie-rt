@@ -36,6 +36,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus	01/04/2020  Cleanup error messages
+* 1.2   Tejus   03/20/2020  Reorder range apis
 * </pre>
 *
 ******************************************************************************/
@@ -44,53 +45,6 @@
 
 
 /************************** Function Definitions *****************************/
-/*****************************************************************************/
-/**
-*
-* This API writes a 32-bit value to the specified data memory location for
-* the selected tile.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Loc of AIE Tiles
-* @param	Addr: Address in data memory to write.
-* @param	Data: 32-bit value to be written.
-*
-* @return	XAIE_OK on success and error code on failure
-*
-* @note		None.
-*
-*******************************************************************************/
-AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 Addr, u32 Data)
-{
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_DataMemWrite(DevInst, Range, Addr, 1, Data);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API read a 32-bit value from the specified data memory location for
-* the selected tile.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Loc of AIE Tiles
-* @param	Addr: Address in data memory to write.
-* @param	Data: Pointer to store 32-bit value read from memory.
-*
-* @return	XAIE_OK on success and error code on failure
-*
-* @note		None.
-*
-*******************************************************************************/
-AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 Addr, u32 *Data)
-{
-
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_DataMemRead(DevInst, Range, Addr, 1, Data);
-}
-
 /*****************************************************************************/
 /**
 *
@@ -164,7 +118,6 @@ AieRC XAie_DataMemWrite(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr,
 
 	return XAIE_OK;
 }
-
 
 /*****************************************************************************/
 /**
@@ -242,6 +195,53 @@ AieRC XAie_DataMemRead(XAie_DevInst *DevInst, XAie_LocRange Range, u32 Addr, u32
 	}
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API writes a 32-bit value to the specified data memory location for
+* the selected tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Loc of AIE Tiles
+* @param	Addr: Address in data memory to write.
+* @param	Data: 32-bit value to be written.
+*
+* @return	XAIE_OK on success and error code on failure
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 Addr, u32 Data)
+{
+	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
+	return XAie_DataMemWrite(DevInst, Range, Addr, 1, Data);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API read a 32-bit value from the specified data memory location for
+* the selected tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Loc of AIE Tiles
+* @param	Addr: Address in data memory to write.
+* @param	Data: Pointer to store 32-bit value read from memory.
+*
+* @return	XAIE_OK on success and error code on failure
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 Addr, u32 *Data)
+{
+
+	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
+	return XAie_DataMemRead(DevInst, Range, Addr, 1, Data);
 }
 
 /** @} */
