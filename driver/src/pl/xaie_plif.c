@@ -36,6 +36,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   10/28/2019  Initial creation
 * 1.1   Tejus   03/16/2020  Implementation of apis for Mux/Demux configuration
+* 1.2   Tejus   03/20/2020  Make internal functions static
 * </pre>
 *
 ******************************************************************************/
@@ -477,11 +478,11 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @note		If this API is used to configure PLTOAIE interfaces, explicit
 *		call to enable stream ports in downsizer enable register is not
-*		required.
+*		required. Internal only.
 *
 ******************************************************************************/
-AieRC XAie_PlToAieIntfRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width)
+static AieRC XAie_PlToAieIntfRangeEnable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum, XAie_PlIfWidth Width)
 {
 	return _XAie_PlToAieIntfConfig(DevInst, Range, PortNum, Width,
 			XAIE_ENABLE);
@@ -506,11 +507,11 @@ AieRC XAie_PlToAieIntfRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @note		If this API is used to configure PLTOAIE interfaces, explicit
 *		call to enable stream ports in downsizer enable register is not
-*		required.
+*		required. Internal only.
 *
 ******************************************************************************/
-AieRC XAie_PlToAieIntfRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width)
+static AieRC XAie_PlToAieIntfRangeDisable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum, XAie_PlIfWidth Width)
 {
 	return _XAie_PlToAieIntfConfig(DevInst, Range, PortNum, Width,
 			XAIE_DISABLE);
@@ -586,11 +587,11 @@ AieRC XAie_PlToAieIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_AieToPlIntfRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width)
+static AieRC XAie_AieToPlIntfRangeEnable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum, XAie_PlIfWidth Width)
 {
 	return _XAie_AieToPlIntfConfig(DevInst, Range, PortNum, Width,
 			XAIE_ENABLE);
@@ -610,11 +611,11 @@ AieRC XAie_AieToPlIntfRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_AieToPlIntfRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width)
+static AieRC XAie_AieToPlIntfRangeDisable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum, XAie_PlIfWidth Width)
 {
 	return _XAie_AieToPlIntfConfig(DevInst, Range, PortNum, Width,
 			XAIE_DISABLE);
@@ -681,11 +682,11 @@ AieRC XAie_AieToPlIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_PlIfDownSzrRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum)
+static AieRC XAie_PlIfDownSzrRangeEnable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_PlIfDownSzrPortEnableReg(DevInst, Range, PortNum,
 			XAIE_ENABLE);
@@ -704,11 +705,11 @@ AieRC XAie_PlIfDownSzrRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_PlIfDownSzrRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum)
+static AieRC XAie_PlIfDownSzrRangeDisable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_PlIfDownSzrPortEnableReg(DevInst, Range, PortNum,
 			XAIE_DISABLE);
@@ -772,11 +773,11 @@ AieRC XAie_PlIfDownSzrDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_PlIfBliBypassRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum)
+static AieRC XAie_PlIfBliBypassRangeEnable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_PlIfBliBypassRange(DevInst, Range, PortNum,
 			XAIE_ENABLE);
@@ -794,11 +795,11 @@ AieRC XAie_PlIfBliBypassRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_PlIfBliBypassRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum)
+static AieRC XAie_PlIfBliBypassRangeDisable(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_PlIfBliBypassRange(DevInst, Range, PortNum,
 			XAIE_DISABLE);
@@ -1020,10 +1021,10 @@ static AieRC _XAie_ConfigShimNocDeMuxRange(XAie_DevInst *DevInst,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_EnableShimDmaToAieStrmPortRange(XAie_DevInst *DevInst,
+static AieRC XAie_EnableShimDmaToAieStrmPortRange(XAie_DevInst *DevInst,
 		XAie_LocRange Range, u8 PortNum)
 {
 	if((PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
@@ -1071,10 +1072,10 @@ AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_EnableAieToShimDmaStrmPortRange(XAie_DevInst *DevInst,
+static AieRC XAie_EnableAieToShimDmaStrmPortRange(XAie_DevInst *DevInst,
 		XAie_LocRange Range, u8 PortNum)
 {
 	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
@@ -1121,10 +1122,10 @@ AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_EnableNoCToAieStrmPortRange(XAie_DevInst *DevInst,
+static AieRC XAie_EnableNoCToAieStrmPortRange(XAie_DevInst *DevInst,
 		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_ConfigShimNocMuxRange(DevInst, Range, PortNum,
@@ -1166,10 +1167,10 @@ AieRC XAie_EnableNoCToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_EnableAieToNoCStrmPortRange(XAie_DevInst *DevInst,
+static AieRC XAie_EnableAieToNoCStrmPortRange(XAie_DevInst *DevInst,
 		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_ConfigShimNocDeMuxRange(DevInst, Range, PortNum,
@@ -1214,9 +1215,10 @@ AieRC XAie_EnableAieToNoCStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		After a device reset, AIE<->PL connections are enabled by
 *		default. This API has to be called only if AIE<->SHIMDMA or
 *		AIE<->NOC connections have been enabled after a device reset.
+*		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_EnablePlToAieStrmPortRange(XAie_DevInst *DevInst,
+static AieRC XAie_EnablePlToAieStrmPortRange(XAie_DevInst *DevInst,
 		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_ConfigShimNocMuxRange(DevInst, Range, PortNum,
@@ -1263,9 +1265,10 @@ AieRC XAie_EnablePlToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		After a device reset, AIE<->PL connections are enabled by
 *		default. This API has to be called only if AIE<->SHIMDMA or
 *		AIE<->NOC connections have been enabled after a device reset.
+*		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_EnableAieToPlStrmPortRange(XAie_DevInst *DevInst,
+static AieRC XAie_EnableAieToPlStrmPortRange(XAie_DevInst *DevInst,
 		XAie_LocRange Range, u8 PortNum)
 {
 	return _XAie_ConfigShimNocDeMuxRange(DevInst, Range, PortNum,

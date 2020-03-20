@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   03/20/2020  Remove range apis
 * </pre>
 *
 ******************************************************************************/
@@ -48,17 +49,6 @@
 #include "xaie_helper.h"
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
-		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-		u8 MstrPortNum, u8 Enable);
-AieRC XAie_StrmConnCctEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-		u8 MstrPortNum);
-
-AieRC XAie_StrmConnCctDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-		u8 MstrPortNum);
-
 AieRC XAie_StrmConnCctEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum);

@@ -36,6 +36,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   10/28/2019  Initial creation
 * 1.1   Tejus   03/16/2020  Implementation of apis for Mux/Demux configuration
+* 1.2   Tejus   03/20/2020  Remove range apis
 * </pre>
 *
 ******************************************************************************/
@@ -60,56 +61,28 @@ AieRC XAie_PlIfBliBypassEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
 AieRC XAie_PlIfBliBypassDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_PlIfBliBypassRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum);
-AieRC XAie_PlIfBliBypassRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum);
-AieRC XAie_PlIfDownSzrRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum);
-AieRC XAie_PlIfDownSzrRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum);
 AieRC XAie_PlIfDownSzrEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
 AieRC XAie_PlIfDownSzrDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_PlToAieIntfRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width);
-AieRC XAie_PlToAieIntfRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width);
 AieRC XAie_PlToAieIntfEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum, XAie_PlIfWidth Width);
 AieRC XAie_PlToAieIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 PortNum, XAie_PlIfWidth Width);
-AieRC XAie_AieToPlIntfRangeEnable(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 PortNum, XAie_PlIfWidth Width);
-AieRC XAie_AieToPlIntfRangeDisable(XAie_DevInst *DevInst, XAie_LocRange Range,
 		u8 PortNum, XAie_PlIfWidth Width);
 AieRC XAie_AieToPlIntfEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum, XAie_PlIfWidth Width);
 AieRC XAie_AieToPlIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum, XAie_PlIfWidth Width);
-AieRC XAie_EnableShimDmaToAieStrmPortRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u8 PortNum);
 AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_EnableAieToShimDmaStrmPortRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u8 PortNum);
 AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_EnableNoCToAieStrmPortRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u8 PortNum);
 AieRC XAie_EnableNoCToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_EnableAieToNoCStrmPortRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u8 PortNum);
 AieRC XAie_EnableAieToNoCStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_EnablePlToAieStrmPortRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u8 PortNum);
 AieRC XAie_EnablePlToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
-AieRC XAie_EnableAieToPlStrmPortRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u8 PortNum);
 AieRC XAie_EnableAieToPlStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
 #endif		/* end of protection macro */

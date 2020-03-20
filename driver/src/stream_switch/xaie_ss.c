@@ -37,6 +37,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   10/21/2019  Optimize stream switch data structures
 * 1.2   Tejus	01/04/2020  Cleanup error messages
+* 1.3   Tejus   03/20/2020  Make internal function static
 * </pre>
 *
 ******************************************************************************/
@@ -205,12 +206,12 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
-AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
-		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-		u8 MstrPortNum, u8 Enable)
+static AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
+		XAie_LocRange Range, StrmSwPortType Slave, u8 SlvPortNum,
+		StrmSwPortType Master, u8 MstrPortNum, u8 Enable)
 {
 	AieRC RC;
 	u64 MstrAddr;
@@ -307,12 +308,12 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal Only.
 *
 *******************************************************************************/
-AieRC XAie_StrmConnCctEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-		u8 MstrPortNum)
+static AieRC XAie_StrmConnCctEnableRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, StrmSwPortType Slave, u8 SlvPortNum,
+		StrmSwPortType Master, u8 MstrPortNum)
 {
 
 	return XAie_StreamSwitchConfigureCct(DevInst, Range, Slave, SlvPortNum,
@@ -334,12 +335,12 @@ AieRC XAie_StrmConnCctEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
-AieRC XAie_StrmConnCctDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-		u8 MstrPortNum)
+static AieRC XAie_StrmConnCctDisableRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, StrmSwPortType Slave, u8 SlvPortNum,
+		StrmSwPortType Master, u8 MstrPortNum)
 {
 
 	return XAie_StreamSwitchConfigureCct(DevInst, Range, Slave, SlvPortNum,
