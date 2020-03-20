@@ -1,6 +1,7 @@
 #include <xaiengine/xaie_core.h>
 #include <xaiengine/xaie_dma.h>
 #include <xaiengine/xaie_elfloader.h>
+#include <xaiengine/xaie_locks.h>
 #include <xaiengine/xaie_mem.h>
 #include <xaiengine/xaie_plif.h>
 #include <xaiengine/xaie_ss.h>
