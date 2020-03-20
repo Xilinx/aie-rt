@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   03/20/2020  Remove range apis
 * </pre>
 *
 ******************************************************************************/
@@ -48,21 +49,11 @@
 
 /************************** Constant Definitions *****************************/
 /************************** Function Prototypes  *****************************/
-
-AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range, u8 Enable,
-		u8 Reset);
-AieRC XAie_CoreEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range);
-AieRC XAie_CoreDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range);
 AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
-
 AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
 AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut);
-AieRC XAie_CoreWaitForDoneRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u32 TimeOut);
-AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 		u32 TimeOut);
 
 #endif		/* end of protection macro */

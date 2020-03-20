@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   03/20/2020  Remove range apis
 * </pre>
 *
 ******************************************************************************/
@@ -60,8 +61,6 @@ typedef struct {
 	u32 end;	/**< Stack end address */
 } XAieSim_StackSz;
 /************************** Function Prototypes  *****************************/
-AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
-		u8 LoadSym);
 AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *ElfPtr,
 		u8 LoadSym);
 

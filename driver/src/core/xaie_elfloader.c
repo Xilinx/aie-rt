@@ -38,6 +38,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus	01/04/2020  Cleanup error messages
+* 1.2   Tejus   03/20/2020  Make internal functions static
 * </pre>
 *
 ******************************************************************************/
@@ -325,11 +326,11 @@ void XAie_WriteElfSection(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *SectName,
 *
 * @return	XAIE_OK on success, else error code.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
-AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range, u8 *ElfPtr,
-		u8 LoadSym)
+static AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range,
+		u8 *ElfPtr, u8 LoadSym)
 {
 	FILE *Fd;
 	Elf32_Ehdr ElfHdr;

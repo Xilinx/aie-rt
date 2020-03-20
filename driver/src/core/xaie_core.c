@@ -37,6 +37,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus	01/04/2020  Cleanup error messages
 * 1.2   Tejus   03/20/2020  Reorder functions
+* 1.3   Tejus   03/20/2020  Make internal functions static
 * </pre>
 *
 ******************************************************************************/
@@ -61,11 +62,11 @@
 * @param	Reset - Reset/Unreset the core (1-Reset,0-Unreset).
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range, u8 Enable,
-		u8 Reset)
+static AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range,
+		u8 Enable, u8 Reset)
 {
 	u32 RegVal;
 	const XAie_CoreMod *CoreMod;
@@ -209,10 +210,10 @@ static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_CoreEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
+static AieRC XAie_CoreEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
 {
 	return XAie_CoreControl(DevInst, Range, XAIE_ENABLE, XAIE_DISABLE);
 }
@@ -229,10 +230,10 @@ AieRC XAie_CoreEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_CoreDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
+static AieRC XAie_CoreDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
 {
 	return XAie_CoreControl(DevInst, Range, XAIE_DISABLE, XAIE_ENABLE);
 }
@@ -294,11 +295,11 @@ AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_CoreWaitForDoneRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u32 TimeOut)
+static AieRC XAie_CoreWaitForDoneRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u32 TimeOut)
 {
 	const XAie_CoreMod *CoreMod;
 	u32 Mask;
@@ -322,11 +323,11 @@ AieRC XAie_CoreWaitForDoneRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
-AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u32 TimeOut)
+static AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst,
+		XAie_LocRange Range, u32 TimeOut)
 {
 	const XAie_CoreMod *CoreMod;
 	u32 Mask;
