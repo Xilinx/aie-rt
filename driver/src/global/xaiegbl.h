@@ -39,6 +39,8 @@
 * 1.1   Tejus   10/28/2019  Add error type for pl interface apis
 * 1.2   Tejus   12/09/2019  Forward declaration of structures
 * 1.3   Tejus   03/17/2020  Add error types and data structure for lock apis
+* 1.4   Tejus   03/21/2020  Add data strcuture and initialization function for
+*			    packets.
 * </pre>
 *
 ******************************************************************************/
@@ -204,6 +206,12 @@ typedef struct {
 	s8 LockVal;
 } XAie_Lock;
 
+/* Data structure to capture packet id and packet type */
+typedef struct {
+	u8 PktId;
+	u8 PktType;
+} XAie_Packet;
+
 /**************************** Function prototypes ***************************/
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
 
@@ -225,6 +233,28 @@ static inline XAie_Lock XAie_LockInit(u8 Id, s8 Value)
 {
 	XAie_Lock Lock = {Id, Value};
 	return Lock;
+}
+
+/*****************************************************************************/
+/*
+*
+* This API returns a structure of type XAie_Packet which captures the packet id
+* and packet type. XAie_Packet can be used to configure the packet properties
+* of aie dmas and stream switches. Packet ID determins the route between ports,
+* and packet type is used to differentiate packets from the same source.
+*
+* @param	PktId: Packet id(5 bits)
+* @param	PktType: Packet type(3 bits)
+*
+* @return	Pkt: Packet strcuture initialized with Id and Type.
+*
+* @note		None.
+*
+******************************************************************************/
+static inline XAie_Packet XAie_PacketInit(u8 PktId, u8 PktType)
+{
+	XAie_Packet Pkt = {PktId, PktType};
+	return Pkt;
 }
 
 /*****************************************************************************/
