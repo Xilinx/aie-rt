@@ -38,6 +38,7 @@
 * 1.1   Tejus   10/21/2019  Optimize stream switch data structures
 * 1.2   Tejus	01/04/2020  Cleanup error messages
 * 1.3   Tejus   03/20/2020  Make internal function static
+* 1.4   Tejus   03/21/2020  Fix slave port configuration bug
 * </pre>
 *
 ******************************************************************************/
@@ -129,7 +130,7 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 	*RegVal = XAie_SetField(Enable, StrmMod->SlvEn.Lsb,
 			StrmMod->SlvEn.Mask) |
 		XAie_SetField(PktEnable,
-				StrmMod->SlvPktEn.Lsb, StrmMod->SlvEn.Mask);
+				StrmMod->SlvPktEn.Lsb, StrmMod->SlvPktEn.Mask);
 
 	return XAIE_OK;
 }
