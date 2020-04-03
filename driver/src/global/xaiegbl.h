@@ -43,6 +43,7 @@
 *			    packets.
 * 1.5   Tejus   03/22/2020  Remove data strcutures from initial dma api
 *			    implementation
+* 1.6   Tejus   03/23/2020  Add data structures for common dma apis.
 * </pre>
 *
 ******************************************************************************/
@@ -57,6 +58,8 @@
 #define XAIE_LOCK_WITH_NO_VALUE	(-1)
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
+typedef struct XAie_DmaMod XAie_DmaMod;
+typedef struct XAie_LockMod XAie_LockMod;
 
 /*
  * This typedef captures all the properties of a AIE Device
@@ -134,6 +137,141 @@ typedef enum{
 	SS_PORT_TYPE_MAX
 } StrmSwPortType;
 
+/* Data structures to capture data shape for dmas */
+typedef struct {
+	u32 StepSize;
+	u32 Wrap;
+} XAie_Gen2DmaDimDesc;
+
+typedef struct {
+	u32 Offset;
+	u32 Incr;
+	u32 Wrap;
+} XAie_Gen1DmaDimDesc;
+
+typedef union {
+	XAie_Gen1DmaDimDesc AieDimDesc;
+	XAie_Gen2DmaDimDesc Aie2DimDesc;
+} XAie_DmaDimDisc;
+
+typedef struct {
+	u8 NumDim;
+	XAie_DmaDimDisc Dim[];
+} XAie_DmaTensor;
+
+typedef struct {
+	u8 LockAcqId;
+	u8 LockRelId;
+	u8 LockAcqEn;
+	s8 LockAcqVal;
+	u8 LockAcqValEn;
+	u8 LockRelEn;
+	s8 LockRelVal;
+	u8 LockRelValEn;
+} XAie_LockDesc;
+
+typedef struct {
+	u8 PktId;
+	u8 PktType;
+	u8 PktEn;
+} XAie_PktDesc;
+
+typedef struct {
+	u64 Address;
+	u32 Length;
+} XAie_AddrDesc;
+
+typedef struct {
+	u8 ValidBd;
+	u8 NxtBd;
+	u8 UseNxtBd;
+	u8 OutofOrderBdId;
+} XAie_BdEnDesc;
+
+typedef struct {
+	u8 SMID;
+	u8 BurstLen;
+	u8 AxQos;
+	u8 SecureAccess;
+	u8 AxCache;
+} XAie_DmaAxiDesc;
+
+typedef struct {
+	u8 X_Incr;
+	u8 X_Wrap;
+	u16 X_Offset;
+	u8 Y_Incr;
+	u8 Y_Wrap;
+	u16 Y_Offset;
+	u8 IntrleaveBufSelect;
+	u16 CurrPtr;
+	u8 IntrleaveCount;
+	u8 EnInterleaved;
+} XAie_Gen1MultiDimDesc;
+
+typedef struct {
+	u16 Wrap;
+	u32 StepSize;
+} XAie_Gen2DimDesc;
+
+typedef struct {
+	u8 IterCurr;
+	XAie_Gen2DimDesc IterDesc;
+	XAie_Gen2DimDesc DimDesc[4U];	/* Max 4D addressing supported */
+} XAie_Gen2MultiDimDesc;
+
+typedef union {
+	XAie_Gen1MultiDimDesc Gen1MultiDimDesc;
+	XAie_Gen2MultiDimDesc Gen2MultiDimDesc;
+} XAie_MultiDimDesc;
+
+typedef struct {
+	u8 D0_ZeroBefore;
+	u8 D0_ZeroAfter;
+	u8 D1_ZeroBefore;
+	u8 D1_ZeroAfter;
+	u8 D2_ZeroBefore;
+	u8 D2_ZeroAfter;
+} XAie_ZeroPadDesc;
+
+typedef struct {
+	u8 ControllerId;
+	u8 EnOutofOrderId;
+	u8 Reset;
+	u8 EnTokenIssue;
+	u8 PauseStream;
+	u8 PauseMem;
+	u8 Enable;
+} XAie_ChannelDesc;
+
+typedef struct {
+	XAie_PktDesc PktDesc;
+	XAie_LockDesc LockDesc;
+	XAie_AddrDesc AddrDesc;
+	XAie_DmaAxiDesc AxiDesc;
+	XAie_BdEnDesc BdEnDesc;
+	XAie_LockDesc LockDesc_2;
+	XAie_AddrDesc AddrDesc_2;
+	XAie_MultiDimDesc MultiDimDesc;
+	XAie_ZeroPadDesc ZeroPadDesc;
+	XAie_ChannelDesc ChDesc;
+	const XAie_DmaMod *DmaMod;
+	const XAie_LockMod *LockMod;
+	u8 EnDoubleBuff;
+	u8 EnFifoMode;
+	u8 EnCompression;
+	u8 EnOutofOrderBdId;
+	u8 TileType;
+	u8 IsReady;
+} XAie_DmaDesc;
+
+/*
+ * This enum contains the dma channel reset for aie dmas.
+ */
+typedef enum {
+	DMA_CHANNEL_UNRESET,
+	DMA_CHANNEL_RESET
+} XAie_DmaChReset;
 /*
  * This enum contains the dma direction for aie dmas.
  */
@@ -167,6 +305,10 @@ typedef enum{
 	XAIE_INVALID_LOCK_ID,
 	XAIE_INVALID_LOCK_VALUE,
 	XAIE_LOCK_RESULT_FAILED,
+	XAIE_INVALID_DMA_DESC,
+	XAIE_INVALID_ADDRESS,
+	XAIE_FEATURE_NOT_SUPPORTED,
+	XAIE_INVALID_BURST_LENGTH,
 	XAIE_ERR_MAX
 } AieRC;
 
