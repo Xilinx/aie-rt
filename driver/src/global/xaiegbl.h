@@ -41,6 +41,8 @@
 * 1.3   Tejus   03/17/2020  Add error types and data structure for lock apis
 * 1.4   Tejus   03/21/2020  Add data strcuture and initialization function for
 *			    packets.
+* 1.5   Tejus   03/22/2020  Remove data strcutures from initial dma api
+*			    implementation
 * </pre>
 *
 ******************************************************************************/
@@ -114,38 +116,6 @@ typedef struct {
 	XAie_LocType End;
 	XAie_LocType Stride;
 } XAie_LocRange;
-
-/*
- * This typedef contains attributes of a data tensor descriptor.
- */
-typedef struct {
-	u32 Shape[4];
-	u8 Stride[4];
-} XAie_TensorDesc;
-
-/*
- * This typdef contains attributes of a aie lock.  
- */
-typedef struct {
-	u8 En;
-	u8 Id;
-	s8 Val;
-} XAie_LockDesc;
-
-/*
- * This typdef contains attributes of a aie dma buffer descriptor.  
- */
-typedef struct {
-	u8 UseNxtBd;
-	u8 NxtBd;
-	u8 ValidBd;
-	u8 EnCompression;
-	u8 EnPkt;
-	u8 PktId;
-	u8 PktType;
-	u8 OutofOrderBdId;
-	/* More fields as required */
-} XAie_DmaBdAttr;
 
 /*
  * This enum contains all the Stream Switch Port types. These enums are used to
@@ -297,27 +267,6 @@ static inline XAie_LocRange XAie_TileRange(XAie_LocType Start, XAie_LocType End,
 {
 	XAie_LocRange Range = { Start, End, Stride };
 	return Range;
-}
-
-/*****************************************************************************/
-/*
-*
-* This API returns a structure of type XAie_LockDesc which captures the lock id,
-* value and enable fields.
-*
-* @param	En: Enable lock.
-* @param	Id: Lock id
-* @param	Val: Lock value.
-*
-* @return	Desc: Lock descriptor structure.
-*
-* @note		None.
-*
-******************************************************************************/
-static inline XAie_LockDesc XAie_MakeLockDesc(u8 En, u8 Id, s8 Val)
-{
-	XAie_LockDesc Desc = { En, Id, Val };
-	return Desc;
 }
 
 /*****************************************************************************/

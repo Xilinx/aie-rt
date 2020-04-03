@@ -21,10 +21,9 @@
 * THE SOFTWARE.
 *
 ******************************************************************************/
-
 /*****************************************************************************/
 /**
-* @file xaie_core.h
+* @file xaie_dma.h
 * @{
 *
 * Header file for dma functions
@@ -35,6 +34,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   03/22/2020  Remove initial dma implemenatation
 * </pre>
 *
 ******************************************************************************/
@@ -46,22 +46,7 @@
 #include "xaielib.h"
 #include "xaie_helper.h"
 
-
 /************************** Function Prototypes  *****************************/
-AieRC XAie_DmaBdConfig_1D(XAie_DevInst *DevInst, XAie_LocType Loc, u8 BdNum,
-		u32 BaseAddr, u32 Len, XAie_LockDesc Acq, XAie_LockDesc Rel,
-		XAie_DmaBdAttr Attr);
-AieRC XAie_DmaBdConfig_1DRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 BdNum, u32 BaseAddr, u32 Len, XAie_LockDesc Acq,
-		XAie_LockDesc Rel, XAie_DmaBdAttr Attr);
-
-/* Channel Control APIs */
-AieRC XAie_DmaEnChannelRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 ChNum, u8 StartBd, XAie_DmaDirection Dir, u8 RptCnt,
-		u8 EnToken, u8 CtrlId, XAie_DmaBdAttr Attr);
-AieRC XAie_DmaEnChannel(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
-		u8 StartBd, XAie_DmaDirection Dir, u8 RptCnt, u8 EnToken,
-		u8 CtrlId, XAie_DmaBdAttr Attr);
 
 #endif		/* end of protection macro */
 /** @} */

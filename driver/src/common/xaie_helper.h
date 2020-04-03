@@ -37,6 +37,8 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   12/09/2019  Include correct header file to avoid cyclic
 *			    dependancy
+* 1.2   Tejus   03/22/2020  Remove helper functions used by initial dma
+*			    implementations
 * </pre>
 *
 ******************************************************************************/
@@ -105,23 +107,6 @@ static inline u32 _XAie_GetLenFromRange(XAie_LocRange R)
 	return ((R.End.Row - R.Start.Row + 1 + (R.Stride.Row - 1)) / R.Stride.Row) *
 		((R.End.Col - R.Start.Col + 1 + (R.Stride.Col - 1)) / R.Stride.Col);
 }
-
-/*****************************************************************************/
-/**
-*
-* Checks of the lock descriptor is valid or not
-*
-* @param	Lock: Lock descriptor
-* @return	XAIE_OK if valid or XAIE_ERR if invalid
-*
-* @note		Internal API only.
-*
-******************************************************************************/
-static inline AieRC _XAie_IsValidLock(XAie_LockDesc Lock, u8 LockMax)
-{
-	return (Lock.Id > LockMax ? XAIE_ERR : XAIE_OK);
-}
-
 
 u8 _XAie_GetTileType(XAie_DevInst *DevInst, XAie_LocRange Range);
 AieRC _XAie_CheckRangeTileType(XAie_DevInst *DevInst, XAie_LocRange Range);
