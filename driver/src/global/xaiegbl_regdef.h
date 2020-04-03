@@ -43,6 +43,7 @@
 * 1.5   Tejus  03/17/2020  Add data structures for lock module
 * 1.6   Tejus  03/21/2020  Add data structures for stream switch slot registers
 * 1.7   Tejus  03/23/2020  Re-organize data structure to capture aie dmas
+* 1.8  Dishita 03/24/2020  Add data structure for performance counter
 * </pre>
 *
 ******************************************************************************/
@@ -436,6 +437,30 @@ typedef struct XAie_LockMod {
 			XAie_Lock Lock, u32 TimeOut);
 } XAie_LockMod;
 
+/* This typedef contains attributes of Performace Counter module */
+typedef struct XAie_PerfMod {
+	u8 MaxCounterVal;       /* Maximum counter value per module */
+	u8 StartStopShift;      /* Shift for start stop perf ctrl reg */
+	u8 ResetShift;          /* Shift for reset perf ctrl reg */
+	u8 PerfCounterOffsetAdd;/* Add to calc perf cntrl offset for counter */
+	u32 PerfCtrlBaseAddr;   /* Perf counter ctrl register offset address */
+	u32 PerfCtrlOffsetAdd;  /* Add this val for next Perf counter ctrl reg*/
+	u32 PerfCtrlResetBaseAddr;/* Perf counter ctrl offset addr for reset */
+	u32 PerfCounterBaseAddr; /* Offset addr for perf counter 0 */
+	u32 PerfCounterEvtValBaseAddr; /* Offset addr for perf counter evnt val*/
+	const XAie_RegFldAttr Start; /* lsb and mask for start event for ctr0 */
+	const XAie_RegFldAttr Stop; /* lsb and mask for stop event for ctr0 */
+	const XAie_RegFldAttr Reset; /* lsb and mask for reset event for ctr0 */
+} XAie_PerfMod;
+
+/* This typedef contains attributes of Events module */
+typedef struct XAie_EvntMod {
+	u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
+	u8 InvalidEventVal;	/* Value that indicates invalid event */
+	u32 EventMin;		/* number corresponding to evt 0 in the enum */
+	u32 EventMax;		/* number corresponding to last evt in enum */
+} XAie_EvntMod;
+
 /*
  * This typedef contains all the modules for a Tile type
  */
@@ -446,6 +471,8 @@ typedef struct XAie_TileMod {
 	const XAie_MemMod  *MemMod;
 	const XAie_PlIfMod *PlIfMod;
 	const XAie_LockMod *LockMod;
+	const XAie_PerfMod *PerfMod;
+	const XAie_EvntMod *EvntMod;
 } XAie_TileMod;
 
 #endif
