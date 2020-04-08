@@ -59,9 +59,8 @@
 *
 ******************************************************************************/
 u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
-							XAie_LocType Loc)
+		XAie_LocType Loc)
 {
-	AieRC RC;
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
@@ -101,12 +100,9 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 	CounterRegOffset = PerfMod->PerfCounterBaseAddr +
 				((Counter)*PerfMod->PerfCounterOffsetAdd);
 
-	u8 R = Loc.Row;
-	u8 C = Loc.Col;
 	/* Compute absolute address and write to register */
-	CounterRegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, R ,C) + CounterRegOffset;
-
+	CounterRegAddr = DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row,
+						Loc.Col) + CounterRegOffset;
 	return XAieGbl_Read32(CounterRegAddr);
 }
 /*****************************************************************************/
@@ -124,9 +120,9 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
-	XAie_PerfCounters Counter, XAie_Events StartEvent, XAie_Events StopEvent)
+		XAie_PerfCounters Counter, XAie_Events StartEvent,
+		XAie_Events StopEvent)
 {
-	AieRC RC;
 	u32 RegOffset, FldVal, FldMask;
 	u64 RegAddr;
 	u8 TileType, IntStartEvent, IntStopEvent;
@@ -202,14 +198,10 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 		PerfMod->Stop.Lsb + (PerfMod->StartStopShift * (Counter % 2U)),
 		PerfMod->Stop.Mask << (PerfMod->StartStopShift * (Counter % 2U)));
 
-	u8 R = Loc.Row;
-	u8 C = Loc.Col;
-
 	/* Compute absolute address and write to register */
 	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, R ,C) + RegOffset;
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
-
 	return XAIE_OK;
 }
 
@@ -227,10 +219,9 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
-			XAie_PerfCounters Counter, XAie_LocType Loc,
-						XAie_Events ResetEvent)
+		XAie_PerfCounters Counter, XAie_LocType Loc,
+		XAie_Events ResetEvent)
 {
-	AieRC RC;
 	u32 ResetRegOffset, ResetFldMask;
 	u64 ResetRegAddr, ResetFldVal;
 	u8 TileType, IntResetEvent;
@@ -299,15 +290,10 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 		PerfMod->Reset.Lsb + (PerfMod->ResetShift * Counter),
 		PerfMod->Reset.Mask << (PerfMod->ResetShift * Counter));
 
-	u8 R = Loc.Row;
-	u8 C = Loc.Col;
-
 	/* Compute absolute address and write to register */
-			ResetRegAddr = DevInst->BaseAddr +
-				_XAie_GetTileAddr(DevInst, R ,C) + ResetRegOffset;
-			XAieGbl_MaskWrite32(ResetRegAddr,
-					ResetFldMask, ResetFldVal);
-
+	ResetRegAddr = DevInst->BaseAddr +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + ResetRegOffset;
+	XAieGbl_MaskWrite32(ResetRegAddr, ResetFldMask, ResetFldVal);
 	return XAIE_OK;
 }
 
@@ -324,9 +310,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-				XAie_PerfCounters Counter, u32 CounterVal)
+		XAie_PerfCounters Counter, u32 CounterVal)
 {
-	AieRC RC;
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
@@ -366,13 +351,10 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CounterRegOffset = PerfMod->PerfCounterBaseAddr +
 					((Counter)*PerfMod->PerfCounterOffsetAdd);
 
-	u8 R = Loc.Row;
-	u8 C = Loc.Col;
 	/* Compute absolute address and write to register */
 	CounterRegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, R ,C) + CounterRegOffset;
+		_XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) + CounterRegOffset;
 	XAieGbl_Write32(CounterRegAddr,CounterVal);
-
 	return XAIE_OK;
 }
 /*****************************************************************************/
@@ -388,9 +370,8 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-					XAie_PerfCounters Counter, u32 EventVal)
+		XAie_PerfCounters Counter, u32 EventVal)
 {
-	AieRC RC;
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
@@ -430,13 +411,9 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CounterRegOffset = (PerfMod->PerfCounterEvtValBaseAddr) +
 				((Counter)*PerfMod->PerfCounterOffsetAdd);
 
-	u8 R = Loc.Row;
-	u8 C = Loc.Col;
-
 	/* Compute absolute address and write to register */
 	CounterRegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, R ,C) + CounterRegOffset;
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + CounterRegOffset;
 	XAieGbl_Write32(CounterRegAddr,EventVal);
-
 	return XAIE_OK;
 }
