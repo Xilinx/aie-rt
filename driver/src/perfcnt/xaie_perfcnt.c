@@ -85,13 +85,13 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
 	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
 	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0){
+	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
 		Counter -= XAIE_MEMPERFCOUNTER_0;
 		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
 	}
 
 	/* Checking for valid Counter */
-	if(Counter >= PerfMod->MaxCounterVal){
+	if(Counter >= PerfMod->MaxCounterVal) {
 		XAieLib_print("Error: Invalid Counter number: %d\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
@@ -150,7 +150,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
 	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
 	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0){
+	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
 		Counter -= XAIE_MEMPERFCOUNTER_0;
 		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[1];
@@ -158,7 +158,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 
 	/* check if the event passed as input is corresponding to the module */
 	if(StartEvent < EvntMod->EventMin || StartEvent > EvntMod->EventMax ||
-		StopEvent < EvntMod->EventMin || StopEvent > EvntMod->EventMax){
+		StopEvent < EvntMod->EventMin || StopEvent > EvntMod->EventMax) {
 		XAieLib_print("Error: Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -173,13 +173,13 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 
 	/*checking for valid true event number */
 	if(IntStartEvent == XAIE_EVENT_INVALID ||
-			IntStopEvent == XAIE_EVENT_INVALID){
+			IntStopEvent == XAIE_EVENT_INVALID) {
 		XAieLib_print("Error: Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	/* Checking for valid Counter */
-	if(Counter >= PerfMod->MaxCounterVal){
+	if(Counter >= PerfMod->MaxCounterVal) {
 		XAieLib_print("Error: Invalid Counter number: %d\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
@@ -249,14 +249,14 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
 	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
 	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0){
+	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
 		Counter -= XAIE_MEMPERFCOUNTER_0;
 		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[1];
 	}
 
 	/* check if the event passed as input is corresponding to the module */
-	if(ResetEvent < EvntMod->EventMin || ResetEvent > EvntMod->EventMax){
+	if(ResetEvent < EvntMod->EventMin || ResetEvent > EvntMod->EventMax) {
 		XAieLib_print("Error: Invalid Event id: %d\n", ResetEvent);
 		return XAIE_INVALID_ARGS;
 	}
@@ -268,13 +268,13 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 	IntResetEvent = EvntMod->XAie_EventNumber[ResetEvent];
 
 	/*checking for valid true event number */
-	if(IntResetEvent == XAIE_EVENT_INVALID){
+	if(IntResetEvent == XAIE_EVENT_INVALID) {
 		XAieLib_print("Error: Invalid Event id: %d\n", ResetEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
 	/* Checking for valid Counter */
-	if(Counter >= PerfMod->MaxCounterVal){
+	if(Counter >= PerfMod->MaxCounterVal) {
 		XAieLib_print("Error: Invalid Counter number: %d\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
@@ -336,13 +336,13 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
 	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
 	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0){
+	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
 		Counter -= XAIE_MEMPERFCOUNTER_0;
 		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
 	}
 
 	/* Checking for valid Counter */
-	if(Counter >= PerfMod->MaxCounterVal){
+	if(Counter >= PerfMod->MaxCounterVal) {
 		XAieLib_print("Error: Invalid Counter number: %d\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
@@ -396,13 +396,13 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
 	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
 	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0){
+	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
 		Counter -= XAIE_MEMPERFCOUNTER_0;
 		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
 	}
 
 	/* Checking for valid Counter */
-	if(Counter >= PerfMod->MaxCounterVal){
+	if(Counter >= PerfMod->MaxCounterVal) {
 		XAieLib_print("Error: Invalid Counter number: %d\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
