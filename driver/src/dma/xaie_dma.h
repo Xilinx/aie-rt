@@ -36,6 +36,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   03/22/2020  Remove initial dma implemenatation
 * 1.2   Tejus   03/22/2020  Dma apis for aie
+* 1.3   Tejus   04/09/2020  Remove unused argument from interleave enable api
 * </pre>
 *
 ******************************************************************************/
@@ -62,8 +63,8 @@ AieRC XAie_DmaEnableBd(XAie_DmaDesc *DmaDesc);
 AieRC XAie_DmaDisableBd(XAie_DmaDesc *DmaDesc);
 AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 		u8 Cache, u8 Secure);
-AieRC XAie_DmaSetInterleaveEnable(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		u8 DoubleBuff, u8 IntrleaveCount, u16 IntrleaveCurr);
+AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
+		u8 IntrleaveCount, u16 IntrleaveCurr);
 AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
 AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,

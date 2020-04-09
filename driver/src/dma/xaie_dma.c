@@ -37,6 +37,7 @@
 * 1.1   Tejus	01/04/2020  Cleanup error messages
 * 1.2   Tejus   03/22/2020  Remove initial dma api implementation
 * 1.3   Tejus   03/22/2020  Dma api implementation
+* 1.4   Tejus   04/09/2020  Remove unused argument from interleave enable api
 * </pre>
 *
 ******************************************************************************/
@@ -583,8 +584,8 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 *		configure the buffer descriptor field in the hardware.
 *
 ******************************************************************************/
-AieRC XAie_DmaSetInterleaveEnable(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		u8 DoubleBuff, u8 IntrleaveCount, u16 IntrleaveCurr)
+AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
+		u8 IntrleaveCount, u16 IntrleaveCurr)
 {
 	const XAie_DmaMod *DmaMod;
 
