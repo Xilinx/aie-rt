@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <xaiengine/xaie_core.h>
 #include <xaiengine/xaie_dma.h>
 #include <xaiengine/xaie_elfloader.h>
@@ -13,4 +17,8 @@
 
 #ifdef __AIESIM__
 #include <xaiengine/xaiesim.h>
+#endif
+
+#ifdef __cplusplus
+}
 #endif
