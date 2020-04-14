@@ -35,6 +35,7 @@
 * Ver   Who     Date        Changes
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   Dishita 11/22/2019  Initial creation
+* 1.1   Tejus   04/13/2020  Remove use of range in apis
 *
 * </pre>
 *
@@ -65,7 +66,6 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 	u64 CounterRegAddr;
 	u8 TileType;
 	const XAie_PerfMod *PerfMod;
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -73,7 +73,7 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -129,15 +129,13 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
 
-	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
-
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -228,15 +226,13 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
 
-	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
-
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -316,7 +312,6 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 CounterRegAddr;
 	u8 TileType;
 	const XAie_PerfMod *PerfMod;
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -324,7 +319,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -376,7 +371,6 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 CounterRegAddr;
 	u8 TileType;
 	const XAie_PerfMod *PerfMod;
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -384,7 +378,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;

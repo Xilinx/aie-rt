@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   03/17/2020  Initial creation
+* 1.1   Tejus   04/13/2020  Remove use of range in apis
 * </pre>
 *
 ******************************************************************************/
@@ -71,7 +72,6 @@ AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 		u32 TimeOut)
 {
 	u8  TileType;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 	const XAie_LockMod *LockMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -80,12 +80,7 @@ AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -134,7 +129,6 @@ AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 		u32 TimeOut)
 {
 	u8  TileType;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 	const XAie_LockMod *LockMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -143,12 +137,7 @@ AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;

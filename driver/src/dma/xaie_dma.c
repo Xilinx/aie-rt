@@ -38,6 +38,7 @@
 * 1.2   Tejus   03/22/2020  Remove initial dma api implementation
 * 1.3   Tejus   03/22/2020  Dma api implementation
 * 1.4   Tejus   04/09/2020  Remove unused argument from interleave enable api
+* 1.5   Tejus   04/13/2020  Remove use of range in apis
 * </pre>
 *
 ******************************************************************************/
@@ -73,7 +74,6 @@ AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 {
 	u8 TileType;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) || (DmaDesc == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -81,12 +81,7 @@ AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -624,7 +619,6 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -632,7 +626,7 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(DmaDesc->TileType != _XAie_GetTileType(DevInst, Range)) {
+	if(DmaDesc->TileType != _XAie_GetTileTypefromLoc(DevInst, Loc)) {
 		XAieLib_print("Error: Tile type mismatch\n");
 		return XAIE_INVALID_TILE;
 	}
@@ -669,7 +663,6 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	u64 Addr;
 	u32 Val;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -677,12 +670,7 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMPL) ||
 			(TileType == XAIEGBL_TILE_TYPE_SHIMNOC)) {
 		XAieLib_print("Error: Invalid Tile Type\n");
@@ -728,7 +716,6 @@ AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 TileType;
 	AieRC RC;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -736,12 +723,7 @@ AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -787,7 +769,6 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 Value;
 	u64 Addr;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -800,12 +781,7 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_ERR;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -853,7 +829,6 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	u32 Value;
 	u64 Addr;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -866,12 +841,7 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		return XAIE_ERR;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -925,7 +895,6 @@ AieRC XAie_DmaChannelConfig(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	u32 ChWord[XAIE_DMA_CHCTRL_NUM_WORDS] = {0U};
 	u32 ChWordMask[XAIE_DMA_CHCTRL_NUM_WORDS] = {0U};
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) || (DmaDesc == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -943,12 +912,7 @@ AieRC XAie_DmaChannelConfig(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		return XAIE_INVALID_DMA_DESC;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	if(DmaDesc->TileType != _XAie_GetTileType(DevInst, Range)) {
+	if(DmaDesc->TileType != _XAie_GetTileTypefromLoc(DevInst, Loc)) {
 		XAieLib_print("Error: Tile type mismatch\n");
 		return XAIE_INVALID_TILE;
 	}
@@ -1031,7 +995,6 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 TileType;
 	u64 Addr;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -1039,12 +1002,7 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -1094,7 +1052,6 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 TileType;
 	u64 Addr;
 	const XAie_DmaMod *DmaMod;
-	XAie_LocRange Range = { Loc, Loc, {1U, 1U} };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -1102,12 +1059,7 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
