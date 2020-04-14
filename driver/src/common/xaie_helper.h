@@ -39,6 +39,7 @@
 *			    dependancy
 * 1.2   Tejus   03/22/2020  Remove helper functions used by initial dma
 *			    implementations
+* 1.3   Tejus   04/13/2020  Add api to get tile type from Loc
 * </pre>
 *
 ******************************************************************************/
@@ -109,6 +110,7 @@ static inline u32 _XAie_GetLenFromRange(XAie_LocRange R)
 }
 
 u8 _XAie_GetTileType(XAie_DevInst *DevInst, XAie_LocRange Range);
+u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC _XAie_CheckRangeTileType(XAie_DevInst *DevInst, XAie_LocRange Range);
 
 #endif		/* end of protection macro */

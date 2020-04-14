@@ -37,6 +37,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   09/24/2019  Fix range check logic for shim row
 * 1.2   Tejus   01/04/2020  Cleanup error messages
+* 1.3   Tejus   04/13/2020  Add api to get tile type from Loc
 * </pre>
 *
 ******************************************************************************/
@@ -80,6 +81,47 @@ u8 _XAie_GetTileType(XAie_DevInst *DevInst, XAie_LocRange Range)
 		return XAIEGBL_TILE_TYPE_MEMTILE;
 	} else if (StartRow >= DevInst->AieTileRowStart &&
 			(StartRow < (DevInst->AieTileRowStart +
+				     DevInst->AieTileNumRows))) {
+		return XAIEGBL_TILE_TYPE_AIETILE;
+	}
+
+	XAieLib_print("Error: Cannot find Tile Type\n");
+
+	return XAIEGBL_TILE_TYPE_MAX;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function used to get the tile type for a given device instance
+* and tile location.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @return	TileType (AIETILE/MEMTILE/SHIMPL/SHIMNOC on success and MAX on
+*		error)
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	u8 ColType;
+
+	if(Loc.Row == 0U) {
+		ColType = Loc.Col % 4U;
+		if((ColType == 0U) || (ColType == 1U)) {
+			return XAIEGBL_TILE_TYPE_SHIMPL;
+		}
+
+		return XAIEGBL_TILE_TYPE_SHIMNOC;
+
+	} else if(Loc.Row >= DevInst->MemTileRowStart &&
+			(Loc.Row < (DevInst->MemTileRowStart +
+				     DevInst->MemTileNumRows))) {
+		return XAIEGBL_TILE_TYPE_MEMTILE;
+	} else if (Loc.Row >= DevInst->AieTileRowStart &&
+			(Loc.Row < (DevInst->AieTileRowStart +
 				     DevInst->AieTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
