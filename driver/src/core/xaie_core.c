@@ -38,6 +38,7 @@
 * 1.1   Tejus	01/04/2020  Cleanup error messages
 * 1.2   Tejus   03/20/2020  Reorder functions
 * 1.3   Tejus   03/20/2020  Make internal functions static
+* 1.4   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * </pre>
 *
 ******************************************************************************/
@@ -57,7 +58,7 @@
 * unresetting the core are required to be handled by the application layer/
 *
 * @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
+* @param	Loc: Location of the AIE tile.
 * @param	Enable:  Enable/Disable the core (1- Enable, 0-Disable).
 * @param	Reset - Reset/Unreset the core (1-Reset,0-Unreset).
 * @return	XAIE_OK on success, Error code on failure.
@@ -65,7 +66,7 @@
 * @note		Internal only.
 *
 ******************************************************************************/
-static AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range,
+static AieRC _XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 Enable, u8 Reset)
 {
 	u32 RegVal;
@@ -78,20 +79,10 @@ static AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Invalid Device Range\n");
-		return XAIE_INVALID_RANGE;
-	}
-
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
-	}
-
-	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Range has different Tile Types\n");
-		return XAIE_INVALID_RANGE;
 	}
 
 	/* Get core module pointer from device instance */
@@ -102,18 +93,12 @@ static AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range,
 		XAie_SetField(Reset, CoreMod->CoreCtrl->CtrlRst.Lsb,
 				CoreMod->CoreCtrl->CtrlRst.Mask);
 
-	for(u8 R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
-		for(u8 C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
+	u64 RegAddr;
+	/* Compute register address based of R and C */
+	RegAddr = DevInst->BaseAddr + CoreMod->CoreCtrl->RegOff +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-			u64 RegAddr;
-			/* Compute register address based of R and C */
-			RegAddr = DevInst->BaseAddr +
-				_XAie_GetTileAddr(DevInst, R, C)
-				+ CoreMod->CoreCtrl->RegOff;
-
-			XAieGbl_Write32(RegAddr, RegVal);
-		}
-	}
+	XAieGbl_Write32(RegAddr, RegVal);
 
 	return XAIE_OK;
 }
@@ -127,9 +112,9 @@ static AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range,
 * whichever happens first.
 *
 * @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
+* @param	Loc: Location of the AIE tile.
 * @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
-*		be set to 500us. The TimeOut value passed is per tile.
+*		be set to 500us.
 * @param	Mask: Mask for the core status register.
 * @param	Value: Value for the core status register.
 *
@@ -138,8 +123,8 @@ static AieRC XAie_CoreControl(XAie_DevInst *DevInst, XAie_LocRange Range,
 * @note		Internal API only.
 *
 ******************************************************************************/
-static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u32 TimeOut,u32 Mask, u32 Value)
+static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 TimeOut, u32 Mask, u32 Value)
 {
 
 	u64 RegAddr;
@@ -152,20 +137,10 @@ static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Invalid Device Range\n");
-		return XAIE_INVALID_RANGE;
-	}
-
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
-	}
-
-	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Range has different Tile Types\n");
-		return XAIE_INVALID_RANGE;
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
@@ -176,66 +151,17 @@ static AieRC XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocRange Range,
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}
 
-	for(u8 R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
-		for(u8 C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
 
-			RegAddr = DevInst->BaseAddr +
-				_XAie_GetTileAddr(DevInst, R, C)
-				+ CoreMod->CoreSts->RegOff;
-			if(XAieGbl_MaskPoll(RegAddr, Mask, Value, TimeOut) !=
-					XAIE_SUCCESS) {
-				XAieLib_print("Error: Status poll time out"\
-						"for Col %d, Row %d\n", R, C);
-				return XAIE_CORE_STATUS_TIMEOUT;
-			} else {
-				continue;
-			}
-		}
+	RegAddr = DevInst->BaseAddr + CoreMod->CoreSts->RegOff +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if(XAieGbl_MaskPoll(RegAddr, Mask, Value, TimeOut) != XAIE_SUCCESS) {
+		XAieLib_print("Error: Status poll time out\n");
+		return XAIE_CORE_STATUS_TIMEOUT;
 	}
 
 	return XAIE_OK;
 
-}
-
-/*****************************************************************************/
-/*
-*
-* This API writes to the Core control register of a range of tiles to enable
-* and unreset the AIE core. This API writes to the register after some basic
-* checks. Any gracefullness required in enabling/disabling and/or resetting/
-* unresetting the core are required to be handled by the application layer.
-*
-* @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-static AieRC XAie_CoreEnableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
-{
-	return XAie_CoreControl(DevInst, Range, XAIE_ENABLE, XAIE_DISABLE);
-}
-/*****************************************************************************/
-/*
-*
-* This API writes to the Core control register of a range of tiles to disable
-* and reset the AIE core. This API writes to the register after some basic
-* checks. Any gracefullness required in enabling/disabling and/or resetting/
-* unresetting the core are required to be handled by the application layer.
-*
-* @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-static AieRC XAie_CoreDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
-{
-	return XAie_CoreControl(DevInst, Range, XAIE_DISABLE, XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -256,8 +182,7 @@ static AieRC XAie_CoreDisableRange(XAie_DevInst *DevInst, XAie_LocRange Range)
 ******************************************************************************/
 AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_CoreDisableRange(DevInst, Range);
+	return _XAie_CoreControl(DevInst, Loc, XAIE_DISABLE, XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -269,7 +194,7 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 * the core are required to be handled by the application layer.
 *
 * @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
+* @param	Loc: Location of the AIE tile.
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -278,64 +203,7 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 ******************************************************************************/
 AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_CoreEnableRange(DevInst, Range);
-}
-
-/*****************************************************************************/
-/*
-*
-* This API implements a blocking wait function to check the core to be in
-* done state for a range of AIE tiles. API comes out of the loop when core
-* status changes to done or the timeout elapses, whichever happens first.
-*
-* @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
-* @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
-*		be set to 500us. The TimeOut value passed is per tile.
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-static AieRC XAie_CoreWaitForDoneRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u32 TimeOut)
-{
-	const XAie_CoreMod *CoreMod;
-	u32 Mask;
-	u32 Value;
-	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
-	Mask = CoreMod->CoreSts->Done.Mask;
-	Value = 1 << CoreMod->CoreSts->Done.Lsb;
-	return XAie_CoreWaitStatus(DevInst, Range, TimeOut, Mask, Value);
-}
-
-/*****************************************************************************/
-/*
-*
-* This API implements a blocking wait function to check the core to be in
-* disable state for a range of AIE tiles. API comes out of the loop when core
-* status changes to disable or the timeout elapses, whichever happens first.
-*
-* @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
-* @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
-*		be set to 500us. The TimeOut value passed is per tile.
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-static AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, u32 TimeOut)
-{
-	const XAie_CoreMod *CoreMod;
-	u32 Mask;
-	u32 Value;
-	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
-	Mask = CoreMod->CoreSts->En.Mask;
-	Value = 0 << CoreMod->CoreSts->En.Lsb;
-	return XAie_CoreWaitStatus(DevInst, Range, TimeOut, Mask, Value);
+	return _XAie_CoreControl(DevInst, Loc, XAIE_ENABLE, XAIE_DISABLE);
 }
 
 /*****************************************************************************/
@@ -346,7 +214,7 @@ static AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst,
 * changes to done or the timeout elapses, whichever happens first.
 *
 * @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
+* @param	Loc: Location of the AIE tile.
 * @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
@@ -354,11 +222,15 @@ static AieRC XAie_CoreWaitForDisableRange(XAie_DevInst *DevInst,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut)
+AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 {
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_CoreWaitForDoneRange(DevInst, Range, TimeOut);
+	const XAie_CoreMod *CoreMod;
+	u32 Mask;
+	u32 Value;
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	Mask = CoreMod->CoreSts->Done.Mask;
+	Value = 1U << CoreMod->CoreSts->Done.Lsb;
+	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value);
 }
 
 /*****************************************************************************/
@@ -380,8 +252,13 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut)
 {
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_CoreWaitForDisableRange(DevInst, Range, TimeOut);
+	const XAie_CoreMod *CoreMod;
+	u32 Mask;
+	u32 Value;
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	Mask = CoreMod->CoreSts->En.Mask;
+	Value = 0U << CoreMod->CoreSts->En.Lsb;
+	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value);
 }
 
 /** @} */

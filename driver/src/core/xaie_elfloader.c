@@ -39,6 +39,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus	01/04/2020  Cleanup error messages
 * 1.2   Tejus   03/20/2020  Make internal functions static
+* 1.3   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * </pre>
 *
 ******************************************************************************/
@@ -321,7 +322,7 @@ void XAie_WriteElfSection(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *SectName,
 * memory followed by clearing of the BSS sections.
 *
 * @param	DevInst- Pointer to the Device instance structure.
-* @param	Range: Range of Aie Tiles.
+* @param	Loc: Coordinate of Aie Tile.
 * @param	ElfPtr: Path to the ELF file to be loaded into memory.
 *
 * @return	XAIE_OK on success, else error code.
@@ -329,8 +330,8 @@ void XAie_WriteElfSection(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *SectName,
 * @note		Internal only.
 *
 *******************************************************************************/
-static AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range,
-		u8 *ElfPtr, u8 LoadSym)
+AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *ElfPtr,
+		u8 LoadSym)
 {
 	FILE *Fd;
 	Elf32_Ehdr ElfHdr;
@@ -357,9 +358,7 @@ static AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 	u32 DoneSize;
 	uint64_t DmbAddr;
 	uint64_t TgtTileAddr;
-
 	const XAie_CoreMod *CoreMod;
-	XAie_LocType Loc;
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -367,20 +366,10 @@ static AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Invalid Device Range\n");
-		return XAIE_INVALID_RANGE;
-	}
-
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
-	}
-
-	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Range has different Tile Types\n");
-		return XAIE_INVALID_RANGE;
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
@@ -399,17 +388,13 @@ static AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 		return Status;
 	}
 
-	for(int R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
-		for(int C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
-			/* Send the stack range set command */
-			XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_SETSTACK, C, R,
-					StackSz.start, StackSz.end, XAIE_NULL);
-			/* Load symbols if enabled */
-			if(LoadSym == XAIE_ENABLE) {
-				XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_LOADSYM, C,
-						R, 0, 0, ElfPtr);
-			}
-		}
+	/* Send the stack range set command */
+	XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_SETSTACK, Loc.Col, Loc.Row,
+			StackSz.start, StackSz.end, XAIE_NULL);
+	/* Load symbols if enabled */
+	if(LoadSym == XAIE_ENABLE) {
+		XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_LOADSYM, Loc.Col, Loc.Row, 0,
+				0, ElfPtr);
 	}
 
 #endif
@@ -530,96 +515,67 @@ static AieRC XAie_LoadElfRange(XAie_DevInst *DevInst, XAie_LocRange Range,
 	}
 
 	Count = 0U;
-	for(u8 R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
-		for(u8 C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
-			Loc.Row = R;
-			Loc.Col = C;
-			while(Count < ElfHdr.e_shnum) {
-				/* Copy the program data sections to memory */
-				if((SectHdr[Count].sh_type == SHT_PROGBITS) &&
-						((SectHdr[Count].sh_flags &
-						  (SHF_ALLOC | SHF_EXECINSTR)) 
-						 || (SectHdr[Count].sh_flags &
-							 (SHF_ALLOC | SHF_WRITE)))) {
-					XAie_WriteElfSection(DevInst, Loc,
-							ShName[Count], 
-							&SectHdr[Count], Fd);
-				}
-				/* Zero out the bss sections */
-				if((SectHdr[Count].sh_type == SHT_NOBITS) &&
-						(strstr(ShName[Count], "bss.DMb")
-						 != NULL)) {
-					XAieLib_print("Zeroing out the bss sections\n");
-					TgtTileAddr = XAie_GetTargetTileAddr(
-							DevInst, Loc,
-							SectHdr[Count].sh_addr);
-					SectAddr = SectHdr[Count].sh_addr;
-					RemSize = SectHdr[Count].sh_size;
+	while(Count < ElfHdr.e_shnum) {
+		/* Copy the program data sections to memory */
+		if((SectHdr[Count].sh_type == SHT_PROGBITS) &&
+				((SectHdr[Count].sh_flags &
+				  (SHF_ALLOC | SHF_EXECINSTR)) ||
+				 (SectHdr[Count].sh_flags &
+				  (SHF_ALLOC | SHF_WRITE)))) {
+			XAie_WriteElfSection(DevInst, Loc, ShName[Count],
+					&SectHdr[Count], Fd);
+		}
+		/* Zero out the bss sections */
+		if((SectHdr[Count].sh_type == SHT_NOBITS) &&
+				(strstr(ShName[Count], "bss.DMb") != NULL)) {
+			XAieLib_print("Zeroing out the bss sections\n");
+			TgtTileAddr = XAie_GetTargetTileAddr(DevInst, Loc,
+					SectHdr[Count].sh_addr);
+			SectAddr = SectHdr[Count].sh_addr;
+			RemSize = SectHdr[Count].sh_size;
+			DoneSize = 0U;
+
+			/* Use 32 bit loads to match sim output */
+			for(Idx = 0U; Idx < RemSize; Idx += 4U){
+				/* Mask address as per the Data
+				   memory offset*/
+				DmbOff = (SectAddr & (CoreMod->CoreMemSize - 1)) +
+					Idx;
+
+				if(DmbOff & CoreMod->CoreMemSize) {
+				/*
+				 * 32/64 KB boundary cross. Data section
+				 * moving to the memory bank of next
+				 * cardinal direction. Change the target
+				 * tile address
+				 */
+					SectHdr[Count].sh_addr
+						+= CoreMod->CoreMemSize;
+					TgtTileAddr =
+						XAie_GetTargetTileAddr(DevInst, Loc,
+								(SectHdr[Count].sh_addr &
+								 (CoreMod->CoreEastAddrEnd - CoreMod->CoreSouthAddrEnd)));
+					SectAddr = 0x0U;
+					Idx = 0U;
+					DmbOff = 0U;
+					RemSize -= DoneSize;
 					DoneSize = 0U;
-
-					/* Use 32 bit loads to match sim output */
-					for(Idx = 0U; Idx < RemSize; Idx += 4U){
-						/* Mask address as per the Data 
-						   memory offset*/
-						DmbOff = (SectAddr &
-								(CoreMod->CoreMemSize - 1)) + Idx;
-
-						if(DmbOff & CoreMod->CoreMemSize) {
-                                        /*
-                                         * 32/64 KB boundary cross. Data section
-                                         * moving to the memory bank of next
-                                         * cardinal direction. Change the target
-                                         * tile address
-                                         */
-							SectHdr[Count].sh_addr
-								+= CoreMod->CoreMemSize;
-							TgtTileAddr =
-								XAie_GetTargetTileAddr(DevInst, Loc,
-										(SectHdr[Count].sh_addr &
-										 (CoreMod->CoreEastAddrEnd - CoreMod->CoreSouthAddrEnd)));
-							SectAddr = 0x0U;
-							Idx = 0U;
-							DmbOff = 0U;
-							RemSize -= DoneSize;
-							DoneSize = 0U;
-						}
-
-						DmbAddr = TgtTileAddr +
-							DevInst->DevProp.DevMod[TileType].MemMod->MemAddr
-							+ DmbOff;
-						XAieGbl_Write32(DmbAddr, 0U);
-						DoneSize += 4U;
-					}
 				}
-				Count++;
+
+				DmbAddr = TgtTileAddr +
+					DevInst->DevProp.DevMod[TileType].MemMod->MemAddr
+					+ DmbOff;
+				XAieGbl_Write32(DmbAddr, 0U);
+				DoneSize += 4U;
 			}
 		}
+
+		Count++;
 	}
+
 	fclose(Fd);
 
 	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the API to load the specified ELF to the target AIE Tile program
-* memory followed by clearing of the BSS sections.
-*
-* @param	DevInst- Pointer to the Device instance structure.
-* @param	Loc: Coordinate of Aie Tile.
-* @param	ElfPtr: Path to the ELF file to be loaded into memory.
-*
-* @return	XAIE_OK on success, else error code.
-*
-* @note		None.
-*
-*******************************************************************************/
-AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *ElfPtr,
-		u8 LoadSym)
-{
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_LoadElfRange(DevInst, Range, ElfPtr, LoadSym);
 }
 
 /** @} */
