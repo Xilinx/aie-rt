@@ -44,6 +44,7 @@
 * 1.5   Tejus   03/22/2020  Remove data strcutures from initial dma api
 *			    implementation
 * 1.6   Tejus   03/23/2020  Add data structures for common dma apis.
+* 1.7   Tejus   04/13/2020  Remove range structure and helper function.
 * </pre>
 *
 ******************************************************************************/
@@ -110,15 +111,6 @@ typedef struct {
 	u8 Row;
 	u8 Col;
 } XAie_LocType;
-
-/*
- * This typedef contains attributes for a range of AIE tiles.
- */
-typedef struct {
-	XAie_LocType Start;
-	XAie_LocType End;
-	XAie_LocType Stride;
-} XAie_LocRange;
 
 /*
  * This enum contains all the Stream Switch Port types. These enums are used to
@@ -387,28 +379,6 @@ static inline XAie_LocType XAie_TileLoc(u8 col, u8 row)
 {
 	XAie_LocType Loc = { row, col };
 	return Loc;
-}
-
-/*****************************************************************************/
-/*
-*
-* This API returns a structure of type XAie_LocRange which captures a range of
-* AIE tiles.
-*
-* @param	Start: starting location of the range.
-* @param	End: ending location of the range.
-* @param	Stride: stride for row and column
-*
-* @return	Range: strcuture containing range of AIE Tiles.
-*
-* @note		None.
-*
-******************************************************************************/
-static inline XAie_LocRange XAie_TileRange(XAie_LocType Start, XAie_LocType End,
-		XAie_LocType Stride)
-{
-	XAie_LocRange Range = { Start, End, Stride };
-	return Range;
 }
 
 /*****************************************************************************/
