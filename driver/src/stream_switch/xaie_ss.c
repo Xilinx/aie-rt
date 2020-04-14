@@ -40,6 +40,7 @@
 * 1.3   Tejus   03/20/2020  Make internal function static
 * 1.4   Tejus   03/21/2020  Fix slave port configuration bug
 * 1.5   Tejus   03/21/2020  Add stream switch packet switch mode apis
+* 1.6   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * </pre>
 *
 ******************************************************************************/
@@ -211,7 +212,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 * port of the stream switch switch in ciruit switch mode.
 *
 * @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
+* @param	Loc: Loc of AIE Tiles
 * @param	Slave - Slave port type.
 * @param	SlvPortNum- Slave port number.
 * @param	Master - Master port type.
@@ -223,8 +224,8 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 * @note		Internal only.
 *
 *******************************************************************************/
-static AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
-		XAie_LocRange Range, StrmSwPortType Slave, u8 SlvPortNum,
+static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
+		XAie_LocType Loc, StrmSwPortType Slave, u8 SlvPortNum,
 		StrmSwPortType Master, u8 MstrPortNum, u8 Enable)
 {
 	AieRC RC;
@@ -244,25 +245,15 @@ static AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(_XAie_CheckLocRange(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Invalid Device Range\n");
-		return XAIE_INVALID_RANGE;
-	}
-
 	if((Slave >= SS_PORT_TYPE_MAX) || (Master >= SS_PORT_TYPE_MAX)) {
 		XAieLib_print("Error: Invalid Stream Switch Ports\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
-	}
-
-	if(_XAie_CheckRangeTileType(DevInst, Range) != XAIE_OK) {
-		XAieLib_print("Error: Range has different Tile Types\n");
-		return XAIE_INVALID_RANGE;
 	}
 
 	/* Get stream switch module pointer from device instance */
@@ -290,75 +281,16 @@ static AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	for(u8 R = Range.Start.Row; R <= Range.End.Row; R += Range.Stride.Row) {
-		for(u8 C = Range.Start.Col; C <= Range.End.Col; C += Range.Stride.Col) {
+	/* Compute absolute address and write to register */
+	MstrAddr = DevInst->BaseAddr + MstrOff +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	SlvAddr = DevInst->BaseAddr + SlvOff +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-			/* Compute absolute address and write to register */
-			MstrAddr = DevInst->BaseAddr +
-				_XAie_GetTileAddr(DevInst, R ,C) + MstrOff;
-			SlvAddr = DevInst->BaseAddr +
-				_XAie_GetTileAddr(DevInst, R ,C) + SlvOff;
-
-			XAieGbl_Write32(MstrAddr, MstrVal);
-			XAieGbl_Write32(SlvAddr, SlvVal);
-		}
-	}
+	XAieGbl_Write32(MstrAddr, MstrVal);
+	XAieGbl_Write32(SlvAddr, SlvVal);
 
 	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API is used to enable the connection between the selected master port
-* to the specified slave port of the stream switch in ciruit switch mode.
-*
-* @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
-* @param	Slave - Slave port type.
-* @param	SlvPortNum- Slave port number.
-* @param	Master - Master port type.
-* @param	MstrPortNum- Master port number.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal Only.
-*
-*******************************************************************************/
-static AieRC XAie_StrmConnCctEnableRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, StrmSwPortType Slave, u8 SlvPortNum,
-		StrmSwPortType Master, u8 MstrPortNum)
-{
-
-	return XAie_StreamSwitchConfigureCct(DevInst, Range, Slave, SlvPortNum,
-			Master, MstrPortNum, XAIE_ENABLE);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API is used to disable the connection between the selected master port
-* to the specified slave port of the stream switch switch in ciruit switch mode.
-*
-* @param	DevInst: Device Instance
-* @param	Range: Range of AIE Tiles
-* @param	Slave - Slave port type.
-* @param	SlvPortNum- Slave port number.
-* @param	Master - Master port type.
-* @param	MstrPortNum- Master port number.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static AieRC XAie_StrmConnCctDisableRange(XAie_DevInst *DevInst,
-		XAie_LocRange Range, StrmSwPortType Slave, u8 SlvPortNum,
-		StrmSwPortType Master, u8 MstrPortNum)
-{
-
-	return XAie_StreamSwitchConfigureCct(DevInst, Range, Slave, SlvPortNum,
-			Master, MstrPortNum, XAIE_DISABLE);
 }
 
 /*****************************************************************************/
@@ -383,9 +315,8 @@ AieRC XAie_StrmConnCctEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum)
 {
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_StrmConnCctEnableRange(DevInst, Range, Slave, SlvPortNum,
-			Master, MstrPortNum);
+	return _XAie_StreamSwitchConfigureCct(DevInst, Loc, Slave, SlvPortNum,
+			Master, MstrPortNum, XAIE_ENABLE);
 
 }
 
@@ -411,9 +342,8 @@ AieRC XAie_StrmConnCctDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum)
 {
-	XAie_LocRange Range = { Loc, Loc, { 1, 1 } };
-	return XAie_StrmConnCctDisableRange(DevInst, Range, Slave, SlvPortNum,
-			Master, MstrPortNum);
+	return _XAie_StreamSwitchConfigureCct(DevInst, Loc, Slave, SlvPortNum,
+			Master, MstrPortNum, XAIE_DISABLE);
 
 }
 
@@ -444,7 +374,6 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 RegVal = 0U;
 	u8 TileType;
 	const XAie_StrmMod *StrmMod;
-	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -457,12 +386,7 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -569,7 +493,6 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 	u8 TileType;
 	const XAie_StrmMod *StrmMod;
 	u32 Config = 0U;
-	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -587,12 +510,7 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
@@ -712,7 +630,6 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	u32 RegVal = 0U;
 	const XAie_StrmMod *StrmMod;
-	XAie_LocRange Range = { Loc, Loc, { 1U, 1U } };
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -727,12 +644,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * TODO: Remove getting the tile type from Range once helper function
-	 * is avaialble. This will work for now as _XAie_GetTileType returns
-	 * the tiletype of the first tile in the range.
-	 */
-	TileType = _XAie_GetTileType(DevInst, Range);
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
