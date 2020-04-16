@@ -75,8 +75,6 @@
 
 #define XAie_print			XAieLib_print
 #define XAie_usleep			XAieLib_usleep
-#define XAie_AssertNonvoid		XAieLib_AssertNonvoid
-#define XAie_AssertVoid			XAieLib_AssertVoid
 
 #define XAie_SetField(Val, Lsb, Mask)	(((u32)Val << Lsb) & Mask)
 #define XAie_GetField(Val, Lsb, Mask)	(((u32)Val & Mask) >> Lsb)
