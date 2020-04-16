@@ -4,7 +4,7 @@ CC ?= gcc
 CP = cp
 EXT = ../examples/aie_sim_test/ext/top
 LIBSOURCES = $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)
-CFLAGS += -DXAIE_WRKARND_CRVO1692 -Wall
+CFLAGS += -DXAIE_WRKARND_CRVO1692 -Wall -Wextra
 OUTS = $(LIBSOURCES:.c=.o)
 INCLUDEFILES = ./*/*.h
 INCLUDEDIR = ../include
