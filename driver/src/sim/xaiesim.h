@@ -80,6 +80,9 @@
 #endif
 #define XAieSim_usleep                   usleep
 
+#define XAieSim_AssertNonvoid(arg)	{}
+#define XAieSim_AssertVoid(arg)          {}
+
 #define XAIESIM_IO_MODE_ESS		0U
 #define XAIESIM_IO_MODE_SOCK		1U
 #define XAIESIM_IO_MODE_CDO		2U

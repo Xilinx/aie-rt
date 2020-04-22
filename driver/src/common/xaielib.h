@@ -89,6 +89,8 @@ u32 XAieLib_NPIRead32(u64 Addr);
 void XAieLib_NPIWrite32(u64 Addr, u32 Data);
 u32 XAieLib_NPIMaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs);
 
+u32 XAieLib_AssertNonvoid(u8 Cond);
+void XAieLib_AssertVoid(u8 Cond);
 int XAieLib_usleep(u64 Usec);
 
 struct XAieGbl_Tile;

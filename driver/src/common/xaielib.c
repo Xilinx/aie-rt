@@ -51,7 +51,6 @@
 * 2.2  Nishad  05/16/2019  Fix deallocation of pointer not on heap MISRA-c
 * 				mandatory violation
 * 2.3  Tejus   09/24/2019  Modified and added for aie
-* 2.4  Wendy   04/15/2020  Remove assert
 * </pre>
 *
 ******************************************************************************/
@@ -103,6 +102,46 @@ typedef struct XAieLib_MemInst
 } XAieLib_MemInst;
 
 /************************** Function Definitions *****************************/
+
+/*****************************************************************************/
+/**
+*
+* This asserts if the condition doesn't meet.
+*
+* @param	Cond: Condition to meet. Should be 0 or 1.
+*
+* @return	0
+*
+* @note		None.
+*
+*******************************************************************************/
+u32 XAieLib_AssertNonvoid(u8 Cond)
+{
+#ifdef __AIESIM__
+	XAieSim_AssertNonvoid(Cond);
+#endif
+	return 0;
+}
+
+/*****************************************************************************/
+/**
+*
+* This asserts if the condition doesn't meet. Can be used for void return
+* function.
+*
+* @param	Cond: Condition to meet. Should be 0 or 1.
+*
+* @return	None.
+*
+* @note		None.
+*
+*******************************************************************************/
+void XAieLib_AssertVoid(u8 Cond)
+{
+#ifdef __AIESIM__
+	XAieSim_AssertVoid(Cond);
+#endif
+}
 
 /*****************************************************************************/
 /**
