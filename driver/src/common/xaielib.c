@@ -52,7 +52,6 @@
 * 				mandatory violation
 * 2.3  Tejus   09/24/2019  Modified and added for aie
 * 2.4  Wendy   04/15/2020  Remove assert
-* 2.5  Wendy   04/15/2020  fix unused variable compilation warnings
 * </pre>
 *
 ******************************************************************************/
@@ -121,10 +120,7 @@ int XAieLib_usleep(u64 Usec)
 {
 #ifdef __AIESIM__
 	return XAieSim_usleep(Usec);
-#else
-	(void)Usec;
 #endif
-	return 0;
 }
 
 /*****************************************************************************/
@@ -159,7 +155,9 @@ void XAieLib_InitDev(void)
 *******************************************************************************/
 void XAieLib_InterruptUnregisterIsr(int Offset)
 {
-	(void)Offset;
+#ifdef __AIESIM__
+	return;
+#endif
 }
 /*****************************************************************************/
 /**
@@ -177,10 +175,9 @@ void XAieLib_InterruptUnregisterIsr(int Offset)
 *******************************************************************************/
 int XAieLib_InterruptRegisterIsr(int Offset, int (*Handler) (void *Data), void *Data)
 {
-	(void)Offset;
-	(void)Handler;
-	(void)Data;
+#ifdef __AIESIM__
 	return XAIELIB_FAILURE;
+#endif
 }
 
 /*****************************************************************************/
@@ -198,16 +195,12 @@ int XAieLib_InterruptRegisterIsr(int Offset, int (*Handler) (void *Data), void *
 void XAieLib_IntPrint(const char *Format, ...)
 {
 #ifdef __AIESIM__
+	/*
+	 * If XAieSim_print() is used, the driver should be built with
+	 * XAIE_DEBUG. Use print directly instead.
+	 */
 	printf(Format);
-#elif defined __AIEBAREMTL__
-	xil_printf(Format);
-#else
-	va_list argptr;
-	va_start(argptr, Format);
-	vprintf(Format, argptr);
-	va_end(argptr);
 #endif
-
 }
 
 /*****************************************************************************/
@@ -226,8 +219,9 @@ void XAieLib_IntPrint(const char *Format, ...)
 *******************************************************************************/
 XAieLib_MemInst *XAieLib_MemInit(u8 idx)
 {
-	(void)idx;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -244,7 +238,8 @@ XAieLib_MemInst *XAieLib_MemInit(u8 idx)
 *******************************************************************************/
 void XAieLib_MemFinish(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
+#ifdef __AIESIM__
+#endif
 }
 
 /*****************************************************************************/
@@ -265,11 +260,9 @@ void XAieLib_MemFinish(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 XAieLib_MemInst *XAieLib_MemAttach(u64 Vaddr, u64 Paddr, u64 Size, u64 MemHandle)
 {
-	(void)Vaddr;
-	(void)Paddr;
-	(void)Size;
-	(void)MemHandle;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -286,7 +279,8 @@ XAieLib_MemInst *XAieLib_MemAttach(u64 Vaddr, u64 Paddr, u64 Size, u64 MemHandle
 *******************************************************************************/
 void XAieLib_MemDetach(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
+#ifdef __AIESIM__
+#endif
 }
 
 /*****************************************************************************/
@@ -304,9 +298,9 @@ void XAieLib_MemDetach(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 XAieLib_MemInst *XAieLib_MemAllocate(u64 Size, u32 Attr)
 {
-	(void)Size;
-	(void)Attr;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -323,7 +317,8 @@ XAieLib_MemInst *XAieLib_MemAllocate(u64 Size, u32 Attr)
 *******************************************************************************/
 void XAieLib_MemFree(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
+#ifdef __AIESIM__
+#endif
 }
 
 /*****************************************************************************/
@@ -340,8 +335,9 @@ void XAieLib_MemFree(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 u8 XAieLib_MemSyncForCPU(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
-	return XAIE_OK;
+#ifdef __AIESIM__
+	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -358,8 +354,9 @@ u8 XAieLib_MemSyncForCPU(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 u8 XAieLib_MemSyncForDev(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
-	return XAIE_OK;
+#ifdef __AIESIM__
+	return 0;
+#endif
 
 }
 
@@ -377,8 +374,9 @@ u8 XAieLib_MemSyncForDev(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 u64 XAieLib_MemGetSize(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -397,8 +395,9 @@ u64 XAieLib_MemGetSize(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 u64 XAieLib_MemGetVaddr(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -416,8 +415,9 @@ u64 XAieLib_MemGetVaddr(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 u64 XAieLib_MemGetPaddr(XAieLib_MemInst *XAieLib_MemInstPtr)
 {
-	(void)XAieLib_MemInstPtr;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -436,9 +436,8 @@ u64 XAieLib_MemGetPaddr(XAieLib_MemInst *XAieLib_MemInstPtr)
 *******************************************************************************/
 void XAieLib_MemWrite32(XAieLib_MemInst *XAieLib_MemInstPtr, u64 Addr, u32 Data)
 {
-	(void)XAieLib_MemInstPtr;
-	(void)Addr;
-	(void)Data;
+#ifdef __AIESIM__
+#endif
 }
 
 /*****************************************************************************/
@@ -456,9 +455,9 @@ void XAieLib_MemWrite32(XAieLib_MemInst *XAieLib_MemInstPtr, u64 Addr, u32 Data)
 *******************************************************************************/
 u32 XAieLib_MemRead32(XAieLib_MemInst *XAieLib_MemInstPtr, u64 Addr)
 {
-	(void)XAieLib_MemInstPtr;
-	(void)Addr;
+#ifdef __AIESIM__
 	return 0;
+#endif
 }
 
 /*****************************************************************************/
@@ -586,13 +585,6 @@ void XAieLib_WriteCmd(u8 Command, u8 ColId, u8 RowId, u32 CmdWd0,
 {
 #ifdef __AIESIM__
 	XAieSim_WriteCmd(Command, ColId, RowId, CmdWd0, CmdWd1, CmdStr);
-#else
-	(void)Command;
-	(void)ColId;
-	(void)RowId;
-	(void)CmdWd0;
-	(void)CmdWd1;
-	(void)CmdStr;
 #endif
 }
 
@@ -640,9 +632,6 @@ u32 XAieLib_NPIRead32(u64 Addr)
 {
 #ifdef __AIESIM__
 	return XAieSim_NPIRead32(Addr);
-#else
-	(void)Addr;
-	return 0;
 #endif
 }
 
@@ -663,9 +652,6 @@ void XAieLib_NPIWrite32(u64 Addr, u32 Data)
 {
 #ifdef __AIESIM__
 	XAieSim_NPIWrite32(Addr, Data);
-#else
-	(void)Addr;
-	(void)Data;
 #endif
 }
 
@@ -686,12 +672,10 @@ void XAieLib_NPIWrite32(u64 Addr, u32 Data)
 *******************************************************************************/
 void XAieLib_NPIMaskWrite32(u64 Addr, u32 Mask, u32 Data)
 {
+	u32 RegVal;
+
 #ifdef __AIESIM__
 	XAieSim_NPIMaskWrite32(Addr, Mask, Data);
-#else
-	(void)Addr;
-	(void)Mask;
-	(void)Data;
 #endif
 }
 /*****************************************************************************/
@@ -718,11 +702,6 @@ u32 XAieLib_NPIMaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs)
 	if (XAieSim_NPIMaskPoll(Addr, Mask, Value, TimeOutUs) == XAIESIM_SUCCESS) {
 		Ret = XAIELIB_SUCCESS;
 	}
-#else
-	(void)Addr;
-	(void)Mask;
-	(void)Value;
-	(void)TimeOutUs;
 #endif
 	return Ret;
 }
