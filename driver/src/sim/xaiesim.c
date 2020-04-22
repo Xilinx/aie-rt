@@ -54,7 +54,6 @@
 * 1.9  Hyun    01/08/2018  Add the MaskPoll
 * 2.0  Hyun    04/05/2018  NPI support
 * 2.1  Tejus   10/03/2019  Restructure directory for AIE
-* 2.2  Wendy   04/15/2020  Remove unused variable warning
 * </pre>
 *
 ******************************************************************************/
@@ -619,9 +618,6 @@ void XAieSim_Init(uint8 NumCols, uint8 NumRows)
                         }
                 }
         }
-#else
-	(void)NumCols;
-	(void)NumRows;
 #endif
 }
 
