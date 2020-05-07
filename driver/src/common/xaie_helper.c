@@ -39,6 +39,7 @@
 * 1.2   Tejus   01/04/2020  Cleanup error messages
 * 1.3   Tejus   04/13/2020  Add api to get tile type from Loc
 * 1.4   Tejus   04/13/2020  Remove helper functions for range apis
+* 1.5   Dishita 04/29/2020  Add api to check module & tile type combination
 * </pre>
 *
 ******************************************************************************/
@@ -87,6 +88,48 @@ u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 	XAieLib_print("Error: Cannot find Tile Type\n");
 
 	return XAIEGBL_TILE_TYPE_MAX;
+}
+
+/*****************************************************************************/
+/**
+* This function is used to check for module and tiletype combination.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of the AIE tile.
+* @param	Module:	XAIE_MEM_MOD - memory module
+* 			XAIE_CORE_MOD - core module
+* 			XAIE_PL_MOD - pl module
+* @return       XAIE_OK for correct combination of Module and tile type
+* 		XAIE_INVALID_ARGS for incorrect combination of module and tile
+* 		type
+*
+* @note         Internal API only.
+*
+*******************************************************************************/
+AieRC _XAie_CheckModule(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module)
+{
+	u8 TileType;
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE && Module > XAIE_CORE_MOD) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(TileType == (XAIEGBL_TILE_TYPE_SHIMPL ||
+		XAIEGBL_TILE_TYPE_SHIMNOC) && Module != XAIE_PL_MOD) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE &&
+		Module != XAIE_MEM_MOD) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	return XAIE_OK;
 }
 
 /** @} */

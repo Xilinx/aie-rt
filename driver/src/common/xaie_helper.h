@@ -70,6 +70,7 @@ static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, int R, int C)
 }
 
 u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
-
+AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
 #endif		/* end of protection macro */
 /** @} */
