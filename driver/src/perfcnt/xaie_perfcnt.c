@@ -1,8 +1,26 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2020 Xilinx, Inc.  All rights reserved.
-* SPDX-License-Identifier: MIT
+*
+* Copyright (C) 2020 Xilinx, Inc.  All rights reserved.
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMANGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*
 ******************************************************************************/
-
 
 /*****************************************************************************/
 /**
@@ -19,6 +37,7 @@
 * 1.0   Dishita 11/22/2019  Initial creation
 * 1.1   Tejus   04/13/2020  Remove use of range in apis
 * 1.2   Dishita 04/16/2020  Fix compiler warnings
+* 1.3   Dishita 05/04/2020  Added Module argument to all apis
 *
 * </pre>
 *
@@ -34,16 +53,20 @@
 /*****************************************************************************/
 /* This API reads the given counter for the given range of tiles
 *
-* @param        DevInst: Device Instance
-* @param        Loc: Location of AIE tile
-* @param        Counter:Performance Counter
-* @return       XAIE_OK on success
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @param	Module: Module of tile.
+*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			For Pl or Shim tile - XAIE_PL_MOD,
+*			For Mem tile - XAIE_MEM_MOD.
+* @param	Counter:Performance Counter
+* @return	XAIE_OK on success
 *
 * @note
 *
 ******************************************************************************/
 u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_PerfCounters Counter)
+		XAie_ModuleType Module, u8 Counter)
 {
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
@@ -62,15 +85,10 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
-	/*
-	 * Checking if the counter is memory module counter of AIE tile
-	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
-	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
-	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
-		Counter -= XAIE_MEMPERFCOUNTER_0;
-		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
+	if(Module == XAIE_PL_MOD) {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0U];
+	} else {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[Module];
 	}
 
 	/* Checking for valid Counter */
@@ -86,25 +104,30 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Compute absolute address and write to register */
 	CounterRegAddr = DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row,
 						Loc.Col) + CounterRegOffset;
+
 	return XAieGbl_Read32(CounterRegAddr);
 }
 /*****************************************************************************/
 /* This API configures the control registers corresponding to the counters
 *  with the start and stop event for the given tile
 *
-* @param        DevInst: Device Instance
-* @param        Loc: Location of the tile
-* @param        Counter:Performance Counter
-* @param        StartEvent:Event that triggers start to the counter
-* @Param        StopEvent: Event that triggers stop to the counter
-* @return       XAIE_OK on success
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the tile
+* @param	Module: Module of tile.
+*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			For Pl or Shim tile - XAIE_PL_MOD,
+*			For Mem tile - XAIE_MEM_MOD.
+* @param	Counter:Performance Counter
+* @param	StartEvent:Event that triggers start to the counter
+* @Param	StopEvent: Event that triggers stop to the counter
+* @return	XAIE_OK on success
 *
 * @note
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_PerfCounters Counter, XAie_Events StartEvent,
-		XAie_Events StopEvent)
+		XAie_ModuleType Module, u8 Counter,
+		XAie_Events StartEvent, XAie_Events StopEvent)
 {
 	u32 RegOffset, FldVal, FldMask;
 	u64 RegAddr;
@@ -124,17 +147,12 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
-	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
-	/*
-	 * Checking if the counter is memory module counter of AIE tile
-	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
-	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
-	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
-		Counter -= XAIE_MEMPERFCOUNTER_0;
-		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[1];
+	if(Module == XAIE_PL_MOD) {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0U];
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[Module];
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
 	/* check if the event passed as input is corresponding to the module */
@@ -183,6 +201,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = DevInst->BaseAddr +
 			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+
 	return XAIE_OK;
 }
 
@@ -190,17 +209,22 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 /* This API configures the control registers corresponding to the counter
 *  with the reset event for the given range of tiles
 *
-* @param        DevInst: Device Instance
-* @param        Loc: Location of AIE tile
-* @param        Counter:Performance Counter
-* @param        ResetEvent:Event that triggers reset to the counter
-* @return       XAIE_OK on success
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @param	Module: Module of tile.
+*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			For Pl or Shim tile - XAIE_PL_MOD,
+*			For Mem tile - XAIE_MEM_MOD.
+* @param	Counter:Performance Counter
+* @param	ResetEvent:Event that triggers reset to the counter
+* @return	XAIE_OK on success
 *
 * @note
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_PerfCounters Counter, XAie_Events ResetEvent)
+		XAie_ModuleType Module, u8 Counter,
+		XAie_Events ResetEvent)
 {
 	u32 ResetRegOffset, ResetFldMask;
 	u64 ResetRegAddr, ResetFldVal;
@@ -220,17 +244,12 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
-	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
-	/*
-	 * Checking if the counter is memory module counter of AIE tile
-	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
-	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
-	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
-		Counter -= XAIE_MEMPERFCOUNTER_0;
-		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[1];
+	if(Module == XAIE_PL_MOD) {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0U];
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[Module];
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
 	/* check if the event passed as input is corresponding to the module */
@@ -272,23 +291,30 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	ResetRegAddr = DevInst->BaseAddr +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + ResetRegOffset;
 	XAieGbl_MaskWrite32(ResetRegAddr, ResetFldMask, ResetFldVal);
+
 	return XAIE_OK;
 }
 
 /*****************************************************************************/
 /* This API sets the performance counter event value for the given tile.
 *
-* @param        DevInst: Device Instance
-* @param        Loc: Location of Tile
-* @param        Counter:Performance Counter
-* @param        CounterVal:Performance Counter Value
-* @return       XAIE_OK on success
+* @param	DevInst: Device Instance
+* @param	Loc: Location of Tile
+* @param	Module: Module of tile.
+*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			For Pl or Shim tile - XAIE_PL_MOD,
+*			For Mem tile - XAIE_MEM_MOD.
+*
+* @param	Counter:Performance Counter
+* @param	CounterVal:Performance Counter Value
+* @return	XAIE_OK on success
 *
 * @note
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_PerfCounters Counter, u32 CounterVal)
+		XAie_ModuleType Module, u8 Counter,
+		u32 CounterVal)
 {
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
@@ -307,15 +333,10 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
-	/*
-	 * Checking if the counter is memory module counter of AIE tile
-	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
-	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
-	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
-		Counter -= XAIE_MEMPERFCOUNTER_0;
-		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
+	if(Module == XAIE_PL_MOD) {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0U];
+	} else {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[Module];
 	}
 
 	/* Checking for valid Counter */
@@ -332,22 +353,27 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CounterRegAddr = DevInst->BaseAddr +
 		_XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) + CounterRegOffset;
 	XAieGbl_Write32(CounterRegAddr,CounterVal);
+
 	return XAIE_OK;
 }
 /*****************************************************************************/
 /* This API sets the performance counter event value for the given tile.
 *
-* @param        DevInst: Device Instance
-* @param        Loc: Location of AIE tile
-* @param        Counter:Performance Counter
-* @param        EventVal:Event value to set
-* @return       XAIE_OK on success
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @param	Module: Module of tile.
+*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			For Pl or Shim tile - XAIE_PL_MOD,
+*			For Mem tile - XAIE_MEM_MOD.
+* @param	Counter:Performance Counter
+* @param	EventVal:Event value to set
+* @return	XAIE_OK on success
 *
 * @note
 *
 ******************************************************************************/
 AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_PerfCounters Counter, u32 EventVal)
+		XAie_ModuleType Module, u8 Counter, u32 EventVal)
 {
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
@@ -366,15 +392,10 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
-	/*
-	 * Checking if the counter is memory module counter of AIE tile
-	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
-	 * or 5, it is implied to be counter 0 or 1 of mem module of aie tile.
-	 */
-	if(Counter >= XAIE_MEMPERFCOUNTER_0) {
-		Counter -= XAIE_MEMPERFCOUNTER_0;
-		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[1];
+	if(Module == XAIE_PL_MOD) {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0U];
+	} else {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[Module];
 	}
 
 	/* Checking for valid Counter */
@@ -391,5 +412,6 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CounterRegAddr = DevInst->BaseAddr +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + CounterRegOffset;
 	XAieGbl_Write32(CounterRegAddr,EventVal);
+
 	return XAIE_OK;
 }
