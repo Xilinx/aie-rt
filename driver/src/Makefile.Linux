@@ -9,7 +9,7 @@ OUTS = $(LIBSOURCES:.c=.o)
 INCLUDEFILES = ./*/*.h
 INCLUDEDIR = ../include
 NAME := xaiengine
-MAJOR = 1
+MAJOR = 2
 MINOR = 0
 VERSION = $(MAJOR).$(MINOR)
 
