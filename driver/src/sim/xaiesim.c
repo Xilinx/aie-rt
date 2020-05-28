@@ -34,15 +34,13 @@
 * 1.9  Hyun    01/08/2018  Add the MaskPoll
 * 2.0  Hyun    04/05/2018  NPI support
 * 2.1  Tejus   10/03/2019  Restructure directory for AIE
+* 2.2  Tejus   05/27/2020  Remove __AIESIM_SOCK__ related code.
 * </pre>
 *
 ******************************************************************************/
 #include "stdlib.h"
 #include "xaiesim.h"
 
-#ifdef __AIESIM_SOCK__
-#include "xsock.h"
-#endif
 #ifdef __AIESIM_ESS__
 #include "main_rts.h"
 #include "cdo_rts.h"
@@ -77,9 +75,6 @@ typedef struct XAieSim_IO_Funcs {
 #if defined(__AIESIM_ESS__)
 static const XAieSim_IO_Funcs Ess_IO_Funcs;
 static const XAieSim_IO_Funcs *IO_Funcs = &Ess_IO_Funcs;
-#elif defined(__AIESIM_SOCK__)
-static const XAieSim_IO_Funcs Sock_IO_Funcs;
-static const XAieSim_IO_Funcs *IO_Funcs = &Sock_IO_Funcs;
 #else
 static const XAieSim_IO_Funcs *IO_Funcs = NULL;
 #endif
@@ -274,81 +269,6 @@ static const XAieSim_IO_Funcs Ess_IO_Funcs = {
 };
 #endif
 
-#ifdef __AIESIM_SOCK__
-
-/*
- * Socket client IO functions
- */
-
-static inline uint32 XAieSim_SockRead32(uint64_t Addr)
-{
-	return XSock_Read32(Addr);
-}
-
-static inline void XAieSim_SockRead128(uint64_t Addr, uint32 *Data)
-{
-	uint8 Idx;
-
-	/* AIE sim no support yet, so do 32-bit reads for now */
-	for(Idx = 0U; Idx < 4U; Idx++) {
-		Data[Idx] = XSock_Read32(Addr + Idx*4U);
-	}
-}
-
-static inline void XAieSim_SockWrite32(uint64_t Addr, uint32 Data)
-{
-	XSock_Write32(Addr, Data);
-}
-
-static inline void XAieSim_SockWrite128(uint64_t Addr, uint32 *Data)
-{
-	XSock_Write128(Addr, Data);
-}
-
-static inline void XAieSim_SockMaskWrite32(uint64_t Addr, uint32 Mask,
-		uint32 Data)
-{
-	uint32 RegVal = XSock_Read32(Addr);
-
-	RegVal &= ~Mask;
-	RegVal |= Data;
-	XSock_Write32(Addr, RegVal);
-}
-
-static inline void  XAieSim_SockWriteCmd(uint8 Command, uint8 ColId,
-		uint8 RowId, uint32 CmdWd0, uint32 CmdWd1, uint8 *CmdStr)
-{
-	XSock_WriteCmd(Command, ColId, RowId, CmdWd0, CmdWd1, CmdStr);
-}
-
-static inline void XAieSim_SockMaskPoll(uint64_t Addr, uint32 Mask,
-		uint32 Value, uint32 TimeOutUs)
-{
-	uint32 Ret = XAIESIM_FAILURE;
-
-	while (TimeOutUs > 0U) {
-		if ((ess_Read32(Addr) & Mask) == Value) {
-			Ret = XAIESIM_SUCCESS;
-			break;
-		}
-		usleep(1);
-		TimeOutUs--;
-	}
-
-	return Ret;
-}
-
-static const XAieSim_IO_Funcs Sock_IO_Funcs = {
-	.Read32 = XAieSim_SockRead32,
-	.Read128 = XAieSim_SockRead128,
-	.Write32 = XAieSim_SockWrite32,
-	.MaskWrite32 = XAieSim_SockMaskWrite32,
-	.Write128 = XAieSim_SockWrite128,
-	.WriteCmd = XAieSim_SockWriteCmd,
-	.MaskPoll = XAieSim_SockMaskPoll,
-};
-#endif
-
 /*****************************************************************************/
 /**
 *
@@ -527,11 +447,6 @@ uint8 XAieSim_SetIOMode(uint8 Mode)
 		IO_Funcs = &Cdo_IO_Funcs;
 		break;
 #endif
-#ifdef __AIESIM_SOCK__
-	case XAIESIM_IO_MODE_SOCK:
-		IO_Funcs = &Sock_IO_Funcs;
-		break;
-#endif
 	default:
 		return XAIESIM_FAILURE;
 	}
@@ -678,4 +593,3 @@ uint32 XAieSim_NPIMaskPoll(uint64_t Addr, uint32 Mask, uint32 Value,
 }
 
 /** @} */
-
