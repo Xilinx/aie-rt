@@ -22,6 +22,7 @@
 * 1.3   Tejus   03/20/2020  Make internal functions static
 * 1.4   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * 1.5   Tejus   06/01/2020  Add core debug halt apis.
+* 1.6   Tejus   06/01/2020  Add api to read core done bit.
 * </pre>
 *
 ******************************************************************************/
@@ -322,6 +323,50 @@ AieRC XAie_CoreDebugHalt(XAie_DevInst *DevInst, XAie_LocType Loc)
 AieRC XAie_CoreDebugUnhalt(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
 	return _XAie_CoreDebugCtrlHalt(DevInst, Loc, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/*
+*
+* This API reads the Done bit value in the core status register.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	DoneBit: Pointer to store the value of Done bit.
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 *DoneBit)
+{
+	u64 RegAddr;
+	const XAie_CoreMod *CoreMod;
+	u8 TileType;
+	u32 Data;
+
+	if((DevInst == XAIE_NULL) || (DoneBit == NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
+
+	RegAddr = DevInst->BaseAddr + CoreMod->CoreSts->RegOff +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	Data = XAieGbl_Read32(RegAddr);
+	*DoneBit = (u8)(Data & CoreMod->CoreSts->Done.Mask);
+
+	return XAIE_OK;
 }
 
 /** @} */
