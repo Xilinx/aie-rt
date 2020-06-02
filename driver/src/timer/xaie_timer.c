@@ -189,8 +189,8 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 *                       (XAIE_RESETENABLE, XAIE_RESETDISABLE)
 *
 * @return	XAIE_OK on success.
-*		XAIE_INVALID_ARGS if any argument is invalid$
-* 		XAIE_INVALID_TILE if tile type from Loc is invalid$
+*		XAIE_INVALID_ARGS if any argument is invalid
+* 		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note
 *
@@ -269,7 +269,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This API returns the current value of the Core module 64-bit timer.
+* This API returns the current value of the module's 64-bit timer.
 *
 * @param	DevInst - Device Instance.
 * @param	Loc - Location of tile.
@@ -277,23 +277,25 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 *                         For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *                         For Pl or Shim tile - XAIE_PL_MOD,
 *                         For Mem tile - XAIE_MEM_MOD.
+* @param	TimerVal - Pointer to store Timer Value.
 *
-* @return	64-bit timer value.
+* @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note		None.
 *
 ********************************************************************************/
-u64 XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module)
+AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u64 *TimerVal)
 {
 	u32 CurValHigh, CurValLow;
-	u64 CurVal;
 	u8 TileType, RC;
 	const XAie_TimerMod *TimerMod;
 
-	if((DevInst == XAIE_NULL) ||
+	if((DevInst == XAIE_NULL) || (TimerVal == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAieLib_print("Error: Invalid Device Instance or TimerVal\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -302,7 +304,8 @@ u64 XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
-	 /* check for module and tiletype combination */
+
+	/* check for module and tiletype combination */
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
         if(RC != XAIE_OK) {
 		XAieLib_print("Error: Invalid Module\n");
@@ -324,7 +327,8 @@ u64 XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CurValHigh = XAieGbl_Read32(DevInst->BaseAddr +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->HighOff);
-	CurVal = ((u64)CurValHigh << XAIE_TIMER_32BIT_SHIFT) | CurValLow;
 
-	return CurVal;
+	*TimerVal = ((u64)CurValHigh << XAIE_TIMER_32BIT_SHIFT) | CurValLow;
+
+	return XAIE_OK;
 }

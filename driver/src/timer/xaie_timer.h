@@ -37,6 +37,6 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event,
 		XAie_Reset Reset);
-u64 XAie_CoreReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module);
+AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u64 *TimerVal);
 #endif		/* end of protection macro */
