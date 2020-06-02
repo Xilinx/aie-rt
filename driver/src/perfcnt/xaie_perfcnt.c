@@ -60,22 +60,25 @@
 *			For Pl or Shim tile - XAIE_PL_MOD,
 *			For Mem tile - XAIE_MEM_MOD.
 * @param	Counter:Performance Counter
+* @param	CounterVal: Pointer to store Counter Value
 * @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note
 *
 ******************************************************************************/
-u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 Counter)
+AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 Counter, u32 *CounterVal)
 {
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
 	const XAie_PerfMod *PerfMod;
 
-	if((DevInst == XAIE_NULL) ||
+	if((DevInst == XAIE_NULL) || (CounterVal == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAieLib_print("Error: Invalid Device Instance or CounterVal\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -104,8 +107,9 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Compute absolute address and write to register */
 	CounterRegAddr = DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row,
 						Loc.Col) + CounterRegOffset;
+	*CounterVal = XAieGbl_Read32(CounterRegAddr);
 
-	return XAieGbl_Read32(CounterRegAddr);
+	return XAIE_OK;
 }
 /*****************************************************************************/
 /* This API configures the control registers corresponding to the counters
@@ -121,6 +125,8 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	StartEvent:Event that triggers start to the counter
 * @Param	StopEvent: Event that triggers stop to the counter
 * @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note
 *
@@ -218,6 +224,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Counter:Performance Counter
 * @param	ResetEvent:Event that triggers reset to the counter
 * @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note
 *
@@ -308,6 +316,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Counter:Performance Counter
 * @param	CounterVal:Performance Counter Value
 * @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note
 *
@@ -368,6 +378,8 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Counter:Performance Counter
 * @param	EventVal:Event value to set
 * @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
 * @note
 *
