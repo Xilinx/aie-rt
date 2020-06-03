@@ -22,6 +22,7 @@
 * 1.3   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * 1.4   Tejus   05/26/2020  Remove elf loader implementation for refactoring
 * 1.5   Tejus   05/26/2020  Implement elf loader using program sections.
+* 1.6   Tejus   06/03/2020  Fix compilation error for simulation.
 * </pre>
 *
 ******************************************************************************/
@@ -488,6 +489,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	 */
 	u32 Status;
 	char MapPath[256U];
+	XAieSim_StackSz StackSz;
 
 	/* Get the stack range */
 	strcpy(MapPath, ElfPtr);
