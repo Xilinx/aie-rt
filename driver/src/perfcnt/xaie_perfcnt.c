@@ -74,6 +74,7 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
+	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 
 	if((DevInst == XAIE_NULL) || (CounterVal == XAIE_NULL) ||
@@ -86,6 +87,13 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(Module == XAIE_PL_MOD) {
@@ -138,6 +146,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 RegOffset, FldVal, FldMask;
 	u64 RegAddr;
 	u8 TileType, IntStartEvent, IntStopEvent;
+	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -151,6 +160,13 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(Module == XAIE_PL_MOD) {
@@ -237,6 +253,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 ResetRegOffset, ResetFldMask;
 	u64 ResetRegAddr, ResetFldVal;
 	u8 TileType, IntResetEvent;
+	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -250,6 +267,13 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(Module == XAIE_PL_MOD) {
@@ -329,6 +353,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
+	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -341,6 +366,13 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(Module == XAIE_PL_MOD) {
@@ -390,6 +422,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
 	u8 TileType;
+	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -402,6 +435,13 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAieLib_print("Error: Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if(Module == XAIE_PL_MOD) {
