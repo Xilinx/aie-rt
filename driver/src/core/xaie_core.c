@@ -25,6 +25,7 @@
 * 1.6   Tejus   06/01/2020  Add api to read core done bit.
 * 1.7   Tejus   06/05/2020  Change core enable/disable api to mask write.
 * 1.8   Tejus   06/05/2020  Add api to reset/unreset aie cores.
+* 1.9   Tejus   06/05/2020  Add null check for DevInst in core status apis.
 * </pre>
 *
 ******************************************************************************/
@@ -62,12 +63,6 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
@@ -299,6 +294,13 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 	const XAie_CoreMod *CoreMod;
 	u32 Mask;
 	u32 Value;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreSts->Done.Mask;
 	Value = 1U << CoreMod->CoreSts->Done.Lsb;
@@ -327,6 +329,13 @@ AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	const XAie_CoreMod *CoreMod;
 	u32 Mask;
 	u32 Value;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreSts->En.Mask;
 	Value = 0U << CoreMod->CoreSts->En.Lsb;
