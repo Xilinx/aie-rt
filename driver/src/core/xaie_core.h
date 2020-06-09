@@ -20,6 +20,7 @@
 * 1.1   Tejus   03/20/2020  Remove range apis
 * 1.2   Tejus   06/01/2020  Add core debug halt apis
 * 1.3   Tejus   06/01/2020  Add api to read core done bit.
+* 1.4   Tejus   06/05/2020  Add api to reset/unreset aie cores.
 * </pre>
 *
 ******************************************************************************/
@@ -43,6 +44,8 @@ AieRC XAie_CoreDebugHalt(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_CoreDebugUnhalt(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *DoneBit);
+AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc);
+AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc);
 
 #endif		/* end of protection macro */
 /** @} */
