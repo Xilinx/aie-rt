@@ -17,6 +17,7 @@
 * Ver   Who     Date        Changes
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   Dishita 04/06/2020  Initial creation
+* 1.1   Dishita 06/10/2020  Add XAie_WaitCycles API
 *
 * </pre>
 *
@@ -30,6 +31,7 @@
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
 #define XAIE_TIMER_32BIT_SHIFT		32U
+#define XAIE_WAIT_CYCLE_MAX_VAL		0xFFFFFFFFFFFF
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -329,6 +331,92 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TimerMod->HighOff);
 
 	*TimerVal = ((u64)CurValHigh << XAIE_TIMER_32BIT_SHIFT) | CurValLow;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+* This API implements a blocking wait function until the specified clock cyles
+* are elapsed in the given module's 64-bit counter.
+*
+* @param        DevInst - Device Instance.
+* @param        Loc - Location of tile.
+* @param        Module - Module of the tile
+*                        For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                        For Pl or Shim tile - XAIE_PL_MOD,
+*                        For Mem tile - XAIE_MEM_MOD.
+* @param        CycleCnt - No. of timer clock cycles to elapse.
+*
+* @return       XAIE_OK on success
+*               XAIE_INVALID_ARGS if any argument is invalid
+*               XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note         CycleCnt has an upper limit of 0xFFFFFFFFFFFF or 300 trillion
+*		cycles to prevent overflow.
+*
+******************************************************************************/
+AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u64 CycleCnt)
+{
+
+	u64 StartVal, EndVal, CurVal;
+	u32 CurHigh, CurLow;
+	u8 TileType;
+	AieRC RC;
+	const XAie_TimerMod *TimerMod;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Invalid Module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(CycleCnt > XAIE_WAIT_CYCLE_MAX_VAL) {
+		XAieLib_print("Error: CycleCnt above max value\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Module == XAIE_PL_MOD) {
+		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[0U];
+	} else {
+		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
+	}
+
+	/* Read the timer high and low values before wait */
+	CurLow = XAieGbl_Read32(DevInst->BaseAddr +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		TimerMod->LowOff);
+	CurHigh = XAieGbl_Read32(DevInst->BaseAddr +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		TimerMod->HighOff);
+
+	StartVal = ((u64)CurHigh << XAIE_TIMER_32BIT_SHIFT) | CurLow;
+	EndVal = StartVal + CycleCnt;
+
+	while(CurVal < EndVal) {
+		/* Read the timer high and low values */
+		CurLow = XAieGbl_Read32(DevInst->BaseAddr +
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			TimerMod->LowOff);
+		CurHigh = XAieGbl_Read32(DevInst->BaseAddr +
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			TimerMod->HighOff);
+		CurVal = ((u64)CurHigh << XAIE_TIMER_32BIT_SHIFT) | CurLow;
+	}
 
 	return XAIE_OK;
 }
