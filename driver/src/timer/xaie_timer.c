@@ -18,6 +18,7 @@
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   Dishita 04/06/2020  Initial creation
 * 1.1   Dishita 06/10/2020  Add XAie_WaitCycles API
+* 1.2   Dishita 06/17/2020  Resolve compiler warning
 *
 * </pre>
 *
@@ -360,7 +361,7 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 CycleCnt)
 {
 
-	u64 StartVal, EndVal, CurVal;
+	u64 StartVal, EndVal, CurVal = 0U;
 	u32 CurHigh, CurLow;
 	u8 TileType;
 	AieRC RC;
