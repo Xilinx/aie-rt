@@ -31,6 +31,7 @@
 * 2.1   Tejus   05/26/2020  Restructure and optimize core module.
 * 2.2   Tejus  06/01/2020  Add data structure for debug halt register.
 * 2.3   Tejus  06/05/2020  Add field in data structure for dma fifo mode.
+* 2.4   Nishad 06/16/2020  Add data structures for trace module
 * </pre>
 *
 ******************************************************************************/
@@ -465,6 +466,24 @@ typedef struct XAie_TimerMod {
 	const XAie_RegFldAttr CtrlResetEvent; /* Timer control reset event field */
 } XAie_TimerMod;
 
+/* This structure captures all the attributes relevant to trace module */
+typedef struct {
+	u32 CtrlRegOff;
+	u32 PktConfigRegOff;
+	u32 StatusRegOff;
+	u32 *EventRegOffs;
+	u8 NumTraceSlotIds;
+	u8 NumEventsPerSlot;
+	XAie_RegFldAttr StopEvent;
+	XAie_RegFldAttr StartEvent;
+	XAie_RegFldAttr ModeConfig;
+	XAie_RegFldAttr PktType;
+	XAie_RegFldAttr PktId;
+	XAie_RegFldAttr State;
+	XAie_RegFldAttr ModeSts;
+	const XAie_RegFldAttr *Event;
+} XAie_TraceMod;
+
 /*
  * This typedef contains all the modules for a Tile type
  */
@@ -478,6 +497,7 @@ typedef struct XAie_TileMod {
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
 	const XAie_TimerMod *TimerMod;
+	const XAie_TraceMod *TraceMod;
 } XAie_TileMod;
 
 #endif
