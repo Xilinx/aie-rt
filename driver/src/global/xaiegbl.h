@@ -29,6 +29,7 @@
 * 1.7   Tejus   04/13/2020  Remove range structure and helper function.
 * 1.8   Dishita 04/27/2020  Add enum for reset and modules.
 * 1.9   Tejus   06/05/2020  Change name of FifoMode field.
+* 2.0   Nishad  06/18/2020  Add macros for max value of packet Id and type.
 * </pre>
 *
 ******************************************************************************/
@@ -40,7 +41,10 @@
 #include "xaiegbl_defs.h"
 
 /************************** Constant Definitions *****************************/
-#define XAIE_LOCK_WITH_NO_VALUE	(-1)
+#define XAIE_LOCK_WITH_NO_VALUE		(-1)
+#define XAIE_PACKET_ID_MAX		0x1F
+#define XAIE_PACKET_TYPE_MAX		0x7
+
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
 typedef struct XAie_DmaMod XAie_DmaMod;

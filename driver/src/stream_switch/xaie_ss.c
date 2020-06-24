@@ -23,6 +23,7 @@
 * 1.4   Tejus   03/21/2020  Fix slave port configuration bug
 * 1.5   Tejus   03/21/2020  Add stream switch packet switch mode apis
 * 1.6   Tejus   04/13/2020  Remove range apis and change to single tile apis
+* 1.7   Nishad  06/19/2020  Move XAIE_PACKETID_MAX to xaiegbl.h
 * </pre>
 *
 ******************************************************************************/
@@ -40,7 +41,6 @@
 #define XAIE_SS_MASK				0x1F
 #define XAIE_SS_MSELEN_MAX			0xF
 
-#define XAIE_PACKETID_MAX			0x1F
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -621,7 +621,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((Arbitor > XAIE_SS_ARBITOR_MAX) || (MSel > XAIE_SS_MSEL_MAX) ||
 			(Mask & ~XAIE_SS_MASK) ||
-			(Pkt.PktId > XAIE_PACKETID_MAX)) {
+			(Pkt.PktId > XAIE_PACKET_ID_MAX)) {
 		XAieLib_print("Error: Invalid Arbitor, MSel, PktId or Mask\n");
 		return XAIE_INVALID_ARGS;
 	}
