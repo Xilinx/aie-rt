@@ -69,6 +69,7 @@ typedef struct XAie_DevProp {
 typedef enum {
 	XAIE_IO_BACKEND_METAL, /* Linux backend. Default backend of driver. */
 	XAIE_IO_BACKEND_SIM,   /* Ess simulation backend */
+	XAIE_IO_BACKEND_CDO,   /* Cdo generation backend */
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 

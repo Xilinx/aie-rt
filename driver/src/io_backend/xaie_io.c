@@ -19,6 +19,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   06/09/2020 Initial creation.
 * 1.1   Tejus   06/10/2020 Add ess simulation backend.
+* 1.2   Tejus   06/10/2020 Add cdo backend.
 * </pre>
 *
 ******************************************************************************/
@@ -30,6 +31,8 @@
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_METAL
 #elif defined (__AIESIM__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SIM
+#elif defined (__AIECDO__)
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CDO
 #else
 	#define XAIE_DEFAULT_BACKEND 0U
 #endif
@@ -37,11 +40,13 @@
 /************************** Variable Definitions *****************************/
 const extern XAie_Backend MetalBackend;
 const extern XAie_Backend SimBackend;
+const extern XAie_Backend CdoBackend;
 
 const static XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
 	&MetalBackend,
 	&SimBackend,
+	&CdoBackend,
 };
 
 /************************** Function Definitions *****************************/
