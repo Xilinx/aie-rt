@@ -31,6 +31,7 @@
 * 1.9   Tejus   06/05/2020  Change name of FifoMode field.
 * 2.0   Nishad  06/18/2020  Add macros for max value of packet Id and type.
 * 2.1   Tejus   06/10/2020  Add IO backend data structures.
+* 2.2   Tejus   06/10/2020  Add ess simulation backend.
 * </pre>
 *
 ******************************************************************************/
@@ -67,6 +68,7 @@ typedef struct XAie_DevProp {
  */
 typedef enum {
 	XAIE_IO_BACKEND_METAL, /* Linux backend. Default backend of driver. */
+	XAIE_IO_BACKEND_SIM,   /* Ess simulation backend */
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 

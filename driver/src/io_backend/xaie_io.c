@@ -18,6 +18,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   06/09/2020 Initial creation.
+* 1.1   Tejus   06/10/2020 Add ess simulation backend.
 * </pre>
 *
 ******************************************************************************/
@@ -27,16 +28,20 @@
 /************************** Constant Definitions *****************************/
 #if defined (__AIEMETAL__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_METAL
+#elif defined (__AIESIM__)
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SIM
 #else
 	#define XAIE_DEFAULT_BACKEND 0U
 #endif
 
 /************************** Variable Definitions *****************************/
 const extern XAie_Backend MetalBackend;
+const extern XAie_Backend SimBackend;
 
 const static XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
 	&MetalBackend,
+	&SimBackend,
 };
 
 /************************** Function Definitions *****************************/
