@@ -23,6 +23,7 @@
 * 1.4   Tejus   05/26/2020  Remove elf loader implementation for refactoring
 * 1.5   Tejus   05/26/2020  Implement elf loader using program sections.
 * 1.6   Tejus   06/03/2020  Fix compilation error for simulation.
+* 1.7   Tejus   06/10/2020  Switch to new io backend.
 * </pre>
 *
 ******************************************************************************/
@@ -202,7 +203,10 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const unsigned char *ProgSec, const Elf32_Phdr *Phdr)
 {
 	AieRC RC;
+	const unsigned char *OverFlowSec;
 	u32 OverFlowBytes;
+	u32 OverFlowMask;
+	u32 OverFlowData;
 	u32 BytesToWrite;
 	u32 SectionAddr;
 	u32 SectionSize;
@@ -220,12 +224,28 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			return XAIE_INVALID_ELF;
 		}
 
-		Addr = DevInst->BaseAddr + CoreMod->ProgMemHostOffset +
-			Phdr->p_paddr +
+		Addr = CoreMod->ProgMemHostOffset + Phdr->p_paddr +
 			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-		for(u32 i = 0U; i < Phdr->p_memsz; i += 4U) {
-			XAieGbl_Write32(Addr + i, *((u32 *)(ProgSec + i)));
+		XAie_BlockWrite32(DevInst, Addr, (u32 *)ProgSec,
+				Phdr->p_memsz / 4U);
+
+		/* Handle unaligned(32 bits) program memory sections*/
+		OverFlowBytes = Phdr->p_memsz % 4U;
+		if(OverFlowBytes) {
+			OverFlowSec = ProgSec + Phdr->p_memsz - OverFlowBytes;
+			OverFlowData = 0U;
+			OverFlowMask = 0U;
+			for(u8 i = 0U; i < OverFlowBytes; i++) {
+				OverFlowData |= (0xFF & *OverFlowSec) <<
+					(i * 8U);
+				OverFlowMask |= 0xFF << (i * 8U);
+				OverFlowSec++;
+			}
+
+			XAie_MaskWrite32(DevInst, Addr + Phdr->p_memsz -
+					OverFlowBytes, OverFlowMask,
+					OverFlowData);
 		}
 
 		return XAIE_OK;
@@ -262,13 +282,11 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		BytesToWrite = SectionSize - OverFlowBytes;
-		Addr = DevInst->BaseAddr + (SectionAddr & AddrMask) +
+		Addr = (SectionAddr & AddrMask) +
 			_XAie_GetTileAddr(DevInst, TgtLoc.Row, TgtLoc.Col);
 
-		for(u32 i = 0; i < BytesToWrite; i += 4U) {
-			XAieGbl_Write32(Addr + i, *((u32 *)ProgSec));
-			ProgSec += 4U;
-		}
+		XAie_BlockWrite32(DevInst, Addr, (u32 *)ProgSec,
+				BytesToWrite / 4U);
 
 		SectionSize -= BytesToWrite;
 		SectionAddr += BytesToWrite;
@@ -295,12 +313,10 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		BytesToWrite = SectionSize - OverFlowBytes;
-		Addr = DevInst->BaseAddr + (SectionAddr & AddrMask) +
+		Addr = (SectionAddr & AddrMask) +
 			_XAie_GetTileAddr(DevInst, TgtLoc.Row, TgtLoc.Col);
 
-		for(u32 i = 0; i < BytesToWrite; i += 4U) {
-			XAieGbl_Write32(Addr + i, 0U);
-		}
+		XAie_BlockSet32(DevInst, Addr, 0U, BytesToWrite / 4U);
 
 		SectionSize -= BytesToWrite;
 		SectionAddr += BytesToWrite;

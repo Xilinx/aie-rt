@@ -26,6 +26,7 @@
 * 1.7   Tejus   06/05/2020  Change core enable/disable api to mask write.
 * 1.8   Tejus   06/05/2020  Add api to reset/unreset aie cores.
 * 1.9   Tejus   06/05/2020  Add null check for DevInst in core status apis.
+* 2.0   Tejus   06/10/2020  Switch to new io backend apis.
 * </pre>
 *
 ******************************************************************************/
@@ -79,10 +80,11 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreSts->RegOff +
+	RegAddr = CoreMod->CoreSts->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	if(XAieGbl_MaskPoll(RegAddr, Mask, Value, TimeOut) != XAIE_SUCCESS) {
+	if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
+			XAIE_SUCCESS) {
 		XAieLib_print("Error: Status poll time out\n");
 		return XAIE_CORE_STATUS_TIMEOUT;
 	}
@@ -129,10 +131,10 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
 	Value = 0U << CoreMod->CoreCtrl->CtrlEn.Lsb;
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreCtrl->RegOff +
+	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_MaskWrite32(RegAddr, Mask, Value);
+	XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 
 	return XAIE_OK;
 }
@@ -174,10 +176,10 @@ AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
 	Value = 1U << CoreMod->CoreCtrl->CtrlEn.Lsb;
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreCtrl->RegOff +
+	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_MaskWrite32(RegAddr, Mask, Value);
+	XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 
 	return XAIE_OK;
 }
@@ -219,10 +221,10 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
 	Value = 1U << CoreMod->CoreCtrl->CtrlRst.Lsb;
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreCtrl->RegOff +
+	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_MaskWrite32(RegAddr, Mask, Value);
+	XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 
 	return XAIE_OK;
 }
@@ -265,10 +267,10 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
 	Value = 0U << CoreMod->CoreCtrl->CtrlRst.Lsb;
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreCtrl->RegOff +
+	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_MaskWrite32(RegAddr, Mask, Value);
+	XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 
 	return XAIE_OK;
 }
@@ -377,10 +379,10 @@ static AieRC _XAie_CoreDebugCtrlHalt(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreDebug->RegOff +
+	RegAddr = CoreMod->CoreDebug->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_MaskWrite32(RegAddr, CoreMod->CoreDebug->DebugHalt.Mask,
+	XAie_MaskWrite32(DevInst, RegAddr, CoreMod->CoreDebug->DebugHalt.Mask,
 			Enable);
 
 	return XAIE_OK;
@@ -457,10 +459,10 @@ AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
-	RegAddr = DevInst->BaseAddr + CoreMod->CoreSts->RegOff +
+	RegAddr = CoreMod->CoreSts->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	Data = XAieGbl_Read32(RegAddr);
+	Data = XAie_Read32(DevInst, RegAddr);
 	*DoneBit = (u8)(Data & CoreMod->CoreSts->Done.Mask);
 
 	return XAIE_OK;
