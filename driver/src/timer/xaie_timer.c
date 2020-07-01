@@ -19,6 +19,7 @@
 * 1.0   Dishita 04/06/2020  Initial creation
 * 1.1   Dishita 06/10/2020  Add XAie_WaitCycles API
 * 1.2   Dishita 06/17/2020  Resolve compiler warning
+* 1.3   Tejus   06/10/2020  Switch to new io backend apis.
 *
 * </pre>
 *
@@ -97,16 +98,14 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Set up Timer low event value */
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
 		TimerMod->TrigEventLowValOff;
-	XAieGbl_Write32(RegAddr, LowEventValue);
+	XAie_Write32(DevInst, RegAddr, LowEventValue);
 
 	/* Set up Timer high event value */
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
 		TimerMod->TrigEventHighValOff;
-	XAieGbl_Write32(RegAddr, HighEventValue);
+	XAie_Write32(DevInst, RegAddr, HighEventValue);
 
 	return XAIE_OK;
 }
@@ -165,12 +164,11 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
 	}
 
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->CtrlOff;
 	Mask = TimerMod->CtrlReset.Mask;
 	RegVal = XAie_SetField(XAIE_RESETENABLE, TimerMod->CtrlReset.Lsb, Mask);
-	XAieGbl_MaskWrite32(RegAddr, Mask, RegVal);
+	XAie_MaskWrite32(DevInst, RegAddr, Mask, RegVal);
 
 	return XAIE_OK;
 }
@@ -261,10 +259,9 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegVal |= XAie_SetField(Reset, TimerMod->CtrlReset.Lsb,
 			TimerMod->CtrlReset.Mask);
 
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->CtrlOff;
-	XAieGbl_Write32(RegAddr, RegVal);
+	XAie_Write32(DevInst, RegAddr, RegVal);
 
 	return XAIE_OK;
 }
@@ -324,12 +321,12 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Read the timer high and low values before wait */
-	CurValLow = XAieGbl_Read32(DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		TimerMod->LowOff);
-	CurValHigh = XAieGbl_Read32(DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		TimerMod->HighOff);
+	CurValLow = XAie_Read32(DevInst,
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			TimerMod->LowOff);
+	CurValHigh = XAie_Read32(DevInst,
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			TimerMod->HighOff);
 
 	*TimerVal = ((u64)CurValHigh << XAIE_TIMER_32BIT_SHIFT) | CurValLow;
 
@@ -398,24 +395,24 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Read the timer high and low values before wait */
-	CurLow = XAieGbl_Read32(DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		TimerMod->LowOff);
-	CurHigh = XAieGbl_Read32(DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		TimerMod->HighOff);
+	CurLow = XAie_Read32(DevInst,
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			TimerMod->LowOff);
+	CurHigh = XAie_Read32(DevInst,
+			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			TimerMod->HighOff);
 
 	StartVal = ((u64)CurHigh << XAIE_TIMER_32BIT_SHIFT) | CurLow;
 	EndVal = StartVal + CycleCnt;
 
 	while(CurVal < EndVal) {
 		/* Read the timer high and low values */
-		CurLow = XAieGbl_Read32(DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-			TimerMod->LowOff);
-		CurHigh = XAieGbl_Read32(DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-			TimerMod->HighOff);
+		CurLow = XAie_Read32(DevInst,
+				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+				TimerMod->LowOff);
+		CurHigh = XAie_Read32(DevInst,
+				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+				TimerMod->HighOff);
 		CurVal = ((u64)CurHigh << XAIE_TIMER_32BIT_SHIFT) | CurLow;
 	}
 
