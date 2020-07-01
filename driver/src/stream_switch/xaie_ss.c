@@ -24,6 +24,7 @@
 * 1.5   Tejus   03/21/2020  Add stream switch packet switch mode apis
 * 1.6   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * 1.7   Nishad  06/19/2020  Move XAIE_PACKETID_MAX to xaiegbl.h
+* 1.8   Tejus   06/10/2020  Switch to new io backend apis.
 * </pre>
 *
 ******************************************************************************/
@@ -264,13 +265,11 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 	}
 
 	/* Compute absolute address and write to register */
-	MstrAddr = DevInst->BaseAddr + MstrOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	SlvAddr = DevInst->BaseAddr + SlvOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	MstrAddr = MstrOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	SlvAddr = SlvOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_Write32(MstrAddr, MstrVal);
-	XAieGbl_Write32(SlvAddr, SlvVal);
+	XAie_Write32(DevInst, MstrAddr, MstrVal);
+	XAie_Write32(DevInst, SlvAddr, SlvVal);
 
 	return XAIE_OK;
 }
@@ -385,10 +384,9 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	XAieGbl_Write32(Addr, RegVal);
+	XAie_Write32(DevInst, Addr, RegVal);
 
 	return XAIE_OK;
 }
@@ -519,10 +517,9 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	XAieGbl_Write32(Addr, RegVal);
+	XAie_Write32(DevInst, Addr, RegVal);
 
 	return XAIE_OK;
 }
@@ -640,8 +637,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		StrmMod->SlvSlotConfig[Slave].PortBaseAddr +
 		SlvPortNum * StrmMod->SlotOffsetPerPort +
 		SlotNum * StrmMod->SlotOffset;
@@ -659,7 +655,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 					StrmMod->SlotArbitor.Mask);
 	}
 
-	XAieGbl_Write32(RegAddr, RegVal);
+	XAie_Write32(DevInst, RegAddr, RegVal);
 
 	return XAIE_OK;
 }
