@@ -21,6 +21,7 @@
 * 1.2   Tejus   03/20/2020  Reorder range apis
 * 1.3   Tejus   03/20/2020  Make internal functions static
 * 1.4   Tejus   04/13/2020  Remove range apis and change to single tile apis
+* 1.5   Tejus   06/10/2020  Switch to new io backend apis.
 * </pre>
 *
 ******************************************************************************/
@@ -71,10 +72,10 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
-	RegAddr = DevInst->BaseAddr + MemMod->MemAddr + Addr +
+	RegAddr = MemMod->MemAddr + Addr +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAieGbl_Write32(RegAddr, Data);
+	XAie_Write32(DevInst, RegAddr, Data);
 
 	return XAIE_OK;
 }
@@ -121,10 +122,10 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
-	RegAddr = DevInst->BaseAddr + MemMod->MemAddr + Addr +
+	RegAddr = MemMod->MemAddr + Addr +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	*Data = XAieGbl_Read32(RegAddr);
+	*Data = XAie_Read32(DevInst, RegAddr);
 
 	return XAIE_OK;
 }
