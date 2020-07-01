@@ -33,6 +33,7 @@
 * 2.2  Nishad  05/16/2019  Fix deallocation of pointer not on heap MISRA-c
 * 				mandatory violation
 * 2.3  Tejus   09/24/2019  Modified and added for aie
+* 2.4  Tejus   06/09/2020  Remove NPI apis.
 * </pre>
 *
 ******************************************************************************/
@@ -637,93 +638,4 @@ u32 XAieLib_MaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs)
 	return Ret;
 }
 
-/*****************************************************************************/
-/**
-*
-* This is the NPI IO function to read 32bit data from the specified address.
-*
-* @param	Addr: Address to read from.
-*
-* @return	32-bit read value.
-*
-* @note		This only work if NPI is accessble.
-*
-*******************************************************************************/
-u32 XAieLib_NPIRead32(u64 Addr)
-{
-#ifdef __AIESIM__
-	return XAieSim_NPIRead32(Addr);
-#endif
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the NPI IO function to write 32bit data to the specified address.
-*
-* @param	Addr: Address to write to.
-* @param	Data: 32-bit data to be written.
-*
-* @return	None.
-*
-* @note		This only work if NPI is accessble.
-*
-*******************************************************************************/
-void XAieLib_NPIWrite32(u64 Addr, u32 Data)
-{
-#ifdef __AIESIM__
-	XAieSim_NPIWrite32(Addr, Data);
-#endif
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the NPI IO function to write a masked 32bit data to
-* the specified address.
-*
-* @param	Addr: Address to write to.
-* @param	Mask: Mask to be applied to Data.
-* @param	Data: 32-bit data to be written.
-*
-* @return	None.
-*
-* @note		This only work if NPI is accessble.
-*
-*******************************************************************************/
-void XAieLib_NPIMaskWrite32(u64 Addr, u32 Mask, u32 Data)
-{
-	u32 RegVal;
-
-#ifdef __AIESIM__
-	XAieSim_NPIMaskWrite32(Addr, Mask, Data);
-#endif
-}
-/*****************************************************************************/
-/**
-*
-* This is the NPI IO function to poll until the value at the address to be given
-* masked value.
-*
-* @param	Addr: Address to write to.
-* @param	Mask: Mask to be applied to read data.
-* @param	Value: The expected value
-* @param	TimeOutUs: Minimum timeout in usec.
-*
-* @return	XAIELIB_SUCCESS on success, otherwise XAIELIB_FAILURE
-*
-* @note		This only work if NPI is accessble.
-*
-*******************************************************************************/
-u32 XAieLib_NPIMaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs)
-{
-	u32 Ret = XAIELIB_FAILURE;
-
-#ifdef __AIESIM__
-	if (XAieSim_NPIMaskPoll(Addr, Mask, Value, TimeOutUs) == XAIESIM_SUCCESS) {
-		Ret = XAIELIB_SUCCESS;
-	}
-#endif
-	return Ret;
-}
 /** @} */

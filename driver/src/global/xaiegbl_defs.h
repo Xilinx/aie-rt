@@ -24,6 +24,7 @@
 * 1.5  Tejus   08/01/2019  Restructure code for AIE
 * 1.6  Dishita 04/17/2020  Fix compiler warning
 * 1.7  Dishita 05/07/2020  Removed Reset related macros
+* 1.8  Tejus   06/09/2020  Remove NPI apis.
 * </pre>
 *
 ******************************************************************************/
@@ -70,11 +71,6 @@
 #define XAieGbl_Write128	XAieLib_Write128
 #define XAieGbl_WriteCmd	XAieLib_WriteCmd
 #define XAieGbl_MaskPoll	XAieLib_MaskPoll
-
-#define XAieGbl_NPIRead32	XAieLib_NPIRead32
-#define XAieGbl_NPIWrite32	XAieLib_NPIWrite32
-#define XAieGbl_NPIMaskWrite32	XAieLib_NPIMaskWrite32
-#define XAieGbl_NPIMaskPoll	XAieLib_NPIMaskPoll
 
 #define XAieGbl_MemInst		XAieLib_MemInst
 #define XAieGbl_MemInit		XAieLib_MemInit

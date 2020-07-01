@@ -25,6 +25,7 @@
 * 1.6  Nishad  12/05/2018  Renamed ME attributes to AIE
 * 1.7  Hyun    01/08/2019  Add XAieLib_MaskPoll()
 * 1.8  Tejus   09/24/2019  Modified and added for aie
+* 1.9  Tejus   06/09/2020  Remove NPI apis.
 * </pre>
 *
 ******************************************************************************/
@@ -64,10 +65,6 @@ void XAieLib_MaskWrite32(u64 Addr, u32 Mask, u32 Data);
 void XAieLib_Write128(u64 Addr, u32 *Data);
 void XAieLib_WriteCmd(u8 Command, u8 ColId, u8 RowId, u32 CmdWd0, u32 CmdWd1, u8 *CmdStr);
 u32 XAieLib_MaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs);
-
-u32 XAieLib_NPIRead32(u64 Addr);
-void XAieLib_NPIWrite32(u64 Addr, u32 Data);
-u32 XAieLib_NPIMaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs);
 
 u32 XAieLib_AssertNonvoid(u8 Cond);
 void XAieLib_AssertVoid(u8 Cond);
