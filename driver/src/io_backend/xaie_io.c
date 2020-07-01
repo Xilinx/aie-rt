@@ -20,6 +20,7 @@
 * 1.0   Tejus   06/09/2020 Initial creation.
 * 1.1   Tejus   06/10/2020 Add ess simulation backend.
 * 1.2   Tejus   06/10/2020 Add cdo backend.
+* 1.3   Tejus   06/10/2020 Add helper function to get backend pointer.
 * </pre>
 *
 ******************************************************************************/
@@ -80,6 +81,23 @@ AieRC XAie_IOInit(XAie_DevInst *DevInst)
 	XAieLib_print("LOG: Initialized with backend %d\n", Backend->Type);
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the api to get the backend pointer for a given Backend
+*
+* @param	Backend - Backend type.
+*
+* @return	Backend pointer.
+*
+* @note		Internal Only.
+*
+******************************************************************************/
+const XAie_Backend* _XAie_GetBackendPtr(XAie_BackendType Backend)
+{
+	return IOBackend[Backend];
 }
 
 /** @} */

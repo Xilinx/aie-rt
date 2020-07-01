@@ -18,6 +18,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   06/09/2020 Initial creation.
+* 1.1   Tejus   06/10/2020 Add helper function to get backend pointer.
 * </pre>
 *
 ******************************************************************************/
@@ -65,6 +66,7 @@ typedef struct XAie_Backend {
 
 /************************** Function Prototypes  *****************************/
 AieRC XAie_IOInit(XAie_DevInst *DevInst);
+const XAie_Backend* _XAie_GetBackendPtr(XAie_BackendType Backend);
 
 #endif	/* End of protection macro */
 

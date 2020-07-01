@@ -32,6 +32,7 @@
 * 2.0   Nishad  06/18/2020  Add macros for max value of packet Id and type.
 * 2.1   Tejus   06/10/2020  Add IO backend data structures.
 * 2.2   Tejus   06/10/2020  Add ess simulation backend.
+* 2.3   Tejus   06/10/2020  Add api to change backend at runtime.
 * </pre>
 *
 ******************************************************************************/
@@ -341,6 +342,7 @@ typedef struct {
 
 /**************************** Function prototypes ***************************/
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
+AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
 
 /*****************************************************************************/
 /*

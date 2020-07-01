@@ -20,6 +20,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   10/22/2019  Enable AIE initilization
 * 1.2   Tejus   06/09/2020  Call IO init api from XAie_CfgInitialize
+* 1.3   Tejus   06/10/2020  Add api to change backend at runtime.
 * </pre>
 *
 ******************************************************************************/
@@ -98,6 +99,60 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	if(RC != XAIE_OK) {
 		return RC;
 	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the api to set the IO backend of the driver at runtime.
+*
+* @param	DevInst - Global AIE device instance pointer.
+* @param	Backend - Backend IO type to switch to.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
+{
+	AieRC RC;
+	const XAie_Backend *CurrBackend, *NewBackend;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Backend == XAIE_IO_BACKEND_MAX) {
+		XAieLib_print("Error: Invalid backend request \n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Release resources for current backend */
+	CurrBackend = DevInst->Backend;
+	RC = CurrBackend->Ops.Finish((void *)(DevInst->IOInst));
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Failed to close backend instance."
+				"Falling back to backend %d\n",
+				CurrBackend->Type);
+		return RC;
+	}
+
+	/* Get new backend and initialize the backend */
+	NewBackend = _XAie_GetBackendPtr(Backend);
+	RC = NewBackend->Ops.Init(DevInst);
+	if(RC != XAIE_OK) {
+		XAieLib_print("Error: Failed to initialize backend %d\n",
+				Backend);
+		return RC;
+	}
+
+	XAieLib_print("LOG: Switching backend to %d\n", Backend);
+	DevInst->Backend = NewBackend;
 
 	return XAIE_OK;
 }
