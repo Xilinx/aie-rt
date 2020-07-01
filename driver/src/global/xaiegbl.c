@@ -19,11 +19,13 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   10/22/2019  Enable AIE initilization
+* 1.2   Tejus   06/09/2020  Call IO init api from XAie_CfgInitialize
 * </pre>
 *
 ******************************************************************************/
 
 /***************************** Include Files *********************************/
+#include "xaie_io.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl_regdef.h"
@@ -56,6 +58,7 @@ extern XAie_TileMod Aie2Mod[XAIEGBL_TILE_TYPE_MAX];
 ******************************************************************************/
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 {
+	AieRC RC;
 
 	if((InstPtr == XAIE_NULL) || (ConfigPtr == XAIE_NULL)) {
 		XAieLib_print("Error %d: Invalid input arguments\n",
@@ -91,7 +94,10 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
 
-	XAieLib_InitDev();
+	RC = XAie_IOInit(InstPtr);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	return XAIE_OK;
 }

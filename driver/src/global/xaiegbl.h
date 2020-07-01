@@ -30,6 +30,7 @@
 * 1.8   Dishita 04/27/2020  Add enum for reset and modules.
 * 1.9   Tejus   06/05/2020  Change name of FifoMode field.
 * 2.0   Nishad  06/18/2020  Add macros for max value of packet Id and type.
+* 2.1   Tejus   06/10/2020  Add IO backend data structures.
 * </pre>
 *
 ******************************************************************************/
@@ -49,6 +50,7 @@
 typedef struct XAie_TileMod XAie_TileMod;
 typedef struct XAie_DmaMod XAie_DmaMod;
 typedef struct XAie_LockMod XAie_LockMod;
+typedef struct XAie_Backend XAie_Backend;
 
 /*
  * This typedef captures all the properties of a AIE Device
@@ -59,6 +61,14 @@ typedef struct XAie_DevProp {
 	u8 ColShift;
 	XAie_TileMod *DevMod;
 } XAie_DevProp;
+
+/*
+ * This typedef captures all the IO Backends supported by the driver
+ */
+typedef enum {
+	XAIE_IO_BACKEND_METAL, /* Linux backend. Default backend of driver. */
+	XAIE_IO_BACKEND_MAX
+} XAie_BackendType;
 
 /*
  * This typedef contains the attributes for a AIE partition. The structure is
@@ -74,6 +84,8 @@ typedef struct {
 	u8 AieTileRowStart; /* Aie tile starting row in the partition */
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
+	const XAie_Backend *Backend; /* Backend IO properties */
+	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
 				     setup to AIE prop during intialization*/
 } XAie_DevInst;
@@ -289,6 +301,7 @@ typedef enum{
 	XAIE_INVALID_ADDRESS,
 	XAIE_FEATURE_NOT_SUPPORTED,
 	XAIE_INVALID_BURST_LENGTH,
+	XAIE_INVALID_BACKEND,
 	XAIE_ERR_MAX
 } AieRC;
 
