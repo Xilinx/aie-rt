@@ -34,19 +34,21 @@
 #elif defined (__AIECDO__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CDO
 #else
-	#define XAIE_DEFAULT_BACKEND 0U
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
 #endif
 
 /************************** Variable Definitions *****************************/
 const extern XAie_Backend MetalBackend;
 const extern XAie_Backend SimBackend;
 const extern XAie_Backend CdoBackend;
+const extern XAie_Backend DebugBackend;
 
 const static XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
 	&MetalBackend,
 	&SimBackend,
 	&CdoBackend,
+	&DebugBackend,
 };
 
 /************************** Function Definitions *****************************/
