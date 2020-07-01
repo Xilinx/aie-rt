@@ -38,6 +38,7 @@
 * 1.1   Tejus   04/13/2020  Remove use of range in apis
 * 1.2   Dishita 04/16/2020  Fix compiler warnings
 * 1.3   Dishita 05/04/2020  Added Module argument to all apis
+* 1.4   Tejus   06/10/2020  Switch to new io backend apis.
 *
 * </pre>
 *
@@ -113,9 +114,9 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 				((Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
-	CounterRegAddr = DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row,
-						Loc.Col) + CounterRegOffset;
-	*CounterVal = XAieGbl_Read32(CounterRegAddr);
+	CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		CounterRegOffset;
+	*CounterVal = XAie_Read32(DevInst, CounterRegAddr);
 
 	return XAIE_OK;
 }
@@ -220,9 +221,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		PerfMod->Stop.Mask << (PerfMod->StartStopShift * (Counter % 2U)));
 
 	/* Compute absolute address and write to register */
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
-	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 
 	return XAIE_OK;
 }
@@ -320,9 +320,9 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		PerfMod->Reset.Mask << (PerfMod->ResetShift * Counter));
 
 	/* Compute absolute address and write to register */
-	ResetRegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + ResetRegOffset;
-	XAieGbl_MaskWrite32(ResetRegAddr, ResetFldMask, ResetFldVal);
+	ResetRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		ResetRegOffset;
+	XAie_MaskWrite32(DevInst, ResetRegAddr, ResetFldMask, ResetFldVal);
 
 	return XAIE_OK;
 }
@@ -392,9 +392,9 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 					((Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
-	CounterRegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) + CounterRegOffset;
-	XAieGbl_Write32(CounterRegAddr,CounterVal);
+	CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
+		CounterRegOffset;
+	XAie_Write32(DevInst, CounterRegAddr, CounterVal);
 
 	return XAIE_OK;
 }
@@ -461,9 +461,9 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 				((Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
-	CounterRegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + CounterRegOffset;
-	XAieGbl_Write32(CounterRegAddr,EventVal);
+	CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		CounterRegOffset;
+	XAie_Write32(DevInst, CounterRegAddr, EventVal);
 
 	return XAIE_OK;
 }
