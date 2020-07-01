@@ -17,6 +17,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Nishad   06/16/2020  Initial creation
+* 1.1   Tejus    06/25/2020  Switch to new io backend.
 * </pre>
 *
 ******************************************************************************/
@@ -103,11 +104,11 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	EventRegOffId = SlotId / TraceMod->NumEventsPerSlot;
 	RegOffset = TraceMod->EventRegOffs[EventRegOffId];
 	FldMask = TraceMod->Event[SlotId].Mask;
-	FldVal = XAie_SetField(MappedEvent, TraceMod->Event[SlotId].Lsb, FldMask);
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	FldVal = XAie_SetField(MappedEvent, TraceMod->Event[SlotId].Lsb,
+			FldMask);
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 
 	return XAIE_OK;
 }
@@ -183,10 +184,9 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegOffset = TraceMod->CtrlRegOff;
 	FldMask = TraceMod->StartEvent.Mask;
 	FldVal = XAie_SetField(MappedEvent, TraceMod->StartEvent.Lsb, FldMask);
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 
 	return XAIE_OK;
 }
@@ -262,10 +262,9 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegOffset = TraceMod->CtrlRegOff;
 	FldMask = TraceMod->StopEvent.Mask;
 	FldVal = XAie_SetField(MappedEvent, TraceMod->StopEvent.Lsb, FldMask);
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 
 	return XAIE_OK;
 }
@@ -332,10 +331,9 @@ AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 				TraceMod->PktId.Mask) |
 		 XAie_SetField(Pkt.PktType, TraceMod->PktType.Lsb,
 				 TraceMod->PktType.Mask);
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 
 	return XAIE_OK;
 }
@@ -402,10 +400,9 @@ AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegOffset = TraceMod->CtrlRegOff;
 	FldMask = TraceMod->ModeConfig.Mask;
 	FldVal = XAie_SetField(Mode, TraceMod->ModeConfig.Lsb, FldMask);
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAieGbl_MaskWrite32(RegAddr, FldMask, FldVal);
+	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 
 	return XAIE_OK;
 }
@@ -462,9 +459,8 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 
 	RegOffset = TraceMod->StatusRegOff;
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
-	RegValue = XAieGbl_Read32(RegAddr);
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegValue = XAie_Read32(DevInst, RegAddr);
 
 	*State = XAie_GetField(RegValue, TraceMod->State.Lsb,
 			TraceMod->State.Mask);
@@ -526,9 +522,8 @@ AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 
 	RegOffset = TraceMod->StatusRegOff;
-	RegAddr = DevInst->BaseAddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
-	RegValue = XAieGbl_Read32(RegAddr);
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegValue = XAie_Read32(DevInst, RegAddr);
 
 	*Mode = XAie_GetField(RegValue, TraceMod->ModeSts.Lsb,
 			TraceMod->ModeSts.Mask);
