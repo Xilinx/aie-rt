@@ -18,6 +18,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Nishad   06/16/2020  Initial creation
 * 1.1   Tejus    06/25/2020  Switch to new io backend.
+* 1.2   Nishad   07/03/2020  Fix typo in XAie_TracePktConfig().
 * </pre>
 *
 ******************************************************************************/
@@ -320,7 +321,8 @@ AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	else
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 
-	if(Pkt.PktId > XAIE_PACKET_ID_MAX || Pkt.PktId > XAIE_PACKET_TYPE_MAX) {
+	if(Pkt.PktId > XAIE_PACKET_ID_MAX || Pkt.PktType > XAIE_PACKET_TYPE_MAX)
+	{
 		XAieLib_print("Error: Invalid packet type or ID\n");
 		return XAIE_INVALID_ARGS;
 	}
