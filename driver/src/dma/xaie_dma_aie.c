@@ -23,6 +23,7 @@
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_helper.h"
+#include "xaiegbl.h"
 #include "xaiegbl_regdef.h"
 
 /************************** Constant Definitions *****************************/
@@ -112,6 +113,8 @@ AieRC _XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel,
 	DmaDesc->LockDesc.LockRelId = Rel.LockId;
 	DmaDesc->LockDesc.LockAcqEn = AcqEn;
 	DmaDesc->LockDesc.LockRelEn = RelEn;
+	DmaDesc->LockDesc.LockRelValEn = 0U;
+	DmaDesc->LockDesc.LockAcqValEn = 0U;
 
 	/* If lock release value is invalid,then lock released with no value */
 	if(Rel.LockVal != XAIE_LOCK_WITH_NO_VALUE) {

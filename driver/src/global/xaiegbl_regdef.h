@@ -45,7 +45,6 @@
 #define XAIE_FEATURE_AVAILABLE 	 1U
 #define XAIE_FEATURE_UNAVAILABLE 0U
 
-#define XAIE1_LOCK_WITH_NOVALUE (0xFF)
 /************************** Constant Definitions *****************************/
 /**
  * This typedef contains the attributes for the register bit fields.
