@@ -203,10 +203,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const unsigned char *ProgSec, const Elf32_Phdr *Phdr)
 {
 	AieRC RC;
-	const unsigned char *OverFlowSec;
 	u32 OverFlowBytes;
-	u32 OverFlowMask;
-	u32 OverFlowData;
 	u32 BytesToWrite;
 	u32 SectionAddr;
 	u32 SectionSize;
@@ -227,26 +224,16 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Addr = CoreMod->ProgMemHostOffset + Phdr->p_paddr +
 			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
+		/*
+		 * The program memory sections in the elf can end at 32bit
+		 * unaligned addresses. To factor this, we round up the number
+		 * of 32-bit words that has to be written to the program
+		 * memory. Since the elf has footers at the end, accessing
+		 * memory out of Progsec will not result in a segmentation
+		 * fault.
+		 */
 		XAie_BlockWrite32(DevInst, Addr, (u32 *)ProgSec,
-				Phdr->p_memsz / 4U);
-
-		/* Handle unaligned(32 bits) program memory sections*/
-		OverFlowBytes = Phdr->p_memsz % 4U;
-		if(OverFlowBytes) {
-			OverFlowSec = ProgSec + Phdr->p_memsz - OverFlowBytes;
-			OverFlowData = 0U;
-			OverFlowMask = 0U;
-			for(u8 i = 0U; i < OverFlowBytes; i++) {
-				OverFlowData |= (0xFF & *OverFlowSec) <<
-					(i * 8U);
-				OverFlowMask |= 0xFF << (i * 8U);
-				OverFlowSec++;
-			}
-
-			XAie_MaskWrite32(DevInst, Addr + Phdr->p_memsz -
-					OverFlowBytes, OverFlowMask,
-					OverFlowData);
-		}
+				(Phdr->p_memsz + 4U - 1U) / 4U);
 
 		return XAIE_OK;
 	}
@@ -285,8 +272,9 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Addr = (SectionAddr & AddrMask) +
 			_XAie_GetTileAddr(DevInst, TgtLoc.Row, TgtLoc.Col);
 
+		/* ceil(number of 32bit words to write)*/
 		XAie_BlockWrite32(DevInst, Addr, (u32 *)ProgSec,
-				BytesToWrite / 4U);
+				(BytesToWrite + 4U - 1U) / 4U);
 
 		SectionSize -= BytesToWrite;
 		SectionAddr += BytesToWrite;
@@ -316,7 +304,9 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Addr = (SectionAddr & AddrMask) +
 			_XAie_GetTileAddr(DevInst, TgtLoc.Row, TgtLoc.Col);
 
-		XAie_BlockSet32(DevInst, Addr, 0U, BytesToWrite / 4U);
+		/* ceil(number of 32bit words to write)*/
+		XAie_BlockSet32(DevInst, Addr, 0U,
+				(BytesToWrite + 4U - 1U) / 4U);
 
 		SectionSize -= BytesToWrite;
 		SectionAddr += BytesToWrite;
