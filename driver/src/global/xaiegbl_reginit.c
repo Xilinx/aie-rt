@@ -42,6 +42,8 @@
 * 2.7   Nishad  06/09/2020  Fix typo in *_MEMORY_* event macros
 * 2.8   Tejus   06/05/2020  Populate fifo mode availability in data structure.
 * 2.9   Nishad  06/16/2020  Add trace module properties
+* 3.0   Nishad  06/28/2020  Populate stream switch port event selection, event
+* 			    generation and combo event properties
 * </pre>
 *
 ******************************************************************************/
@@ -1418,11 +1420,41 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.XAie_EventNumber = AieTileMemModEventMapping,
 		.EventMin = 1000U,
 		.EventMax = 1149U,
+		.GenEventRegOff = XAIEGBL_MEM_EVTGEN,
+		.GenEvent = {XAIEGBL_MEM_EVTGEN_EVT_LSB, XAIEGBL_MEM_EVTGEN_EVT_MASK},
+		.ComboInputRegOff = XAIEGBL_MEM_COMEVTINP,
+		.ComboEventMask = XAIEGBL_MEM_COMEVTINP_EVTA_MASK,
+		.ComboEventOff = 8U,
+		.ComboCtrlRegOff = XAIEGBL_MEM_COMEVTCTRL,
+		.ComboConfigMask = XAIEGBL_MEM_COMEVTCTRL_COM0_MASK,
+		.ComboConfigOff = 8U,
+		.BaseStrmPortSelectRegOff = XAIE_FEATURE_UNAVAILABLE,
+		.NumStrmPortSelectIds = XAIE_FEATURE_UNAVAILABLE,
+		.StrmPortSelectIdsPerReg = XAIE_FEATURE_UNAVAILABLE,
+		.PortIdMask = XAIE_FEATURE_UNAVAILABLE,
+		.PortIdOff = XAIE_FEATURE_UNAVAILABLE,
+		.PortMstrSlvMask = XAIE_FEATURE_UNAVAILABLE,
+		.PortMstrSlvOff = XAIE_FEATURE_UNAVAILABLE,
 	},
 	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
 		.EventMin = 0U,
 		.EventMax = 128U,
+		.GenEventRegOff = XAIEGBL_CORE_EVTGEN,
+		.GenEvent = {XAIEGBL_CORE_EVTGEN_EVT_LSB, XAIEGBL_CORE_EVTGEN_EVT_MASK},
+		.ComboInputRegOff = XAIEGBL_CORE_COMEVTINP,
+		.ComboEventMask = XAIEGBL_CORE_COMEVTINP_EVTA_MASK,
+		.ComboEventOff = 8U,
+		.ComboCtrlRegOff = XAIEGBL_CORE_COMEVTCTRL,
+		.ComboConfigMask = XAIEGBL_CORE_COMEVTCTRL_COM0_MASK,
+		.ComboConfigOff = 8U,
+		.BaseStrmPortSelectRegOff = XAIEGBL_CORE_STRSWIEVTPORTSEL0,
+		.NumStrmPortSelectIds = 8U,
+		.StrmPortSelectIdsPerReg = 4U,
+		.PortIdMask = XAIEGBL_CORE_STRSWIEVTPORTSEL0_PORT0ID_MASK,
+		.PortIdOff = 8U,
+		.PortMstrSlvMask = XAIEGBL_CORE_STRSWIEVTPORTSEL0_PORT0MSTRSLV_MASK,
+		.PortMstrSlvOff = 8U,
 	},
 };
 
@@ -1432,6 +1464,21 @@ static const XAie_EvntMod AiePlEvntMod =
 	.XAie_EventNumber = AieTilePlModEventMapping,
 	.EventMin = 2000U,
 	.EventMax = 2160U,
+	.GenEventRegOff = XAIEGBL_PL_EVTGEN,
+	.GenEvent = {XAIEGBL_PL_EVTGEN_EVT_LSB, XAIEGBL_PL_EVTGEN_EVT_MASK},
+	.ComboInputRegOff = XAIEGBL_PL_COMEVTINP,
+	.ComboEventMask = XAIEGBL_PL_COMEVTINP_EVTA_MASK,
+	.ComboEventOff = 8U,
+	.ComboCtrlRegOff = XAIEGBL_PL_COMEVTCTRL,
+	.ComboConfigMask = XAIEGBL_PL_COMEVTCTRL_COM0_MASK,
+	.ComboConfigOff = 8U,
+	.BaseStrmPortSelectRegOff = XAIEGBL_PL_STRSWIEVTPORTSEL0,
+	.NumStrmPortSelectIds = 8U,
+	.StrmPortSelectIdsPerReg = 4U,
+	.PortIdMask = XAIEGBL_PL_STRSWIEVTPORTSEL0_PORT0ID_MASK,
+	.PortIdOff = 8U,
+	.PortMstrSlvMask = XAIEGBL_PL_STRSWIEVTPORTSEL0_PORT0MSTRSLV_MASK,
+	.PortMstrSlvOff = 8U,
 };
 
 /* Data structure to capture core and mem module timer properties */
