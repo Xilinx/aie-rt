@@ -34,6 +34,8 @@
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SIM
 #elif defined (__AIECDO__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CDO
+#elif defined (__AIEBAREMETAL__)
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_BAREMETAL
 #else
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
 #endif
@@ -42,6 +44,7 @@
 const extern XAie_Backend MetalBackend;
 const extern XAie_Backend SimBackend;
 const extern XAie_Backend CdoBackend;
+const extern XAie_Backend BaremetalBackend;
 const extern XAie_Backend DebugBackend;
 
 const static XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
@@ -49,6 +52,7 @@ const static XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 	&MetalBackend,
 	&SimBackend,
 	&CdoBackend,
+	&BaremetalBackend,
 	&DebugBackend,
 };
 
