@@ -32,6 +32,8 @@
 * 2.2   Tejus  06/01/2020  Add data structure for debug halt register.
 * 2.3   Tejus  06/05/2020  Add field in data structure for dma fifo mode.
 * 2.4   Nishad 06/16/2020  Add data structures for trace module
+* 2.5   Nishad 06/28/2020  Add data structures for event selection and combo
+*			   event registers
 * </pre>
 *
 ******************************************************************************/
@@ -452,6 +454,21 @@ typedef struct XAie_EvntMod {
 	const u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
 	u32 EventMin;		/* number corresponding to evt 0 in the enum */
 	u32 EventMax;		/* number corresponding to last evt in enum */
+	u32 GenEventRegOff;
+	XAie_RegFldAttr GenEvent;
+	u32 ComboInputRegOff;
+	u32 ComboEventMask;
+	u8 ComboEventOff;
+	u32 ComboCtrlRegOff;
+	u32 ComboConfigMask;
+	u8 ComboConfigOff;
+	u32 BaseStrmPortSelectRegOff;
+	u32 NumStrmPortSelectIds;
+	u32 StrmPortSelectIdsPerReg;
+	u32 PortIdMask;
+	u8 PortIdOff;
+	u32 PortMstrSlvMask;
+	u8 PortMstrSlvOff;
 } XAie_EvntMod;
 
 /* This typedef contains attributes of timer module */
