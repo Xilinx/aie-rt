@@ -9,7 +9,7 @@
 * @file xaie_events.h
 * @{
 *
-* Header file for performance counter implementations.
+* Header file for AIE events module.
 *
 * <pre>
 * MODIFICATION HISTORY:
@@ -19,6 +19,9 @@
 * 1.0   Dishita  11/21/2019  Initial creation
 * 1.1   Nishad   06/02/2020  Move event files under events directory
 * 1.2   Nishad   06/02/2020  Remove unused included header files
+* 1.3   Nishad   07/06/2020  Add APIs to configure stream switch port event
+*			     selection, event generation, and combo event
+*			     registers.
 * </pre>
 *
 ******************************************************************************/
@@ -26,10 +29,12 @@
 #define XAIE_EVENTS_H
 
 /***************************** Include Files *********************************/
+#include "xaiegbl.h"
+
 /***************************** Macro Definitions *****************************/
 #define XAIE_EVENT_INVALID		255
 
-/************************** Enum *********************************************/
+/**************************** Type Definitions *******************************/
 /*
  * This enum contains all the Events for all modules: Core, Memory of AIE tile
  * MEM tile and PL tile
@@ -643,5 +648,36 @@ typedef enum {
 	XAIE_EVENT_USER_EVENT_0_MEM_TILE,
 	XAIE_EVENT_USER_EVENT_1_MEM_TILE,
 } XAie_Events;
+
+/* Enum to capture stream switch port interface */
+typedef enum {
+	XAIE_STRMSW_SLAVE,
+	XAIE_STRMSW_MASTER,
+} XAie_StrmPortIntf;
+
+/* Enum to capture different event combo operations */
+typedef enum {
+	XAIE_EVENT_COMBO_E1_AND_E2,
+	XAIE_EVENT_COMBO_E1_AND_NOTE2,
+	XAIE_EVENT_COMBO_E1_OR_E2,
+	XAIE_EVENT_COMBO_E1_OR_NOTE2
+} XAie_EventComboOps;
+
+/* Enum to capture different event combo configs */
+typedef enum {
+	XAIE_EVENT_COMBO0,
+	XAIE_EVENT_COMBO1,
+	XAIE_EVENT_COMBO2,
+} XAie_EventComboId;
+
+/************************** Function Prototypes  *****************************/
+AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events Event);
+AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_EventComboId ComboId,
+		XAie_EventComboOps Op, XAie_Events Event1, XAie_Events Event2);
+AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
+		StrmSwPortType Port, u8 PortNum);
 
 #endif		/* end of protection macro */
