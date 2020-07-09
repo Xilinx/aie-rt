@@ -385,6 +385,15 @@ typedef struct {
 } XAie_MemMod;
 
 /*
+ * The typedef contains the attributes of SHIM clock buffer configuration
+ */
+typedef struct {
+	u32 RegOff;
+	u32 RstEnable;			/* Reset value of enable bit */
+	XAie_RegFldAttr ClkBufEnable;
+} XAie_ShimClkBufCntr;
+
+/*
  * The typedef contains attributes of PL interface module
  */
 typedef struct {
@@ -405,6 +414,7 @@ typedef struct {
 	const XAie_RegFldAttr *DownSzrByPass;
 	const XAie_RegFldAttr *ShimNocMux;
 	const XAie_RegFldAttr *ShimNocDeMux;
+	const XAie_ShimClkBufCntr *ClkBufCntr; /* Shim clock buffer control configuration */
 } XAie_PlIfMod;
 
 /*
