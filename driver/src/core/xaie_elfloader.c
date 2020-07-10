@@ -376,27 +376,6 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This routine sends the out of bound command to the sim to load symbols.
-*
-* @param	Loc: Location of AIE Tile.
-* @param	ElfPtr: Path to the ELF file.
-*
-* @return	None.
-*
-* @note		None.
-*
-*******************************************************************************/
-static void XAieSim_LoadSymbols(XAie_LocType Loc, const char *ElfPtr)
-{
-	XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_LOADSYM, Loc.Col, Loc.Row, 0, 0,
-			ElfPtr);
-}
-#endif
-
-#ifdef __AIESIM__
-/*****************************************************************************/
-/**
-*
 * This is the routine to derive the stack start and end addresses from the
 * specified map file. This function basically looks for the line
 * <b><init_address>..<final_address> ( <num> items) : Stack</b> in the
@@ -509,12 +488,13 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	}
 
 	/* Send the stack range set command */
-	XAieSim_WriteCmd(XAIESIM_CMDIO_CMD_SETSTACK, Loc.Col, Loc.Row,
+	XAie_CmdWrite(DevInst, Loc.Col, Loc.Row, XAIESIM_CMDIO_CMD_SETSTACK,
 			StackSz.start, StackSz.end, XAIE_NULL);
 
 	/* Load symbols if enabled */
 	if(LoadSym == XAIE_ENABLE) {
-		XAieSim_LoadSymbols(Loc, ElfPtr);
+		XAie_CmdWrite(DevInst, Loc.Col, Loc.Row,
+				XAIESIM_CMDIO_CMD_LOADSYM, 0, 0, ElfPtr);
 	}
 #endif
 	Fd = fopen(ElfPtr, "r");
