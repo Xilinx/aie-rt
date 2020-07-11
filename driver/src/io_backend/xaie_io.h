@@ -29,6 +29,22 @@
 #include "xaiegbl.h"
 
 /****************************** Type Definitions *****************************/
+
+/*
+ * Typedef for enum to capture backend function code
+ */
+typedef enum {
+	XAIE_BACKEND_OP_NPIWR32,
+} XAie_BackendOpCode;
+
+/*
+ * Typedef for structure for NPI write 32bit structure
+ */
+typedef struct XAie_BackendNpiWrReq {
+	u32 NpiRegOff;
+	u32 Val;
+} XAie_BackendNpiWrReq;
+
 /*
  * Typdef to capture all the backend IO operations
  * Init        : Backend specific initialization function. Init should attach
@@ -44,6 +60,7 @@
  *               a specified value at 32-bit granularity.
  * CmdWrite32  : This IO operation is required only in simulation mode. Other
  *               backends should have a no-op.
+ * RunOp       : Run operation specified by the operation code
  */
 typedef struct XAie_BackendOps {
 	AieRC (*Init)(XAie_DevInst *DevInst);
@@ -56,9 +73,11 @@ typedef struct XAie_BackendOps {
 	void (*BlockSet32)(void *IOInst, u64 RegOff, u32 Data, u32 Size);
 	void (*CmdWrite)(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 			u32 CmdWd1, const char *CmdStr);
+	AieRC (*RunOp)(void *IOInst, XAie_DevInst *DevInst,
+		     XAie_BackendOpCode Op, void *Arg);
 } XAie_BackendOps;
 
-/* Typedef to capture all backend inforamation */
+/* Typedef to capture all backend information */
 typedef struct XAie_Backend {
 	XAie_BackendType Type;
 	XAie_BackendOps Ops;
@@ -68,6 +87,28 @@ typedef struct XAie_Backend {
 AieRC XAie_IOInit(XAie_DevInst *DevInst);
 const XAie_Backend* _XAie_GetBackendPtr(XAie_BackendType Backend);
 
+/*****************************************************************************/
+/**
+*
+* Set the NPI write request arguments
+*
+* @param	RegOff : NPI register offset
+* @param	RegVal : Register Value
+* @return	NPI write request
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+static inline XAie_BackendNpiWrReq
+_XAie_SetBackendNpiWrReq(u32 RegOff, u32 RegVal)
+{
+	XAie_BackendNpiWrReq Req;
+
+	Req.NpiRegOff = RegOff;
+	Req.Val = RegVal;
+
+	return Req;
+}
 #endif	/* End of protection macro */
 
 /** @} */

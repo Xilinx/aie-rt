@@ -112,6 +112,14 @@ static inline void XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row,
 			CmdWd0, CmdWd1, CmdStr);
 }
 
+static inline AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op,
+		void *Arg)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
+}
+
 u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
