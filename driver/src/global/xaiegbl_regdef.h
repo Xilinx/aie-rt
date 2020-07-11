@@ -385,6 +385,23 @@ typedef struct {
 } XAie_MemMod;
 
 /*
+ * The typedef contains the attributes of reset configuration
+ */
+typedef struct {
+	u32 RegOff;
+	XAie_RegFldAttr RstCntr;
+} XAie_RstMod;
+
+/*
+ * The typedef contains the attributes of SHIM NOC AXI MM configuration
+ */
+typedef struct {
+	u32 RegOff;
+	XAie_RegFldAttr NsuSlvErr;
+	XAie_RegFldAttr NsuDecErr;
+} XAie_ShimNocAxiMMConfig;
+
+/*
  * The typedef contains the attributes of SHIM clock buffer configuration
  */
 typedef struct {
@@ -403,6 +420,7 @@ typedef struct {
 	u32 DownSzrByPassOff;
 	u32 ShimNocMuxOff;
 	u32 ShimNocDeMuxOff;
+	u32 ColRstOff;
 	u8  NumUpSzrPorts;
 	u8  MaxByPassPortNum;
 	u8  NumDownSzrPorts;
@@ -415,6 +433,9 @@ typedef struct {
 	const XAie_RegFldAttr *ShimNocMux;
 	const XAie_RegFldAttr *ShimNocDeMux;
 	const XAie_ShimClkBufCntr *ClkBufCntr; /* Shim clock buffer control configuration */
+	XAie_RegFldAttr ColRst; /* Tile column reset configuration */
+	const XAie_RstMod *ShimTileRst; /* SHIM tile reset enable configuration */
+	const XAie_ShimNocAxiMMConfig *ShimNocAxiMM; /* SHIM NOC AXI MM configuration */
 } XAie_PlIfMod;
 
 /*
