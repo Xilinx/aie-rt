@@ -503,6 +503,20 @@ static const XAie_ShimClkBufCntr AieShimClkBufCntr =
 	.ClkBufEnable = {XAIEGBL_PL_TILCLOCTRL_CLOBUFENA_LSB, XAIEGBL_PL_TILCLOCTRL_CLOBUFENA_MASK}
 };
 
+/* Register to reset SHIM tile */
+static const XAie_RstMod AieShimTileRst =
+{
+	.RegOff = XAIEGBL_PL_AIESHIRSTENA,
+	.RstCntr = {XAIEGBL_PL_AIESHIRSTENA_RST_LSB, XAIEGBL_PL_AIESHIRSTENA_RST_MASK}
+};
+
+/* Register field attributes for SHIMNOC AXI MM configuration */
+static const XAie_ShimNocAxiMMConfig AieShimNocAxiMMConfig =
+{
+	.RegOff = 0x1E020,
+	.NsuSlvErr = {2, 0x4},
+	.NsuDecErr = {3, 0x8}
+};
 
 /* Core Module */
 static const XAie_CoreMod AieCoreMod =
@@ -533,6 +547,7 @@ static const XAie_PlIfMod AiePlIfMod =
 	.DownSzrOff = XAIEGBL_PL_PLINTDOWCFG,
 	.DownSzrEnOff = XAIEGBL_PL_PLINTDOWENA,
 	.DownSzrByPassOff = XAIEGBL_PL_PLINTDOWBYPASS,
+	.ColRstOff = XAIEGBL_PL_AIETILCOLRST,
 	.NumUpSzrPorts = 0x6,
 	.MaxByPassPortNum = 0x6,
 	.NumDownSzrPorts = 0x8,
@@ -547,6 +562,9 @@ static const XAie_PlIfMod AiePlIfMod =
 	.ShimNocMux = NULL,
 	.ShimNocDeMux = NULL,
 	.ClkBufCntr = &AieShimClkBufCntr,
+	.ColRst = {XAIEGBL_PL_AIETILCOLRST_RST_LSB, XAIEGBL_PL_AIETILCOLRST_RST_MASK},
+	.ShimTileRst = &AieShimTileRst,
+	.ShimNocAxiMM = NULL,
 };
 
 /* PL Interface module for SHIMNOC Tiles */
@@ -556,6 +574,7 @@ static const XAie_PlIfMod AieShimTilePlIfMod =
 	.DownSzrOff = XAIEGBL_PL_PLINTDOWCFG,
 	.DownSzrEnOff = XAIEGBL_PL_PLINTDOWENA,
 	.DownSzrByPassOff = XAIEGBL_PL_PLINTDOWBYPASS,
+	.ColRstOff = XAIEGBL_PL_AIETILCOLRST,
 	.NumUpSzrPorts = 0x6,
 	.MaxByPassPortNum = 0x6,
 	.NumDownSzrPorts = 0x8,
@@ -570,6 +589,9 @@ static const XAie_PlIfMod AieShimTilePlIfMod =
 	.ShimNocMux = AieShimMuxConfig,
 	.ShimNocDeMux = AieShimDeMuxConfig,
 	.ClkBufCntr = &AieShimClkBufCntr,
+	.ColRst = {XAIEGBL_PL_AIETILCOLRST_RST_LSB, XAIEGBL_PL_AIETILCOLRST_RST_MASK},
+	.ShimTileRst = &AieShimTileRst,
+	.ShimNocAxiMM = &AieShimNocAxiMMConfig,
 };
 
 /* Lock Module for AIE Tiles  */
