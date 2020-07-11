@@ -27,10 +27,12 @@
 
 #include "xaie_debug.h"
 #include "xaie_io.h"
+#include "xaie_npi.h"
 
 /****************************** Type Definitions *****************************/
 typedef struct {
 	u64 BaseAddr;
+	u64 NpiBaseAddr;
 } XAie_DebugIO;
 
 /************************** Variable Definitions *****************************/
@@ -46,6 +48,7 @@ const XAie_Backend DebugBackend =
 	.Ops.BlockWrite32 = XAie_DebugIO_BlockWrite32,
 	.Ops.BlockSet32 = XAie_DebugIO_BlockSet32,
 	.Ops.CmdWrite = XAie_DebugIO_CmdWrite,
+	.Ops.RunOp = XAie_DebugIO_RunOp,
 };
 
 /************************** Function Definitions *****************************/
@@ -91,6 +94,7 @@ AieRC XAie_DebugIO_Init(XAie_DevInst *DevInst)
 	}
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
+	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	DevInst->IOInst = IOInst;
 
 	return XAIE_OK;
@@ -239,6 +243,82 @@ void XAie_DebugIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr)
 {
 	/* no-op */
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function to write to AI engine NPI registers
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write.
+* @param	RegVal: Register value to write
+*
+* @return	None.
+*
+* @note		None.
+*
+*******************************************************************************/
+static void _XAie_DebugIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
+{
+	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	u64 RegAddr;
+
+	RegAddr = DebugIOInst->NpiBaseAddr + RegOff;
+	printf("NPIMW: 0x%lx, 0x%x\n", RegAddr, RegVal);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function to run backend operations
+*
+* @param	IOInst: IO instance pointer
+* @param	DevInst: AI engine partition device instance
+* @param	Op: Backend operation code
+* @param	Arg: Backend operation argument
+*
+* @return	XAIE_OK for success and error code for failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		     XAie_BackendOpCode Op, void *Arg)
+{
+	AieRC RC = XAIE_OK;
+	(void)IOInst;
+
+	switch(Op) {
+		case XAIE_BACKEND_OP_NPIWR32:
+		{
+			XAie_BackendNpiWrReq *Req = Arg;
+
+			_XAie_DebugIO_NpiWrite32(IOInst, Req->NpiRegOff,
+					Req->Val);
+			break;
+		}
+		case XAIE_BACKEND_OP_ASSERT_SHIMRST:
+		{
+			u8 RstEnable = (u8)((uintptr_t)Arg & 0xFF);
+
+			_XAie_NpiSetShimReset(DevInst, RstEnable);
+			break;
+		}
+		case XAIE_BACKEND_OP_SET_PROTREG:
+		{
+			u8 Enable = (u8)((uintptr_t)Arg & 0xFF);
+
+			_XAie_NpiSetProtectedRegEnable(DevInst, Enable);
+			break;
+		}
+		default:
+			XAieLib_print("Error: Backend doesn't support Op %u.\n", Op);
+			RC = XAIE_FEATURE_NOT_SUPPORTED;
+			break;
+	}
+
+	return RC;
 }
 
 /** @} */

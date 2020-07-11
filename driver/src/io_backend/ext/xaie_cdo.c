@@ -36,10 +36,13 @@
 
 #include "xaie_cdo.h"
 #include "xaie_io.h"
+#include "xaie_npi.h"
 
+/************************** Constant Definitions *****************************/
 /****************************** Type Definitions *****************************/
 typedef struct {
 	u64 BaseAddr;
+	u64 NpiBaseAddr;
 } XAie_CdoIO;
 
 /************************** Variable Definitions *****************************/
@@ -55,6 +58,7 @@ const XAie_Backend CdoBackend =
 	.Ops.BlockWrite32 = XAie_CdoIO_BlockWrite32,
 	.Ops.BlockSet32 = XAie_CdoIO_BlockSet32,
 	.Ops.CmdWrite = XAie_CdoIO_CmdWrite,
+	.Ops.RunOp = XAie_CdoIO_RunOp,
 };
 
 /************************** Function Definitions *****************************/
@@ -102,6 +106,7 @@ AieRC XAie_CdoIO_Init(XAie_DevInst *DevInst)
 	}
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
+	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	DevInst->IOInst = IOInst;
 
 	return XAIE_OK;
@@ -240,6 +245,83 @@ void XAie_CdoIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 		XAie_CdoIO_Write32(IOInst, RegOff+ i * 4U, Data);
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the function to write 32 bit value to NPI register address.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: NPI register offset
+* @param	RegVal: Value to write to register
+*
+* @return	None.
+*
+* @note		None.
+*
+*******************************************************************************/
+static void _XAie_CdoIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
+{
+	XAie_CdoIO *CdoIOInst = (XAie_CdoIO *)IOInst;
+	u64 RegAddr;
+
+	RegAddr = CdoIOInst->NpiBaseAddr + RegOff;
+	cdo_Write32(RegAddr, RegVal);
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function to run backend operations
+*
+* @param	IOInst: IO instance pointer
+* @param	DevInst: AI engine partition device instance
+* @param	Op: Backend operation code
+* @param	Arg: Backend operation argument
+*
+* @return	XAIE_OK for success and error code for failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		     XAie_BackendOpCode Op, void *Arg)
+{
+	AieRC RC = XAIE_OK;
+	(void)IOInst;
+
+	switch(Op) {
+		case XAIE_BACKEND_OP_NPIWR32:
+		{
+			XAie_BackendNpiWrReq *Req = Arg;
+
+			_XAie_CdoIO_NpiWrite32(IOInst, Req->NpiRegOff,
+					Req->Val);
+			break;
+		}
+		case XAIE_BACKEND_OP_ASSERT_SHIMRST:
+		{
+			u8 RstEnable = (u8)((uintptr_t)Arg & 0xFF);
+
+			_XAie_NpiSetShimReset(DevInst, RstEnable);
+			break;
+		}
+		case XAIE_BACKEND_OP_SET_PROTREG:
+		{
+			u8 Enable = (u8)((uintptr_t)Arg & 0xFF);
+
+			_XAie_NpiSetProtectedRegEnable(DevInst, Enable);
+			break;
+		}
+		default:
+			XAieLib_print("Error: Backend doesn't support Op %u.\n", Op);
+			RC = XAIE_FEATURE_NOT_SUPPORTED;
+			break;
+	}
+
+	return RC;
+}
+
 #else
 
 AieRC XAie_CdoIO_Finish(void *IOInst)
@@ -288,6 +370,16 @@ void XAie_CdoIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 void XAie_CdoIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
 	/* no-op */
+}
+
+AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		     XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
 #endif /* __AIECDO__ */

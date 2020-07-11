@@ -54,6 +54,7 @@ const XAie_Backend BaremetalBackend =
 	.Ops.BlockWrite32 = XAie_BaremetalIO_BlockWrite32,
 	.Ops.BlockSet32 = XAie_BaremetalIO_BlockSet32,
 	.Ops.CmdWrite = XAie_BaremetalIO_CmdWrite,
+	.Ops.RunOp = XAie_BaremetalIO_RunOp,
 };
 
 /************************** Function Definitions *****************************/
@@ -319,4 +320,13 @@ void XAie_BaremetalIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 	/* no-op */
 }
 
+AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
 /** @} */

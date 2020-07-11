@@ -39,6 +39,11 @@ void XAie_DebugIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size);
 void XAie_DebugIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size);
 void XAie_DebugIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr);
+AieRC XAie_DebugIO_SetShimResetAssert(void *IOInst, u8 RstEnable);
+AieRC XAie_DebugIO_SetProtectedReg(void *IOInst, XAie_DevInst *DevInst,
+			u8 Enable);
+AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg);
 
 #endif	/* End of protection macro */
 

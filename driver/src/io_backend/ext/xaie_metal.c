@@ -41,6 +41,7 @@
 
 #include "xaie_io.h"
 #include "xaie_metal.h"
+#include "xaie_npi.h"
 
 /***************************** Macro Definitions *****************************/
 /****************************** Type Definitions *****************************/
@@ -50,6 +51,8 @@ typedef struct XAie_MetalIO {
 	struct metal_device *device;	/**< libmetal device */
 	struct metal_io_region *io;	/**< libmetal io region */
 	u64 io_base;			/**< libmetal io region base */
+	struct metal_device *npi_device;	/**< libmetal NPI device */
+	struct metal_io_region *npi_io;	/**< libmetal NPI io region */
 } XAie_MetalIO;
 
 #endif /* __AIEMETAL__ */
@@ -67,6 +70,7 @@ const XAie_Backend MetalBackend =
 	.Ops.BlockWrite32 = XAie_MetalIO_BlockWrite32,
 	.Ops.BlockSet32 = XAie_MetalIO_BlockSet32,
 	.Ops.CmdWrite = XAie_MetalIO_CmdWrite,
+	.Ops.RunOp = XAie_MetalIO_RunOp,
 };
 
 /************************** Function Definitions *****************************/
@@ -90,6 +94,9 @@ AieRC XAie_MetalIO_Finish(void *IOInst)
 	XAie_MetalIO *MetalIOInst = (XAie_MetalIO *)IOInst;
 
 	metal_device_close(MetalIOInst->device);
+	if (MetalIOInst->npi_device) {
+		metal_device_close(MetalIOInst->npi_device);
+	}
 	metal_free_memory(IOInst);
 	metal_finish();
 
@@ -143,6 +150,12 @@ AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 	}
 
 	MetalIOInst->io_base = metal_io_phys(MetalIOInst->io, 0);
+
+	ret = metal_device_open("platform", "f70a0000.aie-npi",
+			&MetalIOInst->npi_device);
+	if (ret == 0) {
+		MetalIOInst->npi_io = metal_device_io_region(MetalIOInst->npi_device, 0);
+	}
 
 	DevInst->IOInst = (void *)MetalIOInst;
 
@@ -320,6 +333,92 @@ void XAie_MetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 	}
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the function to write to AI engine NPI registers
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write.
+* @param	RegVal: Register value to write
+*
+* @return	None.
+*
+* @note		None.
+*
+*******************************************************************************/
+static void _XAie_MetalIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
+{
+	XAie_MetalIO *MetalIOInst = (XAie_MetalIO *)IOInst;
+
+	metal_io_write32(MetalIOInst->npi_io, RegOff, RegVal);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function to run backend operations
+*
+* @param	IOInst: IO instance pointer
+* @param	DevInst: AI engine partition device instance
+* @param	Op: Backend operation code
+* @param	Arg: Backend operation argument
+*
+* @return	XAIE_OK for success and error code for failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		     XAie_BackendOpCode Op, void *Arg)
+{
+	AieRC RC = XAIE_FEATURE_NOT_SUPPORTED;
+	XAie_MetalIO *MetalIOInst = (XAie_MetalIO *)IOInst;
+
+	switch(Op) {
+		case XAIE_BACKEND_OP_NPIWR32:
+		{
+			XAie_BackendNpiWrReq *Req = Arg;
+
+			if (MetalIOInst->npi_io != NULL) {
+				_XAie_MetalIO_NpiWrite32(IOInst,
+						Req->NpiRegOff, Req->Val);
+				RC = XAIE_OK;
+			}
+			break;
+		}
+		case XAIE_BACKEND_OP_ASSERT_SHIMRST:
+		{
+			u8 RstEnable = (u8)((uintptr_t)Arg & 0xFF);
+
+			if (MetalIOInst->npi_io != NULL) {
+				_XAie_NpiSetShimReset(DevInst, RstEnable);
+				RC = XAIE_OK;
+			}
+			break;
+		}
+		case XAIE_BACKEND_OP_SET_PROTREG:
+		{
+			u8 Enable = (u8)((uintptr_t)Arg & 0xFF);
+
+			if (MetalIOInst->npi_io != NULL) {
+				_XAie_NpiSetProtectedRegEnable(DevInst,
+						Enable);
+				RC = XAIE_OK;
+			}
+			break;
+		}
+		default:
+			RC = XAIE_FEATURE_NOT_SUPPORTED;
+			break;
+	}
+
+	if (RC == XAIE_FEATURE_NOT_SUPPORTED) {
+		XAieLib_print("Error: Backend doesn't support Op %u.\n", Op);
+	}
+	return RC;
+}
+
 #else
 
 AieRC XAie_MetalIO_Finish(void *IOInst)
@@ -368,6 +467,16 @@ void XAie_MetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 void XAie_MetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
 	/* no-op */
+}
+
+AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
 #endif /* __AIEMETAL__ */

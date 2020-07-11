@@ -55,6 +55,7 @@ const XAie_Backend SimBackend =
 	.Ops.BlockWrite32 = XAie_SimIO_BlockWrite32,
 	.Ops.BlockSet32 = XAie_SimIO_BlockSet32,
 	.Ops.CmdWrite = XAie_SimIO_CmdWrite,
+	.Ops.RunOp = XAie_SimIO_RunOp,
 };
 
 /************************** Function Definitions *****************************/
@@ -336,5 +337,15 @@ void XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 }
 
 #endif /* __AIESIM__ */
+
+AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
 
 /** @} */
