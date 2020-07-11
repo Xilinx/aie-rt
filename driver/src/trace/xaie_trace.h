@@ -56,5 +56,17 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_TraceState *State);
 AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_TraceMode *Mode);
+AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events StartEvent,
+		XAie_Events StopEvent, XAie_TraceMode Mode);
+AieRC XAie_TraceControlConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
+AieRC XAie_TracePktConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
+AieRC XAie_TraceEventList(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events *Events, u8 *SlotId,
+		u8 NumEvents);
+AieRC XAie_TraceEventReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SlotId);
 
 #endif		/* end of protection macro */
