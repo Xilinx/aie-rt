@@ -330,10 +330,30 @@ typedef struct {
 	const XAie_DmaSysProp *SysProp;
 } XAie_DmaBdProp;
 
+typedef struct {
+	XAie_RegFldAttr Status;
+	XAie_RegFldAttr StartQSize;
+	XAie_RegFldAttr Stalled;
+} XAie_Gen1DmaChStatus;
+
+typedef struct {
+	XAie_RegFldAttr Status;
+	XAie_RegFldAttr StalledLockRel;
+	XAie_RegFldAttr StalledLockAcq;
+	XAie_RegFldAttr StalledStreamStarve;
+	XAie_RegFldAttr TaskQSize;
+} XAie_Gen2DmaChStatus;
+
+typedef union {
+	XAie_Gen1DmaChStatus AieDmaChStatus;
+	XAie_Gen2DmaChStatus Aie2DmaChStatus;
+} XAie_DmaChStatus;
+
 /*
  * The typedef contains the attributes of the Dma Channels
  */
 typedef struct {
+	u8 StartQSizeMax;
 	XAie_RegBdFldAttr EnToken;
 	XAie_RegBdFldAttr RptCount;
 	XAie_RegBdFldAttr StartBd;
@@ -344,6 +364,7 @@ typedef struct {
 	XAie_RegBdFldAttr Enable;
 	XAie_RegBdFldAttr PauseMem;
 	XAie_RegBdFldAttr PauseStream;
+	const XAie_DmaChStatus *DmaChStatus;
 } XAie_DmaChProp;
 
 /*
@@ -364,6 +385,8 @@ typedef struct XAie_DmaMod {
 	u32 IdxOffset;
 	u32 ChCtrlBase;
 	u32 NumChannels;
+	u32 ChStatusBase;
+	u32 ChStatusOffset;
 	const XAie_DmaBdProp *BdProp;
 	const XAie_DmaChProp *ChProp;
 	void (*DmaBdInit)(XAie_DmaDesc *Desc);
@@ -374,6 +397,12 @@ typedef struct XAie_DmaMod {
 	AieRC (*SetMultiDim) (XAie_DmaDesc *Desc, XAie_DmaTensor *Tensor);
 	AieRC (*WriteBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
 			XAie_LocType Loc, u8 BdNum);
+	AieRC (*PendingBd)(XAie_DevInst *DevInst, XAie_LocType Loc,
+			const XAie_DmaMod *DmaMod, u8 ChNum,
+			XAie_DmaDirection Dir, u8 *PendingBd);
+	AieRC (*WaitforDone)(XAie_DevInst *DevINst, XAie_LocType Loc,
+			const XAie_DmaMod *DmaMod, u8 ChNum,
+			XAie_DmaDirection Dir, u32 TimeOutUs);
 } XAie_DmaMod;
 
 /*
