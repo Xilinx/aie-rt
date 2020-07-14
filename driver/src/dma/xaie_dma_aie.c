@@ -38,6 +38,7 @@
 #define XAIE_SHIMDMA_NUM_BD_WORDS			5U
 
 #define XAIE_TILE_DMA_NUM_DIMS_MAX			2U
+#define XAIE_DMA_STATUS_IDLE				0x0U
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -457,6 +458,104 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 
 	for(u8 i = 0U; i < XAIE_TILEDMA_NUM_BD_WORDS; i++) {
 		XAie_Write32(DevInst, Addr + i * 4U, BdWord[i]);
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to get the count of scheduled BDs in pending.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	DmaMod: Dma module pointer
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	PendingBd: Pointer to store the number of pending BDs.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only. For AIE Tiles only.
+*
+******************************************************************************/
+AieRC _XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
+		u8 *PendingBd)
+{
+	u64 Addr;
+	u32 StatusReg, StartQSize, Stalled, Status;
+
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->ChStatusBase + Dir * DmaMod->ChStatusOffset;
+
+	StatusReg = XAie_Read32(DevInst, Addr);
+
+	StartQSize = XAie_GetField(StatusReg,
+			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.StartQSize.Lsb,
+			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.StartQSize.Mask);
+
+	if(StartQSize > DmaMod->ChProp->StartQSizeMax) {
+		XAieLib_print("Error: Invalid start queue size from register\n");
+		return XAIE_ERR;
+	}
+
+	Status = XAie_GetField(StatusReg,
+			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Lsb,
+			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Mask);
+	Stalled = XAie_GetField(StatusReg,
+			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Stalled.Lsb,
+			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Stalled.Mask);
+
+	/* Check if BD is being used by a channel */
+	if((Status != XAIE_DMA_STATUS_IDLE) || Stalled) {
+		StartQSize++;
+	}
+
+	*PendingBd = StartQSize;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on Shim DMA channel to be completed.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	DmaMod: Dma module pointer
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param        TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only. For AIE Tiles only.
+*
+******************************************************************************/
+AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
+		u32 TimeOutUs)
+{
+	u64 Addr;
+	u32 Mask, Value;
+
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->ChStatusBase + Dir * DmaMod->ChStatusOffset;
+	Mask = DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Mask |
+		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.StartQSize.Mask |
+		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Stalled.Mask;
+
+	/* This will check the stalled and start queue size bits to be zero */
+	Value = XAIE_DMA_STATUS_IDLE <<
+		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Lsb;
+
+	if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
+			XAIE_SUCCESS) {
+		XAieLib_print("Wait for done timed out\n");
+		return XAIE_ERR;
 	}
 
 	return XAIE_OK;

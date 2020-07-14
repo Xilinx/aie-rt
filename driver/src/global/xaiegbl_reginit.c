@@ -769,6 +769,29 @@ static const XAie_DmaBdProp AieTileDmaProp =
 	.SysProp = NULL
 };
 
+static const XAie_DmaChStatus AieTileDmaChStatus[] =
+{
+	/* This database is common for mm2s and s2mm channels */
+	{
+		/* For channel 0 */
+		.AieDmaChStatus.Status.Lsb = XAIEGBL_MEM_DMAS2MMSTA_STA0_LSB,
+		.AieDmaChStatus.Status.Mask = XAIEGBL_MEM_DMAS2MMSTA_STA0_MASK,
+		.AieDmaChStatus.StartQSize.Lsb = XAIEGBL_MEM_DMAS2MMSTA_STAQUESIZ0_LSB,
+		.AieDmaChStatus.StartQSize.Mask = XAIEGBL_MEM_DMAS2MMSTA_STAQUESIZ0_MASK,
+		.AieDmaChStatus.Stalled.Lsb = XAIEGBL_MEM_DMAS2MMSTA_LOCKSTAL0_LSB,
+		.AieDmaChStatus.Stalled.Mask = XAIEGBL_MEM_DMAS2MMSTA_LOCKSTAL0_MASK,
+	},
+	{
+		/* For channel 1 */
+		.AieDmaChStatus.Status.Lsb = XAIEGBL_MEM_DMAS2MMSTA_STA1_LSB,
+		.AieDmaChStatus.Status.Mask = XAIEGBL_MEM_DMAS2MMSTA_STA1_MASK,
+		.AieDmaChStatus.StartQSize.Lsb = XAIEGBL_MEM_DMAS2MMSTA_STAQUESIZ1_LSB,
+		.AieDmaChStatus.StartQSize.Mask = XAIEGBL_MEM_DMAS2MMSTA_STAQUESIZ1_MASK,
+		.AieDmaChStatus.Stalled.Lsb = XAIEGBL_MEM_DMAS2MMSTA_LOCKSTAL1_LSB,
+		.AieDmaChStatus.Stalled.Mask = XAIEGBL_MEM_DMAS2MMSTA_LOCKSTAL1_MASK,
+	},
+};
+
 static const XAie_DmaChProp AieTileDmaChProp =
 {
 	.CtrlId = {0U},
@@ -787,6 +810,8 @@ static const XAie_DmaChProp AieTileDmaChProp =
 	.StartBd.Idx = 1U,
 	.StartBd.Lsb = XAIEGBL_MEM_DMAS2MM0STAQUE_STABD_LSB,
 	.StartBd.Mask = XAIEGBL_MEM_DMAS2MM0STAQUE_STABD_MASK,
+	.StartQSizeMax = 4U,
+	.DmaChStatus = AieTileDmaChStatus,
 };
 
 /* Tile Dma Module */
@@ -806,13 +831,17 @@ static const XAie_DmaMod AieTileDmaMod =
 	.ChCtrlBase = XAIEGBL_MEM_DMAS2MM0CTR,
 	.NumChannels = 2U,  /* Number of s2mm/mm2s channels */
 	.ChIdxOffset = 0x8,  /* This is the offset between each channel */
+	.ChStatusBase = XAIEGBL_MEM_DMAS2MMSTA,
+	.ChStatusOffset = 0x10,
 	.BdProp = &AieTileDmaProp,
 	.ChProp = &AieTileDmaChProp,
 	.DmaBdInit = &_XAie_TileDmaInit,
 	.SetLock = &_XAie_DmaSetLock,
 	.SetIntrleave = &_XAie_DmaSetInterleaveEnable,
 	.SetMultiDim = &_XAie_DmaSetMultiDim,
-	.WriteBd = &_XAie_TileDmaWriteBd
+	.WriteBd = &_XAie_TileDmaWriteBd,
+	.PendingBd = &_XAie_DmaGetPendingBdCount,
+	.WaitforDone = &_XAie_DmaWaitForDone,
 };
 
 /* shim dma structures */
@@ -924,6 +953,29 @@ static const XAie_DmaBdProp AieShimDmaProp =
 	.SysProp = &AieShimDmaSysProp
 };
 
+static const XAie_DmaChStatus AieShimDmaChStatus[] =
+{
+	/* This database is common for mm2s and s2mm channels */
+	{
+		/* For channel 0 */
+		.AieDmaChStatus.Status.Lsb = XAIEGBL_NOC_DMAS2MMSTA_STA0_LSB,
+		.AieDmaChStatus.Status.Mask = XAIEGBL_NOC_DMAS2MMSTA_STA0_MASK,
+		.AieDmaChStatus.StartQSize.Lsb = XAIEGBL_NOC_DMAS2MMSTA_STAQUESIZ0_LSB,
+		.AieDmaChStatus.StartQSize.Mask = XAIEGBL_NOC_DMAS2MMSTA_STAQUESIZ0_MASK,
+		.AieDmaChStatus.Stalled.Lsb = XAIEGBL_NOC_DMAS2MMSTA_STAL0_LSB,
+		.AieDmaChStatus.Stalled.Mask = XAIEGBL_NOC_DMAS2MMSTA_STAL0_MASK,
+	},
+	{
+		/* For channel 1 */
+		.AieDmaChStatus.Status.Lsb = XAIEGBL_NOC_DMAS2MMSTA_STA1_LSB,
+		.AieDmaChStatus.Status.Mask = XAIEGBL_NOC_DMAS2MMSTA_STA1_MASK,
+		.AieDmaChStatus.StartQSize.Lsb = XAIEGBL_NOC_DMAS2MMSTA_STAQUESIZ1_LSB,
+		.AieDmaChStatus.StartQSize.Mask = XAIEGBL_NOC_DMAS2MMSTA_STAQUESIZ1_MASK,
+		.AieDmaChStatus.Stalled.Lsb = XAIEGBL_NOC_DMAS2MMSTA_STAL1_LSB,
+		.AieDmaChStatus.Stalled.Mask = XAIEGBL_NOC_DMAS2MMSTA_STAL1_MASK,
+	},
+};
+
 static const XAie_DmaChProp AieShimDmaChProp =
 {
 	.CtrlId = {0U},
@@ -944,6 +996,8 @@ static const XAie_DmaChProp AieShimDmaChProp =
 	.StartBd.Idx = 1U,
 	.StartBd.Lsb = XAIEGBL_NOC_DMAS2MM0STAQUE_STABD_LSB,
 	.StartBd.Mask = XAIEGBL_NOC_DMAS2MM0STAQUE_STABD_MASK,
+	.StartQSizeMax = 4U,
+	.DmaChStatus = AieShimDmaChStatus,
 };
 
 /* Shim Dma Module */
@@ -963,13 +1017,17 @@ static const XAie_DmaMod AieShimDmaMod =
 	.ChCtrlBase = XAIEGBL_NOC_DMAS2MM0CTR,
 	.NumChannels = 2U,  /* Number of s2mm/mm2s channels */
 	.ChIdxOffset = 0x8,  /* This is the offset between each channel */
+	.ChStatusBase = XAIEGBL_NOC_DMAS2MMSTA,
+	.ChStatusOffset = 0x4,
 	.BdProp = &AieShimDmaProp,
 	.ChProp = &AieShimDmaChProp,
 	.DmaBdInit = &_XAie_ShimDmaInit,
 	.SetLock = &_XAie_DmaSetLock,
 	.SetIntrleave = NULL,
 	.SetMultiDim = NULL,
-	.WriteBd = &_XAie_ShimDmaWriteBd
+	.WriteBd = &_XAie_ShimDmaWriteBd,
+	.PendingBd = &_XAie_DmaGetPendingBdCount,
+	.WaitforDone = &_XAie_DmaWaitForDone,
 };
 
 /* Enum to Event Number mapping of all events of AIE Core module */
