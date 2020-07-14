@@ -38,6 +38,7 @@
 
 #define XAIE_SHIM_BLEN_SHIFT				0x3
 #define XAIE_DMA_CHCTRL_NUM_WORDS			2U
+#define XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US		1000000U
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -1141,6 +1142,98 @@ AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir)
 {
 	return _XAie_DmaChannelControl(DevInst, Loc, ChNum, Dir, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to get the count of scheduled BDs in pending.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	PendingBd: Pointer to store the number of pending BDs.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This function checks the number of pending BDs in the queue
+* as well as if there's any BD that the channel is currently operating on.
+* If multiple BDs are chained, it's counted as one BD.
+*
+******************************************************************************/
+AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u8 *PendingBd)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAieLib_print("Error: Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	return DmaMod->PendingBd(DevInst, Loc, DmaMod, ChNum, Dir, PendingBd);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on Shim DMA channel to be completed.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param        TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, u32 TimeOutUs)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAieLib_print("Error: Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAieLib_print("Error: Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if(TimeOutUs == 0U) {
+		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
+	}
+
+	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs);
 }
 
 /** @} */
