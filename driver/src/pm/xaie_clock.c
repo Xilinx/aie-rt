@@ -27,7 +27,7 @@
 
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
-
+#define CheckBit(bitmap, pos)	(bitmap[ pos / (sizeof(bitmap[0]) * 8U)] & (1U << pos % (sizeof(bitmap[0]) * 8U)))
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -63,7 +63,8 @@ static void  _XAie_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 	FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
 			ClkBufCntr->ClkBufEnable.Mask);
 
-	XAie_Write32(DevInst, RegAddr, FldVal);
+	XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
+			FldVal);
 }
 
 /*****************************************************************************/
@@ -110,4 +111,176 @@ u8 _XAie_CheckClockRstEnable(XAie_DevInst *DevInst, XAie_LocType Loc)
 	ClkBufCntr = PlIfMod->ClkBufCntr;
 
 	return ClkBufCntr->RstEnable;
+}
+
+/*****************************************************************************/
+/*
+* This is an API to gate clocks in tiles from the topmost row to the row above
+* the Location passed as argument in that column. In AIE HW, the control of
+* clock gating a tile is present in the tile below that tile in that column.
+* Hence gating of clocks of unused tiles in a col happens from top.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @return	XAIE_OK on success
+*
+* @note		None
+*
+*******************************************************************************/
+static void _XAie_PmGateTiles(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	for (u8 R = DevInst->NumRows - 1; R > Loc.Row; R--) {
+		u8 TileType;
+		u64 RegAddr;
+		const XAie_ClockMod *ClockMod;
+		XAie_LocType TileLoc;
+
+		TileLoc.Col = Loc.Col;
+		TileLoc.Row = R - 1;
+		TileType = _XAie_GetTileTypefromLoc(DevInst, TileLoc);
+		ClockMod = DevInst->DevProp.DevMod[TileType].ClockMod;
+		RegAddr = _XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col) +
+				ClockMod->ClockRegOff;
+		XAie_MaskWrite32(DevInst, RegAddr,
+				ClockMod->NextTileClockCntrl.Mask, 0U);
+	}
+}
+
+/*****************************************************************************/
+/*
+* This is an API to enable clocks for tiles from FromLoc to ToLoc. In AIE HW,
+* the control of clock gating a tile is present in the tile below that tile
+* in that column. Hence ungating clocks in tiles happen bottom up.
+*
+* @param	DevInst: Device Instance
+* @param	FromLoc: Location of tile to ungate from.
+* @param	ToLoc: Location of tile to ungate to.
+* @return	XAIE_OK on success
+*
+* @note		None
+*
+*******************************************************************************/
+static void _XAie_PmUngateTiles(XAie_DevInst *DevInst, XAie_LocType FromLoc,
+		XAie_LocType ToLoc)
+{
+	for (u8 R = FromLoc.Row; R < ToLoc.Row; R++) {
+		XAie_LocType TileLoc;
+		u8 TileType;
+		u64 RegAddr;
+		const XAie_ClockMod *ClockMod;
+
+		TileLoc.Col = FromLoc.Col;
+		TileLoc.Row = R;
+		TileType = _XAie_GetTileTypefromLoc(DevInst, TileLoc);
+		ClockMod = DevInst->DevProp.DevMod[TileType].ClockMod;
+		RegAddr = _XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col) +
+				ClockMod->ClockRegOff;
+		XAie_MaskWrite32(DevInst, RegAddr,
+				ClockMod->NextTileClockCntrl.Mask,
+				1 << ClockMod->NextTileClockCntrl.Lsb);
+	}
+}
+
+/*****************************************************************************/
+/**
+* This is an internal API to set bit corresponding to tile requested in
+* the TilesInUse bitmap.
+*
+* @param        DevInst: Device Instance
+* @param        set_bit: Bit position corresponding to the tile requested.
+* @return       XAIE_OK on success
+*
+* @note         None
+*
+******************************************************************************/
+static void _XAiePm_SetTileInUse(XAie_DevInst *DevInst, u32 set_bit)
+{
+	DevInst->TilesInUse[set_bit / (sizeof(DevInst->TilesInUse[0]) * 8U)] |=
+		1U << (set_bit % (sizeof(DevInst->TilesInUse[0]) * 8U));
+}
+
+/*****************************************************************************/
+/**
+* This API enables clock for all the tiles passed as argument to this API.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @param	NumTiles: Number of tiles requested for use.
+*
+* @return	XAIE_OK on success.
+*
+* @note
+*
+*******************************************************************************/
+AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
+		u32 NumTiles)
+{
+	u32 SetTileStatus, CheckTileStatus;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
+		XAieLib_print("Error: Clock gating not supported\n");
+		return XAIE_ERR;
+	}
+
+	/*
+	 * Passing empty list to enable all tiles of device instance is
+	 * temporary and will be removed soon.
+	 */
+	if(Loc == NULL) {
+		_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
+		return XAIE_OK;
+	}
+
+	for(u32 i = 0; i < NumTiles; i++) {
+		if(Loc[i].Row == 0)
+			continue;
+
+		u8 flag = 0;
+		/* Calculate bit number in bit map for the tile requested */
+		SetTileStatus = (Loc[i].Col * (DevInst->NumRows - 1U)) +
+				Loc[i].Row - 1U;
+
+		for(u32 row = DevInst->NumRows - 1U; row > 0U; row--) {
+			/*
+			 * Check for the upper most tile in use in the column
+			 * of the tile requested.
+			 */
+			CheckTileStatus = Loc[i].Col * (DevInst->NumRows - 1U)
+					+ row - 1U;
+			if(CheckBit(DevInst->TilesInUse, CheckTileStatus)) {
+				flag = 1;
+				if(SetTileStatus > CheckTileStatus) {
+					XAie_LocType ToLoc, FromLoc;
+					ToLoc.Col = Loc[i].Col;
+					ToLoc.Row = Loc[i].Row;
+					FromLoc.Col = Loc[i].Col;
+					FromLoc.Row = row;
+					_XAie_PmUngateTiles(DevInst,
+							FromLoc, ToLoc);
+				}
+				break;
+			}
+		}
+
+		if(flag == 0) {
+			XAie_LocType TileLoc;
+			TileLoc.Col = Loc[i].Col;
+			TileLoc.Row = 0U;
+			/* Ungate the shim tile of that column */
+			_XAie_PmSetColumnClockBuffer(DevInst, TileLoc,
+					XAIE_ENABLE);
+			/* Gate unused tiles from top to uppermost tile inuse */
+			TileLoc.Row = Loc[i].Row;
+			_XAie_PmGateTiles(DevInst, TileLoc);
+		}
+		_XAiePm_SetTileInUse(DevInst, SetTileStatus);
+	}
+
+	return XAIE_OK;
 }
