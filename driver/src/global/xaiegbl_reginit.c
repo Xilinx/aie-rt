@@ -1662,6 +1662,20 @@ static const XAie_TraceMod AiePlTraceMod =
 	.Event = AiePlTraceEvent
 };
 
+/* Data Structure for clock control of PL/NOC tile. */
+static XAie_ClockMod AiePlClockMod =
+{
+	.ClockRegOff = XAIEGBL_PL_TILCLOCTRL,
+	{XAIEGBL_PL_TILCLOCTRL_NEXTILCLOENA_LSB, XAIEGBL_PL_TILCLOCTRL_NEXTILCLOENA_MASK},
+};
+
+/* Data structure for clock control of AIE tile. */
+static XAie_ClockMod AieTileClockMod =
+{
+	.ClockRegOff = XAIEGBL_CORE_TILCLOCTRL,
+	{XAIEGBL_CORE_TILCLOCTRL_NEXTILCLOENA_LSB, XAIEGBL_CORE_TILCLOCTRL_NEXTILCLOENA_MASK},
+};
+
 /*
  * AIE Module
  * This data structure captures all the modules for each tile type.
@@ -1684,6 +1698,7 @@ XAie_TileMod AieMod[] =
 		.EvntMod = AieTileEvntMod,
 		.TimerMod = AieTileTimerMod,
 		.TraceMod = AieTileTraceMod,
+		.ClockMod = &AieTileClockMod,
 	},
 	{
 		/*
@@ -1699,6 +1714,7 @@ XAie_TileMod AieMod[] =
 		.EvntMod = &AiePlEvntMod,
 		.TimerMod = &AiePlTimerMod,
 		.TraceMod = &AiePlTraceMod,
+		.ClockMod = &AiePlClockMod,
 	},
 	{
 		/*
@@ -1714,6 +1730,7 @@ XAie_TileMod AieMod[] =
 		.EvntMod = &AiePlEvntMod,
 		.TimerMod = &AiePlTimerMod,
 		.TraceMod = &AiePlTraceMod,
+		.ClockMod = &AiePlClockMod,
 	},
 	{
 		/*
@@ -1729,6 +1746,7 @@ XAie_TileMod AieMod[] =
 		.EvntMod = NULL,
 		.TimerMod = NULL,
 		.TraceMod = NULL,
+		.ClockMod = NULL,
 	}
 };
 
