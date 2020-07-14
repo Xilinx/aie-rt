@@ -8,6 +8,7 @@
 extern "C" {
 #endif
 
+#include <xaiengine/xaie_clock.h>
 #include <xaiengine/xaie_core.h>
 #include <xaiengine/xaie_dma.h>
 #include <xaiengine/xaie_elfloader.h>
