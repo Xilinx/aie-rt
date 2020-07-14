@@ -534,6 +534,11 @@ typedef struct {
 	const XAie_RegFldAttr *Event;
 } XAie_TraceMod;
 
+/* This structure captures all attributes related to Clock Module */
+typedef struct XAie_ClockMod {
+	u32 ClockRegOff;
+	const XAie_RegFldAttr NextTileClockCntrl;
+} XAie_ClockMod;
 /*
  * This typedef contains all the modules for a Tile type
  */
@@ -548,6 +553,7 @@ typedef struct XAie_TileMod {
 	const XAie_EvntMod *EvntMod;
 	const XAie_TimerMod *TimerMod;
 	const XAie_TraceMod *TraceMod;
+	const XAie_ClockMod *ClockMod;
 } XAie_TileMod;
 
 #endif

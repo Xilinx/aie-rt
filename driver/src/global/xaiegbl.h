@@ -47,6 +47,7 @@
 #define XAIE_LOCK_WITH_NO_VALUE		(-1)
 #define XAIE_PACKET_ID_MAX		0x1F
 #define XAIE_PACKET_TYPE_MAX		0x7
+#define XAIE_TILES_BITMAP_SIZE          32
 
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
@@ -90,6 +91,7 @@ typedef struct {
 	u8 AieTileRowStart; /* Aie tile starting row in the partition */
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
+	u32 TilesInUse[XAIE_TILES_BITMAP_SIZE]; /* Bitmap for tiles in use */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
