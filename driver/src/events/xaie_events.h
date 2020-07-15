@@ -24,6 +24,8 @@
 *			     registers.
 * 1.4   Nishad   07/12/2020  Add APIs to configure event broadcast, PC event,
 *			     and group event registers.
+* 1.5   Nishad  07/14/2020  Add APIs to reset individual stream switch port
+*			    event selection ID and combo event.
 * </pre>
 *
 ******************************************************************************/
@@ -693,9 +695,13 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId,
 		XAie_EventComboOps Op, XAie_Events Event1, XAie_Events Event2);
+AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_EventComboId ComboId);
 AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
 		StrmSwPortType Port, u8 PortNum);
+AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SelectId);
 AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 BroadcastId, XAie_Events Event);
 AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,

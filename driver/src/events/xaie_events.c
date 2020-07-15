@@ -19,6 +19,8 @@
 * 1.0   Nishad  07/01/2020  Initial creation
 * 1.1   Nishad  07/12/2020  Add APIs to configure event broadcast, PC event,
 *			    and group event registers.
+* 1.2   Nishad  07/14/2020  Add APIs to reset individual stream switch port
+*			    event selection ID and combo event.
 * </pre>
 *
 ******************************************************************************/
@@ -103,7 +105,7 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This API is used to configure combo events for a given module.
+* This internal API configures combo events for a given module.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Location of AIE Tile.
@@ -125,10 +127,10 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, error code on failure.
 *
-* @note		None.
+* @note		Internal Only.
 *
 ******************************************************************************/
-AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId,
 		XAie_EventComboOps Op, XAie_Events Event1, XAie_Events Event2)
 {
@@ -138,17 +140,7 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 TileType, Event1Lsb, Event2Lsb, MappedEvent1, MappedEvent2;
 	const XAie_EvntMod *EvntMod;
 
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid device instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid tile type\n");
-		return XAIE_INVALID_TILE;
-	}
 
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
@@ -207,7 +199,111 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This API is used to configure the stream switch event selection register for
+* This API configures combo events for a given module.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	ComboId: Combo index.
+* @param	Op: Logical operation between Event1 and Event2 to trigger combo
+*		    event.
+* @param	Event1: When, ComboId == XAIE_EVENT_COMBO0 Event1 coressponds to
+*			Event A, ComboId == XAIE_EVENT_COMBO1 Event1 coressponds
+*			to Event C, ComboId == XAIE_EVENT_COMBO2 Event1
+*			coressponds to XAIE_EVENT_COMBO0.
+* @param	Event2: When, ComboId == XAIE_EVENT_COMBO0 Event2 coressponds to
+*			Event B, ComboId == XAIE_EVENT_COMBO1 Event2 coressponds
+*			to Event D, ComboId == XAIE_EVENT_COMBO2 Event2
+*			coressponds to XAIE_EVENT_COMBO1.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_EventComboId ComboId,
+		XAie_EventComboOps Op, XAie_Events Event1, XAie_Events Event2)
+{
+	AieRC RC;
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAieLib_print("Error: Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	return _XAie_EventComboControl(DevInst, Loc, Module, ComboId, Op,
+			Event1, Event2);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API resets individual combo config and it's corresponding events for a
+* given module.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	ComboId: Combo index.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_EventComboId ComboId)
+{
+	AieRC RC;
+	u8 TileType;
+	XAie_Events Event;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAieLib_print("Error: Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	if(Module == XAIE_CORE_MOD) {
+		Event = XAIE_EVENT_NONE_CORE;
+	} else if(Module == XAIE_PL_MOD) {
+		Event = XAIE_EVENT_NONE_PL;
+	} else if(Module == XAIE_MEM_MOD) {
+		if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
+			Event = XAIE_EVENT_NONE_MEM_TILE;
+		else
+			Event = XAIE_EVENT_NONE_MEM;
+	}
+
+	return _XAie_EventComboControl(DevInst, Loc, Module, ComboId,
+			XAIE_EVENT_COMBO_E1_AND_E2, Event, Event);
+}
+
+/*****************************************************************************/
+/**
+*
+* This internal API configures the stream switch event selection register for
 * any given tile type. Any of the Master or Slave stream switch ports can be
 * programmed at given selection index. Events corresponding to the port could be
 * monitored at the given selection ID through event status registers.
@@ -228,12 +324,12 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, error code on failure.
 *
-* @note		None.
+* @note		Internal Only.
 *
 ******************************************************************************/
-AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
-		StrmSwPortType Port, u8 PortNum)
+static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module, u8 SelectId,
+		XAie_StrmPortIntf PortIntf, StrmSwPortType Port, u8 PortNum)
 {
 	AieRC RC;
 	u64 RegAddr;
@@ -241,12 +337,6 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 TileType, SelectRegOffId, PortIdx, PortIdLsb, PortMstrSlvLsb;
 	const XAie_StrmMod *StrmMod;
 	const XAie_EvntMod *EvntMod;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid device instance\n");
-		return XAIE_INVALID_ARGS;
-	}
 
 	if(PortIntf > XAIE_STRMSW_MASTER) {
 		XAieLib_print("Error: Invalid stream switch interface\n");
@@ -259,10 +349,6 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid tile type\n");
-		return XAIE_INVALID_TILE;
-	}
 
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
@@ -306,6 +392,107 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	return XAIE_OK;
 }
+
+/*****************************************************************************/
+/**
+*
+* This API configures the stream switch event selection register for any given
+* tile type. Any of the Master or Slave stream switch ports can be programmed at
+* given selection index. Events corresponding to the port could be monitored at
+* the given selection ID through event status registers.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	SelectId: Selection index at which given port's event are
+*			  captured
+* @param	PortIntf: Stream switch port interface.
+*			  for Slave port - XAIE_STRMSW_SLAVE,
+*			  for Mater port - XAIE_STRMSW_MASTER.
+* @param	Port: Stream switch port type.
+* @param	PortNum: Stream switch port number.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
+		StrmSwPortType Port, u8 PortNum)
+{
+	AieRC RC;
+	u8 TileType;
+	XAie_Events Event;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAieLib_print("Error: Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, Module, SelectId,
+			PortIntf, Port, PortNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API resets individual stream switch event selection ID any given tile
+* type.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	SelectId: Selection index at which given port's event are
+*			  captured
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SelectId)
+{
+	AieRC RC;
+	u8 TileType;
+	StrmSwPortType Port;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAieLib_print("Error: Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+	if(Module == XAIE_CORE_MOD)
+		Port = CORE;
+	else if(Module == XAIE_PL_MOD)
+		Port = CTRL;
+	else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
+		Port = DMA;
+
+	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, Module, SelectId,
+			XAIE_STRMSW_SLAVE, Port, 0U);
+}
+
 
 /*****************************************************************************/
 /**
