@@ -36,6 +36,8 @@
 *			   event registers
 * 2.6   Nishad 07/01/2020  Add MstConfigBaseAddr property to stream switch data
 *			   structure
+* 2.7   Nishad 07/12/2020  Add data structure and register properties to support
+*			   event broadcast, PC event, and group events.
 * </pre>
 *
 ******************************************************************************/
@@ -43,6 +45,7 @@
 #define XAIEGBL_REGDEF_H /* by using protection macros */
 
 /***************************** Include Files *********************************/
+#include "xaie_events.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
 /**************************** Macro Definitions ******************************/
@@ -512,6 +515,13 @@ typedef struct XAie_PerfMod {
 	const XAie_RegFldAttr Reset; /* lsb and mask for reset event for ctr0 */
 } XAie_PerfMod;
 
+typedef struct XAie_EventGroup {
+	XAie_Events GroupEvent;
+	u8 GroupOff;
+	u32 GroupMask;
+	u32 ResetValue;
+} XAie_EventGroup;
+
 /* This typedef contains attributes of Events module */
 typedef struct XAie_EvntMod {
 	const u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
@@ -532,6 +542,21 @@ typedef struct XAie_EvntMod {
 	u8 PortIdOff;
 	u32 PortMstrSlvMask;
 	u8 PortMstrSlvOff;
+	u32 BaseBroadcastRegOff;
+	u8 NumBroadcastIds;
+	u32 BaseBroadcastSwBlockRegOff;
+	u32 BaseBroadcastSwUnblockRegOff;
+	u8 BroadcastSwOff;
+	u8 BroadcastSwBlockOff;
+	u8 BroadcastSwUnblockOff;
+	u8 NumSwitches;
+	u32 BaseGroupEventRegOff;
+	u8 NumGroupEvents;
+	const XAie_EventGroup *Group;
+	u32 BasePCEventRegOff;
+	u8 NumPCEvents;
+	XAie_RegFldAttr PCAddr;
+	XAie_RegFldAttr PCValid;
 } XAie_EvntMod;
 
 /* This typedef contains attributes of timer module */
