@@ -22,6 +22,8 @@
 * 1.3   Nishad   07/06/2020  Add APIs to configure stream switch port event
 *			     selection, event generation, and combo event
 *			     registers.
+* 1.4   Nishad   07/12/2020  Add APIs to configure event broadcast, PC event,
+*			     and group event registers.
 * </pre>
 *
 ******************************************************************************/
@@ -670,6 +672,21 @@ typedef enum {
 	XAIE_EVENT_COMBO2,
 } XAie_EventComboId;
 
+/* Enum to capture event broadcast directions */
+typedef enum {
+	XAIE_EVENT_BROADCAST_SOUTH = 0b0001,
+	XAIE_EVENT_BROADCAST_WEST  = 0b0010,
+	XAIE_EVENT_BROADCAST_NORTH = 0b0100,
+	XAIE_EVENT_BROADCAST_EAST  = 0b1000,
+	XAIE_EVENT_BROADCAST_ALL   = 0b1111,
+} XAie_BroadcastDir;
+
+/* Enum to capture event switches */
+typedef enum {
+	XAIE_EVENT_SWITCH_A,
+	XAIE_EVENT_SWITCH_B,
+} XAie_BroadcastSw;
+
 /************************** Function Prototypes  *****************************/
 AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event);
@@ -679,5 +696,25 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
 		StrmSwPortType Port, u8 PortNum);
+AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 BroadcastId, XAie_Events Event);
+AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 BroadcastId);
+AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
+		u8 Dir);
+AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
+		u8 Dir);
+AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events GroupEvent, u32 GroupBitMap);
+AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events GroupEvent);
+AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 PCEventId, u16 PCAddr);
+AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 PCEventId);
+AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 PCEventId);
 
 #endif		/* end of protection macro */
