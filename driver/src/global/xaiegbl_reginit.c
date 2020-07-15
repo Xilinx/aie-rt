@@ -45,6 +45,8 @@
 * 3.0   Nishad  06/28/2020  Populate stream switch port event selection, event
 * 			    generation and combo event properties
 * 3.1   Nishad  07/01/2020  Populate MstrConfigBaseAddr stream switch property
+* 3.2   Nishad  07/12/2020  Populate event broadcast, PC event, and group event
+*			    register properties
 * </pre>
 *
 ******************************************************************************/
@@ -1507,6 +1509,162 @@ static const XAie_PerfMod AiePlPerfCnt =
 	{XAIEGBL_PL_PERCTR1_CNT0RSTEVT_LSB, XAIEGBL_PL_PERCTR1_CNT0RSTEVT_MASK},
 };
 
+static const XAie_EventGroup AieMemGroupEvent[] =
+{
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_0_MEM,
+		.GroupOff = 0U,
+		.GroupMask = XAIEGBL_MEM_EVTGRP0ENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRP0ENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_WATCHPOINT_MEM,
+		.GroupOff = 1U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPWTCHPTENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPWTCHPTENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_DMA_ACTIVITY_MEM,
+		.GroupOff = 2U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPDMAENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPDMAENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_LOCK_MEM,
+		.GroupOff = 3U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPLOCKENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPLOCKENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_MEMORY_CONFLICT_MEM,
+		.GroupOff = 4U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPMEMCONENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPMEMCONENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_ERRORS_MEM,
+		.GroupOff = 5U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPERRENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPERRENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_BROADCAST_MEM,
+		.GroupOff = 6U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPBRDCASTENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPBRDCASTENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_USER_EVENT_MEM,
+		.GroupOff = 7U,
+		.GroupMask = XAIEGBL_MEM_EVTGRPUSREVTENAMSK,
+		.ResetValue = XAIEGBL_MEM_EVTGRPUSREVTENAMSK,
+	},
+};
+
+static const XAie_EventGroup AieCoreGroupEvent[] =
+{
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_0_CORE,
+		.GroupOff = 0U,
+		.GroupMask = XAIEGBL_CORE_EVTGRP0ENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRP0ENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_PC_EVENT_CORE,
+		.GroupOff = 1U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPPCENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPPCENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_CORE_STALL_CORE,
+		.GroupOff = 2U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPCORESTALENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPCORESTALENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE,
+		.GroupOff = 3U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPCOREPRGFLOENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPCOREPRGFLOENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_ERRORS_0_CORE,
+		.GroupOff = 4U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPERR0ENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPERR0ENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_ERRORS_1_CORE,
+		.GroupOff = 5U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPERR1ENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPERR1ENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_STREAM_SWITCH_CORE,
+		.GroupOff = 6U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPSTRSWIENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPSTRSWIENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_BROADCAST_CORE,
+		.GroupOff = 7U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPBRDCASTENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPBRDCASTENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_USER_EVENT_CORE,
+		.GroupOff = 8U,
+		.GroupMask = XAIEGBL_CORE_EVTGRPUSREVTENAMSK,
+		.ResetValue = XAIEGBL_CORE_EVTGRPUSREVTENAMSK,
+	},
+};
+
+static const XAie_EventGroup AiePlGroupEvent[] =
+{
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_0_PL,
+		.GroupOff = 0U,
+		.GroupMask = XAIEGBL_PL_EVTGRP0ENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRP0ENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_DMA_ACTIVITY_PL,
+		.GroupOff = 1U,
+		.GroupMask = XAIEGBL_PL_EVTGRPDMAACTENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRPDMAACTENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_LOCK_PL,
+		.GroupOff = 2U,
+		.GroupMask = XAIEGBL_PL_EVTGRPLOCKENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRPLOCKENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_ERRORS_PL,
+		.GroupOff = 3U,
+		.GroupMask = XAIEGBL_PL_EVTGRPERRENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRPERRENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_STREAM_SWITCH_PL,
+		.GroupOff = 4U,
+		.GroupMask = XAIEGBL_PL_EVTGRPSTRSWIENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRPSTRSWIENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_BROADCAST_A_PL,
+		.GroupOff = 5U,
+		.GroupMask = XAIEGBL_PL_EVTGRPBRDCASTAENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRPBRDCASTAENAMSK,
+	},
+	{
+		.GroupEvent = XAIE_EVENT_GROUP_USER_EVENT_PL,
+		.GroupOff = 6U,
+		.GroupMask = XAIEGBL_PL_EVTGRPUSRENAMSK,
+		.ResetValue = XAIEGBL_PL_EVTGRPUSRENAMSK,
+	},
+};
+
 /* Data structure to capture core and memory module events properties */
 static const XAie_EvntMod AieTileEvntMod[] =
 {
@@ -1529,6 +1687,21 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.PortIdOff = XAIE_FEATURE_UNAVAILABLE,
 		.PortMstrSlvMask = XAIE_FEATURE_UNAVAILABLE,
 		.PortMstrSlvOff = XAIE_FEATURE_UNAVAILABLE,
+		.BaseBroadcastRegOff = XAIEGBL_MEM_EVTBRDCAST0,
+		.NumBroadcastIds = 16U,
+		.BaseBroadcastSwBlockRegOff = XAIEGBL_MEM_EVTBRDCASTBLKSOUSET,
+		.BaseBroadcastSwUnblockRegOff = XAIEGBL_MEM_EVTBRDCASTBLKSOUCLR,
+		.BroadcastSwOff = 0U,
+		.BroadcastSwBlockOff = 16U,
+		.BroadcastSwUnblockOff = 16U,
+		.NumSwitches = 1U,
+		.BaseGroupEventRegOff = XAIEGBL_MEM_EVTGRP0ENA,
+		.NumGroupEvents = 8U,
+		.Group = AieMemGroupEvent,
+		.BasePCEventRegOff = XAIE_FEATURE_UNAVAILABLE,
+		.NumPCEvents = XAIE_FEATURE_UNAVAILABLE,
+		.PCAddr = {XAIE_FEATURE_UNAVAILABLE, XAIE_FEATURE_UNAVAILABLE},
+		.PCValid = {XAIE_FEATURE_UNAVAILABLE, XAIE_FEATURE_UNAVAILABLE},
 	},
 	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
@@ -1549,6 +1722,21 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.PortIdOff = 8U,
 		.PortMstrSlvMask = XAIEGBL_CORE_STRSWIEVTPORTSEL0_PORT0MSTRSLV_MASK,
 		.PortMstrSlvOff = 8U,
+		.BaseBroadcastRegOff = XAIEGBL_CORE_EVTBRDCAST0,
+		.NumBroadcastIds = 16U,
+		.BaseBroadcastSwBlockRegOff = XAIEGBL_CORE_EVTBRDCASTBLKSOUSET,
+		.BaseBroadcastSwUnblockRegOff = XAIEGBL_CORE_EVTBRDCASTBLKSOUCLR,
+		.BroadcastSwOff = 0U,
+		.BroadcastSwBlockOff = 16U,
+		.BroadcastSwUnblockOff = 16U,
+		.NumSwitches = 1U,
+		.BaseGroupEventRegOff = XAIEGBL_CORE_EVTGRP0ENA,
+		.NumGroupEvents = 9U,
+		.Group = AieCoreGroupEvent,
+		.BasePCEventRegOff = XAIEGBL_CORE_PCEVT0,
+		.NumPCEvents = 4U,
+		.PCAddr = {XAIEGBL_CORE_PCEVT0_PCADD_LSB, XAIEGBL_CORE_PCEVT0_PCADD_MASK},
+		.PCValid = {XAIEGBL_CORE_PCEVT0_VAL_LSB, XAIEGBL_CORE_PCEVT0_VAL_MASK},
 	},
 };
 
@@ -1573,6 +1761,21 @@ static const XAie_EvntMod AiePlEvntMod =
 	.PortIdOff = 8U,
 	.PortMstrSlvMask = XAIEGBL_PL_STRSWIEVTPORTSEL0_PORT0MSTRSLV_MASK,
 	.PortMstrSlvOff = 8U,
+	.BaseBroadcastRegOff = XAIEGBL_PL_EVTBRDCAST0A,
+	.NumBroadcastIds = 16U,
+	.BaseBroadcastSwBlockRegOff = XAIEGBL_PL_EVTBRDCASTABLKSOUSET,
+	.BaseBroadcastSwUnblockRegOff = XAIEGBL_PL_EVTBRDCASTABLKSOUCLR,
+	.BroadcastSwOff = 64U,
+	.BroadcastSwBlockOff = 16U,
+	.BroadcastSwUnblockOff = 16U,
+	.NumSwitches = 2U,
+	.BaseGroupEventRegOff = XAIEGBL_PL_EVTGRP0ENA,
+	.NumGroupEvents = 7U,
+	.Group = AiePlGroupEvent,
+	.BasePCEventRegOff = XAIE_FEATURE_UNAVAILABLE,
+	.NumPCEvents = XAIE_FEATURE_UNAVAILABLE,
+	.PCAddr = {XAIE_FEATURE_UNAVAILABLE, XAIE_FEATURE_UNAVAILABLE},
+	.PCValid = {XAIE_FEATURE_UNAVAILABLE, XAIE_FEATURE_UNAVAILABLE},
 };
 
 /* Data structure to capture core and mem module timer properties */
