@@ -1045,8 +1045,7 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	XAie_MaskWrite32(DevInst, Addr + (DmaMod->ChProp->StartBd.Idx * 4U),
-			DmaMod->ChProp->StartBd.Mask, BdNum);
+	XAie_Write32(DevInst, Addr + (DmaMod->ChProp->StartBd.Idx * 4U), BdNum);
 
 	return XAIE_OK;
 }
