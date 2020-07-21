@@ -217,10 +217,9 @@ u32 XAie_CdoIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 *******************************************************************************/
 void XAie_CdoIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 {
-	for(u32 i = 0U; i < Size; i++) {
-		XAie_CdoIO_Write32(IOInst, RegOff + i * 4U, *Data);
-		Data++;
-	}
+	XAie_CdoIO *CdoIOInst = (XAie_CdoIO *)IOInst;
+
+	cdo_BlockWrite32(CdoIOInst->BaseAddr + RegOff, Data, Size);
 }
 
 /*****************************************************************************/
@@ -241,8 +240,9 @@ void XAie_CdoIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 *******************************************************************************/
 void XAie_CdoIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
-	for(u32 i = 0U; i < Size; i++)
-		XAie_CdoIO_Write32(IOInst, RegOff+ i * 4U, Data);
+	XAie_CdoIO *CdoIOInst = (XAie_CdoIO *)IOInst;
+
+	cdo_BlockSet32(CdoIOInst->BaseAddr + RegOff, Data, Size);
 }
 
 /*****************************************************************************/
