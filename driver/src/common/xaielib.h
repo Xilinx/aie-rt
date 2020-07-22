@@ -59,25 +59,12 @@ typedef uint64_t		u64;
 /**************************     Inline Helpers   *****************************/
 /************************** Function Prototypes  *****************************/
 u32 XAieLib_Read32(u64 Addr);
-void XAieLib_Read128(u64 Addr, u32 *Data);
 void XAieLib_Write32(u64 Addr, u32 Data);
 void XAieLib_MaskWrite32(u64 Addr, u32 Mask, u32 Data);
-void XAieLib_Write128(u64 Addr, u32 *Data);
 void XAieLib_WriteCmd(u8 Command, u8 ColId, u8 RowId, u32 CmdWd0, u32 CmdWd1, u8 *CmdStr);
 u32 XAieLib_MaskPoll(u64 Addr, u32 Mask, u32 Value, u32 TimeOutUs);
 
-u32 XAieLib_AssertNonvoid(u8 Cond);
-void XAieLib_AssertVoid(u8 Cond);
 int XAieLib_usleep(u64 Usec);
-
-struct XAieGbl_Tile;
-typedef struct XAieGbl_Tile XAieGbl_Tile;
-
-void XAieLib_InitDev(void);
-u32 XAieLib_InitTile(XAieGbl_Tile *TileInstPtr);
-
-void XAieLib_InterruptUnregisterIsr(int Offset);
-int XAieLib_InterruptRegisterIsr(int Offset, int (*Handler) (void *Data), void *Data);
 
 void XAieLib_IntPrint(const char *Format, ...);
 
@@ -86,25 +73,6 @@ void XAieLib_IntPrint(const char *Format, ...);
 #else
 #define XAieLib_print(...)	{}
 #endif
-
-struct XAieLib_MemInst;
-typedef struct XAieLib_MemInst XAieLib_MemInst;
-
-void XAieLib_MemFinish(XAieLib_MemInst *XAieLib_MemInstPtr);
-XAieLib_MemInst *XAieLib_MemInit(u8 idx);
-void XAieLib_MemDetach(XAieLib_MemInst *XAieLib_MemInstPtr);
-XAieLib_MemInst *XAieLib_MemAttach(u64 Vaddr, u64 Paddr, u64 Size, u64 MemHandle);
-void XAieLib_MemFree(XAieLib_MemInst *XAieLib_MemInstPtr);
-XAieLib_MemInst *XAieLib_MemAllocate(u64 Size, u32 Attr);
-u8 XAieLib_MemSyncForCPU(XAieLib_MemInst *XAieLib_MemInstPtr);
-u8 XAieLib_MemSyncForDev(XAieLib_MemInst *XAieLib_MemInstPtr);
-
-u64 XAieLib_MemGetSize(XAieLib_MemInst *XAieLib_MemInstPtr);
-u64 XAieLib_MemGetVaddr(XAieLib_MemInst *XAieLib_MemInstPtr);
-u64 XAieLib_MemGetPaddr(XAieLib_MemInst *XAieLib_MemInstPtr);
-void XAieLib_MemWrite32(XAieLib_MemInst *XAieLib_MemInstPtr, u64 Addr, u32 Data);
-u32 XAieLib_MemRead32(XAieLib_MemInst *XAieLib_MemInstPtr, u64 Addr);
-
 
 #endif		/* end of protection macro */
 /** @} */

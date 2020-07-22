@@ -58,37 +58,15 @@
 
 #define XAie_print			XAieLib_print
 #define XAie_usleep			XAieLib_usleep
-#define XAie_AssertNonvoid		XAieLib_AssertNonvoid
-#define XAie_AssertVoid			XAieLib_AssertVoid
 
 #define XAie_SetField(Val, Lsb, Mask)	(((u32)Val << (Lsb)) & Mask)
 #define XAie_GetField(Val, Lsb, Mask)	(((u32)Val & Mask) >> Lsb)
 
 #define XAieGbl_Read32		XAieLib_Read32
-#define XAieGbl_Read128		XAieLib_Read128
 #define XAieGbl_Write32		XAieLib_Write32
 #define XAieGbl_MaskWrite32	XAieLib_MaskWrite32
-#define XAieGbl_Write128	XAieLib_Write128
 #define XAieGbl_WriteCmd	XAieLib_WriteCmd
 #define XAieGbl_MaskPoll	XAieLib_MaskPoll
-
-#define XAieGbl_MemInst		XAieLib_MemInst
-#define XAieGbl_MemInit		XAieLib_MemInit
-#define XAieGbl_MemFinish	XAieLib_MemFinish
-#define XAieGbl_MemAttach	XAieLib_MemAttach
-#define XAieGbl_MemDetach	XAieLib_MemDetach
-#define XAieGbl_MemAllocate	XAieLib_MemAllocate
-#define XAieGbl_MemFree		XAieLib_MemFree
-#define XAieGbl_MemSyncForCPU	XAieLib_MemSyncForCPU
-#define XAieGbl_MemSyncForDev	XAieLib_MemSyncForDev
-#define XAieGbl_MemGetSize	XAieLib_MemGetSize
-#define XAieGbl_MemGetVaddr	XAieLib_MemGetVaddr
-#define XAieGbl_MemGetPaddr	XAieLib_MemGetPaddr
-#define XAieGbl_MemRead32	XAieLib_MemRead32
-#define XAieGbl_MemWrite32	XAieLib_MemWrite32
-
-#define XAieGbl_IntrRegisterIsr		XAieLib_InterruptRegisterIsr
-#define XAieGbl_IntrUnregisterIsr	XAieLib_InterruptUnregisterIsr
 
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
