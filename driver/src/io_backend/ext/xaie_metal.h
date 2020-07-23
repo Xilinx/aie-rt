@@ -44,6 +44,11 @@ void XAie_MetalIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr);
 AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		XAie_BackendOpCode Op, void *Arg);
+XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache);
+AieRC XAie_MetalMemFree(XAie_MemInst *MemInst);
+AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst);
+AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst);
 
 #endif		/* end of protection macro */
 

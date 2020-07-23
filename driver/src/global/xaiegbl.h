@@ -98,6 +98,22 @@ typedef struct {
 				     setup to AIE prop during intialization*/
 } XAie_DevInst;
 
+/* enum to capture cache property of allocate memory */
+typedef enum {
+	XAIE_MEM_CACHEABLE,
+	XAIE_MEM_NONCACHEABLE
+} XAie_MemCacheProp;
+
+/* typedef to capture properties of an allcoated memory buffer */
+typedef struct {
+	u64 Size;
+	void *VAddr;
+	u64 DevAddr;
+	XAie_MemCacheProp Cache;
+	XAie_DevInst *DevInst;
+	void *BackendHandle; /* Backend specific properties */
+} XAie_MemInst;
+
 typedef struct {
 	u8 AieGen;
 	u64 BaseAddr;

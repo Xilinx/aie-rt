@@ -44,6 +44,9 @@
 #include "xaie_npi.h"
 
 /***************************** Macro Definitions *****************************/
+#define SHM_NUM_ULONG	8					/**< number of ulong for bitmap */
+#define SHM_MAX_IDS	(sizeof(unsigned long) * SHM_NUM_ULONG)	/**< max number of IDs = 64 * 16 = 512 */
+
 /****************************** Type Definitions *****************************/
 #ifdef __AIEMETAL__
 
@@ -53,7 +56,17 @@ typedef struct XAie_MetalIO {
 	u64 io_base;			/**< libmetal io region base */
 	struct metal_device *npi_device;	/**< libmetal NPI device */
 	struct metal_io_region *npi_io;	/**< libmetal NPI io region */
+	unsigned long shm_ids[SHM_NUM_ULONG];	/**< bitmap for shm name space */
 } XAie_MetalIO;
+
+typedef struct XAie_MetalMemInst {
+	struct metal_io_region *io;	/**< libmetal io region */
+	u64 io_base;			/**< libmetal io region base */
+	struct metal_generic_shmem *shm;/**< attached metal shm memory */
+	struct metal_scatter_list *sg;  /**< shm sg list */
+	unsigned int id;                /**< shm id. only for allocated one */
+	XAie_MetalIO *IOInst;		/**< Pointer to the IO Inst */
+} XAie_MetalMemInst;
 
 #endif /* __AIEMETAL__ */
 
@@ -71,6 +84,10 @@ const XAie_Backend MetalBackend =
 	.Ops.BlockSet32 = XAie_MetalIO_BlockSet32,
 	.Ops.CmdWrite = XAie_MetalIO_CmdWrite,
 	.Ops.RunOp = XAie_MetalIO_RunOp,
+	.Ops.MemAllocate = XAie_MetalMemAllocate,
+	.Ops.MemFree = XAie_MetalMemFree,
+	.Ops.MemSyncForCPU = XAie_MetalMemSyncForCPU,
+	.Ops.MemSyncForDev = XAie_MetalMemSyncForDev,
 };
 
 /************************** Function Definitions *****************************/
@@ -419,6 +436,128 @@ AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	return RC;
 }
 
+XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	char shm_name[32U];
+	unsigned int id;
+	int ret;
+	XAie_MemInst *MemInst;
+	XAie_MetalMemInst *MetalMemInst;
+	XAie_MetalIO *MetalIOInst = (XAie_MetalIO *)DevInst->IOInst;
+
+	id = metal_bitmap_next_clear_bit(MetalIOInst->shm_ids, 0, SHM_MAX_IDS);
+	if(id >= SHM_MAX_IDS) {
+		goto err_out;
+	}
+
+	MetalMemInst = metal_allocate_memory(sizeof(*MetalMemInst));
+	if(MetalMemInst == NULL) {
+		XAieLib_print("Error: memory allocation failed\n");
+		goto err_out;
+	}
+
+	MemInst = metal_allocate_memory(sizeof(*MemInst));
+	if(MemInst == NULL) {
+		XAieLib_print("Error: memory allocation failed\n");
+		goto free_metal_mem_inst;
+	}
+
+	/* The name, ion.reserved, and snprintf() are linux specific */
+	snprintf(shm_name, sizeof(shm_name), "ion.reserved/shm%d", id);
+
+	ret = metal_shmem_open(shm_name, Size, Cache, &MetalMemInst->shm);
+	if(ret) {
+		XAieLib_print("Error: failed to open shared memory region\n");
+		goto free_all_mem;
+	}
+
+	MetalMemInst->sg = metal_shm_attach(MetalMemInst->shm,
+			MetalIOInst->device, METAL_SHM_DIR_DEV_RW);
+	if(MetalMemInst->sg == NULL) {
+		XAieLib_print("Error: Failed to attach shmem to device\n");
+		goto close_shmem;
+	}
+
+	MetalMemInst->io = MetalMemInst->sg->ios;
+	MetalMemInst->io_base = metal_io_phys(MetalMemInst->sg->ios, 0U);
+	MetalMemInst->id = id;
+	MetalMemInst->IOInst = MetalIOInst;
+	metal_bitmap_set_bit(MetalIOInst->shm_ids, id);
+
+	MemInst->BackendHandle = (void *)MetalMemInst;
+	MemInst->DevInst = DevInst;
+	MemInst->Cache = Cache;
+	MemInst->Size = Size;
+	MemInst->DevAddr = (u64)metal_io_phys(MetalMemInst->io, 0U);
+	MemInst->VAddr = (void *)metal_io_virt(MetalMemInst->io, 0U);
+
+	return MemInst;
+
+close_shmem:
+	metal_shmem_close(MetalMemInst->shm);
+free_all_mem:
+	metal_free_memory(MemInst);
+free_metal_mem_inst:
+	metal_free_memory(MetalMemInst);
+err_out:
+	return NULL;
+}
+
+AieRC XAie_MetalMemFree(XAie_MemInst *MemInst)
+{
+	XAie_MetalMemInst *MetalMemInst = (XAie_MetalMemInst *)
+		MemInst->BackendHandle;
+	metal_bitmap_clear_bit(MetalMemInst->IOInst->shm_ids, MetalMemInst->id);
+	metal_shm_detach(MetalMemInst->shm, MetalMemInst->IOInst->device);
+	metal_shmem_close(MetalMemInst->shm);
+	metal_free_memory(MetalMemInst);
+	metal_free_memory(MemInst);
+
+	return XAIE_OK;
+}
+
+AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	int ret;
+	XAie_MetalMemInst *MetalMemInst = (XAie_MetalMemInst *)
+		MemInst->BackendHandle;
+
+	if(MetalMemInst->shm == NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return XAIE_ERR;
+	}
+
+	ret = metal_shm_sync_for_cpu(MetalMemInst->shm, METAL_SHM_DIR_DEV_RW);
+	if(ret) {
+		XAieLib_print("Error: Failed to sync for cpu\n");
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst)
+{
+	int ret;
+	XAie_MetalMemInst *MetalMemInst = (XAie_MetalMemInst *)
+		MemInst->BackendHandle;
+
+	if(MetalMemInst->shm == NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return XAIE_ERR;
+	}
+
+	ret = metal_shm_sync_for_device(MetalMemInst->shm,
+			MetalMemInst->IOInst->device, METAL_SHM_DIR_DEV_RW);
+	if(ret) {
+		XAieLib_print("Error: Failed to sync for device\n");
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
 #else
 
 AieRC XAie_MetalIO_Finish(void *IOInst)
@@ -477,6 +616,27 @@ AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	(void)Op;
 	(void)Arg;
 	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
+XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	return NULL;
+}
+
+AieRC XAie_MetalMemFree(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
 }
 
 #endif /* __AIEMETAL__ */

@@ -78,6 +78,11 @@ typedef struct XAie_BackendOps {
 			u32 CmdWd1, const char *CmdStr);
 	AieRC (*RunOp)(void *IOInst, XAie_DevInst *DevInst,
 		     XAie_BackendOpCode Op, void *Arg);
+	XAie_MemInst* (*MemAllocate)(XAie_DevInst *DevInst, u64 Size,
+			XAie_MemCacheProp Cache);
+	AieRC (*MemFree)(XAie_MemInst *MemInst);
+	AieRC (*MemSyncForCPU)(XAie_MemInst *MemInst);
+	AieRC (*MemSyncForDev)(XAie_MemInst *MemInst);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */
