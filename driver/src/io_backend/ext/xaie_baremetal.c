@@ -22,9 +22,12 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#include <stdlib.h>
+
 #ifdef __AIEBAREMETAL__
 
 #include "sleep.h"
+#include "xil_cache.h"
 #include "xil_io.h"
 #include "xil_types.h"
 #include "xstatus.h"
@@ -55,6 +58,10 @@ const XAie_Backend BaremetalBackend =
 	.Ops.BlockSet32 = XAie_BaremetalIO_BlockSet32,
 	.Ops.CmdWrite = XAie_BaremetalIO_CmdWrite,
 	.Ops.RunOp = XAie_BaremetalIO_RunOp,
+	.Ops.MemAllocate = XAie_BaremetalMemAllocate,
+	.Ops.MemFree = XAie_BaremetalMemFree,
+	.Ops.MemSyncForCPU = XAie_BaremetalMemSyncForCPU,
+	.Ops.MemSyncForDev = XAie_BaremetalMemSyncForDev,
 };
 
 /************************** Function Definitions *****************************/
@@ -261,6 +268,56 @@ void XAie_BaremetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 		XAie_BaremetalIO_Write32(IOInst, RegOff+ i * 4U, Data);
 }
 
+XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	XAie_MemInst *MemInst;
+
+	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
+	if(MemInst == NULL) {
+		XAieLib_print("Error: memory allocation failed\n");
+		return NULL;
+	}
+
+	MemInst->VAddr = (void *)malloc(Size);
+	if(MemInst->VAddr == NULL) {
+		XAieLib_print("Error: malloc failed\n");
+		free(MemInst);
+		return NULL;
+	}
+	MemInst->DevAddr = (u64)MemInst->VAddr;
+	MemInst->Size = Size;
+	MemInst->DevInst = DevInst;
+	/*
+	 * TODO: Cache is not handled at the moment for baremetal. The allocated
+	 * memory is always cached.
+	 */
+
+	return MemInst;
+}
+
+AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
+{
+	free(MemInst->VAddr);
+	free(MemInst);
+
+	return XAIE_OK;
+}
+
+AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	Xil_DCacheInvalidateRange((u64)MemInst->VAddr, MemInst->Size);
+
+	return XAIE_OK;
+}
+
+AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
+{
+	Xil_DCacheFlushRange((u64)MemInst->VAddr, MemInst->Size);
+
+	return XAIE_OK;
+}
+
 #else
 
 AieRC XAie_BaremetalIO_Finish(void *IOInst)
@@ -310,6 +367,27 @@ void XAie_BaremetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data,
 void XAie_BaremetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
 	/* no-op */
+}
+
+XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	return NULL;
+}
+
+AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
 }
 
 #endif /* __AIEBAREMETAL__ */
