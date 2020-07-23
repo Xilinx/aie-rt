@@ -41,6 +41,11 @@ void XAie_CdoIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr);
 AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		XAie_BackendOpCode Op, void *Arg);
+XAie_MemInst* XAie_CdoMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache);
+AieRC XAie_CdoMemFree(XAie_MemInst *MemInst);
+AieRC XAie_CdoMemSyncForCPU(XAie_MemInst *MemInst);
+AieRC XAie_CdoMemSyncForDev(XAie_MemInst *MemInst);
 
 #endif	/* End of protection macro */
 

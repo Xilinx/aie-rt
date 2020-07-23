@@ -59,6 +59,10 @@ const XAie_Backend CdoBackend =
 	.Ops.BlockSet32 = XAie_CdoIO_BlockSet32,
 	.Ops.CmdWrite = XAie_CdoIO_CmdWrite,
 	.Ops.RunOp = XAie_CdoIO_RunOp,
+	.Ops.MemAllocate = XAie_CdoMemAllocate,
+	.Ops.MemFree = XAie_CdoMemFree,
+	.Ops.MemSyncForCPU = XAie_CdoMemSyncForCPU,
+	.Ops.MemSyncForDev = XAie_CdoMemSyncForDev,
 };
 
 /************************** Function Definitions *****************************/
@@ -388,6 +392,27 @@ void XAie_CdoIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr)
 {
 	/* no-op */
+}
+
+XAie_MemInst* XAie_CdoMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	return NULL;
+}
+
+AieRC XAie_CdoMemFree(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_CdoMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_CdoMemSyncForDev(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
 }
 
 /** @} */

@@ -56,6 +56,10 @@ const XAie_Backend SimBackend =
 	.Ops.BlockSet32 = XAie_SimIO_BlockSet32,
 	.Ops.CmdWrite = XAie_SimIO_CmdWrite,
 	.Ops.RunOp = XAie_SimIO_RunOp,
+	.Ops.MemAllocate = XAie_SimMemAllocate,
+	.Ops.MemFree = XAie_SimMemFree,
+	.Ops.MemSyncForCPU = XAie_SimMemSyncForCPU,
+	.Ops.MemSyncForDev = XAie_SimMemSyncForDev,
 };
 
 /************************** Function Definitions *****************************/
@@ -346,6 +350,27 @@ AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	(void)Op;
 	(void)Arg;
 	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
+XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	return NULL;
+}
+
+AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
+}
+
+AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
+{
+	return XAIE_ERR;
 }
 
 /** @} */
