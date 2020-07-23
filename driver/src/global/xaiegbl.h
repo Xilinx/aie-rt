@@ -362,6 +362,13 @@ typedef struct {
 /**************************** Function prototypes ***************************/
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
 AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
+XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache);
+AieRC XAie_MemFree(XAie_MemInst *MemInst);
+AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
+AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
+void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
+u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
 
 /*****************************************************************************/
 /*

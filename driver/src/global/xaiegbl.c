@@ -157,4 +157,150 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to allocate a memory
+*
+* @param	DevInst: Device Instance
+* @param	Size: Size of the memory
+* @param	Cache: Buffer to be cacheable or not
+*
+* @return	Pointer to the allocated memory instance.
+*
+* @note		None.
+*
+*******************************************************************************/
+XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return NULL;
+	}
+
+	return Backend->Ops.MemAllocate(DevInst, Size, Cache);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to free the memory
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_MemFree(XAie_MemInst *MemInst)
+{
+	if(MemInst == XAIE_NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return XAIE_ERR;
+	}
+
+	const XAie_Backend *Backend = MemInst->DevInst->Backend;
+
+	return Backend->Ops.MemFree(MemInst);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for CPU
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
+{
+	if(MemInst == XAIE_NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return XAIE_ERR;
+	}
+
+	const XAie_Backend *Backend = MemInst->DevInst->Backend;
+
+	return Backend->Ops.MemSyncForCPU(MemInst);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for device
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
+{
+	if(MemInst == XAIE_NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return XAIE_ERR;
+	}
+
+	const XAie_Backend *Backend = MemInst->DevInst->Backend;
+
+	return Backend->Ops.MemSyncForDev(MemInst);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to return the virtual address of the memory
+* instance
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	Mapped virtual address of the memory instance.
+*
+* @note		None.
+*
+*******************************************************************************/
+void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
+{
+	if(MemInst == XAIE_NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return NULL;
+	}
+
+	return MemInst->VAddr;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to return the physical address of the memory
+* instance
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	Physical address of the memory instance.
+*
+* @note		None.
+*
+*******************************************************************************/
+u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
+{
+	if(MemInst == XAIE_NULL) {
+		XAieLib_print("Error: Invalid memory instance\n");
+		return XAIE_ERR;
+	}
+
+	return MemInst->DevAddr;
+}
+
 /** @} */
