@@ -422,7 +422,8 @@ typedef struct {
 typedef struct {
 	u32 RegOff;
 	XAie_RegFldAttr RstCntr;
-} XAie_RstMod;
+	AieRC (*RstShims)(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols);
+} XAie_ShimRstMod;
 
 /*
  * The typedef contains the attributes of SHIM NOC AXI MM configuration
@@ -466,7 +467,7 @@ typedef struct {
 	const XAie_RegFldAttr *ShimNocDeMux;
 	const XAie_ShimClkBufCntr *ClkBufCntr; /* Shim clock buffer control configuration */
 	XAie_RegFldAttr ColRst; /* Tile column reset configuration */
-	const XAie_RstMod *ShimTileRst; /* SHIM tile reset enable configuration */
+	const XAie_ShimRstMod *ShimTileRst; /* SHIM tile reset enable configuration */
 	const XAie_ShimNocAxiMMConfig *ShimNocAxiMM; /* SHIM NOC AXI MM configuration */
 } XAie_PlIfMod;
 

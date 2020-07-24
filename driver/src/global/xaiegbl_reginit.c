@@ -55,6 +55,7 @@
 #include "xaie_events.h"
 #include "xaie_events_aie.h"
 #include "xaie_locks_aie.h"
+#include "xaie_reset_aie.h"
 #include "xaiegbl_regdef.h"
 #include "xaiegbl_params.h"
 
@@ -506,10 +507,11 @@ static const XAie_ShimClkBufCntr AieShimClkBufCntr =
 };
 
 /* Register to reset SHIM tile */
-static const XAie_RstMod AieShimTileRst =
+static const XAie_ShimRstMod AieShimTileRst =
 {
 	.RegOff = XAIEGBL_PL_AIESHIRSTENA,
-	.RstCntr = {XAIEGBL_PL_AIESHIRSTENA_RST_LSB, XAIEGBL_PL_AIESHIRSTENA_RST_MASK}
+	.RstCntr = {XAIEGBL_PL_AIESHIRSTENA_RST_LSB, XAIEGBL_PL_AIESHIRSTENA_RST_MASK},
+	.RstShims = _XAie_RstShims,
 };
 
 /* Register field attributes for SHIMNOC AXI MM configuration */
