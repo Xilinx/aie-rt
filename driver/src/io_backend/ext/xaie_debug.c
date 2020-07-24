@@ -111,7 +111,7 @@ AieRC XAie_DebugIO_Init(XAie_DevInst *DevInst)
 *
 * @param	IOInst: IO instance pointer
 * @param	RegOff: Register offset to read from.
-* @param	Data: 32-bit data to be written.
+* @param	Value: 32-bit data to be written.
 *
 * @return	None.
 *

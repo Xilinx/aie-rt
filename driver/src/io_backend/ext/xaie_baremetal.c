@@ -77,7 +77,7 @@ const XAie_Backend BaremetalBackend =
 * @return	None.
 *
 * @note		The global IO instance is a singleton and freed when
-* the reference count reaches a zero.
+* the reference count reaches a zero. Internal only.
 *
 *******************************************************************************/
 AieRC XAie_BaremetalIO_Finish(void *IOInst)
@@ -94,7 +94,7 @@ AieRC XAie_BaremetalIO_Finish(void *IOInst)
 *
 * @return	XAIE_OK on success. Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
@@ -118,7 +118,7 @@ AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_BaremetalIO_Write32(void *IOInst, u64 RegOff, u32 Value)
@@ -138,7 +138,7 @@ void XAie_BaremetalIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 *
 * @return	32-bit read value.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 u32 XAie_BaremetalIO_Read32(void *IOInst, u64 RegOff)
@@ -161,7 +161,7 @@ u32 XAie_BaremetalIO_Read32(void *IOInst, u64 RegOff)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_BaremetalIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Value)
@@ -187,7 +187,7 @@ void XAie_BaremetalIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Value)
 *
 * @return	XAIELIB_SUCCESS or XAIELIB_FAILURE.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 u32 XAie_BaremetalIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
@@ -234,7 +234,7 @@ u32 XAie_BaremetalIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_BaremetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data,
@@ -259,7 +259,7 @@ void XAie_BaremetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data,
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_BaremetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
@@ -268,6 +268,20 @@ void XAie_BaremetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 		XAie_BaremetalIO_Write32(IOInst, RegOff+ i * 4U, Data);
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to allocate a memory
+*
+* @param	DevInst: Device Instance
+* @param	Size: Size of the memory
+* @param	Cache: Value from XAie_MemCacheProp enum
+*
+* @return	Pointer to the allocated memory instance.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
@@ -296,6 +310,18 @@ XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	return MemInst;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to free the memory
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 {
 	free(MemInst->VAddr);
@@ -304,6 +330,18 @@ AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for CPU
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	Xil_DCacheInvalidateRange((u64)MemInst->VAddr, MemInst->Size);
@@ -311,6 +349,18 @@ AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for device
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 {
 	Xil_DCacheFlushRange((u64)MemInst->VAddr, MemInst->Size);

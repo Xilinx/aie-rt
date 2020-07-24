@@ -103,7 +103,7 @@ const XAie_Backend MetalBackend =
 * @return	XAIE_OK on success, error code on failure.
 *
 * @note		The global IO instance is a singleton and freed when
-* the reference count reaches a zero.
+* the reference count reaches a zero. Internal only.
 *
 *******************************************************************************/
 AieRC XAie_MetalIO_Finish(void *IOInst)
@@ -130,7 +130,7 @@ AieRC XAie_MetalIO_Finish(void *IOInst)
 * @return	None.
 *
 * @note		The global IO instance is a singleton and any further attempt
-* to initialize just increments the reference count.
+* to initialize just increments the reference count. Internal only.
 *
 *******************************************************************************/
 AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
@@ -199,7 +199,7 @@ finish:
 *
 * @return	32-bit read value.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 u32 XAie_MetalIO_Read32(void *IOInst, u64 RegOff)
@@ -220,7 +220,7 @@ u32 XAie_MetalIO_Read32(void *IOInst, u64 RegOff)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_MetalIO_Write32(void *IOInst, u64 RegOff, u32 Data)
@@ -243,7 +243,7 @@ void XAie_MetalIO_Write32(void *IOInst, u64 RegOff, u32 Data)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_MetalIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Data)
@@ -269,7 +269,7 @@ void XAie_MetalIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Data)
 *
 * @return	XAIELIB_SUCCESS or XAIELIB_FAILURE.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 u32 XAie_MetalIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
@@ -316,7 +316,7 @@ u32 XAie_MetalIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_MetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
@@ -340,7 +340,7 @@ void XAie_MetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_MetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
@@ -361,7 +361,7 @@ void XAie_MetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 static void _XAie_MetalIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
@@ -383,7 +383,7 @@ static void _XAie_MetalIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
 *
 * @return	XAIE_OK for success and error code for failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
@@ -436,6 +436,20 @@ AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	return RC;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to allocate a memory
+*
+* @param	DevInst: Device Instance
+* @param	Size: Size of the memory
+* @param	Cache: Value from XAie_MemCacheProp enum
+*
+* @return	Pointer to the allocated memory instance.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
@@ -504,6 +518,18 @@ err_out:
 	return NULL;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to free the memory
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 AieRC XAie_MetalMemFree(XAie_MemInst *MemInst)
 {
 	XAie_MetalMemInst *MetalMemInst = (XAie_MetalMemInst *)
@@ -517,6 +543,18 @@ AieRC XAie_MetalMemFree(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for CPU
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	int ret;
@@ -537,6 +575,18 @@ AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for device
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
 AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst)
 {
 	int ret;

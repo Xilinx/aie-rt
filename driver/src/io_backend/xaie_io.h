@@ -64,6 +64,13 @@ typedef struct XAie_BackendNpiWrReq {
  * CmdWrite32  : This IO operation is required only in simulation mode. Other
  *               backends should have a no-op.
  * RunOp       : Run operation specified by the operation code
+ * MemAllocate : Backend operation to allocate memory for the user. In addition
+ *		 to that, the operation is expected to allocate memory for
+ *		 MemInst and populate Size, virtual address and device address..
+ * MemFree     : Backend operation to free allocated memory, MemInst allocated
+ *		 by the MemAllocate api.
+ * MemSyncForCPU: Backend operation to prepare memory for CPU access.
+ * MemSyncForDev: Backend operation to prepare memory for Device access.
  */
 typedef struct XAie_BackendOps {
 	AieRC (*Init)(XAie_DevInst *DevInst);

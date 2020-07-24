@@ -75,7 +75,7 @@ const XAie_Backend SimBackend =
 * @return	None.
 *
 * @note		The global IO instance is a singleton and freed when
-* the reference count reaches a zero.
+* the reference count reaches a zero. Internal only.
 *
 *******************************************************************************/
 AieRC XAie_SimIO_Finish(void *IOInst)
@@ -93,7 +93,7 @@ AieRC XAie_SimIO_Finish(void *IOInst)
 *
 * @return	XAIE_OK on success. Error code on failure.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
@@ -123,7 +123,7 @@ AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_SimIO_Write32(void *IOInst, u64 RegOff, u32 Value)
@@ -143,7 +143,7 @@ void XAie_SimIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 *
 * @return	32-bit read value.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 u32 XAie_SimIO_Read32(void *IOInst, u64 RegOff)
@@ -166,7 +166,7 @@ u32 XAie_SimIO_Read32(void *IOInst, u64 RegOff)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_SimIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Value)
@@ -192,7 +192,7 @@ void XAie_SimIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Value)
 *
 * @return	XAIELIB_SUCCESS or XAIELIB_FAILURE.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 u32 XAie_SimIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
@@ -228,7 +228,7 @@ u32 XAie_SimIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_SimIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
@@ -252,7 +252,7 @@ void XAie_SimIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_SimIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
@@ -277,7 +277,7 @@ void XAie_SimIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 *******************************************************************************/
 void XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
