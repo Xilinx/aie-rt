@@ -26,6 +26,8 @@
 ******************************************************************************/
 
 /***************************** Include Files *********************************/
+#include <string.h>
+
 #include "xaie_io.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
@@ -94,6 +96,9 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
+
+	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
+		sizeof(ConfigPtr->PartProp));
 
 	RC = XAie_IOInit(InstPtr);
 	if(RC != XAIE_OK) {

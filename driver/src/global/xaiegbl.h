@@ -78,7 +78,23 @@ typedef enum {
 } XAie_BackendType;
 
 /*
- * This typedef contains the attributes for a AIE partition. The structure is
+ * This typedef contains the attributes for an AIE partition properties.
+ * It will contain the fields required to intialize the AIE partition software
+ * instance.
+ */
+typedef struct {
+	u64 Handle;	/* AI engine partition handle. If AI engine handle is
+			 * specified, the NID, and the UID will be ignored. It
+			 * is used in case of Linux Xilinx runtime stack. */
+	u32 Nid;	/* Partition Node ID */
+	u32 Uid;	/* UID of the image runs on the AI engine partition */
+	u32 CntrFlag;	/* AI enigne parition control flag. E.g.to indicate
+			 * if to reset and gate all the tiles when the parition
+			 * is closed. */
+} XAie_PartitionProp;
+
+/*
+ * This typedef contains the attributes for an AIE partition. The structure is
  * setup during intialization.
  */
 typedef struct {
@@ -96,6 +112,7 @@ typedef struct {
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
 				     setup to AIE prop during intialization*/
+	XAie_PartitionProp PartProp; /* Partition property */
 } XAie_DevInst;
 
 /* enum to capture cache property of allocate memory */
@@ -126,6 +143,7 @@ typedef struct {
 	u8 MemTileNumRows;
 	u8 AieTileRowStart;
 	u8 AieTileNumRows;
+	XAie_PartitionProp PartProp;
 } XAie_Config;
 
 /*
@@ -435,6 +453,40 @@ static inline XAie_LocType XAie_TileLoc(u8 col, u8 row)
 /*****************************************************************************/
 /**
 *
+* This API setups the AI engine partition property in AI engine config
+*
+* @param	Config: XAie_Config structure.
+* @param	Nid: AI enigne partition node ID
+* @param	Uid: AI enigne partition image UID
+* @param	Handle: AI engine partition handle, in some OS such as Linux
+*			the AI engine partition is presented as file descriptor.
+*			In case of Xilinx runtime stack, the Xilinx runtime
+*			module has requested the AI engine partition which will
+*			have the handle can be passed to the userspace
+*			application.
+* @param	CntrFlag: AI engine partition control flag. E.g., it can be used
+*			to indicate if the partition needs to cleanup when
+*			application terminates.
+*
+* @return	None.
+*
+* @note		This function is to set the partition system design property to
+*		the AI engine config. It needs to be called before intialize
+*		AI engine partition.
+*
+*******************************************************************************/
+static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
+		u32 Uid, u64 Handle, u32 CntrFlag)
+{
+	ConfigPtr->PartProp.Nid = Nid;
+	ConfigPtr->PartProp.Uid = Uid;
+	ConfigPtr->PartProp.Handle = Handle;
+	ConfigPtr->PartProp.CntrFlag = CntrFlag;
+}
+
+/*****************************************************************************/
+/**
+*
 * Macro to setup the configurate pointer data structure with hardware specific
 * details.
 *
@@ -471,6 +523,7 @@ static inline XAie_LocType XAie_TileLoc(u8 col, u8 row)
 			.MemTileNumRows = _MemTileNumRows,\
 			.AieTileRowStart = _AieTileRowStart,\
 			.AieTileNumRows = _AieTileNumRows,\
+			.PartProp = {0}, \
 		}\
 
 /*****************************************************************************/
