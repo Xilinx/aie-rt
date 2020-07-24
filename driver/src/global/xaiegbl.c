@@ -111,6 +111,40 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 /*****************************************************************************/
 /**
 *
+* This is the api to finish the AI enigne partition. It will release
+* the occupied AI engine resource
+*
+* @param	DevInst - Global AIE device instance pointer.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_Finish(XAie_DevInst *DevInst)
+{
+	const XAie_Backend *CurrBackend;
+	AieRC RC;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	CurrBackend = DevInst->Backend;
+	RC = CurrBackend->Ops.Finish(DevInst->IOInst);
+	if (RC != XAIE_OK) {
+		XAieLib_print("Error: Failed to close backend instance.\n");
+		return RC;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the api to set the IO backend of the driver at runtime.
 *
 * @param	DevInst - Global AIE device instance pointer.
