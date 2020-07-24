@@ -26,6 +26,15 @@
 #endif
 
 /*
+ * Typedef for structure for NPI protected registers access
+ */
+typedef struct XAie_NpiProtRegReq {
+	u32 StartCol;
+	u32 NumCols;
+	u8 Enable;
+} XAie_NpiProtRegReq;
+
+/*
  * This typedef contains the attributes for AI engine NPI registers
  */
 typedef struct XAie_NpiMod {
@@ -38,14 +47,16 @@ typedef struct XAie_NpiMod {
 	XAie_RegFldAttr ProtRegEnable;
 	XAie_RegFldAttr ProtRegFirstCol;
 	XAie_RegFldAttr ProtRegLastCol;
-	u32 (*SetProtectedRegField)(XAie_DevInst *DevInst, u8 Enable);
+	AieRC (*SetProtectedRegField)(XAie_DevInst *DevInst,
+			XAie_NpiProtRegReq *Req, u32 *RegVal);
 } XAie_NpiMod;
 
 typedef void (*NpiWrite32Func)(void *IOInst, u32 RegOff, u32 RegVal);
 
 /************************** Function Prototypes  *****************************/
 void _XAie_NpiSetShimReset(XAie_DevInst *DevInst, u8 RstEnable);
-void _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst, u8 Enable);
+AieRC _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst,
+				    XAie_NpiProtRegReq *Req);
 
 #endif	/* End of protection macro */
 

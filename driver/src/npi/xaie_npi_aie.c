@@ -36,7 +36,8 @@
 /****************************** Type Definitions *****************************/
 
 /************************** Variable Definitions *****************************/
-static u32 _XAie_NpiSetProtectedRegField(XAie_DevInst *DevInst, u8 Enable);
+static AieRC _XAie_NpiSetProtectedRegField(XAie_DevInst *DevInst,
+		XAie_NpiProtRegReq *Req, u32 *RegVal);
 
 XAie_NpiMod _XAieNpiMod =
 {
@@ -59,22 +60,29 @@ XAie_NpiMod _XAieNpiMod =
 * This is function to setup the protected register configuration value.
 *
 * @param	DevInst : AI engine partition device pointer
-* @param	Enable : XAIE_ENABLE to enable access to protected register,
-*			 XAIE_DISABLE to disable access to protected register
+* @param	Req: Protect Register Request
+* @param	RegVal: pointer to return calculated register value
 *
-* @return	32bit Value used by caller function to set to the register
+* @return	XAIE_OK
 *
-* @note		None
+* @note		For AIE, the StartCol and NumCols in the @Req will not be
+*		used as it is not supported in hardware.
 *
 *******************************************************************************/
-static u32 _XAie_NpiSetProtectedRegField(XAie_DevInst *DevInst, u8 Enable)
+static AieRC _XAie_NpiSetProtectedRegField(XAie_DevInst *DevInst,
+		XAie_NpiProtRegReq *Req, u32 *RegVal)
 {
-	u32 RegVal;
+	(void) DevInst;
 
-	(void)DevInst;
-	RegVal = XAie_SetField(Enable, _XAieNpiMod.ProtRegEnable.Lsb,
+	if (Req->StartCol != 0 || Req->NumCols != 0) {
+		XAieLib_print("Error: no columns fields in protected reg\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	*RegVal = XAie_SetField(Req->Enable, _XAieNpiMod.ProtRegEnable.Lsb,
 			       _XAieNpiMod.ProtRegEnable.Mask);
-	return RegVal;
+
+	return XAIE_OK;
 }
 
 /** @} */

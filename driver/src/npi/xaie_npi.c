@@ -132,29 +132,33 @@ void _XAie_NpiSetShimReset(XAie_DevInst *DevInst, u8 RstEnable)
 * This is the NPI function to set the AI engine protect register configuration
 *
 * @param	DevInst : AI engine partition device pointer
-* @param	RstEnable : XAIE_ENABLE to assert reset, and XAIE_DISABLE to
-*			    deassert reset.
+* @param	Req : Request to set the protected registers
 *
-* @return	None
+* @return	XAIE_OK for success, and error value for failure
 *
 * @note		None.
 *
 *******************************************************************************/
-void _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst, u8 Enable)
+AieRC _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst,
+				    XAie_NpiProtRegReq *Req)
 {
 	u32 RegVal;
 	XAie_NpiMod *NpiMod;
-	XAie_BackendNpiWrReq Req;
+	XAie_BackendNpiWrReq IOReq;
+	AieRC RC;
 
 	NpiMod = _XAie_NpiGetMod(DevInst);
 	if (NpiMod == NULL) {
-		return;
+		return XAIE_INVALID_ARGS;
 	}
 
-	RegVal = NpiMod->SetProtectedRegField(DevInst, Enable);
+	RC = NpiMod->SetProtectedRegField(DevInst, Req, &RegVal);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
 
-	Req = _XAie_SetBackendNpiWrReq(NpiMod->ProtRegOff, RegVal);
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_NPIWR32, &Req);
+	IOReq = _XAie_SetBackendNpiWrReq(NpiMod->ProtRegOff, RegVal);
+	return XAie_RunOp(DevInst, XAIE_BACKEND_OP_NPIWR32, &IOReq);
 }
 
 /** @} */

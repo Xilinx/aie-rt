@@ -15,6 +15,7 @@
 /***************************** Include Files *********************************/
 #include "xaie_clock.h"
 #include "xaie_helper.h"
+#include "xaie_npi.h"
 #include "xaie_reset.h"
 #include "xaiegbl.h"
 
@@ -250,6 +251,8 @@ static void  _XAie_RstSetBlockAllShimsNocAxiMmNsuErr(XAie_DevInst *DevInst,
 *******************************************************************************/
 AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 {
+	XAie_NpiProtRegReq ProtRegReq = {0};
+
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
@@ -258,8 +261,8 @@ AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 
 	_XAie_RstSetAllColumnsReset(DevInst, XAIE_ENABLE);
 
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG,
-			(void *)(uintptr_t)XAIE_ENABLE);
+	ProtRegReq.Enable = XAIE_ENABLE;
+	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
 
 	_XAie_RstSetAllShimsReset(DevInst, XAIE_ENABLE);
 
@@ -273,8 +276,8 @@ AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 
 	_XAie_RstSetBlockAllShimsNocAxiMmNsuErr(DevInst, XAIE_ENABLE);
 
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG,
-			(void *)(uintptr_t)XAIE_DISABLE);
+	ProtRegReq.Enable = XAIE_DISABLE;
+	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
 
 	_XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 

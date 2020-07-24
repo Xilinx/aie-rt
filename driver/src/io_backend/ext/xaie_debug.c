@@ -307,9 +307,7 @@ AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_SET_PROTREG:
 		{
-			u8 Enable = (u8)((uintptr_t)Arg & 0xFF);
-
-			_XAie_NpiSetProtectedRegEnable(DevInst, Enable);
+			RC = _XAie_NpiSetProtectedRegEnable(DevInst, Arg);
 			break;
 		}
 		default:
