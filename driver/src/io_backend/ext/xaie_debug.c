@@ -49,6 +49,10 @@ const XAie_Backend DebugBackend =
 	.Ops.BlockSet32 = XAie_DebugIO_BlockSet32,
 	.Ops.CmdWrite = XAie_DebugIO_CmdWrite,
 	.Ops.RunOp = XAie_DebugIO_RunOp,
+	.Ops.MemAllocate = XAie_DebugMemAllocate,
+	.Ops.MemFree = XAie_DebugMemFree,
+	.Ops.MemSyncForCPU = XAie_DebugMemSyncForCPU,
+	.Ops.MemSyncForDev = XAie_DebugMemSyncForDev,
 };
 
 /************************** Function Definitions *****************************/
@@ -317,6 +321,104 @@ AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	}
 
 	return RC;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to allocate a memory
+*
+* @param	DevInst: Device Instance
+* @param	Size: Size of the memory
+* @param	Cache: Buffer to be cacheable or not
+*
+* @return	Pointer to the allocated memory instance.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+XAie_MemInst* XAie_DebugMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	XAie_MemInst *MemInst;
+
+	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
+	if(MemInst == NULL) {
+		XAieLib_print("Error: memory allocation failed\n");
+		return NULL;
+	}
+
+	MemInst->VAddr = (void *)malloc(Size);
+	if(MemInst->VAddr == NULL) {
+		XAieLib_print("Error: malloc failed\n");
+		free(MemInst);
+		return NULL;
+	}
+	MemInst->DevAddr = (u64)MemInst->VAddr;
+	MemInst->Size = Size;
+	MemInst->DevInst = DevInst;
+
+	XAieLib_print("INFO: Cache attribute is ignored\n");
+
+	return MemInst;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to free the memory
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_DebugMemFree(XAie_MemInst *MemInst)
+{
+	free(MemInst->VAddr);
+	free(MemInst);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for CPU
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_DebugMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	XAieLib_print("INFO: Sync for CPU is no-op in debug mode\n");
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for CPU
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_DebugMemSyncForDev(XAie_MemInst *MemInst)
+{
+	XAieLib_print("INFO: Sync for Dev is no-op in debug mode\n");
+
+	return XAIE_OK;
 }
 
 /** @} */

@@ -44,6 +44,11 @@ AieRC XAie_DebugIO_SetProtectedReg(void *IOInst, XAie_DevInst *DevInst,
 			u8 Enable);
 AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		XAie_BackendOpCode Op, void *Arg);
+XAie_MemInst* XAie_DebugMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache);
+AieRC XAie_DebugMemFree(XAie_MemInst *MemInst);
+AieRC XAie_DebugMemSyncForCPU(XAie_MemInst *MemInst);
+AieRC XAie_DebugMemSyncForDev(XAie_MemInst *MemInst);
 
 #endif	/* End of protection macro */
 
