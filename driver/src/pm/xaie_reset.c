@@ -84,71 +84,6 @@ static void  _XAie_RstSetAllColumnsReset(XAie_DevInst *DevInst, u8 RstEnable)
 /*****************************************************************************/
 /**
 *
-* This API set the SHIM tile reset
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of AIE SHIM tile
-* @param	RstEnable: XAIE_ENABLE to enable reset, XAIE_DISABLE to
-*			   disable reset.
-*
-* @return	none
-*
-* @note		It is not required to check the DevInst and the Loc tile type
-*		as the caller function should provide the correct value.
-*
-******************************************************************************/
-static void _XAie_RstSetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 RstEnable)
-{
-	u8 TileType;
-	u32 FldVal;
-	u64 RegAddr;
-	const XAie_PlIfMod *PlIfMod;
-	const XAie_RstMod *ShimTileRst;
-
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
-	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
-	ShimTileRst = PlIfMod->ShimTileRst;
-	if (ShimTileRst == NULL) {
-		return;
-	}
-
-	RegAddr = ShimTileRst->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	FldVal = XAie_SetField(RstEnable,
-			ShimTileRst->RstCntr.Lsb,
-			ShimTileRst->RstCntr.Mask);
-
-	XAie_Write32(DevInst, RegAddr, FldVal);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API set the SHIM reset for every column in the partition
-*
-* @param	DevInst: Device Instance
-* @param	RstEnable: XAIE_ENABLE to assert reset, XAIE_DISABLE to
-*			   deassert reset.
-*
-* @return	none
-*
-* @note		It is not required to check the DevInst as the caller function
-*		should provide the correct value.
-*
-******************************************************************************/
-static void  _XAie_RstSetAllShimsReset(XAie_DevInst *DevInst, u8 RstEnable)
-{
-	for (u32 C = 0; C < DevInst->NumCols; C++) {
-		XAie_LocType Loc = XAie_TileLoc(C, 0);
-
-		_XAie_RstSetShimReset(DevInst, Loc, RstEnable);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
 * This API to set if to block NSU AXI MM slave error and decode error. If NSU
 * errors is blocked, it will only generate error events.
 *
@@ -201,11 +136,20 @@ static void _XAie_RstSetBlockShimNocAxiMmNsuErr(XAie_DevInst *DevInst,
 *
 * @note		It is not required to check the DevInst as the caller function
 *		should provide the correct value.
+*		This function will do the following steps:
+*		 * enable protected registers
+*		 * set AXI MM registers NSU errors fields in all SHIM NOC tiles
+*		 * disable protected registers
 *
 ******************************************************************************/
 static void  _XAie_RstSetBlockAllShimsNocAxiMmNsuErr(XAie_DevInst *DevInst,
 		u8 Enable)
 {
+	XAie_NpiProtRegReq ProtRegReq = {0};
+
+	ProtRegReq.Enable = XAIE_ENABLE;
+	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
+
 	for (u32 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 		u8 TileType;
@@ -216,6 +160,35 @@ static void  _XAie_RstSetBlockAllShimsNocAxiMmNsuErr(XAie_DevInst *DevInst,
 		}
 		_XAie_RstSetBlockShimNocAxiMmNsuErr(DevInst, Loc, Enable);
 	}
+
+	ProtRegReq.Enable = XAIE_DISABLE;
+	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API reset all SHIMs in the AI engine partition
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK for success, and error value for failure
+*
+* @note		This function asserts reset, and then deassert it.
+*		It is not required to check the DevInst as the caller function
+*		should provide the correct value.
+*
+******************************************************************************/
+static AieRC _XAie_RstAllShims(XAie_DevInst *DevInst)
+{
+	u8 TileType;
+	const XAie_ShimRstMod *ShimTileRst;
+	XAie_LocType Loc = XAie_TileLoc(0, 0);
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	ShimTileRst = DevInst->DevProp.DevMod[TileType].PlIfMod->ShimTileRst;
+
+	return ShimTileRst->RstShims(DevInst, 0, DevInst->NumCols);
 }
 
 /*****************************************************************************/
@@ -241,18 +214,12 @@ static void  _XAie_RstSetBlockAllShimsNocAxiMmNsuErr(XAie_DevInst *DevInst,
 *		partition device with multiple backend calls.
 *		Here is the reset sequece:
 *		* reset columns
-*		* enable protected registers
-*		* enable shim reset for every columns
-*		* assert shim reset in NPI
-*		* release shim reset in NPI
+*		* reset shims
 *		* setup AXI MM config to block NSU errors
-*		* disable protected registers
 *		* gate all the tiles
 *******************************************************************************/
 AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 {
-	XAie_NpiProtRegReq ProtRegReq = {0};
-
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
@@ -261,23 +228,9 @@ AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 
 	_XAie_RstSetAllColumnsReset(DevInst, XAIE_ENABLE);
 
-	ProtRegReq.Enable = XAIE_ENABLE;
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
-
-	_XAie_RstSetAllShimsReset(DevInst, XAIE_ENABLE);
-
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_ASSERT_SHIMRST,
-			(void *)(uintptr_t)XAIE_ENABLE);
-
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_ASSERT_SHIMRST,
-			(void *)(uintptr_t)XAIE_DISABLE);
-
-	_XAie_RstSetAllShimsReset(DevInst, XAIE_DISABLE);
+	_XAie_RstAllShims(DevInst);
 
 	_XAie_RstSetBlockAllShimsNocAxiMmNsuErr(DevInst, XAIE_ENABLE);
-
-	ProtRegReq.Enable = XAIE_DISABLE;
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
 
 	_XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 
