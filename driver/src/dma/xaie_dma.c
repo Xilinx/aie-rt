@@ -695,6 +695,11 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMPL) ||
 			(TileType == XAIEGBL_TILE_TYPE_SHIMNOC)) {
@@ -800,6 +805,11 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
 		XAieLib_print("Error: Shim stream pause not supported\n");
 		return XAIE_ERR;
@@ -857,6 +867,11 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -928,6 +943,11 @@ AieRC XAie_DmaChannelConfig(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
 		XAieLib_print("Error: Feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
 	}
 
 	if((DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -1024,6 +1044,11 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
@@ -1076,6 +1101,11 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1173,6 +1203,11 @@ AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAieLib_print("Error: Invalid Tile Type\n");
@@ -1213,6 +1248,11 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAieLib_print("Error: Invalid DMA direction\n");
 		return XAIE_INVALID_ARGS;
 	}
 
