@@ -417,12 +417,9 @@ AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_SET_PROTREG:
 		{
-			u8 Enable = (u8)((uintptr_t)Arg & 0xFF);
-
 			if (MetalIOInst->npi_io != NULL) {
-				_XAie_NpiSetProtectedRegEnable(DevInst,
-						Enable);
-				RC = XAIE_OK;
+				RC = _XAie_NpiSetProtectedRegEnable(DevInst,
+						Arg);
 			}
 			break;
 		}
