@@ -284,3 +284,46 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	return XAIE_OK;
 }
+
+/*****************************************************************************/
+/**
+*
+* This API checks if an AI engine tile is in use.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: tile location
+*
+* @return	XAIE_ENABLE if a tile is in use, otherwise XAIE_DISABLE.
+*
+* @note		This API is supposed to be called internal only.
+*******************************************************************************/
+u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	u8 TileType;
+	u32 TileBit;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_DISABLE;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if (TileType == XAIEGBL_TILE_TYPE_MAX) {
+		return XAIE_DISABLE;
+	}
+
+	if (TileType == XAIEGBL_TILE_TYPE_SHIMNOC ||
+	    TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		return XAIE_ENABLE;
+	}
+
+	TileBit = Loc.Col * (DevInst->NumRows - 1) + Loc.Row - 1;
+	if (CheckBit(DevInst->TilesInUse, TileBit)) {
+		return XAIE_ENABLE;
+	}
+
+	return XAIE_DISABLE;
+}
+
+/** @} */
