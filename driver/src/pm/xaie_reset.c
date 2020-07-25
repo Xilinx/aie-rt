@@ -237,4 +237,98 @@ AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 	return XAIE_OK;
 }
 
+
+/*****************************************************************************/
+/**
+*
+* This API clears an AI engine tile data memory
+*
+* @param	DevInst: Device Instance
+*
+* @return	None.
+*
+* @note		internal to this file.
+*******************************************************************************/
+static void _XAie_ClearDataMem(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	const XAie_MemMod *MemMod;
+	u64 RegAddr;
+	u8 TileType;
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
+	RegAddr = MemMod->MemAddr +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	XAie_BlockSet32(DevInst, RegAddr, 0, MemMod->Size / 4);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API clears an AI engine tile program memory
+*
+* @param	DevInst: Device Instance
+*
+* @return	None.
+*
+* @note		internal to this file.
+*******************************************************************************/
+static void _XAie_ClearProgMem(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	const XAie_CoreMod *CoreMod;
+	u64 RegAddr;
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	RegAddr = CoreMod->ProgMemHostOffset +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	XAie_BlockSet32(DevInst, RegAddr, 0, CoreMod->ProgMemSize / 4);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API clears AI engine partition pointed by the AI enigne device instance.
+* It will zeroize both data and program memories of the requested tiles.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success.
+*		XAIE_INVALID_ARGS if any argument is invalid
+*
+* @note		None.
+*******************************************************************************/
+AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	for(u32 C = 0; C < DevInst->NumCols; C++) {
+		for(u32 R = 0; R < DevInst->NumRows; R++) {
+			XAie_LocType Loc = XAie_TileLoc(C, R);
+			u8 TileType;
+
+			TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+			if(TileType == XAIEGBL_TILE_TYPE_SHIMNOC ||
+			   TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+				continue;
+			}
+
+			if(_XAie_PmIsTileRequested(DevInst, Loc) ==
+			   XAIE_DISABLE) {
+				continue;
+			}
+
+			_XAie_ClearDataMem(DevInst, Loc);
+			if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+				_XAie_ClearProgMem(DevInst, Loc);
+			}
+		}
+	}
+
+	return XAIE_OK;
+}
+
 /** @} */
