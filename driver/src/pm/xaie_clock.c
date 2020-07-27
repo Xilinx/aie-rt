@@ -201,6 +201,24 @@ static void _XAiePm_SetTileInUse(XAie_DevInst *DevInst, u32 set_bit)
 
 /*****************************************************************************/
 /**
+* This is an internal API to get bit position corresponding to tile location in
+* the TilesInUse bitmap. This bitmap does not represent Shim tile so this API
+* only accepts AIE tile.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE tile
+* @return       Bit position in the TilesInUse bitmap
+*
+* @note         None
+*
+******************************************************************************/
+static u32 _XAie_PmGetBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	return Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U;
+}
+
+/*****************************************************************************/
+/**
 * This API enables clock for all the tiles passed as argument to this API.
 *
 * @param	DevInst: Device Instance
@@ -228,6 +246,11 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_ERR;
 	}
 
+	if(NumTiles > (DevInst->NumRows * DevInst->NumCols)) {
+		XAieLib_print("Error: Invalid NumTiles\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 	/*
 	 * Passing empty list to enable all tiles of device instance is
 	 * temporary and will be removed soon.
@@ -237,22 +260,35 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_OK;
 	}
 
+	/* Check validity of all tiles in the list passed to this API */
+	for(u32 j = 0; j < NumTiles; j++) {
+		if(Loc[j].Row >= DevInst->NumRows ||
+			Loc[j].Col >= DevInst->NumCols) {
+			XAieLib_print("Error: Invalid Loc Col:%d Row:%d\n", Loc[j].Col, Loc[j].Row);
+			return XAIE_INVALID_ARGS;
+		}
+	}
+
 	for(u32 i = 0; i < NumTiles; i++) {
+		u8 flag = 0;
+
 		if(Loc[i].Row == 0)
 			continue;
 
-		u8 flag = 0;
 		/* Calculate bit number in bit map for the tile requested */
-		SetTileStatus = (Loc[i].Col * (DevInst->NumRows - 1U)) +
-				Loc[i].Row - 1U;
+		SetTileStatus = _XAie_PmGetBitPosFromLoc(DevInst, Loc[i]);
 
 		for(u32 row = DevInst->NumRows - 1U; row > 0U; row--) {
 			/*
 			 * Check for the upper most tile in use in the column
 			 * of the tile requested.
 			 */
-			CheckTileStatus = Loc[i].Col * (DevInst->NumRows - 1U)
-					+ row - 1U;
+			XAie_LocType TileLoc;
+
+			TileLoc.Col = Loc[i].Col;
+			TileLoc.Row = row;
+			CheckTileStatus = _XAie_PmGetBitPosFromLoc(DevInst,
+					TileLoc);
 			if(CheckBit(DevInst->TilesInUse, CheckTileStatus)) {
 				flag = 1;
 				if(SetTileStatus > CheckTileStatus) {
