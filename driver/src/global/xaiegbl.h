@@ -186,11 +186,11 @@ typedef struct {
 typedef union {
 	XAie_Gen1DmaDimDesc AieDimDesc;
 	XAie_Gen2DmaDimDesc Aie2DimDesc;
-} XAie_DmaDimDisc;
+} XAie_DmaDimDesc;
 
 typedef struct {
 	u8 NumDim;
-	XAie_DmaDimDisc Dim[];
+	XAie_DmaDimDesc *Dim;
 } XAie_DmaTensor;
 
 typedef struct {
