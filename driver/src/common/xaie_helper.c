@@ -28,6 +28,8 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#include <stdarg.h>
+
 #include "xaie_helper.h"
 
 /************************** Variable Definitions *****************************/
@@ -201,5 +203,14 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 	return XAIE_OK;
 }
 
+
+void XAie_Log(FILE *Fd, const char *prefix, const char *Format, ...)
+{
+	va_list ArgPtr;
+	va_start(ArgPtr, Format);
+	fprintf(Fd, "%s", prefix);
+	vfprintf(Fd, Format, ArgPtr);
+	va_end(ArgPtr);
+}
 
 /** @} */

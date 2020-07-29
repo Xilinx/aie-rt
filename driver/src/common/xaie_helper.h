@@ -35,6 +35,21 @@
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
 
+/***************************** Macro Definitions *****************************/
+#define XAIE_ERROR(...) \
+	do { XAie_Log(stderr, "[AIE ERROR]: \t", __VA_ARGS__); } while(0)
+
+#ifdef XAIE_DEBUG
+
+#define XAIE_DBG(...) \
+	do { XAie_Log(stdout, "[AIE DEBUG]: \t", __VA_ARGS__); } while(0)
+
+#else
+
+#define XAIE_DBG(DevInst, ...) {}
+
+#endif /* XAIE_DEBUG */
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -120,6 +135,7 @@ static inline AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op,
 	return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 }
 
+void XAie_Log(FILE *Fd, const char* prefix, const char *Format, ...);
 u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
