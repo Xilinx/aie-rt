@@ -21,6 +21,7 @@
 * 1.1   Tejus   10/22/2019  Enable AIE initilization
 * 1.2   Tejus   06/09/2020  Call IO init api from XAie_CfgInitialize
 * 1.3   Tejus   06/10/2020  Add api to change backend at runtime.
+* 1.4   Dishita 07/28/2020  Add api to turn ECC Off.
 * </pre>
 *
 ******************************************************************************/
@@ -97,6 +98,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
+	InstPtr->EccStatus = XAIE_ENABLE;
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
@@ -343,4 +345,27 @@ u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 	return MemInst->DevAddr;
 }
 
+/*****************************************************************************/
+/*
+* This API disables the ECC flag in the Device Instance of the partition. It
+* should be called before calling elf loader to disable ECC.
+*
+* @param        DevInst: Device Instance
+*
+* @return       XAIE_OK on success
+* @note         None
+*
+*******************************************************************************/
+AieRC XAie_TurnEccOff(XAie_DevInst *DevInst)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	DevInst->EccStatus = XAIE_DISABLE;
+
+	return XAIE_OK;
+}
 /** @} */

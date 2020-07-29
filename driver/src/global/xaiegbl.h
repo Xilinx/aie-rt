@@ -107,6 +107,7 @@ typedef struct {
 	u8 AieTileRowStart; /* Aie tile starting row in the partition */
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
+	u8 EccStatus;		/* Ecc On/Off status of the partition */
 	u32 TilesInUse[XAIE_TILES_BITMAP_SIZE]; /* Bitmap for tiles in use */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */
@@ -388,6 +389,7 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
 AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
 u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
+AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
 
 /*****************************************************************************/
 /*
