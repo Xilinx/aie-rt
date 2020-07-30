@@ -19,6 +19,7 @@
 * 1.0   Nishad   07/21/2020  Initial creation
 * 1.1   Nishad   07/23/2020  Add APIs to configure second level interrupt
 *			     controller.
+* 1.2   Nishad   07/23/2020  Add API to initialize error broadcast network.
 * </pre>
 *
 ******************************************************************************/
@@ -523,6 +524,359 @@ AieRC XAie_IntrCtrlL2IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	ProtRegReq.Enable = XAIE_DISABLE;
 	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+* This API computes first level IRQ broadcast ID.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Switch: Switch in the given module. For shim tile value could be
+*			XAIE_EVENT_SWITCH_A or XAIE_EVENT_SWITCH_B.
+*
+* @return	IrqId: IRQ broadcast ID.
+*
+* @note		IRQ ID for each switch block starts from 0, every block on the
+*		left will increase by 1 until it reaches the first Shim NoC
+*		column. The IRQ ID restarts from 0 on the switch A of the second
+*		Shim NoC column. For the SHIM PL columns after the second Shim
+*		NoC, if there is no Shim NoC further right, the column will use
+*		the Shim NoC on the left. That is,
+*		For column from 0 to 43: the first IRQ broadcast event ID
+*		pattern is: 0 1 2 3 4 5 0 1, 0 1 2 3 4 5 0 1
+*		For column 44 to 49: 0 1 2 3 4 5 0 1 2 3 4 5
+*
+*		Internal Only.
+******************************************************************************/
+static inline u8 _XAie_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_BroadcastSw Switch)
+{
+	u8 IrqId = (((Loc.Col % 4) % 3) * 2) + Switch;
+
+	if(Loc.Col + 3 > DevInst->NumCols)
+		IrqId += 2;
+
+	return IrqId;
+}
+
+/*****************************************************************************/
+/**
+* This API enables default group error events which are marked as fatal errors.
+* It also channels them on broadcast line #0.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u32 GroupErrorEnableMask;
+	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
+	XAie_LocType Loc;
+
+	MemTileStart = DevInst->MemTileRowStart;
+	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
+	AieRowStart = DevInst->AieTileRowStart;
+	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			Loc = XAie_TileLoc(Col, Row);
+			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst,
+							Loc, XAIE_MEM_MOD);
+			RC = XAie_EventGroupControl(DevInst, Loc, XAIE_MEM_MOD,
+					XAIE_EVENT_GROUP_ERRORS_MEM,
+					GroupErrorEnableMask);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure group errors in memory module\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_MEM_MOD,
+					XAIE_ERROR_BROADCAST_ID,
+					XAIE_EVENT_GROUP_ERRORS_MEM);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for memory module\n");
+				return RC;
+			}
+
+			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst,
+							Loc, XAIE_CORE_MOD);
+			RC = XAie_EventGroupControl(DevInst, Loc, XAIE_CORE_MOD,
+					XAIE_EVENT_GROUP_ERRORS_0_CORE,
+					GroupErrorEnableMask);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure group error in core module\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_CORE_MOD,
+					XAIE_ERROR_BROADCAST_ID,
+					XAIE_EVENT_GROUP_ERRORS_0_CORE);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for core module\n");
+				return RC;
+			}
+		}
+
+		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
+			Loc = XAie_TileLoc(Col, MemRow);
+
+			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst,
+							Loc, XAIE_MEM_MOD);
+			RC = XAie_EventGroupControl(DevInst, Loc, XAIE_MEM_MOD,
+					XAIE_EVENT_GROUP_ERRORS_MEM_TILE,
+					GroupErrorEnableMask);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure group error in mem tile\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_MEM_MOD,
+					XAIE_ERROR_BROADCAST_ID,
+					XAIE_EVENT_GROUP_ERRORS_MEM_TILE);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for mem tile\n");
+				return RC;
+			}
+		}
+
+		/*
+		 * Shim tile only needs to setup error notification with first
+		 * level interrupt controller.
+		 */
+		Loc = XAie_TileLoc(Col, DevInst->ShimRow);
+		GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
+								XAIE_PL_MOD);
+		RC = XAie_EventGroupControl(DevInst, Loc, XAIE_PL_MOD,
+					XAIE_EVENT_GROUP_ERRORS_PL,
+					GroupErrorEnableMask);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to configure group error in shim tile\n");
+			return RC;
+		}
+
+		RC = XAie_IntrCtrlL1Event(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+				XAIE_ERROR_BROADCAST_ID,
+				XAIE_EVENT_GROUP_ERRORS_PL);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
+			return RC;
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API configures broadcast network to deliver error events as interrupts in
+* NPI. When error occurs, interrupt is raised on NPI interrupt line #5.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		This API assumes the whole AIE as a single partition and the
+*		following broadcast channels to be available. To avoid conflicts,
+*		it is the user's responsibility to make sure none of the below
+*		channels are being used.
+*			* Broadcast channel #0 in AIE array tiles.
+*			* Switch A L1 IRQ 16.
+*			* For shim tiles from column 0 to 43 broadcast lines
+*			  used follows the pattern as: 0 1 2 3 4 5 0 1.
+*			* For shim tiles from column 44 to 49 broadcast lines
+*			  used follows the pattern as: 0 1 2 3 4 5.
+*			* NPI interrupt line #5.
+******************************************************************************/
+AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u8 TileType, L1BroadcastId, MemTileStart, MemTileEnd, AieRowStart,
+	   AieRowEnd, BroadcastDirSwA, BroadcastDirSwB;
+	XAie_LocType Loc;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	MemTileStart = DevInst->MemTileRowStart;
+	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
+	AieRowStart = DevInst->AieTileRowStart;
+	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		/* Setup error broadcasts to SOUTH from memory and core module */
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			Loc = XAie_TileLoc(Col, Row);
+			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
+				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
+				   XAIE_ERROR_BROADCAST_ID,
+				   XAIE_EVENT_BROADCAST_NORTH |
+				   XAIE_EVENT_BROADCAST_WEST  |
+				   XAIE_EVENT_BROADCAST_EAST);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to block broadcasts in memory module\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
+				   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
+				   XAIE_ERROR_BROADCAST_ID,
+				   XAIE_EVENT_BROADCAST_NORTH |
+				   XAIE_EVENT_BROADCAST_WEST  |
+				   XAIE_EVENT_BROADCAST_EAST);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to block broadcasts in core module\n");
+				return RC;
+			}
+		}
+
+		/* Setup error broadcasts to SOUTH from mem tile */
+		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
+			Loc = XAie_TileLoc(Col, MemRow);
+			BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
+					  XAIE_EVENT_BROADCAST_EAST |
+					  XAIE_EVENT_BROADCAST_WEST;
+			BroadcastDirSwB = BroadcastDirSwA;
+
+			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
+				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
+				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to block broadcasts in mem tile switch A\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
+				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
+				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to block broadcasts in mem tile switch B\n");
+				return RC;
+			}
+		}
+
+		/*
+		 * Compute the broadcast line number on which L1 generates
+		 * error interrupts
+		 */
+		Loc = XAie_TileLoc(Col, DevInst->ShimRow);
+		L1BroadcastId = _XAie_IntrCtrlL1IrqId(DevInst, Loc,
+					XAIE_EVENT_SWITCH_A);
+
+		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+				L1BroadcastId);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to configure L1 IRQ line\n");
+			return RC;
+		}
+
+		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_B,
+				L1BroadcastId + 1);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to configure L1 IRQ line\n");
+			return RC;
+		}
+
+		/* Enable shim tile internal errors */
+		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+				XAIE_ERROR_SHIM_INTR_ID);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			return RC;
+		}
+
+		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+				XAIE_ERROR_BROADCAST_ID);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			return RC;
+		}
+
+		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
+				XAIE_ERROR_BROADCAST_ID);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			return RC;
+		}
+
+		TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+		if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+			XAIE_ERROR("Invalid tile type\n");
+			return XAIE_INVALID_TILE;
+		}
+
+		if(TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
+			BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
+					  XAIE_EVENT_BROADCAST_SOUTH |
+					  XAIE_EVENT_BROADCAST_WEST;
+			BroadcastDirSwB = XAIE_EVENT_BROADCAST_ALL;
+
+			RC = XAie_IntrCtrlL2Enable(DevInst, Loc,
+					XAIE_ERROR_L2_ENABLE);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to enable interrupts to L2\n");
+				return RC;
+			}
+
+			RC = XAie_IntrCtrlL2IrqSet(DevInst, Loc,
+					XAIE_ERROR_NPI_INTR_ID);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure L2 IRQ line\n");
+				return RC;
+			}
+		} else {
+			if(Col + 3 >= DevInst->NumCols) {
+				BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
+						  XAIE_EVENT_BROADCAST_SOUTH |
+						  XAIE_EVENT_BROADCAST_EAST;
+				BroadcastDirSwB = XAIE_EVENT_BROADCAST_NORTH |
+						  XAIE_EVENT_BROADCAST_SOUTH |
+						  XAIE_EVENT_BROADCAST_EAST;
+			} else {
+
+				BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
+						  XAIE_EVENT_BROADCAST_SOUTH |
+						  XAIE_EVENT_BROADCAST_WEST;
+				BroadcastDirSwB = XAIE_EVENT_BROADCAST_NORTH |
+						  XAIE_EVENT_BROADCAST_SOUTH |
+						  XAIE_EVENT_BROADCAST_WEST;
+			}
+		}
+
+		RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD,
+				XAIE_EVENT_SWITCH_A, L1BroadcastId,
+				BroadcastDirSwA);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block broadcasts in shim tile switch A\n");
+			return RC;
+		}
+
+		RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD,
+				XAIE_EVENT_SWITCH_B, L1BroadcastId + 1,
+				BroadcastDirSwB);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block broadcasts in shim tile switch B\n");
+			return RC;
+		}
+	}
+
+	RC =  _XAie_GroupErrorInit(DevInst);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to initialize group errors\n");
+		return RC;
+	}
 
 	return XAIE_OK;
 }

@@ -19,6 +19,7 @@
 * 1.0   Nishad  07/21/2020  Initial creation
 * 1.1   Nishad  07/23/2020  Add APIs to configure second level interrupt
 *			    controller.
+* 1.2   Nishad  07/23/2020  Add API to initialize error broadcast network.
 * </pre>
 *
 ******************************************************************************/
@@ -29,6 +30,11 @@
 #include "xaie_events.h"
 
 /**************************** Type Definitions *******************************/
+#define XAIE_ERROR_BROADCAST_ID			0x0U
+#define XAIE_ERROR_SHIM_INTR_ID			0x10U
+#define XAIE_ERROR_NPI_INTR_ID			0x1U
+#define XAIE_ERROR_L2_ENABLE			0x7FU
+
 /************************** Function Prototypes  *****************************/
 AieRC XAie_IntrCtrlL1Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IntrId);
@@ -48,5 +54,6 @@ AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
 AieRC XAie_IntrCtrlL2IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 NoCIrqId);
+AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
 
 #endif		/* end of protection macro */
