@@ -21,6 +21,7 @@
 *			    and group event registers.
 * 1.2   Nishad  07/14/2020  Add APIs to reset individual stream switch port
 *			    event selection ID and combo event.
+* 1.6   Nishad  07/23/2020  Add API to block brodcast signals using bitmap.
 * </pre>
 *
 ******************************************************************************/
@@ -733,6 +734,92 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		RegAddr   = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		XAie_Write32(DevInst, RegAddr, XAIE_ENABLE << BroadcastId);
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API blocks event broadcasts in the given module.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	Switch: Event switch in the given module.
+*			for AIE Tile switch value is XAIE_EVENT_SWITCH_A,
+*			for Shim tile and Mem tile switch value could be
+*			XAIE_EVENT_SWITCH_A or XAIE_EVENT_SWITCH_B.
+* @param	ChannelBitMap: Bitmap to block broadcast channels.
+* @parma	Dir: Direction to block events on given broadcast index. Values
+*		     could be OR'ed to block multiple directions. For example,
+*		     to block event broadcast in West and East directions set
+*		     Dir as,
+*		     XAIE_EVENT_BROADCAST_WEST | XAIE_EVENT_BROADCAST_EAST.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_BroadcastSw Switch,
+		u32 ChannelBitMap, u8 Dir)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 RegOffset;
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Invalid module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir & ~XAIE_EVENT_BROADCAST_ALL) {
+		XAIE_ERROR("Invalid broadcast direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Module == XAIE_PL_MOD)
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	else
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+
+	if(ChannelBitMap >= (XAIE_ENABLE << EvntMod->NumBroadcastIds) ||
+					Switch > EvntMod->NumSwitches) {
+		XAIE_ERROR("Invalid broadcast bitmap or switch value\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
+		if(!(Dir & 1U << DirShift))
+			continue;
+
+		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
+			    DirShift * EvntMod->BroadcastSwBlockOff +
+			    Switch * EvntMod->BroadcastSwOff;
+		RegAddr   = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			    RegOffset;
+		XAie_Write32(DevInst, RegAddr, ChannelBitMap);
 	}
 
 	return XAIE_OK;

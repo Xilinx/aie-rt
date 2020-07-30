@@ -26,6 +26,7 @@
 *			     and group event registers.
 * 1.5   Nishad  07/14/2020  Add APIs to reset individual stream switch port
 *			    event selection ID and combo event.
+* 1.6   Nishad   07/23/2020  Add API to block brodcast signals using bitmap.
 * </pre>
 *
 ******************************************************************************/
@@ -709,6 +710,9 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
 		u8 Dir);
+AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_BroadcastSw Switch,
+		u32 ChannelBitMap, u8 Dir);
 AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
 		u8 Dir);
