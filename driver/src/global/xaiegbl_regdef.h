@@ -38,6 +38,7 @@
 *			   structure
 * 2.7   Nishad 07/12/2020  Add data structure and register properties to support
 *			   event broadcast, PC event, and group events.
+* 2.8   Nishad 07/21/2020  Add data structure for interrupt controller.
 * </pre>
 *
 ******************************************************************************/
@@ -594,6 +595,38 @@ typedef struct XAie_ClockMod {
 	u32 ClockRegOff;
 	const XAie_RegFldAttr NextTileClockCntrl;
 } XAie_ClockMod;
+
+/*
+ * This structure captures all attributes related to first level interrupt
+ * controller.
+ */
+typedef struct XAie_L1IntrMod {
+	u32 BaseEnableRegOff;
+	u32 BaseDisableRegOff;
+	u32 BaseIrqRegOff;
+	u32 BaseIrqEventRegOff;
+	u32 BaseIrqEventMask;
+	u32 BaseBroadcastBlockRegOff;
+	u32 BaseBroadcastUnblockRegOff;
+	u8 SwOff;
+	u8 NumIntrIds;
+	u8 NumIrqEvents;
+	u8 IrqEventOff;
+	u8 NumBroadcastIds;
+} XAie_L1IntrMod;
+
+/*
+ * This structure captures all attributes related to second level interrupt
+ * controller.
+ */
+typedef struct XAie_L2IntrMod {
+	u32 EnableRegOff;
+	u32 DisableRegOff;
+	u32 IrqRegOff;
+	u8 NumBroadcastIds;
+	u8 NumNoCIntr;
+} XAie_L2IntrMod;
+
 /*
  * This typedef contains all the modules for a Tile type
  */
@@ -609,6 +642,8 @@ typedef struct XAie_TileMod {
 	const XAie_TimerMod *TimerMod;
 	const XAie_TraceMod *TraceMod;
 	const XAie_ClockMod *ClockMod;
+	const XAie_L1IntrMod *L1IntrMod;
+	const XAie_L2IntrMod *L2IntrMod;
 } XAie_TileMod;
 
 #endif
