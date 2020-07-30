@@ -47,6 +47,7 @@
 * 3.1   Nishad  07/01/2020  Populate MstrConfigBaseAddr stream switch property
 * 3.2   Nishad  07/12/2020  Populate event broadcast, PC event, and group event
 *			    register properties
+* 3.3   Nishad  07/21/2020  Populate interrupt controller data structure.
 * </pre>
 *
 ******************************************************************************/
@@ -1940,6 +1941,39 @@ static XAie_ClockMod AieTileClockMod =
 };
 
 /*
+ * Data structure to configures first level interrupt controller for
+ * XAIEGBL_TILE_TYPE_SHIMPL tile type
+ */
+static const XAie_L1IntrMod AiePlL1IntrMod =
+{
+	.BaseEnableRegOff = XAIEGBL_PL_INTCON1STLEVENAA,
+	.BaseDisableRegOff = XAIEGBL_PL_INTCON1STLEVDISA,
+	.BaseIrqRegOff = XAIEGBL_PL_INTCON1STLEVIRQNOA,
+	.BaseIrqEventRegOff = XAIEGBL_PL_INTCON1STLEVIRQEVTA,
+	.BaseIrqEventMask = XAIEGBL_PL_INTCON1STLEVIRQEVTA_IRQEVT0_MASK,
+	.BaseBroadcastBlockRegOff = XAIEGBL_PL_INTCON1STLEVBLKNORINASET,
+	.BaseBroadcastUnblockRegOff = XAIEGBL_PL_INTCON1STLEVBLKNORINACLR,
+	.SwOff = 0x30U,
+	.NumIntrIds = 20U,
+	.NumIrqEvents = 4U,
+	.IrqEventOff = 8U,
+	.NumBroadcastIds = 16U,
+};
+
+/*
+ * Data structure to configures second level interrupt controller for
+ * XAIEGBL_TILE_TYPE_SHIMNOC tile type
+ */
+static const XAie_L2IntrMod AieNoCL2IntrMod =
+{
+	.EnableRegOff = XAIEGBL_NOC_INTCON2NDLEVENA,
+	.DisableRegOff = XAIEGBL_NOC_INTCON2NDLEVDIS,
+	.IrqRegOff = XAIEGBL_NOC_INTCON2NDLEVINT,
+	.NumBroadcastIds = 16U,
+	.NumNoCIntr = 4U,
+};
+
+/*
  * AIE Module
  * This data structure captures all the modules for each tile type.
  * Depending on the tile type, this data strcuture can be used to access all
@@ -1962,6 +1996,8 @@ XAie_TileMod AieMod[] =
 		.TimerMod = AieTileTimerMod,
 		.TraceMod = AieTileTraceMod,
 		.ClockMod = &AieTileClockMod,
+		.L1IntrMod = NULL,
+		.L2IntrMod = NULL,
 	},
 	{
 		/*
@@ -1978,6 +2014,8 @@ XAie_TileMod AieMod[] =
 		.TimerMod = &AiePlTimerMod,
 		.TraceMod = &AiePlTraceMod,
 		.ClockMod = &AiePlClockMod,
+		.L1IntrMod = &AiePlL1IntrMod,
+		.L2IntrMod = &AieNoCL2IntrMod,
 	},
 	{
 		/*
@@ -1994,6 +2032,8 @@ XAie_TileMod AieMod[] =
 		.TimerMod = &AiePlTimerMod,
 		.TraceMod = &AiePlTraceMod,
 		.ClockMod = &AiePlClockMod,
+		.L1IntrMod = &AiePlL1IntrMod,
+		.L2IntrMod = NULL,
 	},
 	{
 		/*
@@ -2010,6 +2050,8 @@ XAie_TileMod AieMod[] =
 		.TimerMod = NULL,
 		.TraceMod = NULL,
 		.ClockMod = NULL,
+		.L1IntrMod = NULL,
+		.L2IntrMod = NULL,
 	}
 };
 
