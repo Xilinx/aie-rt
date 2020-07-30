@@ -165,8 +165,6 @@ void XAieLib_Write32(u64 Addr, u32 Data)
 *******************************************************************************/
 void XAieLib_MaskWrite32(u64 Addr, u32 Mask, u32 Data)
 {
-	u32 RegVal;
-
 #ifdef __AIESIM__
 	XAieSim_MaskWrite32(Addr, Mask, Data);
 #endif

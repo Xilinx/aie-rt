@@ -229,7 +229,6 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId,
 		XAie_EventComboOps Op, XAie_Events Event1, XAie_Events Event2)
 {
-	AieRC RC;
 	u8 TileType;
 
 	if((DevInst == XAIE_NULL) ||
@@ -270,7 +269,6 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId)
 {
-	AieRC RC;
 	u8 TileType;
 	XAie_Events Event;
 
@@ -425,9 +423,7 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
 		StrmSwPortType Port, u8 PortNum)
 {
-	AieRC RC;
 	u8 TileType;
-	XAie_Events Event;
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -468,7 +464,6 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 SelectId)
 {
-	AieRC RC;
 	u8 TileType;
 	StrmSwPortType Port;
 
