@@ -17,12 +17,15 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Nishad   07/21/2020  Initial creation
+* 1.1   Nishad   07/23/2020  Add APIs to configure second level interrupt
+*			     controller.
 * </pre>
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_helper.h"
 #include "xaie_interrupt.h"
+#include "xaie_npi.h"
 
 /************************** Constant Definitions *****************************/
 /************************** Function Definitions *****************************/
@@ -368,6 +371,158 @@ AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	XAie_Write32(DevInst, RegAddr, ChannelBitMap);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables/disables interrupts to second level interrupt controller.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChannelBitMap: Interrupt Bitmap.
+* @param	Enable: XAIE_ENABLE or XAIE_DISABLE to enable or disable.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal Only.
+*
+******************************************************************************/
+static AieRC _XAie_IntrCtrlL2Config(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 ChannelBitMap, u8 Enable)
+{
+	u64 RegAddr;
+	u32 RegOffset;
+	u8 TileType;
+	const XAie_L2IntrMod *L2IntrMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		XAIE_ERROR("Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	L2IntrMod = DevInst->DevProp.DevMod[TileType].L2IntrMod;
+
+	if(ChannelBitMap >= (XAIE_ENABLE << L2IntrMod->NumBroadcastIds)) {
+		XAIE_ERROR("Invalid interrupt bitmap\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Enable == XAIE_ENABLE)
+		RegOffset = L2IntrMod->EnableRegOff;
+	else
+		RegOffset = L2IntrMod->DisableRegOff;
+
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+
+	XAie_Write32(DevInst, RegAddr, ChannelBitMap);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API enables interrupts to second level interrupt controller.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChannelBitMap: Interrupt bit map.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 ChannelBitMap)
+{
+	return _XAie_IntrCtrlL2Config(DevInst, Loc, ChannelBitMap, XAIE_ENABLE);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API disables interrupts to second level interrupt controller.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChannelBitMap: Interrupt bit map.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 ChannelBitMap)
+{
+	return _XAie_IntrCtrlL2Config(DevInst, Loc, ChannelBitMap, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API sets NoC interrupt ID to which the interrupt from second level
+* interrupt controller shall be driven to.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	NoCIrqId: NoC IRQ index on which the interrupt shall be
+*			  driven.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_IntrCtrlL2IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 NoCIrqId)
+{
+	u64 RegAddr;
+	u32 RegOffset;
+	u8 TileType;
+	const XAie_L2IntrMod *L2IntrMod;
+	XAie_NpiProtRegReq ProtRegReq = {0};
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		XAIE_ERROR("Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	L2IntrMod = DevInst->DevProp.DevMod[TileType].L2IntrMod;
+
+	if(L2IntrMod == NULL || NoCIrqId >= L2IntrMod->NumNoCIntr) {
+		XAIE_ERROR("Invalid module type or broadcast ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	RegOffset = L2IntrMod->IrqRegOff;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+
+	ProtRegReq.Enable = XAIE_ENABLE;
+	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
+
+	XAie_Write32(DevInst, RegAddr, NoCIrqId);
+
+	ProtRegReq.Enable = XAIE_DISABLE;
+	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
 
 	return XAIE_OK;
 }
