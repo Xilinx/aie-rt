@@ -13,6 +13,7 @@ extern "C" {
 #include <xaiengine/xaie_dma.h>
 #include <xaiengine/xaie_elfloader.h>
 #include <xaiengine/xaie_events.h>
+#include <xaiengine/xaie_interrupt.h>
 #include <xaiengine/xaie_locks.h>
 #include <xaiengine/xaie_mem.h>
 #include <xaiengine/xaie_perfcnt.h>
