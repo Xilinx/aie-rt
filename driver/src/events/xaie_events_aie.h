@@ -272,7 +272,7 @@
 #define XAIE_EVENTS_MEM_USER_EVENT_2				126
 #define XAIE_EVENTS_MEM_USER_EVENT_3				127
 
-/* Declaration of events for PL/ Shim module */
+/* Declaration of events for PL/ Noc module */
 #define XAIE_EVENTS_PL_NONE					0
 #define XAIE_EVENTS_PL_TRUE					1
 #define XAIE_EVENTS_PL_GROUP_0					2
@@ -380,7 +380,7 @@
 #define XAIE_EVENTS_PL_PORT_STALLED_7				104
 #define XAIE_EVENTS_PL_PORT_TLAST_7				105
 #define XAIE_EVENTS_PL_GROUP_BROADCAST_A			106
-#define XAIE_EVENTS_PL_BROADCAST_0				107
+#define XAIE_EVENTS_PL_BROADCAST_A_0				107
 #define XAIE_EVENTS_PL_BROADCAST_A_1				108
 #define XAIE_EVENTS_PL_BROADCAST_A_2				109
 #define XAIE_EVENTS_PL_BROADCAST_A_3				110
