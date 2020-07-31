@@ -390,6 +390,7 @@ AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
 u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
 AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
+AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
 
 /*****************************************************************************/
 /*
