@@ -467,6 +467,11 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 		return XAIE_INVALID_TILE;
 	}
 
+	if (ElfPtr == XAIE_NULL) {
+		XAIE_ERROR("Invalid ElfPtr\n");
+		return XAIE_INVALID_ARGS;
+	}
+
 #ifdef __AIESIM__
 	/*
 	 * The code under this macro guard is used in simulation mode only.
@@ -475,13 +480,20 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	 * minor changes to priting error message.
 	 */
 	u32 Status;
-	char MapPath[256U];
+	char *MapPath;
+	const char *MapPathSuffix = ".map";
 	XAieSim_StackSz StackSz;
 
 	/* Get the stack range */
+	MapPath = malloc(strlen(ElfPtr) + strlen(MapPathSuffix) + 1);
+	if (MapPath == NULL) {
+		XAIE_ERROR("failed to malloc for .map file path.\n");
+		return XAIE_ERR;
+	}
 	strcpy(MapPath, ElfPtr);
-	strcat(MapPath, ".map");
+	strcat(MapPath, MapPathSuffix);
 	Status = XAieSim_GetStackRange(MapPath, &StackSz);
+	free(MapPath);
 	XAIE_DBG("Stack start:%08x, end:%08x\n", StackSz.start,
 			StackSz.end);
 	if(Status != XAIESIM_SUCCESS) {
