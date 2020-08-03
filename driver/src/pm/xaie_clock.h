@@ -30,7 +30,6 @@
 
 /************************** Function Prototypes  *****************************/
 void _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable);
-u8 _XAie_CheckClockRstEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		u32 NumTiles);
 u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc);

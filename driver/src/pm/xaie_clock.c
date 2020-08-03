@@ -91,30 +91,6 @@ void _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable)
 
 /*****************************************************************************/
 /*
-* This API returns the clock reset enable status.
-*
-* @param        DevInst: Device Instance
-* @param        Loc: Location of AIE tile
-* @return       clock reset value status.
-*
-* @note         None
-*
-*******************************************************************************/
-u8 _XAie_CheckClockRstEnable(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType;
-	const XAie_PlIfMod *PlIfMod;
-	const XAie_ShimClkBufCntr *ClkBufCntr;
-
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
-	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
-	ClkBufCntr = PlIfMod->ClkBufCntr;
-
-	return ClkBufCntr->RstEnable;
-}
-
-/*****************************************************************************/
-/*
 * This is an API to gate clocks in tiles from the topmost row to the row above
 * the Location passed as argument in that column. In AIE HW, the control of
 * clock gating a tile is present in the tile below that tile in that column.
