@@ -216,13 +216,13 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
-	const XAie_Backend *Backend = DevInst->Backend;
-
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
 		return NULL;
 	}
+
+	const XAie_Backend *Backend = DevInst->Backend;
 
 	return Backend->Ops.MemAllocate(DevInst, Size, Cache);
 }
