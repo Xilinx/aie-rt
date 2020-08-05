@@ -216,13 +216,15 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
+	const XAie_Backend *Backend;
+
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
 		return NULL;
 	}
 
-	const XAie_Backend *Backend = DevInst->Backend;
+	Backend = DevInst->Backend;
 
 	return Backend->Ops.MemAllocate(DevInst, Size, Cache);
 }
@@ -241,12 +243,14 @@ XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 *******************************************************************************/
 AieRC XAie_MemFree(XAie_MemInst *MemInst)
 {
+	const XAie_Backend *Backend;
+
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
-	const XAie_Backend *Backend = MemInst->DevInst->Backend;
+	Backend = MemInst->DevInst->Backend;
 
 	return Backend->Ops.MemFree(MemInst);
 }
@@ -265,12 +269,14 @@ AieRC XAie_MemFree(XAie_MemInst *MemInst)
 *******************************************************************************/
 AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 {
+	const XAie_Backend *Backend;
+
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
-	const XAie_Backend *Backend = MemInst->DevInst->Backend;
+	Backend = MemInst->DevInst->Backend;
 
 	return Backend->Ops.MemSyncForCPU(MemInst);
 }
@@ -289,12 +295,14 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 *******************************************************************************/
 AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 {
+	const XAie_Backend *Backend;
+
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
-	const XAie_Backend *Backend = MemInst->DevInst->Backend;
+	Backend = MemInst->DevInst->Backend;
 
 	return Backend->Ops.MemSyncForDev(MemInst);
 }
