@@ -334,7 +334,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem, const u64 ElfSz)
+		const unsigned char* ElfMem)
 {
 	AieRC RC;
 	Elf32_Ehdr *Ehdr;
@@ -543,7 +543,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 
 	fclose(Fd);
 
-	RC = XAie_LoadElfMem(DevInst, Loc, ElfMem, ElfSz);
+	RC = XAie_LoadElfMem(DevInst, Loc, ElfMem);
 	if(RC != XAIE_OK) {
 		free(ElfMem);
 		return RC;

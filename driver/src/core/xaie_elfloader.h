@@ -48,6 +48,6 @@ typedef struct {
 AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 		u8 LoadSym);
 AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem, const u64 ElfSz);
+		const unsigned char* ElfMem);
 #endif		/* end of protection macro */
 /** @} */
