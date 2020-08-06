@@ -42,13 +42,13 @@
 #endif
 
 /************************** Variable Definitions *****************************/
-const extern XAie_Backend MetalBackend;
-const extern XAie_Backend SimBackend;
-const extern XAie_Backend CdoBackend;
-const extern XAie_Backend BaremetalBackend;
-const extern XAie_Backend DebugBackend;
+extern const XAie_Backend MetalBackend;
+extern const XAie_Backend SimBackend;
+extern const XAie_Backend CdoBackend;
+extern const XAie_Backend BaremetalBackend;
+extern const XAie_Backend DebugBackend;
 
-const static XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
+static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
 	&MetalBackend,
 	&SimBackend,
