@@ -728,10 +728,10 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId);
 AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
-		StrmSwPortType Port, u8 PortNum);
+		u8 SelectId, XAie_StrmPortIntf PortIntf, StrmSwPortType Port,
+		u8 PortNum);
 AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 SelectId);
+		u8 SelectId);
 AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 BroadcastId, XAie_Events Event);
 AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -750,10 +750,10 @@ AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events GroupEvent);
 AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId, u16 PCAddr);
+		u8 PCEventId, u16 PCAddr);
 AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId);
+		u8 PCEventId);
 AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId);
+		u8 PCEventId);
 
 #endif		/* end of protection macro */

@@ -309,10 +309,6 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	SelectId: Selection index at which given port's event are
 *			  captured
 * @param	PortIntf: Stream switch port interface.
@@ -327,8 +323,8 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
-		XAie_LocType Loc, XAie_ModuleType Module, u8 SelectId,
-		XAie_StrmPortIntf PortIntf, StrmSwPortType Port, u8 PortNum)
+		XAie_LocType Loc, u8 SelectId, XAie_StrmPortIntf PortIntf,
+		StrmSwPortType Port, u8 PortNum)
 {
 	AieRC RC;
 	u64 RegAddr;
@@ -348,17 +344,10 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
-
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Invalid module\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	if(Module == XAIE_PL_MOD)
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE)
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 	else
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
 
 	if(SelectId >= EvntMod->NumStrmPortSelectIds) {
 		XAIE_ERROR("Invalid selection ID\n");
@@ -402,10 +391,6 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	SelectId: Selection index at which given port's event are
 *			  captured
 * @param	PortIntf: Stream switch port interface.
@@ -420,8 +405,8 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 *
 ******************************************************************************/
 AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 SelectId, XAie_StrmPortIntf PortIntf,
-		StrmSwPortType Port, u8 PortNum)
+		u8 SelectId, XAie_StrmPortIntf PortIntf, StrmSwPortType Port,
+		u8 PortNum)
 {
 	u8 TileType;
 
@@ -437,8 +422,8 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, Module, SelectId,
-			PortIntf, Port, PortNum);
+	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, SelectId, PortIntf,
+			Port, PortNum);
 }
 
 /*****************************************************************************/
@@ -449,10 +434,6 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	SelectId: Selection index at which given port's event are
 *			  captured
 *
@@ -462,7 +443,7 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 SelectId)
+		u8 SelectId)
 {
 	u8 TileType;
 	StrmSwPortType Port;
@@ -478,14 +459,16 @@ AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAIE_ERROR("Invalid tile type\n");
 		return XAIE_INVALID_TILE;
 	}
-	if(Module == XAIE_CORE_MOD)
+
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE)
 		Port = CORE;
-	else if(Module == XAIE_PL_MOD)
+	else if(TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
+		TileType == XAIEGBL_TILE_TYPE_SHIMNOC)
 		Port = CTRL;
 	else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
 		Port = DMA;
 
-	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, Module, SelectId,
+	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, SelectId,
 			XAIE_STRMSW_SLAVE, Port, 0U);
 }
 
@@ -1077,9 +1060,8 @@ AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId, u16 PCAddr, u8 Valid)
+		u8 PCEventId, u16 PCAddr, u8 Valid)
 {
-	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal;
 	u8 TileType;
@@ -1087,16 +1069,7 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Invalid module\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	if(Module == XAIE_PL_MOD)
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
 	if(PCEventId >= EvntMod->NumPCEvents) {
 		XAIE_ERROR("Invalid PC event ID\n");
@@ -1129,10 +1102,6 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	PCEventId: PC Event index.
 * @param	PCAddr: PC event on this instruction address.
 *
@@ -1141,8 +1110,8 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId, u16 PCAddr)
+AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId,
+		u16 PCAddr)
 {
 	u8 TileType;
 
@@ -1158,7 +1127,7 @@ AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	return _XAie_EventPCConfig(DevInst, Loc, Module, PCEventId, PCAddr,
+	return _XAie_EventPCConfig(DevInst, Loc, PCEventId, PCAddr,
 			XAIE_ENABLE);
 }
 
@@ -1169,10 +1138,6 @@ AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	PCEventId: PC Event index.
 *
 * @return	XAIE_OK on success, error code on failure.
@@ -1180,8 +1145,7 @@ AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId)
+AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 {
 	u8 TileType;
 
@@ -1197,8 +1161,7 @@ AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	return _XAie_EventPCConfig(DevInst, Loc, Module, PCEventId, 0U,
-			XAIE_DISABLE);
+	return _XAie_EventPCConfig(DevInst, Loc, PCEventId, 0U, XAIE_DISABLE);
 }
 
 /*****************************************************************************/
@@ -1209,10 +1172,6 @@ AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	PCEventId: PC Event index.
 *
 * @return	XAIE_OK on success, error code on failure.
@@ -1220,8 +1179,7 @@ AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 PCEventId)
+AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 {
 	u8 TileType;
 
@@ -1237,8 +1195,7 @@ AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	return _XAie_EventPCConfig(DevInst, Loc, Module, PCEventId, 0U,
-			XAIE_DISABLE);
+	return _XAie_EventPCConfig(DevInst, Loc, PCEventId, 0U, XAIE_DISABLE);
 }
 
 /** @} */
