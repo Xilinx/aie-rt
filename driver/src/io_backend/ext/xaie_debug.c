@@ -248,6 +248,13 @@ void XAie_DebugIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)Col;
+	(void)Row;
+	(void)Command;
+	(void)CmdWd0;
+	(void)CmdWd1;
+	(void)CmdStr;
 }
 
 /*****************************************************************************/
@@ -359,6 +366,7 @@ XAie_MemInst* XAie_DebugMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
 
+	(void)Cache;
 	XAIE_DBG("Cache attribute is ignored\n");
 
 	return MemInst;
@@ -398,6 +406,7 @@ AieRC XAie_DebugMemFree(XAie_MemInst *MemInst)
 *******************************************************************************/
 AieRC XAie_DebugMemSyncForCPU(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	XAIE_DBG("Sync for CPU is no-op in debug mode\n");
 
 	return XAIE_OK;
@@ -417,6 +426,7 @@ AieRC XAie_DebugMemSyncForCPU(XAie_MemInst *MemInst)
 *******************************************************************************/
 AieRC XAie_DebugMemSyncForDev(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	XAIE_DBG("Sync for Dev is no-op in debug mode\n");
 
 	return XAIE_OK;

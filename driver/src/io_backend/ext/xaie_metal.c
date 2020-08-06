@@ -614,12 +614,14 @@ AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst)
 AieRC XAie_MetalIO_Finish(void *IOInst)
 {
 	/* no-op */
+	(void)IOInst;
 	return XAIE_OK;
 }
 
 AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 {
 	/* no-op */
+	(void)DevInst;
 	XAIE_ERROR("Driver is not compiled with Libmetal backend "
 			"(__AIEMETAL__)\n");
 	return XAIE_INVALID_BACKEND;
@@ -628,34 +630,56 @@ AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 u32 XAie_MetalIO_Read32(void *IOInst, u64 RegOff)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
 	return 0;
 }
 
 void XAie_MetalIO_Write32(void *IOInst, u64 RegOff, u32 Data)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
 }
 
 void XAie_MetalIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Data)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Data;
 }
 
 u32 XAie_MetalIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
+	(void)TimeOutUs;
 	return XAIELIB_FAILURE;
 }
 
 void XAie_MetalIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
 }
 
 void XAie_MetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
 }
 
 AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
@@ -671,21 +695,27 @@ AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
+	(void)DevInst;
+	(void)Size;
+	(void)Cache;
 	return NULL;
 }
 
 AieRC XAie_MetalMemFree(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
 AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
 AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
@@ -695,6 +725,13 @@ void XAie_MetalIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)Col;
+	(void)Row;
+	(void)Command;
+	(void)CmdWd0;
+	(void)CmdWd1;
+	(void)CmdStr;
 }
 
 /** @} */

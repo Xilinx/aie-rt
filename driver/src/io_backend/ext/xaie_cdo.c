@@ -337,12 +337,14 @@ AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 AieRC XAie_CdoIO_Finish(void *IOInst)
 {
 	/* no-op */
+	(void)IOInst;
 	return XAIE_OK;
 }
 
 AieRC XAie_CdoIO_Init(XAie_DevInst *DevInst)
 {
 	/* no-op */
+	(void)DevInst;
 	XAIE_ERROR("Driver is not compiled with cdo generation "
 			"backend (__AIECDO__)\n");
 	return XAIE_INVALID_BACKEND;
@@ -351,34 +353,56 @@ AieRC XAie_CdoIO_Init(XAie_DevInst *DevInst)
 void XAie_CdoIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Value;
 }
 
 u32 XAie_CdoIO_Read32(void *IOInst, u64 RegOff)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
 	return 0;
 }
 
 void XAie_CdoIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Value)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
 }
 
 u32 XAie_CdoIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
+	(void)TimeOutUs;
 	return XAIELIB_FAILURE;
 }
 
 void XAie_CdoIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
 }
 
 void XAie_CdoIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
 }
 
 AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
@@ -397,26 +421,39 @@ void XAie_CdoIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)Col;
+	(void)Row;
+	(void)Command;
+	(void)CmdWd0;
+	(void)CmdWd1;
+	(void)CmdStr;
 }
 
 XAie_MemInst* XAie_CdoMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
+	(void)DevInst;
+	(void)Size;
+	(void)Cache;
 	return NULL;
 }
 
 AieRC XAie_CdoMemFree(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
 AieRC XAie_CdoMemSyncForCPU(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
 AieRC XAie_CdoMemSyncForDev(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 

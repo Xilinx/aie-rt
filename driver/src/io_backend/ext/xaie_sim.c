@@ -292,11 +292,14 @@ void XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 AieRC XAie_SimIO_Finish(void *IOInst)
 {
 	/* no-op */
+	(void)IOInst;
 	return XAIE_OK;
 }
 
 AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 {
+	/* no-op */
+	(void)DevInst;
 	XAIE_ERROR("Driver is not compiled with simulation backend "
 			"(__AIESIM__)\n");
 	return XAIE_INVALID_BACKEND;
@@ -305,40 +308,69 @@ AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 void XAie_SimIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Value;
 }
 
 u32 XAie_SimIO_Read32(void *IOInst, u64 RegOff)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
 	return 0;
 }
 
 void XAie_SimIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Value)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
 }
 
 u32 XAie_SimIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
+	(void)TimeOutUs;
 	return XAIELIB_FAILURE;
 }
 
 void XAie_SimIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
 }
 
 void XAie_SimIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
 }
 
 void XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr)
 {
 	/* no-op */
+	(void)IOInst;
+	(void)Col;
+	(void)Row;
+	(void)Command;
+	(void)CmdWd0;
+	(void)CmdWd1;
+	(void)CmdStr;
 }
 
 #endif /* __AIESIM__ */
@@ -356,21 +388,27 @@ AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
+	(void)DevInst;
+	(void)Size;
+	(void)Cache;
 	return NULL;
 }
 
 AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
 AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
 AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
 {
+	(void)MemInst;
 	return XAIE_ERR;
 }
 
