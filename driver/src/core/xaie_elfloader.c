@@ -511,6 +511,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 				XAIESIM_CMDIO_CMD_LOADSYM, 0, 0, ElfPtr);
 	}
 #endif
+	(void)LoadSym;
 	Fd = fopen(ElfPtr, "r");
 	if(Fd == XAIE_NULL) {
 		XAIE_ERROR("Unable to open elf file\n");

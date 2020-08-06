@@ -78,6 +78,7 @@ void _XAie_TileDmaInit(XAie_DmaDesc *Desc)
 ******************************************************************************/
 void _XAie_ShimDmaInit(XAie_DmaDesc *Desc)
 {
+	(void)Desc;
 	return;
 }
 
