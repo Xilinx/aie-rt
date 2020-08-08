@@ -29,7 +29,9 @@
 #include "xaie_io.h"
 
 /************************** Constant Definitions *****************************/
-#if defined (__AIEMETAL__)
+#if defined (__AIELINUX__)
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_LINUX
+#elif defined (__AIEMETAL__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_METAL
 #elif defined (__AIESIM__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SIM
@@ -47,6 +49,7 @@ extern const XAie_Backend SimBackend;
 extern const XAie_Backend CdoBackend;
 extern const XAie_Backend BaremetalBackend;
 extern const XAie_Backend DebugBackend;
+extern const XAie_Backend LinuxBackend;
 
 static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
@@ -55,6 +58,7 @@ static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 	&CdoBackend,
 	&BaremetalBackend,
 	&DebugBackend,
+	&LinuxBackend,
 };
 
 /************************** Function Definitions *****************************/
