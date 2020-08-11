@@ -829,7 +829,7 @@ void XAie_LinuxIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask, u32 Data)
 	(void)IOInst;
 	(void)RegOff;
 	(void)Mask;
-	(void)Value;
+	(void)Data;
 }
 
 u32 XAie_LinuxIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
