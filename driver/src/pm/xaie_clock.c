@@ -169,10 +169,13 @@ static void _XAie_PmUngateTiles(XAie_DevInst *DevInst, XAie_LocType FromLoc,
 * @note         None
 *
 ******************************************************************************/
-static void _XAiePm_SetTileInUse(XAie_DevInst *DevInst, u32 set_bit)
+static void _XAiePm_SetTileInUse(XAie_DevInst *DevInst, u32 StartSetBit,
+		u32 NumSetBit)
 {
-	DevInst->TilesInUse[set_bit / (sizeof(DevInst->TilesInUse[0]) * 8U)] |=
-		1U << (set_bit % (sizeof(DevInst->TilesInUse[0]) * 8U));
+	for(u32 i = StartSetBit; i < StartSetBit + NumSetBit; i++) {
+		DevInst->TilesInUse[i / (sizeof(DevInst->TilesInUse[0]) * 8U)] |=
+			1U << (i % (sizeof(DevInst->TilesInUse[0]) * 8U));
+	}
 }
 
 /*****************************************************************************/
@@ -232,7 +235,15 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 	 * temporary and will be removed soon.
 	 */
 	if(Loc == NULL) {
+		u32 NumTiles;
+
+		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
+		NumTiles = (DevInst->NumRows - 1) * (DevInst->NumCols);
+
+		SetTileStatus = _XAie_PmGetBitPosFromLoc(DevInst, TileLoc);
+		_XAiePm_SetTileInUse(DevInst, SetTileStatus, NumTiles);
 		_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
+
 		return XAIE_OK;
 	}
 
@@ -291,7 +302,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 			TileLoc.Row = Loc[i].Row;
 			_XAie_PmGateTiles(DevInst, TileLoc);
 		}
-		_XAiePm_SetTileInUse(DevInst, SetTileStatus);
+		_XAiePm_SetTileInUse(DevInst, SetTileStatus, 1U);
 	}
 
 	return XAIE_OK;
