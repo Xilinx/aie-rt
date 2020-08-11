@@ -147,12 +147,13 @@ AieRC XAie_LinuxIO_Finish(void *IOInst)
 static AieRC _XAie_LinuxIO_GetPartition(XAie_DevInst *DevInst,
 		XAie_LinuxIO *IOInst)
 {
-	u32 PartitionId, Size;
+	u32 Size;
 
 	if(DevInst->PartProp.Handle != 0) {
 		/* Requested by other modules like XRT */
 		IOInst->PartitionFd = DevInst->PartProp.Handle;
 	} else {
+		u32 PartitionId;
 		int Ret, Fd;
 		struct aie_partition_query Query;
 		struct aie_range_args *Partitions;
@@ -212,6 +213,8 @@ static AieRC _XAie_LinuxIO_GetPartition(XAie_DevInst *DevInst,
 
 		free(Partitions);
 		IOInst->PartitionFd = Fd;
+		XAIE_DBG("Partition request successful. Partition id is %u\n",
+				PartitionId);
 	}
 
 	IOInst->NumCols = DevInst->NumCols;
@@ -227,8 +230,6 @@ static AieRC _XAie_LinuxIO_GetPartition(XAie_DevInst *DevInst,
 	}
 
 	IOInst->RegMap.MapSize = Size;
-	XAIE_DBG("Partition request successful. Partition id is %u\n",
-			PartitionId);
 
 	return XAIE_OK;
 }
@@ -314,8 +315,8 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 		}
 	}
 
-	XAIE_DBG("Prog memory mapped to 0x%p\n", IOInst->ProgMem.Vaddr);
-	XAIE_DBG("Data memory mapped to 0x%p\n", IOInst->DataMem);
+	XAIE_DBG("Prog memory mapped to 0x%p\n", IOInst->ProgMem.VAddr);
+	XAIE_DBG("Data memory mapped to 0x%p\n", IOInst->DataMem.VAddr);
 
 	IOInst->ProgMemAddr = CoreMod->ProgMemHostOffset;
 	IOInst->ProgMemSize = CoreMod->ProgMemSize;
@@ -375,7 +376,8 @@ AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		return RC;
 	}
 
-	XAIE_DBG("Registers mapped as read-only to 0x%lx\n", IOInst->RegRdMap);
+	XAIE_DBG("Registers mapped as read-only to 0x%lx\n",
+			IOInst->RegMap.VAddr);
 
 	RC = _XAie_LinuxIO_MapMemory(DevInst, IOInst);
 	if(RC != XAIE_OK) {
