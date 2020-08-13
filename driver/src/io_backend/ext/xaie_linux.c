@@ -564,7 +564,8 @@ static inline u64 _XAie_GetRegAddr(XAie_LinuxIO *IOInst, u64 RegOff)
 *******************************************************************************/
 static inline u8 _XAie_GetRowNum(XAie_LinuxIO *IOInst, u64 RegOff)
 {
-	u64 Mask = (IOInst->ColShift - IOInst->RowShift) << IOInst->RowShift;
+	u64 Mask = ((1 << IOInst->ColShift) - 1) &
+			~((1 << IOInst->RowShift) - 1);
 
 	return (RegOff & Mask) >> IOInst->RowShift;
 }
