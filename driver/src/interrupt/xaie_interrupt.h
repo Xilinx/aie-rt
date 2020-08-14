@@ -20,6 +20,7 @@
 * 1.1   Nishad  07/23/2020  Add APIs to configure second level interrupt
 *			    controller.
 * 1.2   Nishad  07/23/2020  Add API to initialize error broadcast network.
+* 1.3   Nishad  08/13/2020  Add macro for error broadcast mask.
 * </pre>
 *
 ******************************************************************************/
@@ -31,6 +32,7 @@
 
 /**************************** Type Definitions *******************************/
 #define XAIE_ERROR_BROADCAST_ID			0x0U
+#define XAIE_ERROR_BROADCAST_MASK		0x1U
 #define XAIE_ERROR_SHIM_INTR_ID			0x10U
 #define XAIE_ERROR_NPI_INTR_ID			0x1U
 #define XAIE_ERROR_L2_ENABLE			0x7FU

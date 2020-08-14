@@ -20,6 +20,8 @@
 * 1.1   Nishad   07/23/2020  Add APIs to configure second level interrupt
 *			     controller.
 * 1.2   Nishad   07/23/2020  Add API to initialize error broadcast network.
+* 1.3   Nishad   08/13/2020  Block error broadcasts from AIE array to shim
+			     while setting up error network.
 * </pre>
 *
 ******************************************************************************/
@@ -868,6 +870,21 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 				BroadcastDirSwB);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to block broadcasts in shim tile switch B\n");
+			return RC;
+		}
+
+		/* Block direct broadcasts to shim row from AIE array */
+		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
+				XAIE_EVENT_SWITCH_A, XAIE_ERROR_BROADCAST_MASK);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			return RC;
+		}
+
+		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
+				XAIE_EVENT_SWITCH_B, XAIE_ERROR_BROADCAST_MASK);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
 			return RC;
 		}
 	}
