@@ -52,7 +52,7 @@
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
-/* This API reads the given counter for the given range of tiles
+/* This API reads the given performance counter for the given tile.
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE tile
@@ -122,7 +122,7 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 }
 /*****************************************************************************/
 /* This API configures the control registers corresponding to the counters
-*  with the start and stop event for the given tile
+*  with the start and stop event for the given tile.
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of the tile
@@ -229,7 +229,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 /*****************************************************************************/
 /* This API configures the control registers corresponding to the counter
-*  with the reset event for the given range of tiles
+*  with the reset event for the given tile.
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE tile
@@ -328,7 +328,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 }
 
 /*****************************************************************************/
-/* This API sets the performance counter event value for the given tile.
+/* This API sets the performance counter value for the given tile.
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of Tile
@@ -466,4 +466,174 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	XAie_Write32(DevInst, CounterRegAddr, EventVal);
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/* This API resets the performance counter event value for the given tile.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE tile
+* @param        Module: Module of tile.
+*                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                       For Pl or Shim tile - XAIE_PL_MOD,
+*                       For Mem tile - XAIE_MEM_MOD.
+* @param        Counter:Performance Counter
+* @return       XAIE_OK on success
+*               XAIE_INVALID_ARGS if any argument is invalid
+*               XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note
+*
+******************************************************************************/
+AieRC XAie_PerfCounterEventValueReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 Counter)
+{
+	return XAie_PerfCounterEventValueSet(DevInst, Loc, Module, Counter, 0U);
+}
+
+/*****************************************************************************/
+/* This API resets the performance counter value for the given tile.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of Tile
+* @param        Module: Module of tile.
+*                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                       For Pl or Shim tile - XAIE_PL_MOD,
+*                       For Mem tile - XAIE_MEM_MOD.
+*
+* @param        Counter:Performance Counter
+* @return       XAIE_OK on success
+*               XAIE_INVALID_ARGS if any argument is invalid
+*               XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note
+*
+******************************************************************************/
+AieRC XAie_PerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 Counter)
+{
+	return XAie_PerfCounterSet(DevInst, Loc, Module, Counter, 0U);
+}
+
+/*****************************************************************************/
+/* This API resets configuration for the control registers corresponding to the
+*  counter with the NONE as reset event for the given tile.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE tile
+* @param        Module: Module of tile.
+*                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                       For Pl or Shim tile - XAIE_PL_MOD,
+*                       For Mem tile - XAIE_MEM_MOD.
+* @param        Counter:Performance Counter
+* @return       XAIE_OK on success
+*               XAIE_INVALID_ARGS if any argument is invalid
+*               XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+*
+******************************************************************************/
+AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		                XAie_ModuleType Module, u8 Counter)
+{
+	AieRC RC;
+	u8 TileType;
+	u32 ResetEvent;
+	const XAie_EvntMod *EvntMod;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Invalid Module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	/* Since first event of all modules is NONE event, using it to reset */
+	ResetEvent = EvntMod->EventMin;
+
+	/*
+	 * Currently calling the external api, later it can be factorized to
+	 * remove redundant checks.
+	 */
+	return XAie_PerfCounterResetControlSet(DevInst, Loc, Module, Counter,
+			ResetEvent);
+}
+
+/*****************************************************************************/
+/* This API resets configuration of the control registers corresponding to the
+*  counters with the start and stop event as NONE for the given tile.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of the tile
+* @param        Module: Module of tile.
+*                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                       For Pl or Shim tile - XAIE_PL_MOD,
+*                       For Mem tile - XAIE_MEM_MOD.
+* @param        Counter:Performance Counter
+* @return       XAIE_OK on success
+*               XAIE_INVALID_ARGS if any argument is invalid
+*               XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note
+*
+******************************************************************************/
+AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+	XAie_ModuleType Module, u8 Counter)
+{
+	AieRC RC;
+	u8 TileType;
+	u32 StartStopEvent;
+	const XAie_EvntMod *EvntMod;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Invalid Module\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	/* Since first event of all modules is NONE event, using it to reset */
+	StartStopEvent = EvntMod->EventMin;
+
+	/*
+	 * Currently calling the external api, later it can be factorized to
+	 * remove redundant checks.
+	 */
+	return XAie_PerfCounterControlSet(DevInst, Loc, Module, Counter,
+		StartStopEvent, StartStopEvent);
 }
