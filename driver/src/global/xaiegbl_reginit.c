@@ -182,7 +182,7 @@ static const XAie_StrmPort AieTileStrmSlv[SS_PORT_TYPE_MAX] =
 		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVEAS0CFG,
 	},
 	{	/* Trace */
-		.NumPorts = 1,
+		.NumPorts = 2,
 		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVMETRACFG
 	}
 };
@@ -358,7 +358,7 @@ static const XAie_StrmPort AieTileStrmSlaveSlot[SS_PORT_TYPE_MAX] =
 		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVEAS0SLO0,
 	},
 	{	/* Trace */
-		.NumPorts = 1,
+		.NumPorts = 2,
 		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVMETRASLO0
 	}
 };
