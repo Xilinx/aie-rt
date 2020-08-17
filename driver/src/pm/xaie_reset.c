@@ -212,7 +212,8 @@ static AieRC _XAie_RstAllShims(XAie_DevInst *DevInst)
 *		run on real hardware. This function defines the AI engine
 *		partition reset sequence for the backends which allow the reset
 *		partition device with multiple backend calls.
-*		Here is the reset sequece:
+*		Here is the reset sequence:
+*		* clock gate all columns
 *		* reset columns
 *		* reset shims
 *		* setup AXI MM config to block NSU errors
@@ -225,6 +226,8 @@ AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
+
+	_XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 
 	_XAie_RstSetAllColumnsReset(DevInst, XAIE_ENABLE);
 
