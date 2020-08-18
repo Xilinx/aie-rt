@@ -40,6 +40,7 @@
 * 1.2   Tejus   12/09/2019  Include correct header file to avoid cyclic
 *			    dependancy
 * 1.3   Tejus   03/16/2020  Seperate PlIf Module for SHIMPL and SHIMNOC Tiles
+* 1.4   Tejus   03/16/2020  Add register properties for Mux/Demux registers
 * </pre>
 *
 ******************************************************************************/
@@ -351,6 +352,24 @@ const static XAie_RegFldAttr AieDownSzrEnable[] =
 	{XAIEGBL_PL_PLINTDOWENA_SOU7_LSB, XAIEGBL_PL_PLINTDOWENA_SOU7_MASK}
 };
 
+/* Register field attributes for SHIMNOC Mux configuration */
+const static XAie_RegFldAttr AieShimMuxConfig[] =
+{
+	{XAIEGBL_NOC_MUXCFG_SOU2_LSB, XAIEGBL_NOC_MUXCFG_SOU2_MASK},
+	{XAIEGBL_NOC_MUXCFG_SOU3_LSB, XAIEGBL_NOC_MUXCFG_SOU3_MASK},
+	{XAIEGBL_NOC_MUXCFG_SOU6_LSB, XAIEGBL_NOC_MUXCFG_SOU6_MASK},
+	{XAIEGBL_NOC_MUXCFG_SOU7_LSB, XAIEGBL_NOC_MUXCFG_SOU7_MASK},
+};
+
+/* Register field attributes for SHIMNOC DeMux configuration */
+const static XAie_RegFldAttr AieShimDeMuxConfig[] =
+{
+	{XAIEGBL_NOC_DEMCFG_SOU2_LSB, XAIEGBL_NOC_DEMCFG_SOU2_MASK},
+	{XAIEGBL_NOC_DEMCFG_SOU3_LSB, XAIEGBL_NOC_DEMCFG_SOU3_MASK},
+	{XAIEGBL_NOC_DEMCFG_SOU4_LSB, XAIEGBL_NOC_DEMCFG_SOU4_MASK},
+	{XAIEGBL_NOC_DEMCFG_SOU5_LSB, XAIEGBL_NOC_DEMCFG_SOU5_MASK},
+};
+
 /* Core Module */
 const static XAie_CoreMod AieCoreMod =
 {
@@ -390,7 +409,11 @@ const static XAie_PlIfMod AiePlIfMod =
 	.DownSzr32_64Bit = AieDownSzr32_64Bit,
 	.DownSzr128Bit = AieDownSzr128Bit,
 	.DownSzrEn = AieDownSzrEnable,
-	.DownSzrByPass = AieDownSzrByPass
+	.DownSzrByPass = AieDownSzrByPass,
+	.ShimNocMuxOff = 0x0,
+	.ShimNocDeMuxOff = 0x0,
+	.ShimNocMux = NULL,
+	.ShimNocDeMux = NULL
 };
 
 /* PL Interface module for SHIMNOC Tiles */
@@ -408,7 +431,11 @@ const static XAie_PlIfMod AieShimTilePlIfMod =
 	.DownSzr32_64Bit = AieDownSzr32_64Bit,
 	.DownSzr128Bit = AieDownSzr128Bit,
 	.DownSzrEn = AieDownSzrEnable,
-	.DownSzrByPass = AieDownSzrByPass
+	.DownSzrByPass = AieDownSzrByPass,
+	.ShimNocMuxOff = XAIEGBL_NOC_MUXCFG,
+	.ShimNocDeMuxOff = XAIEGBL_NOC_DEMCFG,
+	.ShimNocMux = AieShimMuxConfig,
+	.ShimNocDeMux = AieShimDeMuxConfig
 };
 
 /*

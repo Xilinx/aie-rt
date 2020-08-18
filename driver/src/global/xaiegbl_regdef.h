@@ -39,6 +39,7 @@
 * 1.1   Tejus  10/21/2019  Optimize stream switch data structures
 * 1.2   Tejus  10/28/2019  Add data structures for pl interface module
 * 1.3   Tejus  12/09/2019  Forward declaration of structures
+* 1.4	Tejus  03/16/2020  Add register properties for Mux/Demux registers
 * </pre>
 *
 ******************************************************************************/
@@ -210,6 +211,8 @@ typedef struct {
 	u32 DownSzrOff;
 	u32 DownSzrEnOff;
 	u32 DownSzrByPassOff;
+	u32 ShimNocMuxOff;
+	u32 ShimNocDeMuxOff;
 	u8  NumUpSzrPorts;
 	u8  MaxByPassPortNum;
 	u8  NumDownSzrPorts;
@@ -219,6 +222,8 @@ typedef struct {
 	const XAie_RegFldAttr *DownSzr128Bit;
 	const XAie_RegFldAttr *DownSzrEn;
 	const XAie_RegFldAttr *DownSzrByPass;
+	const XAie_RegFldAttr *ShimNocMux;
+	const XAie_RegFldAttr *ShimNocDeMux;
 } XAie_PlIfMod;
 
 /*
