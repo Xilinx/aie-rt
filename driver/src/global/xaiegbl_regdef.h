@@ -42,6 +42,7 @@
 * 1.4	Tejus  03/16/2020  Add register properties for Mux/Demux registers
 * 1.5   Tejus  03/17/2020  Add data structures for lock module
 * 1.6   Tejus  03/21/2020  Add data structures for stream switch slot registers
+* 1.7   Tejus  03/23/2020  Re-organize data structure to capture aie dmas
 * </pre>
 *
 ******************************************************************************/
@@ -51,6 +52,11 @@
 /***************************** Include Files *********************************/
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
+/**************************** Macro Definitions ******************************/
+#define XAIE_FEATURE_AVAILABLE 	 1U
+#define XAIE_FEATURE_UNAVAILABLE 0U
+
+#define XAIE1_LOCK_WITH_NOVALUE (0xFF)
 /************************** Constant Definitions *****************************/
 /**
  * This typedef contains the attributes for the register bit fields.
@@ -141,40 +147,188 @@ typedef struct {
 } XAie_CoreMod;
 
 /*
- * The typedef contains the attributes of the BDs of Tile Dma and Mem Tile Dma.
+ * The typedef captures the Buffer descriptor validity properties
  */
 typedef struct {
-	XAie_RegBdFldAttr BaseAddr;
-	XAie_RegBdFldAttr BufferLen;
-	XAie_RegBdFldAttr EnCompression;
-	XAie_RegBdFldAttr EnPkt;
-	XAie_RegBdFldAttr OutofOrderBdId;
-	XAie_RegBdFldAttr PktId;
-	XAie_RegBdFldAttr PktType;
-	XAie_RegBdFldAttr D1_StepSize;
-	XAie_RegBdFldAttr D0_StepSize;
-	XAie_RegBdFldAttr D1_Wrap;
-	XAie_RegBdFldAttr D0_Wrap;
-	XAie_RegBdFldAttr D2_StepSize;
-	XAie_RegBdFldAttr IterCurr;
-	XAie_RegBdFldAttr IterWrap;
-	XAie_RegBdFldAttr IterStepSize;
+	XAie_RegBdFldAttr ValidBd;
 	XAie_RegBdFldAttr NxtBd;
 	XAie_RegBdFldAttr UseNxtBd;
-	XAie_RegBdFldAttr ValidBd;
+	XAie_RegBdFldAttr OutofOrderBdId;
+} XAie_DmaBdEnProp;
+
+/*
+ * The typedef captures the buffer descriptor packet properties
+ */
+typedef struct {
+	XAie_RegBdFldAttr EnPkt;
+	XAie_RegBdFldAttr PktId;
+	XAie_RegBdFldAttr PktType;
+} XAie_DmaBdPkt;
+
+/*
+ * The typedef captures the buffer descriptor lock properties of aie
+ */
+typedef struct {
+	XAie_RegBdFldAttr LckId_A;
+	XAie_RegBdFldAttr LckRelEn_A;
+	XAie_RegBdFldAttr LckRelVal_A;
+	XAie_RegBdFldAttr LckRelUseVal_A;
+	XAie_RegBdFldAttr LckAcqEn_A;
+	XAie_RegBdFldAttr LckAcqVal_A;
+	XAie_RegBdFldAttr LckAcqUseVal_A;
+	XAie_RegBdFldAttr LckId_B;
+	XAie_RegBdFldAttr LckRelEn_B;
+	XAie_RegBdFldAttr LckRelVal_B;
+	XAie_RegBdFldAttr LckRelUseVal_B;
+	XAie_RegBdFldAttr LckAcqEn_B;
+	XAie_RegBdFldAttr LckAcqVal_B;
+	XAie_RegBdFldAttr LckAcqUseVal_B;
+} XAie_Gen1DmaLock;
+
+/*
+ * The typedef captures the buffer descriptor lock properties of aie2
+ */
+typedef struct {
 	XAie_RegBdFldAttr LckRelVal;
 	XAie_RegBdFldAttr LckRelId;
 	XAie_RegBdFldAttr LckAcqEn;
 	XAie_RegBdFldAttr LckAcqVal;
 	XAie_RegBdFldAttr LckAcqId;
+} XAie_Gen2DmaLock;
+
+/*
+ * union to capture lock properties of dma
+ */
+typedef union {
+	XAie_Gen1DmaLock AieDmaLock;
+	XAie_Gen2DmaLock Aie2DmaLock;
+} XAie_DmaBdLock;
+
+/*
+ * typedef to capture Buffer properties of tile dma
+ */
+typedef struct {
+	XAie_RegBdFldAttr BaseAddr;
+	XAie_RegBdFldAttr BufferLen;
+} XAie_TileDmaBuffer;
+
+/*
+ * The typedef captures the buffer properties of shim dma
+ */
+typedef struct {
+	XAie_RegBdFldAttr AddrLow;
+	XAie_RegBdFldAttr AddrHigh;
+	XAie_RegBdFldAttr BufferLen;
+} XAie_ShimDmaBuffer;
+
+/*
+ * union to capture buffer address and length properties
+ */
+typedef union {
+	XAie_TileDmaBuffer TileDmaBuff;
+	XAie_ShimDmaBuffer ShimDmaBuff;
+} XAie_DmaBdBuffer;
+
+/*
+ * The typedef captures DoubleBuffer properties
+ */
+typedef struct {
+	XAie_RegBdFldAttr EnDoubleBuff;
+	XAie_RegBdFldAttr BaseAddr_B;
+	XAie_RegBdFldAttr EnFifoMode;
+	XAie_RegBdFldAttr EnIntrleaved;
+	XAie_RegBdFldAttr IntrleaveCnt;
+	XAie_RegBdFldAttr BuffSelect;
+} XAie_DmaBdDoubleBuffer;
+
+/*
+ * The typedef captures buffer descriptor fields of aie 2D Mode
+ */
+typedef struct {
+	XAie_RegBdFldAttr X_Incr;
+	XAie_RegBdFldAttr X_Wrap;
+	XAie_RegBdFldAttr X_Offset;
+	XAie_RegBdFldAttr Y_Incr;
+	XAie_RegBdFldAttr Y_Wrap;
+	XAie_RegBdFldAttr Y_Offset;
+	XAie_RegBdFldAttr CurrPtr;
+} XAie_Gen1AddressMode;
+
+/*
+ * The typedef captures the dimension descriptors for aie2
+ */
+typedef struct {
+	XAie_RegBdFldAttr StepSize;
+	XAie_RegBdFldAttr Wrap;
+} XAie_Gen2DmaDimProp;
+
+/*
+ * The typedef captures buffer descriptor fields of aie2 multi dimension
+ * address generation
+ */
+typedef struct {
+	XAie_Gen2DmaDimProp DmaDimProp[4U];
+	XAie_Gen2DmaDimProp Iter;
+	XAie_RegBdFldAttr IterCurr;
+} XAie_Gen2AddressMode;
+
+/*
+ * union captures multi dimension address generation properties between hardware
+ * generations
+ */
+typedef union {
+	XAie_Gen1AddressMode AieMultiDimAddr;
+	XAie_Gen2AddressMode Aie2MultiDimAddr;
+} XAie_DmaBdMultiDimAddr;
+
+/*
+ * The typedef captures Zero padding properties of buffer descriptor
+ */
+typedef struct {
 	XAie_RegBdFldAttr D0_ZeroBefore;
-	XAie_RegBdFldAttr D1_ZeroBefore;
-	XAie_RegBdFldAttr D2_ZeroBefore;
 	XAie_RegBdFldAttr D0_ZeroAfter;
+	XAie_RegBdFldAttr D1_ZeroBefore;
 	XAie_RegBdFldAttr D1_ZeroAfter;
+	XAie_RegBdFldAttr D2_ZeroBefore;
 	XAie_RegBdFldAttr D2_ZeroAfter;
-	XAie_RegBdFldAttr D2_Wrap;
-	XAie_RegBdFldAttr D3_StepSize;
+} XAie_DmaBdZeroPad;
+
+/*
+ * The typedef captures zero compression properties of aie
+ */
+typedef struct {
+	XAie_RegBdFldAttr EnCompression;
+} XAie_DmaBdCompression;
+
+/*
+ * The typedef captures system level properties of DMA. This is applicable only
+ * for SHIM DMA
+ */
+typedef struct {
+	XAie_RegBdFldAttr SMID;
+	XAie_RegBdFldAttr BurstLen;
+	XAie_RegBdFldAttr AxQos;
+	XAie_RegBdFldAttr SecureAccess;
+	XAie_RegBdFldAttr AxCache;
+} XAie_DmaSysProp;
+
+/*
+ * The typedef captures all the buffer descriptor properties for AIE DMAs
+ */
+typedef struct {
+	u64 AddrMask;
+	u8 AddrAlignMask;
+	u8 AddrAlignShift;
+	u8 LenActualOffset;
+	const XAie_DmaBdBuffer *Buffer;
+	const XAie_DmaBdDoubleBuffer *DoubleBuffer;
+	const XAie_DmaBdLock *Lock;
+	const XAie_DmaBdPkt *Pkt;
+	const XAie_DmaBdEnProp *BdEn;
+	const XAie_DmaBdMultiDimAddr *AddrMode;
+	const XAie_DmaBdZeroPad *ZeroPad;
+	const XAie_DmaBdCompression *Compression;
+	const XAie_DmaSysProp *SysProp;
 } XAie_DmaBdProp;
 
 /*
@@ -188,22 +342,38 @@ typedef struct {
 	XAie_RegBdFldAttr EnCompression;
 	XAie_RegBdFldAttr EnOutofOrder;
 	XAie_RegBdFldAttr Reset;
+	XAie_RegBdFldAttr Enable;
+	XAie_RegBdFldAttr PauseMem;
+	XAie_RegBdFldAttr PauseStream;
 } XAie_DmaChProp;
 
 /*
  * The typedef contains attributes of Dma Modules for AIE Tiles and Mem Tiles
  */
-typedef struct {
-	u8  NumBdReg;
+typedef struct XAie_DmaMod {
 	u8  NumBds;
 	u8  NumLocks;
+	u8  ChIdxOffset;
+	u8  NumAddrDim;
+	u8  DoubleBuffering;
+	u8  Compression;
+	u8  ZeroPadding;
+	u8  OutofOrderBdId;
+	u8  InterleaveMode;
 	u32 BaseAddr;
 	u32 IdxOffset;
 	u32 ChCtrlBase;
 	u32 NumChannels;
-	u8  ChIdxOffset;
 	const XAie_DmaBdProp *BdProp;
 	const XAie_DmaChProp *ChProp;
+	void (*DmaBdInit)(XAie_DmaDesc *Desc);
+	AieRC (*SetLock) (XAie_DmaDesc *Desc, XAie_Lock Acq,
+			XAie_Lock Rel, u8 AcqEn, u8 RelEn);
+	AieRC (*SetIntrleave) (XAie_DmaDesc *Desc, u8 DoubleBuff,
+			u8 IntrleaveCount, u16 IntrleaveCurr);
+	AieRC (*SetMultiDim) (XAie_DmaDesc *Desc, XAie_DmaTensor *Tensor);
+	AieRC (*WriteBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
+			XAie_LocType Loc, u8 BdNum);
 } XAie_DmaMod;
 
 /*
