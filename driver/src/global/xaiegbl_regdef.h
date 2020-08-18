@@ -83,42 +83,6 @@ typedef struct {
 	XAie_RegFldAttr En;		/**< Enable value field attributes */
 } XAie_RegCoreSts;
 
-/**
- * This typedef contains the attributes for Stream switch master port config register.
- */
-typedef struct {
-	u32 RegOff;			/**< Register offset */
-	XAie_RegFldAttr MstrEn;	/**< Enable bit field attributes */
-	XAie_RegFldAttr PktEn;	/**< Packet enable bit field attributes */
-	XAie_RegFldAttr DrpHdr;	/**< Drop header bit field attributes */
-	XAie_RegFldAttr Config;	/**< Configuration bit field attributes */
-} XAie_RegStrmMstr;
-
-/*
- * This typedef captures port type and number of master ports available
- */
-typedef struct {
-	u8 NumPorts;
-	const XAie_RegStrmMstr *PortType;
-} XAie_StrmMstr;
-
-/**
- * This typedef contains the attributes for Stream switch slave port config register.
- */
-typedef struct {
-	u32 RegOff;			/**< Register offset */
-	XAie_RegFldAttr SlvEn;	/**< Enable bit field attributes */
-	XAie_RegFldAttr PktEn;	/**< Packet enable bit field attributes */
-} XAie_RegStrmSlv;
-
-/*
- * This typedef captures port type and number of slave ports available
- */
-typedef struct {
-	u8 NumPorts;
-	const XAie_RegStrmSlv *PortType;
-} XAie_StrmSlv;
-
 /*
  * This typedef captures port base address and number of slave ports available
  * for stream switch master and salve ports
