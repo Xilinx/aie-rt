@@ -323,6 +323,15 @@ AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			RC = _XAie_NpiSetProtectedRegEnable(DevInst, Arg);
 			break;
 		}
+		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
+		{
+			XAie_ShimDmaBdArgs *BdArgs = (XAie_ShimDmaBdArgs *)Arg;
+			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
+				XAie_CdoIO_Write32(IOInst, BdArgs->Addr + i * 4,
+						BdArgs->BdWords[i]);
+			}
+			break;
+		}
 		default:
 			XAIE_ERROR("Backend doesn't support Op %u.\n", Op);
 			RC = XAIE_FEATURE_NOT_SUPPORTED;

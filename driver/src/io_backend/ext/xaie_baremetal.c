@@ -369,6 +369,46 @@ AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the function to run backend operations
+*
+* @param	IOInst: IO instance pointer
+* @param	DevInst: AI engine partition device instance
+* @param	Op: Backend operation code
+* @param	Arg: Backend operation argument
+*
+* @return	XAIE_OK for success and error code for failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)DevInst;
+	switch(Op) {
+		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
+			{
+				XAie_ShimDmaBdArgs *BdArgs =
+					(XAie_ShimDmaBdArgs *)Arg;
+				for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
+					XAie_BaremetalIO_Write32(IOInst,
+							BdArgs->Addr + i * 4,
+							BdArgs->BdWords[i]);
+				}
+				break;
+			}
+		default:
+			XAIE_ERROR("Linux backend does not support operation "
+					"%d\n", Op);
+			return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	return XAIE_OK;
+}
+
 #else
 
 AieRC XAie_BaremetalIO_Finish(void *IOInst)
@@ -470,6 +510,16 @@ AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
+AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
 #endif /* __AIEBAREMETAL__ */
 
 void XAie_BaremetalIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
@@ -485,13 +535,4 @@ void XAie_BaremetalIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 	(void)CmdStr;
 }
 
-AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
-		XAie_BackendOpCode Op, void *Arg)
-{
-	(void)IOInst;
-	(void)DevInst;
-	(void)Op;
-	(void)Arg;
-	return XAIE_FEATURE_NOT_SUPPORTED;
-}
 /** @} */

@@ -38,6 +38,7 @@ typedef enum {
 	XAIE_BACKEND_OP_RST_PART,
 	XAIE_BACKEND_OP_ASSERT_SHIMRST,
 	XAIE_BACKEND_OP_SET_PROTREG,
+	XAIE_BACKEND_OP_CONFIG_SHIMDMABD,
 } XAie_BackendOpCode;
 
 /*
@@ -97,6 +98,16 @@ typedef struct XAie_Backend {
 	XAie_BackendType Type;
 	XAie_BackendOps Ops;
 } XAie_Backend;
+
+/* Typedef to capture shimdma Bd arguments */
+typedef struct XAie_ShimDmaBdArgs {
+	u8 NumBdWords;
+	u32 *BdWords;
+	XAie_LocType Loc;
+	u64 VAddr;
+	u32 BdNum;
+	u64 Addr;
+} XAie_ShimDmaBdArgs;
 
 /************************** Function Prototypes  *****************************/
 AieRC XAie_IOInit(XAie_DevInst *DevInst);

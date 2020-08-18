@@ -1076,6 +1076,71 @@ AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is function to configure shim dma using the linux kernel driver.
+*
+* @param	IOInst: IO instance pointer
+* @param	Args: Shim dma arguments pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxIO_ConfigShimDmaBd(void *IOInst,
+		XAie_ShimDmaBdArgs *Args)
+{
+	struct aie_dma_bd_args ShimArgs;
+	int Ret;
+
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+
+	ShimArgs.bd = Args->BdWords;
+	ShimArgs.data_va = Args->VAddr;
+	ShimArgs.loc.row = Args->Loc.Row;
+	ShimArgs.loc.col = Args->Loc.Col;
+	ShimArgs.bd_id = Args->BdNum;
+
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_SET_SHIMDMA_BD_IOCTL,
+			&ShimArgs);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to configure shim dma bd\n");
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the function to run backend operations
+*
+* @param	IOInst: IO instance pointer
+* @param	DevInst: AI engine partition device instance
+* @param	Op: Backend operation code
+* @param	Arg: Backend operation argument
+*
+* @return	XAIE_OK for success and error code for failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)DevInst;
+	switch(Op) {
+	case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
+		return _XAie_LinuxIO_ConfigShimDmaBd(IOInst, Arg);
+	default:
+		XAIE_ERROR("Linux backend does not support operation %d\n", Op);
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+}
+
 #else
 
 AieRC XAie_LinuxIO_Finish(void *IOInst)
@@ -1176,6 +1241,16 @@ AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
+AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
 #endif /* __AIELINUX__ */
 
 void XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
@@ -1189,16 +1264,6 @@ void XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 	(void)CmdWd0;
 	(void)CmdWd1;
 	(void)CmdStr;
-}
-
-AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
-		XAie_BackendOpCode Op, void *Arg)
-{
-	(void)IOInst;
-	(void)DevInst;
-	(void)Op;
-	(void)Arg;
-	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
 /** @} */

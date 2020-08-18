@@ -287,6 +287,28 @@ void XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 	ess_WriteCmd(Command, Col, Row, CmdWd0, CmdWd1, CmdStr);
 }
 
+AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)DevInst;
+	switch(Op) {
+	case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
+	{
+		XAie_ShimDmaBdArgs *BdArgs = (XAie_ShimDmaBdArgs *)Arg;
+		for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
+			XAie_SimIO_Write32(IOInst, BdArgs->Addr + i * 4,
+					BdArgs->BdWords[i]);
+		}
+		break;
+	}
+	default:
+		XAIE_ERROR("Linux backend does not support operation %d\n", Op);
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	return XAIE_OK;
+}
+
 #else
 
 AieRC XAie_SimIO_Finish(void *IOInst)
@@ -373,8 +395,6 @@ void XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 	(void)CmdStr;
 }
 
-#endif /* __AIESIM__ */
-
 AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		XAie_BackendOpCode Op, void *Arg)
 {
@@ -384,6 +404,8 @@ AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	(void)Arg;
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
+
+#endif /* __AIESIM__ */
 
 XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
