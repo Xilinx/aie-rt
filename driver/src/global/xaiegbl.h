@@ -38,6 +38,7 @@
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   10/28/2019  Add error type for pl interface apis
 * 1.2   Tejus   12/09/2019  Forward declaration of structures
+* 1.3   Tejus   03/17/2020  Add error types and data structure for lock apis
 * </pre>
 *
 ******************************************************************************/
@@ -49,6 +50,7 @@
 #include "xaiegbl_defs.h"
 
 /************************** Constant Definitions *****************************/
+#define XAIE_LOCK_WITH_NO_VALUE	(-1)
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
 
@@ -190,10 +192,40 @@ typedef enum{
 	XAIE_INVALID_LOCK,
 	XAIE_INVALID_DMA_DIRECTION,
 	XAIE_INVALID_PLIF_WIDTH,
+	XAIE_INVALID_LOCK_ID,
+	XAIE_INVALID_LOCK_VALUE,
+	XAIE_LOCK_RESULT_FAILED,
 	XAIE_ERR_MAX
 } AieRC;
+
+/* Data structure to capture lock id and value */
+typedef struct {
+	u8 LockId;
+	s8 LockVal;
+} XAie_Lock;
+
 /**************************** Function prototypes ***************************/
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
+
+/*****************************************************************************/
+/*
+*
+* This API returns a structure of type XAie_Loc which captures the lock id and
+* lock value.
+*
+* @param	Id: Lock id
+* @param	Value: Lock value.
+*
+* @return	Lock: Lock strcuture initialized with Id and Value.
+*
+* @note		None.
+*
+******************************************************************************/
+static inline XAie_Lock XAie_LockInit(u8 Id, s8 Value)
+{
+	XAie_Lock Lock = {Id, Value};
+	return Lock;
+}
 
 /*****************************************************************************/
 /*

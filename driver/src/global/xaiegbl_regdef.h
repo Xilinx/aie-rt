@@ -40,6 +40,7 @@
 * 1.2   Tejus  10/28/2019  Add data structures for pl interface module
 * 1.3   Tejus  12/09/2019  Forward declaration of structures
 * 1.4	Tejus  03/16/2020  Add register properties for Mux/Demux registers
+* 1.5   Tejus  03/17/2020  Add data structures for lock module
 * </pre>
 *
 ******************************************************************************/
@@ -227,6 +228,35 @@ typedef struct {
 } XAie_PlIfMod;
 
 /*
+ * The typdef contains attributes of Lock modules.
+ * The lock acquire and release mechanism for lock module are different across
+ * hardware generations. In the first generation, the lock is acquired by
+ * reading a register via AXI-MM path. The register address is specific to
+ * the lock number and whether the lock is being acquired or released with
+ * value. However, in subsequent generations, the lock access mechanism is
+ * different. The register address to read from is computed differently.
+ * To hide this change in the architecture, the information captured in the
+ * below data strcuture does not use the register database directly. For more
+ * details, please refer to the AI Engine hardware architecture specification
+ * document.
+ */
+typedef struct XAie_LockMod {
+	u8  NumLocks;		/* Number of lock in the module */
+	s8  LockValUpperBound; 	/* Upper bound of the lock value */
+	s8  LockValLowerBound; 	/* Lower bound of the lock value */
+	u32 BaseAddr;		/* Base address of the lock module */
+	u32 LockIdOff;		/* Offset between conseccutive locks */
+	u32 RelAcqOff;  	/* Offset between Release and Acquire locks */
+	u32 LockValOff; 	/* Offset thats added to the lock address for a value. */
+	AieRC (*Acquire)(XAie_DevInst *DevInst,
+			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
+			XAie_Lock Lock, u32 TimeOut);
+	AieRC (*Release)(XAie_DevInst *DevInst,
+			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
+			XAie_Lock Lock, u32 TimeOut);
+} XAie_LockMod;
+
+/*
  * This typedef contains all the modules for a Tile type
  */
 typedef struct XAie_TileMod {
@@ -235,6 +265,7 @@ typedef struct XAie_TileMod {
 	const XAie_DmaMod  *DmaMod;
 	const XAie_MemMod  *MemMod;
 	const XAie_PlIfMod *PlIfMod;
+	const XAie_LockMod *LockMod;
 } XAie_TileMod;
 
 #endif

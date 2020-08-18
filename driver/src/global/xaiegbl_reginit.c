@@ -41,6 +41,7 @@
 *			    dependancy
 * 1.3   Tejus   03/16/2020  Seperate PlIf Module for SHIMPL and SHIMNOC Tiles
 * 1.4   Tejus   03/16/2020  Add register properties for Mux/Demux registers
+* 1.5   Tejus   03/17/2020  Add lock module properties
 * </pre>
 *
 ******************************************************************************/
@@ -48,6 +49,7 @@
 /***************************** Include Files *********************************/
 #include "xaiegbl_regdef.h"
 #include "xaiegbl_params.h"
+#include "xaie_locks_aie.h"
 
 /************************** Constant Definitions *****************************/
 
@@ -438,6 +440,34 @@ const static XAie_PlIfMod AieShimTilePlIfMod =
 	.ShimNocDeMux = AieShimDeMuxConfig
 };
 
+/* Lock Module for AIE Tiles  */
+const static XAie_LockMod AieTileLockMod =
+{
+	.BaseAddr = XAIEGBL_MEM_LOCK0RELNV,
+	.NumLocks = 16U,
+	.LockIdOff = 0x80,
+	.RelAcqOff = 0x40,
+	.LockValOff = 0x10,
+	.LockValUpperBound = 1,
+	.LockValLowerBound = -1,
+	.Acquire = &(_XAie_LockAcquire),
+	.Release = &(_XAie_LockRelease)
+};
+
+/* Lock Module for SHIM NOC Tiles  */
+const static XAie_LockMod AieShimNocLockMod =
+{
+	.BaseAddr = XAIEGBL_NOC_LOCK0RELNV,
+	.NumLocks = 16U,
+	.LockIdOff = 0x80,
+	.RelAcqOff = 0x40,
+	.LockValOff = 0x10,
+	.LockValUpperBound = 1,
+	.LockValLowerBound = -1,
+	.Acquire = &(_XAie_LockAcquire),
+	.Release = &(_XAie_LockRelease)
+};
+
 /*
  * AIE Module
  * This data structure captures all the modules for each tile type.
@@ -455,6 +485,7 @@ XAie_TileMod AieMod[] =
 		.DmaMod  = NULL,
 		.MemMod  = &AieTileMemMod,
 		.PlIfMod = NULL,
+		.LockMod = &AieTileLockMod,
 	},
 	{
 		/*
@@ -465,6 +496,7 @@ XAie_TileMod AieMod[] =
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
 		.PlIfMod = &AieShimTilePlIfMod,
+		.LockMod = &AieShimNocLockMod,
 	},
 	{
 		/*
@@ -475,6 +507,7 @@ XAie_TileMod AieMod[] =
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
 		.PlIfMod = &AiePlIfMod,
+		.LockMod = NULL,
 	},
 	{
 		/*
@@ -484,7 +517,8 @@ XAie_TileMod AieMod[] =
 		.StrmSw  = NULL,
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
-		.PlIfMod = NULL
+		.PlIfMod = NULL,
+		.LockMod = NULL
 	}
 };
 
