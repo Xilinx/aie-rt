@@ -36,6 +36,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus  09/26/2019  Initial creation
+* 1.1   Tejus  10/21/2019  Optimize stream switch data structures
 * </pre>
 *
 ******************************************************************************/
@@ -119,13 +120,28 @@ typedef struct {
 } XAie_StrmSlv;
 
 /*
+ * This typedef captures port base address and number of slave ports available
+ * for stream switch master and salve ports
+ */
+typedef struct {
+	u8 NumPorts;
+	u32 PortBaseAddr;
+} XAie_StrmPort;
+
+/*
  * This typedef contains the attributes for Stream Switch Module
  */
 typedef struct {
-	u32 MstrConigBaseAddr;
 	u32 SlvConfigBaseAddr;
-	const XAie_StrmMstr *MstrConfig;
-	const XAie_StrmSlv  *SlvConfig;
+	u32 PortOffset;		  /**< Offset between ports */
+	XAie_RegFldAttr MstrEn;	  /**< Enable bit field attributes */
+	XAie_RegFldAttr MstrPktEn;/**< Packet enable bit field attributes */
+	XAie_RegFldAttr DrpHdr;   /**< Drop header bit field attributes */
+	XAie_RegFldAttr Config;	  /**< Configuration bit field attributes */
+	XAie_RegFldAttr SlvEn;	  /**< Enable bit field attributes */
+	XAie_RegFldAttr SlvPktEn; /**< Packet enable bit field attributes */
+	const XAie_StrmPort *MstrConfig;
+	const XAie_StrmPort  *SlvConfig;
 } XAie_StrmMod;
 
 /*

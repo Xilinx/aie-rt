@@ -35,6 +35,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
+* 1.1   Tejus   10/21/2019  Optimize stream switch data structures
 * </pre>
 *
 ******************************************************************************/
@@ -64,7 +65,7 @@ static AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave
 {
 	u32 BaseAddr;
 	u32 RegAddr;
-	const XAie_StrmSlv *PortPtr;
+	const XAie_StrmPort *PortPtr;
 
 	/* Get Base Addr of the slave tile from Stream Switch Module */
 	BaseAddr = StrmMod->SlvConfigBaseAddr;
@@ -78,7 +79,7 @@ static AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	RegAddr = PortPtr->PortType[PortNum].RegOff;
+	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
 	*SlaveIdx = (RegAddr - BaseAddr) / 4;
 
 	return XAIE_OK;
@@ -103,11 +104,16 @@ static AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave
 * @note		Internal API.
 *
 *******************************************************************************/
-static AieRC _XAie_StrmConfigSlv(const XAie_StrmSlv *PortPtr, u8 PortNum,
-		u8 Enable, u8 PktEnable, u32 *RegVal, u32 *RegOff)
+static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
+		StrmSwPortType PortType, u8 PortNum, u8 Enable, u8 PktEnable,
+		u32 *RegVal, u32 *RegOff)
 {
 	AieRC RC = XAIE_OK;
 	*RegVal = 0U;
+	const XAie_StrmPort  *PortPtr;
+
+	/* Get the slave port pointer from stream module */
+	PortPtr = &StrmMod->SlvConfig[PortType];
 
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
 		RC = XAIE_ERR_STREAM_PORT;
@@ -115,16 +121,16 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmSlv *PortPtr, u8 PortNum,
 		return RC;
 	}
 
-	*RegOff = PortPtr->PortType[PortNum].RegOff;
+	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
 
 	if(Enable != XAIE_ENABLE)
 		return RC;
 
 	/* Frame the 32-bit reg value */
-	*RegVal = XAie_SetField(Enable, PortPtr->PortType[PortNum].SlvEn.Lsb,
-			PortPtr->PortType[PortNum].SlvEn.Mask) |
-		XAie_SetField(PktEnable, PortPtr->PortType[PortNum].PktEn.Lsb,
-				PortPtr->PortType[PortNum].SlvEn.Mask);
+	*RegVal = XAie_SetField(Enable, StrmMod->SlvEn.Lsb,
+			StrmMod->SlvEn.Mask) |
+		XAie_SetField(PktEnable,
+				StrmMod->SlvPktEn.Lsb, StrmMod->SlvEn.Mask);
 
 	return RC;
 }
@@ -148,13 +154,17 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmSlv *PortPtr, u8 PortNum,
 * @note		Internal API.
 *
 *******************************************************************************/
-static AieRC _StrmConfigMstr(const XAie_StrmMstr *PortPtr, u8 PortNum, u8 Enable,
-		u8 PktEnable,  u8 Config, u32 *RegVal, u32 *RegOff)
+static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
+		StrmSwPortType PortType, u8 PortNum, u8 Enable, u8 PktEnable,
+		u8 Config, u32 *RegVal, u32 *RegOff)
 {
 
 	AieRC RC = XAIE_OK;
 	u8 DropHdr;
 	*RegVal = 0U;
+	const XAie_StrmPort *PortPtr;
+
+	PortPtr = &StrmMod->MstrConfig[PortType];
 
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
 		RC = XAIE_ERR_STREAM_PORT;
@@ -162,24 +172,23 @@ static AieRC _StrmConfigMstr(const XAie_StrmMstr *PortPtr, u8 PortNum, u8 Enable
 		return RC;
 	}
 
-	*RegOff = PortPtr->PortType[PortNum].RegOff;
+	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
 	if(Enable != XAIE_ENABLE)
 		return RC;
 
 	/* Extract the drop header field */
-	DropHdr = XAie_GetField(Config,
-			PortPtr->PortType[PortNum].DrpHdr.Lsb,
-			PortPtr->PortType[PortNum].DrpHdr.Mask);
+	DropHdr = XAie_GetField(Config, StrmMod->DrpHdr.Lsb,
+			StrmMod->DrpHdr.Mask);
 
 	/* Frame 32-bit reg value */
-	*RegVal = XAie_SetField(Enable, PortPtr->PortType[PortNum].MstrEn.Lsb,
-			PortPtr->PortType[PortNum].MstrEn.Mask) |
-		XAie_SetField(PktEnable, PortPtr->PortType[PortNum].PktEn.Lsb,
-				PortPtr->PortType[PortNum].PktEn.Mask) |
-		XAie_SetField(DropHdr, PortPtr->PortType[PortNum].DrpHdr.Lsb,
-				PortPtr->PortType[PortNum].DrpHdr.Mask) |
-		XAie_SetField(Config, PortPtr->PortType[PortNum].Config.Lsb,
-				PortPtr->PortType[PortNum].Config.Mask);
+	*RegVal = XAie_SetField(Enable, StrmMod->MstrEn.Lsb,
+			StrmMod->MstrEn.Mask) |
+		XAie_SetField(PktEnable, StrmMod->MstrPktEn.Lsb,
+				StrmMod->MstrPktEn.Mask) |
+		XAie_SetField(DropHdr, StrmMod->DrpHdr.Lsb,
+				StrmMod->DrpHdr.Mask) |
+		XAie_SetField(Config, StrmMod->Config.Lsb,
+				StrmMod->Config.Mask);
 
 	return RC;
 }
@@ -217,8 +226,6 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 	u8 SlaveIdx;
 	u8 TileType;
 	const XAie_StrmMod *StrmMod;
-	const XAie_StrmMstr *MstrPort;
-	const XAie_StrmSlv  *SlvPort;
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -261,23 +268,17 @@ AieRC XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst, XAie_LocRange Range,
 		return RC;
 	}
 
-	/* Get master port pointer from device instance */
-	MstrPort = &DevInst->DevProp.DevMod[TileType].StrmSw->MstrConfig[Master];
-
 	/* Compute the register value and register address for the master port*/
-	RC = _StrmConfigMstr(MstrPort, MstrPortNum, Enable, XAIE_DISABLE,
+	RC = _StrmConfigMstr(StrmMod, Master, MstrPortNum, Enable, XAIE_DISABLE,
 			SlaveIdx, &MstrVal, &MstrOff);
 	if(RC != XAIE_OK) {
 		XAieLib_print("Error %d: Master config error\n", RC);
 		return RC;
 	}
 
-	/* Get the slave port pointer from device instance */
-	SlvPort = &DevInst->DevProp.DevMod[TileType].StrmSw->SlvConfig[Slave];
-
 	/* Compute the register value and register address for slave port */
-	RC = _XAie_StrmConfigSlv(SlvPort, SlvPortNum, Enable, XAIE_DISABLE,
-			&SlvVal, &SlvOff);
+	RC = _XAie_StrmConfigSlv(StrmMod, Slave, SlvPortNum, Enable,
+			XAIE_DISABLE, &SlvVal, &SlvOff);
 	if(RC != XAIE_OK) {
 		XAieLib_print("Error %d: Slave config error\n", RC);
 		return RC;
