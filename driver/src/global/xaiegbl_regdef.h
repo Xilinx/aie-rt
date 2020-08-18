@@ -38,6 +38,7 @@
 * 1.0   Tejus  09/26/2019  Initial creation
 * 1.1   Tejus  10/21/2019  Optimize stream switch data structures
 * 1.2   Tejus  10/28/2019  Add data structures for pl interface module
+* 1.3   Tejus  12/09/2019  Forward declaration of structures
 * </pre>
 *
 ******************************************************************************/
@@ -223,23 +224,13 @@ typedef struct {
 /*
  * This typedef contains all the modules for a Tile type
  */
-typedef struct {
+typedef struct XAie_TileMod {
 	const XAie_CoreMod *CoreMod;
 	const XAie_StrmMod *StrmSw;
 	const XAie_DmaMod  *DmaMod;
 	const XAie_MemMod  *MemMod;
 	const XAie_PlIfMod *PlIfMod;
 } XAie_TileMod;
-
-/*
- * This typedef captures all the properties of a AIE2 Device
- */
-typedef struct {
-	u8 DevGen;
-	u8 RowShift;
-	u8 ColShift;
-	XAie_TileMod *DevMod;
-} XAie_DevProp;
 
 #endif
 

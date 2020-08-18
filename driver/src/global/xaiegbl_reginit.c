@@ -37,12 +37,14 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   10/22/2019  Initial creation
 * 1.1   Tejus   10/28/2019  Add pl interface register properties
+* 1.2   Tejus   12/09/2019  Include correct header file to avoid cyclic
+*			    dependancy
 * </pre>
 *
 ******************************************************************************/
 
 /***************************** Include Files *********************************/
-#include "xaiegbl.h"
+#include "xaiegbl_regdef.h"
 #include "xaiegbl_params.h"
 
 /************************** Constant Definitions *****************************/

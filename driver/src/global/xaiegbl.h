@@ -37,6 +37,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   10/28/2019  Add error type for pl interface apis
+* 1.2   Tejus   12/09/2019  Forward declaration of structures
 * </pre>
 *
 ******************************************************************************/
@@ -46,10 +47,21 @@
 
 /***************************** Include Files *********************************/
 #include "xaiegbl_defs.h"
-#include "xaiegbl_regdef.h"
 
 /************************** Constant Definitions *****************************/
 /**************************** Type Definitions *******************************/
+typedef struct XAie_TileMod XAie_TileMod;
+
+/*
+ * This typedef captures all the properties of a AIE Device
+ */
+typedef struct XAie_DevProp {
+	u8 DevGen;
+	u8 RowShift;
+	u8 ColShift;
+	XAie_TileMod *DevMod;
+} XAie_DevProp;
+
 /*
  * This typedef contains the attributes for a AIE partition. The structure is
  * setup during intialization.
@@ -65,7 +77,7 @@ typedef struct {
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
-				     setup to AIE1/2 prop during intialization*/
+				     setup to AIE prop during intialization*/
 } XAie_DevInst;
 
 typedef struct {
