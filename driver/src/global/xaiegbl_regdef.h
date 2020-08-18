@@ -41,6 +41,7 @@
 * 1.3   Tejus  12/09/2019  Forward declaration of structures
 * 1.4	Tejus  03/16/2020  Add register properties for Mux/Demux registers
 * 1.5   Tejus  03/17/2020  Add data structures for lock module
+* 1.6   Tejus  03/21/2020  Add data structures for stream switch slot registers
 * </pre>
 *
 ******************************************************************************/
@@ -100,16 +101,25 @@ typedef struct {
  * This typedef contains the attributes for Stream Switch Module
  */
 typedef struct {
+	u8 NumSlaveSlots;
 	u32 SlvConfigBaseAddr;
 	u32 PortOffset;		  /**< Offset between ports */
+	u32 SlotOffsetPerPort;
+	u32 SlotOffset;
 	XAie_RegFldAttr MstrEn;	  /**< Enable bit field attributes */
 	XAie_RegFldAttr MstrPktEn;/**< Packet enable bit field attributes */
 	XAie_RegFldAttr DrpHdr;   /**< Drop header bit field attributes */
 	XAie_RegFldAttr Config;	  /**< Configuration bit field attributes */
 	XAie_RegFldAttr SlvEn;	  /**< Enable bit field attributes */
 	XAie_RegFldAttr SlvPktEn; /**< Packet enable bit field attributes */
+	XAie_RegFldAttr SlotPktId;
+	XAie_RegFldAttr SlotMask;
+	XAie_RegFldAttr SlotEn;
+	XAie_RegFldAttr SlotMsel;
+	XAie_RegFldAttr SlotArbitor;
 	const XAie_StrmPort *MstrConfig;
-	const XAie_StrmPort  *SlvConfig;
+	const XAie_StrmPort *SlvConfig;
+	const XAie_StrmPort *SlvSlotConfig;
 } XAie_StrmMod;
 
 /*

@@ -44,6 +44,8 @@
 * 1.5   Tejus   03/17/2020  Add lock module properties
 * 1.6   Tejus   03/21/2020  Add structure fields to stream switch module
 *			    definition
+* 1.7   Tejus   03/21/2020  Add register properties for stream switch slot
+*			    registers
 * </pre>
 *
 ******************************************************************************/
@@ -258,20 +260,117 @@ const static XAie_StrmPort AieShimStrmSlv[SS_PORT_TYPE_MAX] =
 };
 
 /*
+ * Array of all Shim NOC/PL Stream Switch Slave Slot Config registers
+ * The data structure contains number of ports and the register base address.
+ */
+const static XAie_StrmPort AieShimStrmSlaveSlot[SS_PORT_TYPE_MAX] =
+{
+	{	/* Core */
+		.NumPorts = 0,
+		.PortBaseAddr = 0,
+	},
+	{	/* DMA */
+		.NumPorts = 0,
+		.PortBaseAddr = 0,
+	},
+	{	/* Ctrl */
+		.NumPorts = 1,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVTILCTRSLO0,
+	},
+	{	/* Fifo */
+		.NumPorts = 2,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVFIF0SLO0,
+	},
+	{	/* South */
+		.NumPorts = 8,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVSOU0SLO0,
+	},
+	{	/* West */
+		.NumPorts = 4,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVWES0SLO0,
+	},
+	{	/* North */
+		.NumPorts = 4,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVNOR0SLO0,
+	},
+	{	/* East */
+		.NumPorts = 4,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVEAS0SLO0,
+	},
+	{	/* Trace */
+		.NumPorts = 1,
+		.PortBaseAddr = XAIEGBL_PL_STRSWISLVTRASLO0
+	}
+};
+
+/*
+ * Data structure to capture stream switch slave slot register base address for
+ * AIE Tiles
+ */
+const static XAie_StrmPort AieTileStrmSlaveSlot[SS_PORT_TYPE_MAX] =
+{
+	{	/* Core */
+		.NumPorts = 2,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVMECORE0SLO0,
+	},
+	{	/* DMA */
+		.NumPorts = 2,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVDMA0SLO0,
+	},
+	{	/* Ctrl */
+		.NumPorts = 1,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVTILCTRSLO0,
+	},
+	{	/* Fifo */
+		.NumPorts = 2,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVFIF0SLO0,
+	},
+	{	/* South */
+		.NumPorts = 6,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVSOU0SLO0,
+	},
+	{	/* West */
+		.NumPorts = 4,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVWES0SLO0,
+	},
+	{	/* North */
+		.NumPorts = 4,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVNOR0SLO0,
+	},
+	{	/* East */
+		.NumPorts = 4,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVEAS0SLO0,
+	},
+	{	/* Trace */
+		.NumPorts = 1,
+		.PortBaseAddr = XAIEGBL_CORE_STRSWISLVMETRASLO0
+	}
+};
+
+/*
  * Data structure to capture all stream configs for XAIEGBL_TILE_TYPE_AIETILE
  */
 const static XAie_StrmMod AieTileStrmSw =
 {
 	.SlvConfigBaseAddr = XAIEGBL_CORE_STRSWISLVMECORE0CFG,
 	.PortOffset = 0x4,
+	.NumSlaveSlots = 4U,
+	.SlotOffsetPerPort = 0x10,
+	.SlotOffset = 0x4,
 	.MstrEn = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_MSTRENA_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_MSTRENA_MASK},
 	.MstrPktEn = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_PKTENA_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_PKTENA_MASK},
 	.DrpHdr = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_DROHEA_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_DROHEA_MASK},
 	.Config = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_CON_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_CON_MASK},
 	.SlvEn = {XAIEGBL_CORE_STRSWISLVMECORE0CFG_SLVENA_LSB, XAIEGBL_CORE_STRSWISLVMECORE0CFG_SLVENA_MASK},
 	.SlvPktEn = {XAIEGBL_CORE_STRSWISLVMECORE0CFG_PKTENA_LSB, XAIEGBL_CORE_STRSWISLVMECORE0CFG_PKTENA_MASK},
+	.SlotPktId = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ID_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ID_MASK},
+	.SlotMask = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSK_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSK_MASK},
+	.SlotEn = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ENA_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ENA_MASK},
+	.SlotMsel = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSE_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSE_MASK},
+	.SlotArbitor = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ARB_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ARB_MASK},
 	.MstrConfig = AieTileStrmMstr,
-	.SlvConfig = AieTileStrmSlv
+	.SlvConfig = AieTileStrmSlv,
+	.SlvSlotConfig = AieTileStrmSlaveSlot
 };
 
 /*
@@ -281,14 +380,23 @@ const static XAie_StrmMod AieShimStrmSw =
 {
 	.SlvConfigBaseAddr = XAIEGBL_PL_STRSWISLVTILCTRCFG,
 	.PortOffset = 0x4,
+	.NumSlaveSlots = 4U,
+	.SlotOffsetPerPort = 0x10,
+	.SlotOffset = 0x4,
 	.MstrEn = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_MSTRENA_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_MSTRENA_MASK},
 	.MstrPktEn = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_PKTENA_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_PKTENA_MASK},
 	.DrpHdr = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_DROHEA_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_DROHEA_MASK},
 	.Config = {XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_CON_LSB, XAIEGBL_CORE_STRSWIMSTRCFGMECORE0_CON_MASK},
 	.SlvEn = {XAIEGBL_CORE_STRSWISLVMECORE0CFG_SLVENA_LSB, XAIEGBL_CORE_STRSWISLVMECORE0CFG_SLVENA_MASK},
 	.SlvPktEn = {XAIEGBL_CORE_STRSWISLVMECORE0CFG_PKTENA_LSB, XAIEGBL_CORE_STRSWISLVMECORE0CFG_PKTENA_MASK},
+	.SlotPktId = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ID_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ID_MASK},
+	.SlotMask = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSK_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSK_MASK},
+	.SlotEn = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ENA_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ENA_MASK},
+	.SlotMsel = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSE_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_MSE_MASK},
+	.SlotArbitor = {XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ARB_LSB, XAIEGBL_CORE_STRSWISLVMECORE0SLO0_ARB_MASK},
 	.MstrConfig = AieShimStrmMstr,
-	.SlvConfig = AieShimStrmSlv
+	.SlvConfig = AieShimStrmSlv,
+	.SlvSlotConfig = AieShimStrmSlaveSlot
 };
 
 /* Register field attributes for PL interface down sizer for 32 and 64 bits */
