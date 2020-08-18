@@ -47,6 +47,10 @@
 #include "xaiegbl_defs.h"
 #include "xaielib.h"
 
+/*****************************************************************************/
+/***************************** Macro Definitions *****************************/
+#define XAIE_EVENT_INVALID		255
+
 /************************** Enum *********************************************/
 /*
  * This enum contains all the Events for all modules: Core, Memory of AIE tile

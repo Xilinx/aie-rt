@@ -176,8 +176,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 	IntStopEvent = EvntMod->XAie_EventNumber[StopEvent];
 
 	/*checking for valid true event number */
-	if(IntStartEvent == EvntMod->InvalidEventVal ||
-			IntStopEvent == EvntMod->InvalidEventVal){
+	if(IntStartEvent == XAIE_EVENT_INVALID ||
+			IntStopEvent == XAIE_EVENT_INVALID){
 		XAieLib_print("Error: Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -277,7 +277,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 	IntResetEvent = EvntMod->XAie_EventNumber[ResetEvent];
 
 	/*checking for valid true event number */
-	if(IntResetEvent == EvntMod->InvalidEventVal){
+	if(IntResetEvent == XAIE_EVENT_INVALID){
 		XAieLib_print("Error: Invalid Event id: %d\n", ResetEvent);
 		return XAIE_INVALID_ARGS;
 	}

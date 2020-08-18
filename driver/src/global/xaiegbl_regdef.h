@@ -456,7 +456,6 @@ typedef struct XAie_PerfMod {
 /* This typedef contains attributes of Events module */
 typedef struct XAie_EvntMod {
 	u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
-	u8 InvalidEventVal;	/* Value that indicates invalid event */
 	u32 EventMin;		/* number corresponding to evt 0 in the enum */
 	u32 EventMax;		/* number corresponding to last evt in enum */
 } XAie_EvntMod;
