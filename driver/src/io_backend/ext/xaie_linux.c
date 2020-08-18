@@ -27,6 +27,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <linux/dma-buf.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -36,6 +37,7 @@
 #include <unistd.h>
 
 #include "xlnx-ai-engine.h"
+#include "ion.h"
 
 #endif
 
@@ -73,6 +75,10 @@ typedef struct XAie_LinuxIO {
 	u8 ColShift;
 	u64 BaseAddr;
 } XAie_LinuxIO;
+
+typedef struct XAie_LinuxMem {
+	int BufferFd;
+} XAie_LinuxMem;
 
 #endif /* __AIELINUX__ */
 
@@ -792,6 +798,284 @@ void XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 	}
 }
 
+/*****************************************************************************/
+/**
+*
+* This is function to attach the allocated memory descriptor to kernel driver
+*
+* @param	IOInst: IO instance pointer
+* @param	MemInst: Linux Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxMemAttach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
+{
+	int Ret;
+
+	Ret = ioctl(IOInst->PartitionFd, AIE_ATTACH_DMABUF_IOCTL,
+			MemInst->BufferFd);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to attach to dmabuf\n");
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to allocate a memory
+*
+* @param	DevInst: Device Instance
+* @param	Size: Size of the memory
+* @param	Cache: Value from XAie_MemCacheProp enum
+*
+* @return	Pointer to the allocated memory instance.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	AieRC RC;
+	int Fd, Ret;
+	u32 HeapNum;
+	void *VAddr;
+	struct ion_allocation_data AllocArgs;
+	struct ion_heap_query Query;
+	struct ion_heap_data *Heaps;
+	XAie_MemInst *MemInst;
+	XAie_LinuxMem *LinuxMemInst;
+
+	Fd = open("/dev/ion", O_RDONLY);
+	if(Fd < 0) {
+		XAIE_ERROR("Failed to open ion.\n");
+		return NULL;
+	}
+
+	memset(&Query, 0, sizeof(Query));
+	Ret = ioctl(Fd, ION_IOC_HEAP_QUERY, &Query);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to enquire ion heaps.\n");
+		goto error_ion;
+	}
+
+	Heaps = calloc(Query.cnt, sizeof(*Heaps));
+	if(Heaps == NULL) {
+		XAIE_ERROR("Failed to allocate memory for heap details\n");
+		goto error_ion;
+	}
+
+	Query.heaps = (u64)Heaps;
+	Ret = ioctl(Fd, ION_IOC_HEAP_QUERY, &Query);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to enquire ion heap details.\n");
+		free(Heaps);
+		goto error_ion;
+	}
+
+	HeapNum = UINT_MAX;
+	for(u32 i = 0; i < Query.cnt; i++) {
+		XAIE_DBG("Heap id: %u, Heap name: %s, Heap type: %u\n",
+				Heaps[i].heap_id, Heaps[i].name, Heaps[i].type);
+		if(Heaps[i].type == ION_HEAP_TYPE_SYSTEM_CONTIG) {
+			HeapNum = i;
+			break;
+		}
+	}
+
+	if(HeapNum == UINT_MAX) {
+		XAIE_ERROR("Failed to find contiguous heap\n");
+		free(Heaps);
+		goto error_ion;
+	}
+
+	memset(&AllocArgs, 0, sizeof(AllocArgs));
+	AllocArgs.len = Size;
+	AllocArgs.heap_id_mask = 1 << Heaps[HeapNum].heap_id;
+	free(Heaps);
+	if(Cache == XAIE_MEM_CACHEABLE) {
+		AllocArgs.flags = ION_FLAG_CACHED;
+	}
+
+	Ret = ioctl(Fd, ION_IOC_ALLOC, &AllocArgs);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to allocate memory of %lu bytes\n");
+		goto error_ion;
+	}
+
+	VAddr = mmap(NULL, Size, PROT_READ | PROT_WRITE, MAP_SHARED,
+			AllocArgs.fd, 0);
+	if(VAddr == NULL) {
+		XAIE_ERROR("Failed to mmap\n");
+		goto error_alloc_fd;
+	}
+
+	LinuxMemInst = (XAie_LinuxMem *)malloc(sizeof(*LinuxMemInst));
+	if(LinuxMemInst == NULL) {
+		XAIE_ERROR("Memory allocation failed\n");
+		goto error_map;
+	}
+
+	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
+	if(MemInst == NULL) {
+		XAIE_ERROR("Memory allocation failed\n");
+		goto free_meminst;
+	}
+
+	LinuxMemInst->BufferFd = AllocArgs.fd;
+	MemInst->VAddr = VAddr;
+	MemInst->DevAddr = 0x0;
+	MemInst->Size = Size;
+	MemInst->Cache = Cache;
+	MemInst->DevInst = DevInst;
+	MemInst->BackendHandle = LinuxMemInst;
+
+	RC = _XAie_LinuxMemAttach((XAie_LinuxIO *)DevInst->IOInst,
+			LinuxMemInst);
+	if(RC != XAIE_OK) {
+		free(MemInst);
+		goto free_meminst;
+	}
+
+	close(Fd);
+	return MemInst;
+
+free_meminst:
+	free(LinuxMemInst);
+error_map:
+	munmap(VAddr, Size);
+error_alloc_fd:
+	close(AllocArgs.fd);
+error_ion:
+	close(Fd);
+	return NULL;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is function to attach the allocated memory descriptor to kernel driver
+*
+* @param	IOInst: Linux IO instance pointer
+* @param	MemInst: Linux Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxMemDetach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
+{
+	int Ret;
+
+	Ret = ioctl(IOInst->PartitionFd, AIE_DETACH_DMABUF_IOCTL,
+			MemInst->BufferFd);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to detach dmabuf\n");
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to free the memory
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
+{
+	AieRC RC;
+	XAie_LinuxMem *LinuxMemInst =
+		(XAie_LinuxMem *)MemInst->BackendHandle;
+
+	RC = _XAie_LinuxMemDetach((XAie_LinuxIO *)MemInst->DevInst->IOInst,
+			LinuxMemInst);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	munmap(MemInst->VAddr, MemInst->Size);
+	close(LinuxMemInst->BufferFd);
+	free(LinuxMemInst);
+	free(MemInst);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for CPU.
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_LinuxMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	struct dma_buf_sync Sync;
+	int Ret;
+	XAie_LinuxMem *LinuxMemInst =
+		(XAie_LinuxMem *)MemInst->BackendHandle;
+
+	memset(&Sync, 0, sizeof(Sync));
+	Sync.flags = DMA_BUF_SYNC_RW | DMA_BUF_SYNC_START;
+	Ret = ioctl(LinuxMemInst->BufferFd, DMA_BUF_IOCTL_SYNC, &Sync);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to sync, %s.\n", strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for Device.
+*
+* @param	MemInst: Memory instance pointer.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
+{
+	struct dma_buf_sync Sync;
+	int Ret;
+	XAie_LinuxMem *LinuxMemInst =
+		(XAie_LinuxMem *)MemInst->BackendHandle;
+
+	memset(&Sync, 0, sizeof(Sync));
+	Sync.flags = DMA_BUF_SYNC_RW | DMA_BUF_SYNC_END;
+	Ret = ioctl(LinuxMemInst->BufferFd, DMA_BUF_IOCTL_SYNC, &Sync);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to sync, %s.\n", strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
 #else
 
 AieRC XAie_LinuxIO_Finish(void *IOInst)
@@ -865,21 +1149,6 @@ void XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 	(void)Size;
 }
 
-#endif /* __AIEMETAL__ */
-
-void XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
-		u32 CmdWd1, const char *CmdStr)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)Col;
-	(void)Row;
-	(void)Command;
-	(void)CmdWd0;
-	(void)CmdWd1;
-	(void)CmdStr;
-}
-
 XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
@@ -905,6 +1174,21 @@ AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
 	return XAIE_ERR;
+}
+
+#endif /* __AIELINUX__ */
+
+void XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
+		u32 CmdWd1, const char *CmdStr)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)Col;
+	(void)Row;
+	(void)Command;
+	(void)CmdWd0;
+	(void)CmdWd1;
+	(void)CmdStr;
 }
 
 AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
