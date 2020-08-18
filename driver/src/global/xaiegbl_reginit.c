@@ -39,6 +39,7 @@
 * 1.1   Tejus   10/28/2019  Add pl interface register properties
 * 1.2   Tejus   12/09/2019  Include correct header file to avoid cyclic
 *			    dependancy
+* 1.3   Tejus   03/16/2020  Seperate PlIf Module for SHIMPL and SHIMNOC Tiles
 * </pre>
 *
 ******************************************************************************/
@@ -374,8 +375,26 @@ const static XAie_MemMod AieTileMemMod =
 	.MemAddr = XAIEGBL_MEM_DATMEM
 };
 
-/* PL Interface module for SHIMPL/SHIMNOC Tiles */
+/* PL Interface module for SHIMPL Tiles */
 const static XAie_PlIfMod AiePlIfMod =
+{
+	.UpSzrOff = XAIEGBL_PL_PLINTUPSCFG,
+	.DownSzrOff = XAIEGBL_PL_PLINTDOWCFG,
+	.DownSzrEnOff = XAIEGBL_PL_PLINTDOWENA,
+	.DownSzrByPassOff = XAIEGBL_PL_PLINTDOWBYPASS,
+	.NumUpSzrPorts = 0x6,
+	.MaxByPassPortNum = 0x6,
+	.NumDownSzrPorts = 0x8,
+	.UpSzr32_64Bit = AieUpSzr32_64Bit,
+	.UpSzr128Bit = AieUpSzr128Bit,
+	.DownSzr32_64Bit = AieDownSzr32_64Bit,
+	.DownSzr128Bit = AieDownSzr128Bit,
+	.DownSzrEn = AieDownSzrEnable,
+	.DownSzrByPass = AieDownSzrByPass
+};
+
+/* PL Interface module for SHIMNOC Tiles */
+const static XAie_PlIfMod AieShimTilePlIfMod =
 {
 	.UpSzrOff = XAIEGBL_PL_PLINTUPSCFG,
 	.DownSzrOff = XAIEGBL_PL_PLINTDOWCFG,
@@ -418,7 +437,7 @@ XAie_TileMod AieMod[] =
 		.StrmSw  = &AieShimStrmSw,
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
-		.PlIfMod = &AiePlIfMod,
+		.PlIfMod = &AieShimTilePlIfMod,
 	},
 	{
 		/*
