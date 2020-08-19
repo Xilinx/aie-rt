@@ -389,7 +389,7 @@ static inline XAie_LocType XAie_TileLoc(u8 col, u8 row)
 * details.
 *
 * @param	Config: XAie_Config structure.
-* @param	_AieGEn: Aie device generation.
+* @param	_AieGen: Aie device generation.
 * @param	_BaseAddr: Base Address of the device.
 * @param	_ColShift: Bit shift value for column.
 * @param	_RowShift: Bit shift value for row.

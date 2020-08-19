@@ -42,7 +42,7 @@
 *
 * This API initializes the Dma Descriptor for AIE 1 Tile Dma.
 *
-* @param	DmaDesc: Dma Descriptor
+* @param	Desc: Dma Descriptor
 *
 * @return	None.
 *
@@ -66,7 +66,7 @@ void _XAie_TileDmaInit(XAie_DmaDesc *Desc)
 *
 * This API initializes the Dma Descriptor for AIE 1 Shim Dma.
 *
-* @param	DmaDesc: Dma Descriptor
+* @param	Desc: Dma Descriptor
 *
 * @return	None.
 *
@@ -84,7 +84,6 @@ void _XAie_ShimDmaInit(XAie_DmaDesc *Desc)
 * This API initializes the Acquire and Release Locks for a a Dma for AIE
 * descriptor.
 *
-* @param	DevInst: Device Instance.
 * @param	DmaDesc: Initialized Dma Descriptor.
 * @param	Acq: Lock object with acquire lock ID and lock value.
 * @param	Rel: Lock object with release lock ID and lock value.
@@ -178,7 +177,6 @@ AieRC _XAie_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
 *
 * This API setups DmaDesc with parameters to run dma in interleave mode for AIE
 *
-* @param	DevInst: Device Instance.
 * @param	DmaDesc: Initialized Dma Descriptor.
 * @param	DoubleBuff: Double buffer to use(0 - A, 1-B)
 * @param	IntrleaveCount: Interleaved count to use(to be 32b word aligned)

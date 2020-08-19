@@ -273,6 +273,10 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst - Device Instance.
 * @param	Loc - Location of tile.
+* @param	Module - Module of the tile
+*                         For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                         For Pl or Shim tile - XAIE_PL_MOD,
+*                         For Mem tile - XAIE_MEM_MOD.
 *
 * @return	64-bit timer value.
 *

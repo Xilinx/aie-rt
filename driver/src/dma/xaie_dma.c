@@ -136,6 +136,8 @@ static AieRC _XAie_DmaLockConfig(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
 * @param	Acq: Lock object with acquire lock ID and lock value.
 * @param	Rel: Lock object with release lock ID and lock value.
 *
+* @return	XAIE_OK on success, Error code on failure.
+*
 * @note		The API sets up the value in the dma descriptor and does not
 *		configure the buffer descriptor field in the hardware.
 *
@@ -589,6 +591,7 @@ AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 * This API writes a Dma Descriptor which is initialized and setup by other APIs
 * into the corresponding registers and register fields in the hardware.
 *
+* @param	DevInst: Device Instance
 * @param	DmaDesc: Initialized Dma Descriptor.
 * @param	Loc: Location of AIE Tile
 * @param	BdNum: Hardware BD number to be written to.

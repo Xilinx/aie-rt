@@ -498,7 +498,6 @@ AieRC XAie_AieToPlIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
 * @param        PortNum: Stream Port Number (0-7)
-* @param	Enable: 0 for disable, 1 for enable
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -521,7 +520,6 @@ AieRC XAie_PlIfDownSzrEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
 * @param        PortNum: Stream Port Number (0-7)
-* @param	Enable: 0 for disable, 1 for enable
 *
 * @return	XAIE_OK on success, Error code on failure.
 *

@@ -539,7 +539,7 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 * @param	MstrPortNum: Master port number.
 * @param	DropHeader: Enable or disable the drop header bit
 * @param	Arbitor: Arbitor to use for this packet switch connection
-* @param	MselEn: MselEn field in the Master port register field
+* @param	MSelEn: MselEn field in the Master port register field
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -678,7 +678,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	SlotNum: Slot number for the slave port
 * @param	Pkt: Packet with initialized packet id and packet type
 * @param	Mask: Mask field in the slot register
-* @param	Msel: Msel register field in the slave slot register
+* @param	MSel: Msel register field in the slave slot register
 * @param	Arbitor: Arbitor to use for this packet switch connection
 *
 * @return	XAIE_OK on success, Error code on failure.
