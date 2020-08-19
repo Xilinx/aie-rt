@@ -6,7 +6,7 @@
 
 /*****************************************************************************/
 /**
-* @file xaiegbl_events.h
+* @file xaie_events_aie.h
 * @{
 *
 * Header file containing all events macros for AIE.
@@ -18,6 +18,7 @@
 * ----- ------   -------- -----------------------------------------------------
 * 1.0   Dishita  11/21/2019  Initial creation
 * 1.1   Nishad   06/02/2020  Move event files under events directory
+* 1.2   Nishad   06/02/2020  Rename file attribute to xaie_events_aie.h
 * </pre>
 *
 ******************************************************************************/

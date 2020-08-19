@@ -18,6 +18,7 @@
 * ----- ------   -------- -----------------------------------------------------
 * 1.0   Dishita  11/21/2019  Initial creation
 * 1.1   Nishad   06/02/2020  Move event files under events directory
+* 1.2   Nishad   06/02/2020  Remove unused included header files
 * </pre>
 *
 ******************************************************************************/
@@ -25,12 +26,6 @@
 #define XAIE_EVENTS_H
 
 /***************************** Include Files *********************************/
-#include "xaie_helper.h"
-#include "xaiegbl.h"
-#include "xaiegbl_defs.h"
-#include "xaielib.h"
-
-/*****************************************************************************/
 /***************************** Macro Definitions *****************************/
 #define XAIE_EVENT_INVALID		255
 

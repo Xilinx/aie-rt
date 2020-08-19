@@ -35,14 +35,16 @@
 * 2.2   Dishita 04/20/2020  Add timer properties
 * 2.3   Tejus   05/26/2020  Restructure and optimize core module.
 * 2.4   Tejus   06/01/2020  Add data structure for core debug register.
+* 2.5   Nishad  06/02/2020  Rename included header file xaiegbl_events to
+*			    xaie_events_aie
 * </pre>
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_dma_aie.h"
 #include "xaie_events.h"
+#include "xaie_events_aie.h"
 #include "xaie_locks_aie.h"
-#include "xaiegbl_events.h"
 #include "xaiegbl_regdef.h"
 #include "xaiegbl_params.h"
 
