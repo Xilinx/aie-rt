@@ -932,7 +932,7 @@ const static XAie_DmaMod AieShimDmaMod =
 };
 
 /* Enum to Event Number mapping of all events of AIE Core module */
-const static AieTileCoreModEventMapping[] =
+const static u8 AieTileCoreModEventMapping[] =
 {
 	XAIEGBL_CORE_EVENT_NONE,
 	XAIEGBL_CORE_EVENT_TRUE,
@@ -1065,7 +1065,7 @@ const static AieTileCoreModEventMapping[] =
 	XAIEGBL_CORE_EVENT_INSTR_EVENT_2,
 };
 /* Enum to Event Number mapping of all events of AIE Mem module */
-const static AieTileMemModEventMapping[] =
+const static u8 AieTileMemModEventMapping[] =
 {
 	XAIEGBL_MEM_EVENT_NONE,
 	XAIEGBL_MEM_EVENT_TRUE,
@@ -1220,7 +1220,7 @@ const static AieTileMemModEventMapping[] =
 };
 
 /* Enum to Event Number mapping of all events of AIE PL module */
-const static AieTilePlModEventMapping[] =
+const static u8 AieTilePlModEventMapping[] =
 {
 	XAIEGBL_PL_EVENT_NONE,
 	XAIEGBL_PL_EVENT_TRUE,
