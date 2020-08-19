@@ -58,26 +58,26 @@ AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 
 	if(Lock.LockId > LockMod->NumLocks) {
-		XAieLib_print("Error: Invalid Lock Id\n");
+		XAIE_ERROR("Invalid Lock Id\n");
 		return XAIE_INVALID_LOCK_ID;
 	}
 
 	if((Lock.LockVal > LockMod->LockValUpperBound) ||
 			(Lock.LockVal < LockMod->LockValLowerBound)) {
-		XAieLib_print("Error: Lock value out of range\n");
+		XAIE_ERROR("Lock value out of range\n");
 		return XAIE_INVALID_LOCK_VALUE;
 	}
 
@@ -115,26 +115,26 @@ AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 
 	if(Lock.LockId > LockMod->NumLocks) {
-		XAieLib_print("Error: Invalid Lock Id\n");
+		XAIE_ERROR("Invalid Lock Id\n");
 		return XAIE_INVALID_LOCK_ID;
 	}
 
 	if((Lock.LockVal > LockMod->LockValUpperBound) ||
 			(Lock.LockVal < LockMod->LockValLowerBound)) {
-		XAieLib_print("Error: Lock value out of range\n");
+		XAIE_ERROR("Lock value out of range\n");
 		return XAIE_INVALID_LOCK_VALUE;
 	}
 

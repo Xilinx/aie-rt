@@ -222,7 +222,7 @@ AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -301,7 +301,7 @@ AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 

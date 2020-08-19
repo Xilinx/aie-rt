@@ -25,6 +25,7 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#include "xaie_helper.h"
 #include "xaie_io.h"
 
 /************************** Constant Definitions *****************************/
@@ -82,7 +83,7 @@ AieRC XAie_IOInit(XAie_DevInst *DevInst)
 
 	DevInst->Backend = Backend;
 
-	XAieLib_print("LOG: Initialized with backend %d\n", Backend->Type);
+	XAIE_DBG("Initialized with backend %d\n", Backend->Type);
 
 	return XAIE_OK;
 }

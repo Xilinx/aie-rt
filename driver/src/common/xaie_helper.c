@@ -54,7 +54,7 @@ u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 	u8 ColType;
 
 	if(Loc.Col >= DevInst->NumCols) {
-		XAieLib_print("Error: Invalid column: %d\n", Loc.Col);
+		XAIE_ERROR("Invalid column: %d\n", Loc.Col);
 		return XAIEGBL_TILE_TYPE_MAX;
 	}
 
@@ -76,7 +76,7 @@ u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAieLib_print("Error: Cannot find Tile Type\n");
+	XAIE_ERROR("Cannot find Tile Type\n");
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
@@ -104,19 +104,19 @@ AieRC _XAie_CheckModule(XAie_DevInst *DevInst,
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_AIETILE && Module > XAIE_CORE_MOD) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(TileType == (XAIEGBL_TILE_TYPE_SHIMPL ||
 		XAIEGBL_TILE_TYPE_SHIMNOC) && Module != XAIE_PL_MOD) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE &&
 		Module != XAIE_MEM_MOD) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -154,7 +154,7 @@ AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
 
 	/* Return error if the Slave Port Type is not valid */
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		XAieLib_print("Error: Invalid Slave Port\n");
+		XAIE_ERROR("Invalid Slave Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -193,7 +193,7 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 
 	/* Return error if the Master Port Type is not valid */
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		XAieLib_print("Error: Invalid Master Port\n");
+		XAIE_ERROR("Invalid Master Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 

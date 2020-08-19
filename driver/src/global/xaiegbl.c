@@ -28,6 +28,7 @@
 /***************************** Include Files *********************************/
 #include <string.h>
 
+#include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
@@ -64,7 +65,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	AieRC RC;
 
 	if((InstPtr == XAIE_NULL) || (ConfigPtr == XAIE_NULL)) {
-		XAieLib_print("Error %d: Invalid input arguments\n",
+		XAIE_ERROR("Invalid input arguments\n",
 				XAIE_INVALID_ARGS);
 		return XAIE_INVALID_ARGS;
 	}
@@ -80,7 +81,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = AieMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 	} else {
-		XAieLib_print("Error %d: Invalid device\n",
+		XAIE_ERROR("Invalid device\n",
 				XAIE_INVALID_DEVICE);
 		return XAIE_INVALID_DEVICE;
 	}
@@ -128,14 +129,14 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	CurrBackend = DevInst->Backend;
 	RC = CurrBackend->Ops.Finish(DevInst->IOInst);
 	if (RC != XAIE_OK) {
-		XAieLib_print("Error: Failed to close backend instance.\n");
+		XAIE_ERROR("Failed to close backend instance.\n");
 		return RC;
 	}
 
@@ -162,12 +163,12 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Backend == XAIE_IO_BACKEND_MAX) {
-		XAieLib_print("Error: Invalid backend request \n");
+		XAIE_ERROR("Invalid backend request \n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -175,7 +176,7 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 	CurrBackend = DevInst->Backend;
 	RC = CurrBackend->Ops.Finish((void *)(DevInst->IOInst));
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Failed to close backend instance."
+		XAIE_ERROR("Failed to close backend instance."
 				"Falling back to backend %d\n",
 				CurrBackend->Type);
 		return RC;
@@ -185,12 +186,12 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 	NewBackend = _XAie_GetBackendPtr(Backend);
 	RC = NewBackend->Ops.Init(DevInst);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Failed to initialize backend %d\n",
+		XAIE_ERROR("Failed to initialize backend %d\n",
 				Backend);
 		return RC;
 	}
 
-	XAieLib_print("LOG: Switching backend to %d\n", Backend);
+	XAIE_DBG("Switching backend to %d\n", Backend);
 	DevInst->Backend = NewBackend;
 
 	return XAIE_OK;
@@ -217,7 +218,7 @@ XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return NULL;
 	}
 
@@ -239,7 +240,7 @@ XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 AieRC XAie_MemFree(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
@@ -263,7 +264,7 @@ AieRC XAie_MemFree(XAie_MemInst *MemInst)
 AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
@@ -287,7 +288,7 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
@@ -312,7 +313,7 @@ AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return NULL;
 	}
 
@@ -335,7 +336,7 @@ void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 

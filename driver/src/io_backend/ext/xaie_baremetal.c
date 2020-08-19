@@ -34,6 +34,7 @@
 
 #endif
 
+#include "xaie_helper.h"
 #include "xaie_baremetal.h"
 #include "xaie_io.h"
 
@@ -289,13 +290,13 @@ XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 
 	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
 	if(MemInst == NULL) {
-		XAieLib_print("Error: memory allocation failed\n");
+		XAIE_ERROR("memory allocation failed\n");
 		return NULL;
 	}
 
 	MemInst->VAddr = (void *)malloc(Size);
 	if(MemInst->VAddr == NULL) {
-		XAieLib_print("Error: malloc failed\n");
+		XAIE_ERROR("malloc failed\n");
 		free(MemInst);
 		return NULL;
 	}
@@ -379,9 +380,8 @@ AieRC XAie_BaremetalIO_Finish(void *IOInst)
 AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
 	/* no-op */
-	XAieLib_print("WARNING: Driver is not compiled with baremetal "
-			"backend (__AIEBAREMETAL__).IO Operations will result "
-			"in no-ops\n");
+	XAIE_ERROR("Driver is not compiled with baremetal "
+			"backend (__AIEBAREMETAL__)\n");
 	return XAIE_INVALID_BACKEND;
 }
 

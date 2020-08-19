@@ -46,20 +46,20 @@
 *******************************************************************************/
 static void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr)
 {
-	XAieLib_print("**** ELF HEADER ****\n");
-	XAieLib_print("e_type\t\t: 0x%08x\n", Ehdr->e_type);
-	XAieLib_print("e_machine\t: 0x%08x\n", Ehdr->e_machine);
-	XAieLib_print("e_version\t: 0x%08x\n", Ehdr->e_version);
-	XAieLib_print("e_entry\t\t: 0x%08x\n", Ehdr->e_entry);
-	XAieLib_print("e_phoff\t\t: 0x%08x\n", Ehdr->e_phoff);
-	XAieLib_print("e_shoff\t\t: 0x%08x\n", Ehdr->e_shoff);
-	XAieLib_print("e_flags\t\t: 0x%08x\n", Ehdr->e_flags);
-	XAieLib_print("e_ehsize\t: 0x%08x\n", Ehdr->e_ehsize);
-	XAieLib_print("e_phentsize\t: 0x%08x\n", Ehdr->e_phentsize);
-	XAieLib_print("e_phnum\t\t: 0x%08x\n", Ehdr->e_phnum);
-	XAieLib_print("e_shentsize\t: 0x%08x\n", Ehdr->e_shentsize);
-	XAieLib_print("e_shnum\t\t: 0x%08x\n", Ehdr->e_shnum);
-	XAieLib_print("e_shstrndx\t: 0x%08x\n", Ehdr->e_shstrndx);
+	XAIE_DBG("**** ELF HEADER ****\n");
+	XAIE_DBG("e_type\t\t: 0x%08x\n", Ehdr->e_type);
+	XAIE_DBG("e_machine\t: 0x%08x\n", Ehdr->e_machine);
+	XAIE_DBG("e_version\t: 0x%08x\n", Ehdr->e_version);
+	XAIE_DBG("e_entry\t\t: 0x%08x\n", Ehdr->e_entry);
+	XAIE_DBG("e_phoff\t\t: 0x%08x\n", Ehdr->e_phoff);
+	XAIE_DBG("e_shoff\t\t: 0x%08x\n", Ehdr->e_shoff);
+	XAIE_DBG("e_flags\t\t: 0x%08x\n", Ehdr->e_flags);
+	XAIE_DBG("e_ehsize\t: 0x%08x\n", Ehdr->e_ehsize);
+	XAIE_DBG("e_phentsize\t: 0x%08x\n", Ehdr->e_phentsize);
+	XAIE_DBG("e_phnum\t\t: 0x%08x\n", Ehdr->e_phnum);
+	XAIE_DBG("e_shentsize\t: 0x%08x\n", Ehdr->e_shentsize);
+	XAIE_DBG("e_shnum\t\t: 0x%08x\n", Ehdr->e_shnum);
+	XAIE_DBG("e_shstrndx\t: 0x%08x\n", Ehdr->e_shstrndx);
 }
 
 /*****************************************************************************/
@@ -76,15 +76,15 @@ static void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr)
 *******************************************************************************/
 static void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr)
 {
-	XAieLib_print("**** PROGRAM HEADER ****\n");
-	XAieLib_print("p_type\t\t: 0x%08x\n", Phdr->p_type);
-	XAieLib_print("p_offset\t: 0x%08x\n", Phdr->p_offset);
-	XAieLib_print("p_vaddr\t\t: 0x%08x\n", Phdr->p_vaddr);
-	XAieLib_print("p_paddr\t\t: 0x%08x\n", Phdr->p_paddr);
-	XAieLib_print("p_filesz\t: 0x%08x\n", Phdr->p_filesz);
-	XAieLib_print("p_memsz\t\t: 0x%08x\n", Phdr->p_memsz);
-	XAieLib_print("p_flags\t\t: 0x%08x\n", Phdr->p_flags);
-	XAieLib_print("p_align\t\t: 0x%08x\n", Phdr->p_align);
+	XAIE_DBG("**** PROGRAM HEADER ****\n");
+	XAIE_DBG("p_type\t\t: 0x%08x\n", Phdr->p_type);
+	XAIE_DBG("p_offset\t: 0x%08x\n", Phdr->p_offset);
+	XAIE_DBG("p_vaddr\t\t: 0x%08x\n", Phdr->p_vaddr);
+	XAIE_DBG("p_paddr\t\t: 0x%08x\n", Phdr->p_paddr);
+	XAIE_DBG("p_filesz\t: 0x%08x\n", Phdr->p_filesz);
+	XAIE_DBG("p_memsz\t\t: 0x%08x\n", Phdr->p_memsz);
+	XAIE_DBG("p_flags\t\t: 0x%08x\n", Phdr->p_flags);
+	XAIE_DBG("p_align\t\t: 0x%08x\n", Phdr->p_align);
 }
 
 /*****************************************************************************/
@@ -161,19 +161,19 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 		break;
 	default:
 		/* Invalid CardDir */
-		XAieLib_print("Error: Invalid address - 0x%x\n", Addr);
+		XAIE_ERROR("Invalid address - 0x%x\n", Addr);
 		return XAIE_ERR;
 	}
 
 	/* Return errors if modified rows and cols are invalid */
 	if(Loc.Row >= DevInst->NumRows || Loc.Col >= DevInst->NumCols) {
-		XAieLib_print("Error: Target row/col out of range\n");
+		XAIE_ERROR("Target row/col out of range\n");
 		return XAIE_ERR;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAieLib_print("Error: Invalid tile type for address\n");
+		XAIE_ERROR("Invalid tile type for address\n");
 		return XAIE_ERR;
 	}
 
@@ -217,7 +217,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Write to Program Memory */
 	if(Phdr->p_paddr < CoreMod->ProgMemSize) {
 		if((Phdr->p_paddr + Phdr->p_memsz) > CoreMod->ProgMemSize) {
-			XAieLib_print("Error: Overflow of program memory\n");
+			XAIE_ERROR("Overflow of program memory\n");
 			return XAIE_INVALID_ELF;
 		}
 
@@ -243,7 +243,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			(Phdr->p_paddr < CoreMod->DataMemAddr)) ||
 			((Phdr->p_paddr + Phdr->p_memsz) >
 			 (CoreMod->DataMemAddr + CoreMod->DataMemSize * 4U))) {
-		XAieLib_print("Error: Invalid section starting at 0x%x\n",
+		XAIE_ERROR("Invalid section starting at 0x%x\n",
 				Phdr->p_paddr);
 		return XAIE_INVALID_ELF;
 	}
@@ -255,8 +255,9 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	while(SectionSize > 0U) {
 		RC = _XAie_GetTargetTileLoc(DevInst, Loc, SectionAddr, &TgtLoc);
 		if(RC != XAIE_OK) {
-			XAieLib_print("Error: Failed to get target location "\
-					"for p_paddr 0x%x\n", SectionAddr);
+			XAIE_ERROR("Failed to get target "\
+					"location for p_paddr 0x%x\n",
+					SectionAddr);
 			return RC;
 		}
 
@@ -287,8 +288,9 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 		RC = _XAie_GetTargetTileLoc(DevInst, Loc, SectionAddr, &TgtLoc);
 		if(RC != XAIE_OK) {
-			XAieLib_print("Error: Failed to get target location "\
-					"for p_paddr 0x%x\n", SectionAddr);
+			XAIE_ERROR("Failed to get target "
+					"location for p_paddr 0x%x\n",
+					SectionAddr);
 			return RC;
 		}
 
@@ -342,13 +344,13 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) || (ElfMem == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid arguments\n");
+		XAIE_ERROR("Invalid arguments\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAieLib_print("Error: Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -404,7 +406,7 @@ static u32 XAieSim_GetStackRange(const char *MapPtr,
 
 	Fd = fopen(MapPtr, "r");
 	if(Fd == NULL) {
-		XAieLib_print("ERROR: Invalid Map file\n");
+		XAIE_ERROR("Invalid Map file\n");
 		return XAIESIM_FAILURE;
 	}
 
@@ -455,13 +457,13 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAieLib_print("Error: Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -480,10 +482,10 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	strcpy(MapPath, ElfPtr);
 	strcat(MapPath, ".map");
 	Status = XAieSim_GetStackRange(MapPath, &StackSz);
-	XAieLib_print("Stack start:%08x, end:%08x\n", StackSz.start,
+	XAIE_DBG("Stack start:%08x, end:%08x\n", StackSz.start,
 			StackSz.end);
 	if(Status != XAIESIM_SUCCESS) {
-		XAieLib_print("Error: Stack range definition failed\n");
+		XAIE_ERROR("Stack range definition failed\n");
 		return Status;
 	}
 
@@ -499,31 +501,31 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 #endif
 	Fd = fopen(ElfPtr, "r");
 	if(Fd == XAIE_NULL) {
-		XAieLib_print("Error: Unable to open elf file\n");
+		XAIE_ERROR("Unable to open elf file\n");
 		return XAIE_INVALID_ELF;
 	}
 
 	/* Get the file size of the elf */
 	Ret = fseek(Fd, 0L, SEEK_END);
 	if(Ret != 0U) {
-		XAieLib_print("Error: Failed to get end of file\n");
+		XAIE_ERROR("Failed to get end of file\n");
 		return XAIE_INVALID_ELF;
 	}
 
 	ElfSz = ftell(Fd);
 	rewind(Fd);
-	XAieLib_print("LOG: Elf size is %ld bytes\n", ElfSz);
+	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
 
 	/* Read entire elf file into memory */
 	ElfMem = (unsigned char*) malloc(ElfSz);
 	if(ElfMem == NULL) {
-		XAieLib_print("Error: Memory allocation failed\n");
+		XAIE_ERROR("Memory allocation failed\n");
 		return XAIE_ERR;
 	}
 
 	Ret = fread((void*)ElfMem, ElfSz, 1U, Fd);
 	if(Ret == 0U) {
-		XAieLib_print("Error: Failed to read Elf into memory\n");
+		XAIE_ERROR("Failed to read Elf into memory\n");
 		return XAIE_ERR;
 	}
 

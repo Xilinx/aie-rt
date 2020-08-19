@@ -39,7 +39,7 @@ static XAie_NpiMod *_XAie_NpiGetMod(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: failed to get NPI module, invalid dev instance.\n");
+		XAIE_ERROR("failed to get NPI module, invalid dev instance.\n");
 		return NULL;
 	}
 
@@ -47,7 +47,7 @@ static XAie_NpiMod *_XAie_NpiGetMod(XAie_DevInst *DevInst)
 		return &_XAieNpiMod;
 	}
 
-	XAieLib_print("Error: failed to get NPI module, invalid dev version.\n");
+	XAIE_ERROR("failed to get NPI module, invalid dev version.\n");
 	return NULL;
 }
 

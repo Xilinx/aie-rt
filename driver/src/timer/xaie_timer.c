@@ -72,20 +72,20 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* check for module and tiletype combination */
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -139,20 +139,20 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* check for module and tiletype combination */
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -208,20 +208,20 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* check for module and tiletype combination */
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -237,7 +237,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* check if the event passed as input is corresponding to the module */
 	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
-		XAieLib_print("Error: Invalid Event id\n");
+		XAIE_ERROR("Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -249,7 +249,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/*checking for valid true event number */
 	if(IntEvent == XAIE_EVENT_INVALID) {
-		XAieLib_print("Error: Invalid Event id\n");
+		XAIE_ERROR("Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -295,20 +295,20 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) || (TimerVal == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance or TimerVal\n");
+		XAIE_ERROR("Invalid Device Instance or TimerVal\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* check for module and tiletype combination */
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
         if(RC != XAIE_OK) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
                 return XAIE_INVALID_ARGS;
 	}
 
@@ -366,25 +366,25 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* check for module and tiletype combination */
 	RC = _XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Invalid Module\n");
+		XAIE_ERROR("Invalid Module\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(CycleCnt > XAIE_WAIT_CYCLE_MAX_VAL) {
-		XAieLib_print("Error: CycleCnt above max value\n");
+		XAIE_ERROR("CycleCnt above max value\n");
 		return XAIE_INVALID_ARGS;
 	}
 

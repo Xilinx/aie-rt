@@ -237,17 +237,17 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
-		XAieLib_print("Error: Clock gating not supported\n");
+		XAIE_ERROR("Clock gating not supported\n");
 		return XAIE_ERR;
 	}
 
 	if(NumTiles > (DevInst->NumRows * DevInst->NumCols)) {
-		XAieLib_print("Error: Invalid NumTiles\n");
+		XAIE_ERROR("Invalid NumTiles\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -264,7 +264,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 	for(u32 j = 0; j < NumTiles; j++) {
 		if(Loc[j].Row >= DevInst->NumRows ||
 			Loc[j].Col >= DevInst->NumCols) {
-			XAieLib_print("Error: Invalid Loc Col:%d Row:%d\n", Loc[j].Col, Loc[j].Row);
+			XAIE_ERROR("Invalid Loc Col:%d Row:%d\n", Loc[j].Col, Loc[j].Row);
 			return XAIE_INVALID_ARGS;
 		}
 	}
@@ -340,7 +340,7 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_DISABLE;
 	}
 

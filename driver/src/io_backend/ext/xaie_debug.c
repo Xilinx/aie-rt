@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "xaie_debug.h"
+#include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaie_npi.h"
 
@@ -93,7 +94,7 @@ AieRC XAie_DebugIO_Init(XAie_DevInst *DevInst)
 
 	IOInst = (XAie_DebugIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
-		XAieLib_print("Error: Memory allocation failed\n");
+		XAIE_ERROR("Memory allocation failed\n");
 		return XAIE_ERR;
 	}
 
@@ -315,7 +316,7 @@ AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			break;
 		}
 		default:
-			XAieLib_print("Error: Backend doesn't support Op %u.\n", Op);
+			XAIE_ERROR("Backend doesn't support Op %u.\n", Op);
 			RC = XAIE_FEATURE_NOT_SUPPORTED;
 			break;
 	}
@@ -344,13 +345,13 @@ XAie_MemInst* XAie_DebugMemAllocate(XAie_DevInst *DevInst, u64 Size,
 
 	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
 	if(MemInst == NULL) {
-		XAieLib_print("Error: memory allocation failed\n");
+		XAIE_ERROR("memory allocation failed\n");
 		return NULL;
 	}
 
 	MemInst->VAddr = (void *)malloc(Size);
 	if(MemInst->VAddr == NULL) {
-		XAieLib_print("Error: malloc failed\n");
+		XAIE_ERROR("malloc failed\n");
 		free(MemInst);
 		return NULL;
 	}
@@ -358,7 +359,7 @@ XAie_MemInst* XAie_DebugMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
 
-	XAieLib_print("INFO: Cache attribute is ignored\n");
+	XAIE_DBG("Cache attribute is ignored\n");
 
 	return MemInst;
 }
@@ -397,7 +398,7 @@ AieRC XAie_DebugMemFree(XAie_MemInst *MemInst)
 *******************************************************************************/
 AieRC XAie_DebugMemSyncForCPU(XAie_MemInst *MemInst)
 {
-	XAieLib_print("INFO: Sync for CPU is no-op in debug mode\n");
+	XAIE_DBG("Sync for CPU is no-op in debug mode\n");
 
 	return XAIE_OK;
 }
@@ -416,7 +417,7 @@ AieRC XAie_DebugMemSyncForCPU(XAie_MemInst *MemInst)
 *******************************************************************************/
 AieRC XAie_DebugMemSyncForDev(XAie_MemInst *MemInst)
 {
-	XAieLib_print("INFO: Sync for Dev is no-op in debug mode\n");
+	XAIE_DBG("Sync for Dev is no-op in debug mode\n");
 
 	return XAIE_OK;
 }

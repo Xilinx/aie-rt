@@ -39,6 +39,7 @@
 
 #endif
 
+#include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaie_metal.h"
 #include "xaie_npi.h"
@@ -141,14 +142,14 @@ AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 
 	ret = metal_init(&init_param);
 	if(ret) {
-		XAieLib_print("failed to metal_init %d\n", ret);
+		XAIE_ERROR("failed to metal_init %d\n", ret);
 		return XAIE_ERR;
 	}
 
 	MetalIOInst = (XAie_MetalIO *)metal_allocate_memory(
 			sizeof(*MetalIOInst));
 	if(MetalIOInst == NULL) {
-		XAieLib_print("Error: Memory allocation failed\n");
+		XAIE_ERROR("Memory allocation failed\n");
 		goto finish;
 	}
 
@@ -156,13 +157,13 @@ AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 	ret = metal_device_open("platform", "xilinx-aiengine",
 			&MetalIOInst->device);
 	if(ret) {
-		XAieLib_print("failed to metal_device_open\n");
+		XAIE_ERROR("failed to metal_device_open\n");
 		goto free_mem;
 	}
 
 	MetalIOInst->io = metal_device_io_region(MetalIOInst->device, 0);
 	if(!MetalIOInst->io) {
-		XAieLib_print("failed to metal_device_io_region\n");
+		XAIE_ERROR("failed to metal_device_io_region\n");
 		goto close;
 	}
 
@@ -431,7 +432,7 @@ AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	}
 
 	if (RC == XAIE_FEATURE_NOT_SUPPORTED) {
-		XAieLib_print("Error: Backend doesn't support Op %u.\n", Op);
+		XAIE_ERROR("Backend doesn't support Op %u.\n", Op);
 	}
 	return RC;
 }
@@ -467,13 +468,13 @@ XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 
 	MetalMemInst = metal_allocate_memory(sizeof(*MetalMemInst));
 	if(MetalMemInst == NULL) {
-		XAieLib_print("Error: memory allocation failed\n");
+		XAIE_ERROR("memory allocation failed\n");
 		goto err_out;
 	}
 
 	MemInst = metal_allocate_memory(sizeof(*MemInst));
 	if(MemInst == NULL) {
-		XAieLib_print("Error: memory allocation failed\n");
+		XAIE_ERROR("memory allocation failed\n");
 		goto free_metal_mem_inst;
 	}
 
@@ -482,14 +483,14 @@ XAie_MemInst* XAie_MetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 
 	ret = metal_shmem_open(shm_name, Size, Cache, &MetalMemInst->shm);
 	if(ret) {
-		XAieLib_print("Error: failed to open shared memory region\n");
+		XAIE_ERROR("failed to open shared memory region\n");
 		goto free_all_mem;
 	}
 
 	MetalMemInst->sg = metal_shm_attach(MetalMemInst->shm,
 			MetalIOInst->device, METAL_SHM_DIR_DEV_RW);
 	if(MetalMemInst->sg == NULL) {
-		XAieLib_print("Error: Failed to attach shmem to device\n");
+		XAIE_ERROR("Failed to attach shmem to device\n");
 		goto close_shmem;
 	}
 
@@ -562,13 +563,13 @@ AieRC XAie_MetalMemSyncForCPU(XAie_MemInst *MemInst)
 		MemInst->BackendHandle;
 
 	if(MetalMemInst->shm == NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
 	ret = metal_shm_sync_for_cpu(MetalMemInst->shm, METAL_SHM_DIR_DEV_RW);
 	if(ret) {
-		XAieLib_print("Error: Failed to sync for cpu\n");
+		XAIE_ERROR("Failed to sync for cpu\n");
 		return XAIE_ERR;
 	}
 
@@ -594,14 +595,14 @@ AieRC XAie_MetalMemSyncForDev(XAie_MemInst *MemInst)
 		MemInst->BackendHandle;
 
 	if(MetalMemInst->shm == NULL) {
-		XAieLib_print("Error: Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance\n");
 		return XAIE_ERR;
 	}
 
 	ret = metal_shm_sync_for_device(MetalMemInst->shm,
 			MetalMemInst->IOInst->device, METAL_SHM_DIR_DEV_RW);
 	if(ret) {
-		XAieLib_print("Error: Failed to sync for device\n");
+		XAIE_ERROR("Failed to sync for device\n");
 		return XAIE_ERR;
 	}
 
@@ -619,9 +620,8 @@ AieRC XAie_MetalIO_Finish(void *IOInst)
 AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 {
 	/* no-op */
-	XAieLib_print("WARNING: Driver is not compiled with Libmetal backend "
-			"(__AIEMETAL__). IO Operations will result in no-ops."
-			"\n");
+	XAIE_ERROR("Driver is not compiled with Libmetal backend "
+			"(__AIEMETAL__)\n");
 	return XAIE_INVALID_BACKEND;
 }
 

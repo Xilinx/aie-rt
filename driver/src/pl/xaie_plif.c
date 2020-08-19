@@ -70,14 +70,14 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -89,7 +89,7 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 */
 	if((PortNum > PlIfMod->MaxByPassPortNum) || (PortNum == 3U) ||
 			(PortNum == 7U)) {
-		XAieLib_print("Error: Invalid Port Number\n");
+		XAIE_ERROR("Invalid Port Number\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -137,20 +137,20 @@ static AieRC _XAie_PlIfDownSzrPortEnableReg(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	if((PortNum > PlIfMod->NumDownSzrPorts)) {
-		XAieLib_print("Error: Invalid Port Number\n");
+		XAIE_ERROR("Invalid Port Number\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -201,21 +201,21 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* Check Width for validity */
 	if((Width != PLIF_WIDTH_32) && (Width != PLIF_WIDTH_64) &&
 			(Width != PLIF_WIDTH_128)) {
-		XAieLib_print("Error: Invalid Width\n");
+		XAIE_ERROR("Invalid Width\n");
 		return XAIE_INVALID_PLIF_WIDTH;
 	}
 
@@ -223,7 +223,7 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Setup field mask and field value for aie to pl interface */
 	if(PortNum >= PlIfMod->NumDownSzrPorts) {
-		XAieLib_print("Error: Invalid stream port\n");
+		XAIE_ERROR("Invalid stream port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -301,21 +301,21 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	/* Check Width for validity */
 	if((Width != PLIF_WIDTH_32) && (Width != PLIF_WIDTH_64) &&
 			(Width != PLIF_WIDTH_128)) {
-		XAieLib_print("Error: Invalid Width\n");
+		XAIE_ERROR("Invalid Width\n");
 		return XAIE_INVALID_PLIF_WIDTH;
 	}
 
@@ -323,7 +323,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Setup field mask and field value for pl to aie interface */
 	if(PortNum >= PlIfMod->NumDownSzrPorts) {
-		XAieLib_print("Error: Invalid stream port\n");
+		XAIE_ERROR("Invalid stream port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -603,13 +603,13 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -617,7 +617,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_6) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-		XAieLib_print("Error: Invalid port number for Mux\n");
+		XAIE_ERROR("Invalid port number for Mux\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -671,13 +671,13 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -685,7 +685,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_4) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_5)) {
-		XAieLib_print("Error: Invalid port number\n");
+		XAIE_ERROR("Invalid port number\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -726,7 +726,7 @@ AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	if((PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-		XAieLib_print("Error: Invalid port number\n");
+		XAIE_ERROR("Invalid port number\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 

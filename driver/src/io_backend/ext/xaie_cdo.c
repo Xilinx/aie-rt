@@ -35,6 +35,7 @@
 #endif
 
 #include "xaie_cdo.h"
+#include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaie_npi.h"
 
@@ -105,7 +106,7 @@ AieRC XAie_CdoIO_Init(XAie_DevInst *DevInst)
 
 	IOInst = (XAie_CdoIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
-		XAieLib_print("Error: Memory allocation failed\n");
+		XAIE_ERROR("Memory allocation failed\n");
 		return XAIE_ERR;
 	}
 
@@ -323,7 +324,7 @@ AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			break;
 		}
 		default:
-			XAieLib_print("Error: Backend doesn't support Op %u.\n", Op);
+			XAIE_ERROR("Backend doesn't support Op %u.\n", Op);
 			RC = XAIE_FEATURE_NOT_SUPPORTED;
 			break;
 	}
@@ -342,9 +343,8 @@ AieRC XAie_CdoIO_Finish(void *IOInst)
 AieRC XAie_CdoIO_Init(XAie_DevInst *DevInst)
 {
 	/* no-op */
-	XAieLib_print("WARNING: Driver is not compiled with cdo generation "
-			"backend (__AIECDO__).IO Operations will result in "
-			"no-ops\n");
+	XAIE_ERROR("Driver is not compiled with cdo generation "
+			"backend (__AIECDO__)\n");
 	return XAIE_INVALID_BACKEND;
 }
 

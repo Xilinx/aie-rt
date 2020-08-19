@@ -75,7 +75,7 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 	PortPtr = &StrmMod->SlvConfig[PortType];
 
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		XAieLib_print("Error: Invalid Slave Port\n");
+		XAIE_ERROR("Invalid Slave Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -124,7 +124,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 	PortPtr = &StrmMod->MstrConfig[PortType];
 
 	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		XAieLib_print("Error: Invalid Stream Port\n");
+		XAIE_ERROR("Invalid Stream Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -185,18 +185,18 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if((Slave >= SS_PORT_TYPE_MAX) || (Master >= SS_PORT_TYPE_MAX)) {
-		XAieLib_print("Error: Invalid Stream Switch Ports\n");
+		XAIE_ERROR("Invalid Stream Switch Ports\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -205,7 +205,7 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 
 	RC = _XAie_GetSlaveIdx(StrmMod, Slave, SlvPortNum, &SlaveIdx);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Unable to compute Slave Index\n");
+		XAIE_ERROR("Unable to compute Slave Index\n");
 		return RC;
 	}
 
@@ -213,7 +213,7 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 	RC = _StrmConfigMstr(StrmMod, Master, MstrPortNum, Enable, XAIE_DISABLE,
 			SlaveIdx, &MstrVal, &MstrOff);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Master config error\n");
+		XAIE_ERROR("Master config error\n");
 		return RC;
 	}
 
@@ -221,7 +221,7 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 	RC = _XAie_StrmConfigSlv(StrmMod, Slave, SlvPortNum, Enable,
 			XAIE_DISABLE, &SlvVal, &SlvOff);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Slave config error\n");
+		XAIE_ERROR("Slave config error\n");
 		return RC;
 	}
 
@@ -319,18 +319,18 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if((Slave >= SS_PORT_TYPE_MAX)) {
-		XAieLib_print("Error: Invalid Stream Switch Ports\n");
+		XAIE_ERROR("Invalid Stream Switch Ports\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -341,7 +341,7 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RC = _XAie_StrmConfigSlv(StrmMod, Slave, SlvPortNum, EnPkt,
 			Enable, &RegVal, &RegOff);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Slave config error\n");
+		XAIE_ERROR("Slave config error\n");
 		return RC;
 	}
 
@@ -437,23 +437,23 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if((Arbitor > XAIE_SS_ARBITOR_MAX) || (MSelEn > XAIE_SS_MSELEN_MAX)) {
-		XAieLib_print("Error: Invalid Arbitor or MSel Enable\n");
+		XAIE_ERROR("Invalid Arbitor or MSel Enable\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if((Master >= SS_PORT_TYPE_MAX)) {
-		XAieLib_print("Error: Invalid Stream Switch Ports\n");
+		XAIE_ERROR("Invalid Stream Switch Ports\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -474,7 +474,7 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 	RC = _StrmConfigMstr(StrmMod, Master, MstrPortNum, Enable, PktEn,
 			Config, &RegVal, &RegOff);
 	if(RC != XAIE_OK) {
-		XAieLib_print("Error: Master config error\n");
+		XAIE_ERROR("Master config error\n");
 		return RC;
 	}
 
@@ -573,20 +573,20 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAieLib_print("Error: Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if((Arbitor > XAIE_SS_ARBITOR_MAX) || (MSel > XAIE_SS_MSEL_MAX) ||
 			(Mask & ~XAIE_SS_MASK) ||
 			(Pkt.PktId > XAIE_PACKET_ID_MAX)) {
-		XAieLib_print("Error: Invalid Arbitor, MSel, PktId or Mask\n");
+		XAIE_ERROR("Invalid Arbitor, MSel, PktId or Mask\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAieLib_print("Error: Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -594,7 +594,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	StrmMod = DevInst->DevProp.DevMod[TileType].StrmSw;
 	if((Slave >= SS_PORT_TYPE_MAX) || (SlotNum >= StrmMod->NumSlaveSlots) ||
 			(SlvPortNum >= StrmMod->SlvConfig[Slave].NumPorts)) {
-		XAieLib_print("Error: Invalid Slave port and slot arguments\n");
+		XAIE_ERROR("Invalid Slave port and slot arguments\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
