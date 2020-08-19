@@ -35,6 +35,7 @@
 
 /************************** Constant Definitions *****************************/
 #define XAIE_DMA_32BIT_TXFER_LEN			2U
+#define XAIE_DMA_MAX_QUEUE_SIZE				4U
 
 #define XAIE_SHIM_BLEN_SHIFT				0x3
 #define XAIE_DMA_CHCTRL_NUM_WORDS			2U
@@ -1273,6 +1274,41 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	}
 
 	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API return the maximum queue size of the dma given a tile location.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	QueueSize: Pointer to store the queue size.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 *QueueSize)
+{
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) || (QueueSize == NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	*QueueSize = XAIE_DMA_MAX_QUEUE_SIZE;
+	return XAIE_OK;
 }
 
 /** @} */
