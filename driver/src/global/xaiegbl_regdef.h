@@ -28,6 +28,7 @@
 * 1.8  Dishita 03/24/2020  Add data structure for performance counter
 * 1.9  Dishita 04/16/2020  Fix compiler warnings related to performance counter
 * 2.0  Dishita 04/20/2020  Add data structure for timer
+* 2.1   Tejus   05/26/2020  Restructure and optimize core module.
 * </pre>
 *
 ******************************************************************************/
@@ -117,16 +118,13 @@ typedef struct {
  * The typedef contains the attributes of Core Modules
  */
 typedef struct {
+	u8 IsCheckerBoard;
 	u32 ProgMemAddr;
-	u32 CoreMemSize;
-	u32 CoreEastAddrStart;
-	u32 CoreEastAddrEnd;
-	u32 CoreWestAddrStart;
-	u32 CoreWestAddrEnd;
-	u32 CoreSouthAddrStart;
-	u32 CoreSouthAddrEnd;
-	u32 CoreNorthAddrStart;
-	u32 CoreNorthAddrEnd;
+	u32 ProgMemSize;
+	u32 ProgMemHostOffset;
+	u32 DataMemAddr;
+	u32 DataMemSize;
+	u32 DataMemShift;
 	const XAie_RegCoreSts *CoreSts;
 	const XAie_RegCoreCtrl *CoreCtrl;
 } XAie_CoreMod;

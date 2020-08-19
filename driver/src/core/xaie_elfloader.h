@@ -18,6 +18,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   03/20/2020  Remove range apis
+* 1.2   Tejus   05/26/2020  Add API to load elf from memory.
 * </pre>
 *
 ******************************************************************************/
@@ -43,8 +44,10 @@ typedef struct {
 	u32 end;	/**< Stack end address */
 } XAieSim_StackSz;
 /************************** Function Prototypes  *****************************/
-AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *ElfPtr,
-		u8 LoadSym);
 
+AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
+		u8 LoadSym);
+AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const unsigned char* ElfMem, const u64 ElfSz);
 #endif		/* end of protection macro */
 /** @} */
