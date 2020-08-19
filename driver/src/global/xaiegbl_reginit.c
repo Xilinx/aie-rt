@@ -71,7 +71,7 @@
 /*
  * Global instance for Core module Core_Control register.
  */
-const static XAie_RegCoreCtrl AieCoreCtrlReg =
+static const XAie_RegCoreCtrl AieCoreCtrlReg =
 {
 	XAIEGBL_CORE_CORECTRL,
 	{XAIEGBL_CORE_CORECTRL_ENA_LSB, XAIEGBL_CORE_CORECTRL_ENA_MASK},
@@ -81,7 +81,7 @@ const static XAie_RegCoreCtrl AieCoreCtrlReg =
 /*
  * Global instance for Core module Core_Status register.
  */
-const static XAie_RegCoreSts AieCoreStsReg =
+static const XAie_RegCoreSts AieCoreStsReg =
 {
 	XAIEGBL_CORE_CORESTA,
 	{XAIEGBL_CORE_CORESTA_COREDON_LSB, XAIEGBL_CORE_CORESTA_COREDON_MASK},
@@ -93,7 +93,7 @@ const static XAie_RegCoreSts AieCoreStsReg =
  * Array of all Tile Stream Switch Master Config registers
  * The data structure contains number of ports and the register offsets
  */
-const static XAie_StrmPort AieTileStrmMstr[SS_PORT_TYPE_MAX] =
+static const XAie_StrmPort AieTileStrmMstr[SS_PORT_TYPE_MAX] =
 {
 	{	/* Core */
 		.NumPorts = 2,
@@ -137,7 +137,7 @@ const static XAie_StrmPort AieTileStrmMstr[SS_PORT_TYPE_MAX] =
  * Array of all Tile Stream Switch Slave Config registers
  * The data structure contains number of ports and the register offsets
  */
-const static XAie_StrmPort AieTileStrmSlv[SS_PORT_TYPE_MAX] =
+static const XAie_StrmPort AieTileStrmSlv[SS_PORT_TYPE_MAX] =
 {
 	{	/* Core */
 		.NumPorts = 2,
@@ -181,7 +181,7 @@ const static XAie_StrmPort AieTileStrmSlv[SS_PORT_TYPE_MAX] =
  * Array of all Shim NOC/PL Stream Switch Master Config registers
  * The data structure contains number of ports and the register offsets
  */
-const static XAie_StrmPort AieShimStrmMstr[SS_PORT_TYPE_MAX] =
+static const XAie_StrmPort AieShimStrmMstr[SS_PORT_TYPE_MAX] =
 {
 	{	/* Core */
 		.NumPorts = 0,
@@ -225,7 +225,7 @@ const static XAie_StrmPort AieShimStrmMstr[SS_PORT_TYPE_MAX] =
  * Array of all Shim NOC/PL Stream Switch Slave Config registers
  * The data structure contains number of ports and the register offsets
  */
-const static XAie_StrmPort AieShimStrmSlv[SS_PORT_TYPE_MAX] =
+static const XAie_StrmPort AieShimStrmSlv[SS_PORT_TYPE_MAX] =
 {
 	{	/* Core */
 		.NumPorts = 0,
@@ -269,7 +269,7 @@ const static XAie_StrmPort AieShimStrmSlv[SS_PORT_TYPE_MAX] =
  * Array of all Shim NOC/PL Stream Switch Slave Slot Config registers
  * The data structure contains number of ports and the register base address.
  */
-const static XAie_StrmPort AieShimStrmSlaveSlot[SS_PORT_TYPE_MAX] =
+static const XAie_StrmPort AieShimStrmSlaveSlot[SS_PORT_TYPE_MAX] =
 {
 	{	/* Core */
 		.NumPorts = 0,
@@ -313,7 +313,7 @@ const static XAie_StrmPort AieShimStrmSlaveSlot[SS_PORT_TYPE_MAX] =
  * Data structure to capture stream switch slave slot register base address for
  * AIE Tiles
  */
-const static XAie_StrmPort AieTileStrmSlaveSlot[SS_PORT_TYPE_MAX] =
+static const XAie_StrmPort AieTileStrmSlaveSlot[SS_PORT_TYPE_MAX] =
 {
 	{	/* Core */
 		.NumPorts = 2,
@@ -356,7 +356,7 @@ const static XAie_StrmPort AieTileStrmSlaveSlot[SS_PORT_TYPE_MAX] =
 /*
  * Data structure to capture all stream configs for XAIEGBL_TILE_TYPE_AIETILE
  */
-const static XAie_StrmMod AieTileStrmSw =
+static const XAie_StrmMod AieTileStrmSw =
 {
 	.SlvConfigBaseAddr = XAIEGBL_CORE_STRSWISLVMECORE0CFG,
 	.PortOffset = 0x4,
@@ -382,7 +382,7 @@ const static XAie_StrmMod AieTileStrmSw =
 /*
  * Data structure to capture all stream configs for XAIEGBL_TILE_TYPE_SHIMNOC/PL
  */
-const static XAie_StrmMod AieShimStrmSw =
+static const XAie_StrmMod AieShimStrmSw =
 {
 	.SlvConfigBaseAddr = XAIEGBL_PL_STRSWISLVTILCTRCFG,
 	.PortOffset = 0x4,
@@ -406,7 +406,7 @@ const static XAie_StrmMod AieShimStrmSw =
 };
 
 /* Register field attributes for PL interface down sizer for 32 and 64 bits */
-const static XAie_RegFldAttr AieDownSzr32_64Bit[] =
+static const XAie_RegFldAttr AieDownSzr32_64Bit[] =
 {
 	{XAIEGBL_PL_PLINTDOWCFG_SOU0_LSB, XAIEGBL_PL_PLINTDOWCFG_SOU0_MASK},
 	{XAIEGBL_PL_PLINTDOWCFG_SOU1_LSB, XAIEGBL_PL_PLINTDOWCFG_SOU1_MASK},
@@ -419,7 +419,7 @@ const static XAie_RegFldAttr AieDownSzr32_64Bit[] =
 };
 
 /* Register field attributes for PL interface down sizer for 128 bits */
-const static XAie_RegFldAttr AieDownSzr128Bit[] =
+static const XAie_RegFldAttr AieDownSzr128Bit[] =
 {
 	{XAIEGBL_PL_PLINTDOWCFG_SOU0SOU1128COM_LSB, XAIEGBL_PL_PLINTDOWCFG_SOU0SOU1128COM_MASK},
 	{XAIEGBL_PL_PLINTDOWCFG_SOU2SOU3128COM_LSB, XAIEGBL_PL_PLINTDOWCFG_SOU2SOU3128COM_MASK},
@@ -428,7 +428,7 @@ const static XAie_RegFldAttr AieDownSzr128Bit[] =
 };
 
 /* Register field attributes for PL interface up sizer */
-const static XAie_RegFldAttr AieUpSzr32_64Bit[] =
+static const XAie_RegFldAttr AieUpSzr32_64Bit[] =
 {
 	{XAIEGBL_PL_PLINTUPSCFG_SOU0_LSB, XAIEGBL_PL_PLINTUPSCFG_SOU0_MASK},
 	{XAIEGBL_PL_PLINTUPSCFG_SOU1_LSB, XAIEGBL_PL_PLINTUPSCFG_SOU1_MASK},
@@ -439,7 +439,7 @@ const static XAie_RegFldAttr AieUpSzr32_64Bit[] =
 };
 
 /* Register field attributes for PL interface up sizer for 128 bits */
-const static XAie_RegFldAttr AieUpSzr128Bit[] =
+static const XAie_RegFldAttr AieUpSzr128Bit[] =
 {
 	{XAIEGBL_PL_PLINTUPSCFG_SOU0SOU1128COM_LSB, XAIEGBL_PL_PLINTUPSCFG_SOU0SOU1128COM_MASK},
 	{XAIEGBL_PL_PLINTUPSCFG_SOU2SOU3128COM_LSB, XAIEGBL_PL_PLINTUPSCFG_SOU2SOU3128COM_MASK},
@@ -447,7 +447,7 @@ const static XAie_RegFldAttr AieUpSzr128Bit[] =
 };
 
 /* Register field attributes for PL interface down sizer bypass */
-const static XAie_RegFldAttr AieDownSzrByPass[] =
+static const XAie_RegFldAttr AieDownSzrByPass[] =
 {
 	{XAIEGBL_PL_PLINTDOWBYPASS_SOU0_LSB, XAIEGBL_PL_PLINTDOWBYPASS_SOU0_MASK},
 	{XAIEGBL_PL_PLINTDOWBYPASS_SOU1_LSB, XAIEGBL_PL_PLINTDOWBYPASS_SOU1_MASK},
@@ -458,7 +458,7 @@ const static XAie_RegFldAttr AieDownSzrByPass[] =
 };
 
 /* Register field attributes for PL interface down sizer enable */
-const static XAie_RegFldAttr AieDownSzrEnable[] =
+static const XAie_RegFldAttr AieDownSzrEnable[] =
 {
 	{XAIEGBL_PL_PLINTDOWENA_SOU0_LSB, XAIEGBL_PL_PLINTDOWENA_SOU0_MASK},
 	{XAIEGBL_PL_PLINTDOWENA_SOU1_LSB, XAIEGBL_PL_PLINTDOWENA_SOU1_MASK},
@@ -471,7 +471,7 @@ const static XAie_RegFldAttr AieDownSzrEnable[] =
 };
 
 /* Register field attributes for SHIMNOC Mux configuration */
-const static XAie_RegFldAttr AieShimMuxConfig[] =
+static const XAie_RegFldAttr AieShimMuxConfig[] =
 {
 	{XAIEGBL_NOC_MUXCFG_SOU2_LSB, XAIEGBL_NOC_MUXCFG_SOU2_MASK},
 	{XAIEGBL_NOC_MUXCFG_SOU3_LSB, XAIEGBL_NOC_MUXCFG_SOU3_MASK},
@@ -480,7 +480,7 @@ const static XAie_RegFldAttr AieShimMuxConfig[] =
 };
 
 /* Register field attributes for SHIMNOC DeMux configuration */
-const static XAie_RegFldAttr AieShimDeMuxConfig[] =
+static const XAie_RegFldAttr AieShimDeMuxConfig[] =
 {
 	{XAIEGBL_NOC_DEMCFG_SOU2_LSB, XAIEGBL_NOC_DEMCFG_SOU2_MASK},
 	{XAIEGBL_NOC_DEMCFG_SOU3_LSB, XAIEGBL_NOC_DEMCFG_SOU3_MASK},
@@ -489,7 +489,7 @@ const static XAie_RegFldAttr AieShimDeMuxConfig[] =
 };
 
 /* Core Module */
-const static XAie_CoreMod AieCoreMod =
+static const XAie_CoreMod AieCoreMod =
 {
 	.ProgMemAddr = XAIEGBL_CORE_PRGMEM,
 	.CoreCtrl = &AieCoreCtrlReg,
@@ -506,14 +506,14 @@ const static XAie_CoreMod AieCoreMod =
 };
 
 /* Data Memory Module for Tile data memory*/
-const static XAie_MemMod AieTileMemMod =
+static const XAie_MemMod AieTileMemMod =
 {
 	.Size = 32 * 1024,
 	.MemAddr = XAIEGBL_MEM_DATMEM
 };
 
 /* PL Interface module for SHIMPL Tiles */
-const static XAie_PlIfMod AiePlIfMod =
+static const XAie_PlIfMod AiePlIfMod =
 {
 	.UpSzrOff = XAIEGBL_PL_PLINTUPSCFG,
 	.DownSzrOff = XAIEGBL_PL_PLINTDOWCFG,
@@ -535,7 +535,7 @@ const static XAie_PlIfMod AiePlIfMod =
 };
 
 /* PL Interface module for SHIMNOC Tiles */
-const static XAie_PlIfMod AieShimTilePlIfMod =
+static const XAie_PlIfMod AieShimTilePlIfMod =
 {
 	.UpSzrOff = XAIEGBL_PL_PLINTUPSCFG,
 	.DownSzrOff = XAIEGBL_PL_PLINTDOWCFG,
@@ -557,7 +557,7 @@ const static XAie_PlIfMod AieShimTilePlIfMod =
 };
 
 /* Lock Module for AIE Tiles  */
-const static XAie_LockMod AieTileLockMod =
+static const XAie_LockMod AieTileLockMod =
 {
 	.BaseAddr = XAIEGBL_MEM_LOCK0RELNV,
 	.NumLocks = 16U,
@@ -571,7 +571,7 @@ const static XAie_LockMod AieTileLockMod =
 };
 
 /* Lock Module for SHIM NOC Tiles  */
-const static XAie_LockMod AieShimNocLockMod =
+static const XAie_LockMod AieShimNocLockMod =
 {
 	.BaseAddr = XAIEGBL_NOC_LOCK0RELNV,
 	.NumLocks = 16U,
@@ -584,7 +584,7 @@ const static XAie_LockMod AieShimNocLockMod =
 	.Release = &(_XAie_LockRelease)
 };
 
-const static XAie_DmaBdEnProp AieTileDmaBdEnProp =
+static const XAie_DmaBdEnProp AieTileDmaBdEnProp =
 {
 	.NxtBd.Idx = 6U,
 	.NxtBd.Lsb = XAIEGBL_MEM_DMABD0CTRL_NEXBD_LSB,
@@ -598,7 +598,7 @@ const static XAie_DmaBdEnProp AieTileDmaBdEnProp =
 	.OutofOrderBdId = {0U}
 };
 
-const static XAie_DmaBdPkt AieTileDmaBdPktProp =
+static const XAie_DmaBdPkt AieTileDmaBdPktProp =
 {
 	.EnPkt.Idx = 4U,
 	.EnPkt.Lsb = XAIEGBL_MEM_DMABD0CTRL_ENAPKT_LSB,
@@ -611,7 +611,7 @@ const static XAie_DmaBdPkt AieTileDmaBdPktProp =
 	.PktId.Mask = XAIEGBL_MEM_DMABD0PKT_ID_MASK
 };
 
-const static XAie_DmaBdLock AieTileDmaLockProp =
+static const XAie_DmaBdLock AieTileDmaLockProp =
 {
 	.AieDmaLock.LckId_A.Idx = 0U,
 	.AieDmaLock.LckId_A.Lsb = XAIEGBL_MEM_DMABD0ADDA_LOCKIDA_LSB,
@@ -657,7 +657,7 @@ const static XAie_DmaBdLock AieTileDmaLockProp =
 	.AieDmaLock.LckAcqUseVal_B.Mask = XAIEGBL_MEM_DMABD0ADDB_USEACQVALB_MASK,
 };
 
-const static XAie_DmaBdBuffer AieTileDmaBufferProp =
+static const XAie_DmaBdBuffer AieTileDmaBufferProp =
 {
 	.TileDmaBuff.BaseAddr.Idx = 0U,
 	.TileDmaBuff.BaseAddr.Lsb = XAIEGBL_MEM_DMABD0ADDA_BASADDA_LSB,
@@ -667,7 +667,7 @@ const static XAie_DmaBdBuffer AieTileDmaBufferProp =
 	.TileDmaBuff.BufferLen.Mask = XAIEGBL_MEM_DMABD0CTRL_LEN_MASK,
 };
 
-const static XAie_DmaBdDoubleBuffer AieTileDmaDoubleBufferProp =
+static const XAie_DmaBdDoubleBuffer AieTileDmaDoubleBufferProp =
 {
 	.EnDoubleBuff.Idx = 6U,
 	.EnDoubleBuff.Lsb = XAIEGBL_MEM_DMABD0CTRL_ENAABMOD_LSB,
@@ -689,7 +689,7 @@ const static XAie_DmaBdDoubleBuffer AieTileDmaDoubleBufferProp =
 	.BuffSelect.Mask = XAIEGBL_MEM_DMABD0INTSTA_AB_MASK
 };
 
-const static XAie_DmaBdMultiDimAddr AieTileDmaMultiDimProp =
+static const XAie_DmaBdMultiDimAddr AieTileDmaMultiDimProp =
 {
 	.AieMultiDimAddr.X_Incr.Idx = 2U,
 	.AieMultiDimAddr.X_Incr.Lsb = XAIEGBL_MEM_DMABD02DX_XINC_LSB,
@@ -714,7 +714,7 @@ const static XAie_DmaBdMultiDimAddr AieTileDmaMultiDimProp =
 	.AieMultiDimAddr.CurrPtr.Mask = XAIEGBL_MEM_DMABD0INTSTA_CURPTR_MASK
 };
 
-const static XAie_DmaBdProp AieTileDmaProp =
+static const XAie_DmaBdProp AieTileDmaProp =
 {
 	.AddrAlignMask = 0x3,
 	.AddrAlignShift = 0x2,
@@ -731,7 +731,7 @@ const static XAie_DmaBdProp AieTileDmaProp =
 	.SysProp = NULL
 };
 
-const static XAie_DmaChProp AieTileDmaChProp =
+static const XAie_DmaChProp AieTileDmaChProp =
 {
 	.CtrlId = {0U},
 	.EnCompression = {0U},
@@ -752,7 +752,7 @@ const static XAie_DmaChProp AieTileDmaChProp =
 };
 
 /* Tile Dma Module */
-const static XAie_DmaMod AieTileDmaMod =
+static const XAie_DmaMod AieTileDmaMod =
 {
 	.BaseAddr = XAIEGBL_MEM_DMABD0ADDA,
 	.IdxOffset = 0x20,  	/* This is the offset between each BD */
@@ -777,7 +777,7 @@ const static XAie_DmaMod AieTileDmaMod =
 };
 
 /* shim dma structures */
-const static XAie_DmaBdEnProp AieShimDmaBdEnProp =
+static const XAie_DmaBdEnProp AieShimDmaBdEnProp =
 {
 	.NxtBd.Idx = 2U,
 	.NxtBd.Lsb = XAIEGBL_NOC_DMABD1BUFCTRL_NEXBD_LSB,
@@ -791,7 +791,7 @@ const static XAie_DmaBdEnProp AieShimDmaBdEnProp =
 	.OutofOrderBdId = {0U}
 };
 
-const static XAie_DmaBdPkt AieShimDmaBdPktProp =
+static const XAie_DmaBdPkt AieShimDmaBdPktProp =
 {
 	.EnPkt.Idx = 4U,
 	.EnPkt.Lsb = XAIEGBL_NOC_DMABD0PKT_ENAPKT_LSB,
@@ -804,7 +804,7 @@ const static XAie_DmaBdPkt AieShimDmaBdPktProp =
 	.PktId.Mask = XAIEGBL_NOC_DMABD0PKT_ID_MASK
 };
 
-const static XAie_DmaBdLock AieShimDmaLockProp =
+static const XAie_DmaBdLock AieShimDmaLockProp =
 {
 	.AieDmaLock.LckId_A.Idx = 2U,
 	.AieDmaLock.LckId_A.Lsb = XAIEGBL_NOC_DMABD0CTRL_LOCKID_LSB,
@@ -836,7 +836,7 @@ const static XAie_DmaBdLock AieShimDmaLockProp =
 	.AieDmaLock.LckAcqUseVal_B = {0U}
 };
 
-const static XAie_DmaBdBuffer AieShimDmaBufferProp =
+static const XAie_DmaBdBuffer AieShimDmaBufferProp =
 {
 	.ShimDmaBuff.AddrLow.Idx = 0U,
 	.ShimDmaBuff.AddrLow.Lsb = XAIEGBL_NOC_DMABD0ADDLOW_ADDLOW_LSB,
@@ -849,7 +849,7 @@ const static XAie_DmaBdBuffer AieShimDmaBufferProp =
 	.ShimDmaBuff.BufferLen.Mask = XAIEGBL_NOC_DMABD0BUFLEN_BUFLEN_MASK,
 };
 
-const static XAie_DmaSysProp AieShimDmaSysProp =
+static const XAie_DmaSysProp AieShimDmaSysProp =
 {
 	.SMID.Idx = 3U,
 	.SMID.Lsb = XAIEGBL_NOC_DMABD0AXICFG_SMI_LSB,
@@ -868,7 +868,7 @@ const static XAie_DmaSysProp AieShimDmaSysProp =
 	.AxCache.Mask = XAIEGBL_NOC_DMABD0AXICFG_AXC_MASK,
 };
 
-const static XAie_DmaBdProp AieShimDmaProp =
+static const XAie_DmaBdProp AieShimDmaProp =
 {
 	.AddrAlignMask = 0xF,
 	.AddrAlignShift = 0x0,
@@ -885,7 +885,7 @@ const static XAie_DmaBdProp AieShimDmaProp =
 	.SysProp = &AieShimDmaSysProp
 };
 
-const static XAie_DmaChProp AieShimDmaChProp =
+static const XAie_DmaChProp AieShimDmaChProp =
 {
 	.CtrlId = {0U},
 	.EnCompression = {0U},
@@ -908,7 +908,7 @@ const static XAie_DmaChProp AieShimDmaChProp =
 };
 
 /* Shim Dma Module */
-const static XAie_DmaMod AieShimDmaMod =
+static const XAie_DmaMod AieShimDmaMod =
 {
 	.BaseAddr = XAIEGBL_NOC_DMABD0ADDLOW,
 	.IdxOffset = 0x14,  	/* This is the offset between each BD */
