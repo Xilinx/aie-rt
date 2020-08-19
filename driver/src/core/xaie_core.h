@@ -18,6 +18,7 @@
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   09/24/2019  Initial creation
 * 1.1   Tejus   03/20/2020  Remove range apis
+* 1.2   Tejus   06/01/2020  Add core debug halt apis
 * </pre>
 *
 ******************************************************************************/
@@ -37,6 +38,8 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
 AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
+AieRC XAie_CoreDebugHalt(XAie_DevInst *DevInst, XAie_LocType Loc);
+AieRC XAie_CoreDebugUnhalt(XAie_DevInst *DevInst, XAie_LocType Loc);
 
 #endif		/* end of protection macro */
 /** @} */

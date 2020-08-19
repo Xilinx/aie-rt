@@ -34,6 +34,7 @@
 * 2.1   Dishita 04/16/2020  Fix compiler warnings
 * 2.2   Dishita 04/20/2020  Add timer properties
 * 2.3   Tejus   05/26/2020  Restructure and optimize core module.
+* 2.4   Tejus   06/01/2020  Add data structure for core debug register.
 * </pre>
 *
 ******************************************************************************/
@@ -71,6 +72,16 @@ static const XAie_RegCoreSts AieCoreStsReg =
 	{XAIEGBL_CORE_CORESTA_COREDON_LSB, XAIEGBL_CORE_CORESTA_COREDON_MASK},
 	{XAIEGBL_CORE_CORESTA_RST_LSB, XAIEGBL_CORE_CORESTA_RST_MASK},
 	{XAIEGBL_CORE_CORESTA_ENA_LSB, XAIEGBL_CORE_CORESTA_ENA_MASK}
+};
+
+/*
+ * Global instance for Core module for core debug registers.
+ */
+static const XAie_RegCoreDebug AieCoreDebugReg =
+{
+	.RegOff = XAIEGBL_CORE_DBGCTRL0,
+	.DebugHalt.Lsb = XAIEGBL_CORE_DBGCTRL0_DBGHLTBIT_LSB,
+	.DebugHalt.Mask = XAIEGBL_CORE_DBGCTRL0_DBGHLTBIT_MASK
 };
 
 /*
@@ -484,6 +495,7 @@ static const XAie_CoreMod AieCoreMod =
 	.DataMemShift = 15U,
 	.CoreCtrl = &AieCoreCtrlReg,
 	.CoreSts = &AieCoreStsReg,
+	.CoreDebug = &AieCoreDebugReg
 };
 
 /* Data Memory Module for Tile data memory*/

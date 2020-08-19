@@ -29,6 +29,7 @@
 * 1.9  Dishita 04/16/2020  Fix compiler warnings related to performance counter
 * 2.0  Dishita 04/20/2020  Add data structure for timer
 * 2.1   Tejus   05/26/2020  Restructure and optimize core module.
+* 2.2   Tejus  06/01/2020  Add data structure for debug halt register.
 * </pre>
 *
 ******************************************************************************/
@@ -81,6 +82,14 @@ typedef struct {
 } XAie_RegCoreSts;
 
 /*
+ * This typedef contains the attributes for core debug halt register
+ */
+typedef struct {
+	u32 RegOff;
+	XAie_RegFldAttr DebugHalt;
+} XAie_RegCoreDebug;
+
+/*
  * This typedef captures port base address and number of slave ports available
  * for stream switch master and salve ports
  */
@@ -127,6 +136,7 @@ typedef struct {
 	u32 DataMemShift;
 	const XAie_RegCoreSts *CoreSts;
 	const XAie_RegCoreCtrl *CoreCtrl;
+	const XAie_RegCoreDebug *CoreDebug;
 } XAie_CoreMod;
 
 /*
