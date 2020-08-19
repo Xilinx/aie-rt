@@ -28,6 +28,7 @@
 * 1.6   Tejus   03/23/2020  Add data structures for common dma apis.
 * 1.7   Tejus   04/13/2020  Remove range structure and helper function.
 * 1.8   Dishita 04/27/2020  Add enum for reset and modules.
+* 1.9   Tejus   06/05/2020  Change name of FifoMode field.
 * </pre>
 *
 ******************************************************************************/
@@ -233,7 +234,7 @@ typedef struct {
 	const XAie_DmaMod *DmaMod;
 	const XAie_LockMod *LockMod;
 	u8 EnDoubleBuff;
-	u8 EnFifoMode;
+	u8 FifoMode;
 	u8 EnCompression;
 	u8 EnOutofOrderBdId;
 	u8 TileType;

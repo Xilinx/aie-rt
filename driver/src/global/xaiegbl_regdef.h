@@ -30,6 +30,7 @@
 * 2.0  Dishita 04/20/2020  Add data structure for timer
 * 2.1   Tejus   05/26/2020  Restructure and optimize core module.
 * 2.2   Tejus  06/01/2020  Add data structure for debug halt register.
+* 2.3   Tejus  06/05/2020  Add field in data structure for dma fifo mode.
 * </pre>
 *
 ******************************************************************************/
@@ -228,7 +229,7 @@ typedef union {
 typedef struct {
 	XAie_RegBdFldAttr EnDoubleBuff;
 	XAie_RegBdFldAttr BaseAddr_B;
-	XAie_RegBdFldAttr EnFifoMode;
+	XAie_RegBdFldAttr FifoMode;
 	XAie_RegBdFldAttr EnIntrleaved;
 	XAie_RegBdFldAttr IntrleaveCnt;
 	XAie_RegBdFldAttr BuffSelect;
@@ -353,6 +354,7 @@ typedef struct XAie_DmaMod {
 	u8  ZeroPadding;
 	u8  OutofOrderBdId;
 	u8  InterleaveMode;
+	u8  FifoMode;
 	u32 BaseAddr;
 	u32 IdxOffset;
 	u32 ChCtrlBase;

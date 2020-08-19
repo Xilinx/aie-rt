@@ -22,6 +22,7 @@
 * 1.3   Tejus   03/22/2020  Dma api implementation
 * 1.4   Tejus   04/09/2020  Remove unused argument from interleave enable api
 * 1.5   Tejus   04/13/2020  Remove use of range in apis
+* 1.6   Tejus   06/05/2020  Add api to enable fifo mode.
 * </pre>
 *
 ******************************************************************************/
@@ -406,6 +407,42 @@ AieRC XAie_DmaEnableCompression(XAie_DmaDesc *DmaDesc)
 	}
 
 	DmaDesc->EnCompression = XAIE_ENABLE;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API configures the FIFO mode of the DMA Descriptor.
+*
+* @param	DmaDesc: Initialized Dma Descriptor.
+* @param	Counter: Fifo counter to use. XAIE_DMA_FIFO_COUNTER_NONE to
+* 		disable.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		The API sets up the value in the dma descriptor and does not
+*		configure the buffer descriptor field in the hardware.
+*
+******************************************************************************/
+AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc, XAie_DmaFifoCounter Counter)
+{
+	const XAie_DmaMod *DmaMod;
+
+	if((DmaDesc == XAIE_NULL) ||
+			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAieLib_print("Error: Invalid Arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	DmaMod = DmaDesc->DmaMod;
+	if(DmaMod->FifoMode == XAIE_FEATURE_UNAVAILABLE) {
+		XAieLib_print("Error: Feature not supported\n");
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	DmaDesc->FifoMode = Counter;
 
 	return XAIE_OK;
 }

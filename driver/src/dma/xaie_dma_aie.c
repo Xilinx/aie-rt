@@ -432,9 +432,9 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_SetField(DmaDesc->EnDoubleBuff,
 				BdProp->DoubleBuffer->EnDoubleBuff.Lsb,
 				BdProp->DoubleBuffer->EnDoubleBuff.Mask) |
-		XAie_SetField(DmaDesc->EnFifoMode,
-				BdProp->DoubleBuffer->EnFifoMode.Lsb,
-				BdProp->DoubleBuffer->EnFifoMode.Mask) |
+		XAie_SetField(DmaDesc->FifoMode,
+				BdProp->DoubleBuffer->FifoMode.Lsb,
+				BdProp->DoubleBuffer->FifoMode.Mask) |
 		XAie_SetField(DmaDesc->PktDesc.PktEn, BdProp->Pkt->EnPkt.Lsb,
 				BdProp->Pkt->EnPkt.Mask) |
 		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.EnInterleaved,

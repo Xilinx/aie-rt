@@ -40,6 +40,7 @@
 * 2.6   Nishad  06/03/2020  Rename XAIEGBL_<MODULE>_EVENT_* macros to
 *			    XAIE_EVENTS_<MODULE>_*
 * 2.7   Nishad  06/09/2020  Fix typo in *_MEMORY_* event macros
+* 2.8   Tejus   06/05/2020  Populate fifo mode availability in data structure.
 * </pre>
 *
 ******************************************************************************/
@@ -673,9 +674,9 @@ static const XAie_DmaBdDoubleBuffer AieTileDmaDoubleBufferProp =
 	.BaseAddr_B.Idx = 1U,
 	.BaseAddr_B.Lsb = XAIEGBL_MEM_DMABD0ADDB_BASADDB_LSB,
 	.BaseAddr_B.Mask = XAIEGBL_MEM_DMABD0ADDB_BASADDB_MASK,
-	.EnFifoMode.Idx = 6U,
-	.EnFifoMode.Lsb = XAIEGBL_MEM_DMABD0CTRL_ENAFIFMOD_LSB,
-	.EnFifoMode.Mask = XAIEGBL_MEM_DMABD0CTRL_ENAFIFMOD_MASK,
+	.FifoMode.Idx = 6U,
+	.FifoMode.Lsb = XAIEGBL_MEM_DMABD0CTRL_ENAFIFMOD_LSB,
+	.FifoMode.Mask = XAIEGBL_MEM_DMABD0CTRL_ENAFIFMOD_MASK,
 	.EnIntrleaved.Idx = 6U,
 	.EnIntrleaved.Lsb = XAIEGBL_MEM_DMABD0CTRL_ENAINT_LSB,
 	.EnIntrleaved.Mask = XAIEGBL_MEM_DMABD0CTRL_ENAINT_MASK,
@@ -762,6 +763,7 @@ static const XAie_DmaMod AieTileDmaMod =
 	.ZeroPadding = XAIE_FEATURE_UNAVAILABLE,
 	.OutofOrderBdId = XAIE_FEATURE_UNAVAILABLE,
 	.InterleaveMode = XAIE_FEATURE_AVAILABLE,
+	.FifoMode = XAIE_FEATURE_AVAILABLE,
 	.ChCtrlBase = XAIEGBL_MEM_DMAS2MM0CTR,
 	.NumChannels = 2U,  /* Number of s2mm/mm2s channels */
 	.ChIdxOffset = 0x8,  /* This is the offset between each channel */
@@ -918,6 +920,7 @@ static const XAie_DmaMod AieShimDmaMod =
 	.ZeroPadding = XAIE_FEATURE_UNAVAILABLE,
 	.OutofOrderBdId = XAIE_FEATURE_UNAVAILABLE,
 	.InterleaveMode = XAIE_FEATURE_UNAVAILABLE,
+	.FifoMode = XAIE_FEATURE_UNAVAILABLE,
 	.ChCtrlBase = XAIEGBL_NOC_DMAS2MM0CTR,
 	.NumChannels = 2U,  /* Number of s2mm/mm2s channels */
 	.ChIdxOffset = 0x8,  /* This is the offset between each channel */

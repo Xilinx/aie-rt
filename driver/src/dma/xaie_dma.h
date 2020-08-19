@@ -20,6 +20,7 @@
 * 1.1   Tejus   03/22/2020  Remove initial dma implemenatation
 * 1.2   Tejus   03/22/2020  Dma apis for aie
 * 1.3   Tejus   04/09/2020  Remove unused argument from interleave enable api
+* 1.4   Tejus   06/05/2020  Add api to enable fifo mode.
 * </pre>
 *
 ******************************************************************************/
@@ -28,6 +29,16 @@
 /***************************** Include Files *********************************/
 #include "xaiegbl.h"
 #include "xaielib.h"
+
+/**************************** Type Definitions *******************************/
+/*
+ * This enum captures the DMA Fifo Counters
+ */
+typedef enum {
+	XAIE_DMA_FIFO_COUNTER_NONE = 0U,
+	XAIE_DMA_FIFO_COUNTER_0 = 2U,
+	XAIE_DMA_FIFO_COUNTER_1 = 3U,
+} XAie_DmaFifoCounter;
 
 /************************** Function Prototypes  *****************************/
 AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
@@ -41,6 +52,8 @@ AieRC XAie_DmaSetAddrLen(XAie_DmaDesc *DmaDesc, u64 Addr, u32 Len);
 AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 		u64 Addr, u32 Len);
 AieRC XAie_DmaEnableCompression(XAie_DmaDesc *DmaDesc);
+AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc,
+		XAie_DmaFifoCounter Counter);
 AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u8 NextBd, u8 EnableNextBd);
 AieRC XAie_DmaEnableBd(XAie_DmaDesc *DmaDesc);
 AieRC XAie_DmaDisableBd(XAie_DmaDesc *DmaDesc);
