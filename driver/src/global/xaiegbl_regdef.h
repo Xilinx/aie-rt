@@ -39,6 +39,8 @@
 * 2.7   Nishad 07/12/2020  Add data structure and register properties to support
 *			   event broadcast, PC event, and group events.
 * 2.8   Nishad 07/21/2020  Add data structure for interrupt controller.
+* 2.9   Nishad 07/24/2020  Add event property to capture default group error
+*			   mask.
 * </pre>
 *
 ******************************************************************************/
@@ -554,6 +556,7 @@ typedef struct XAie_EvntMod {
 	u8 NumSwitches;
 	u32 BaseGroupEventRegOff;
 	u8 NumGroupEvents;
+	u32 DefaultGroupErrorMask;
 	const XAie_EventGroup *Group;
 	u32 BasePCEventRegOff;
 	u8 NumPCEvents;

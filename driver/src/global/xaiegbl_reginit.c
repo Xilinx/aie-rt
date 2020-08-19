@@ -48,6 +48,7 @@
 * 3.2   Nishad  07/12/2020  Populate event broadcast, PC event, and group event
 *			    register properties
 * 3.3   Nishad  07/21/2020  Populate interrupt controller data structure.
+* 3.4   Nishad  07/24/2020  Populate value of default group error mask.
 * </pre>
 *
 ******************************************************************************/
@@ -1668,7 +1669,35 @@ static const XAie_EventGroup AiePlGroupEvent[] =
 	},
 };
 
-/* Data structure to capture core and memory module events properties */
+/*
+ * Data structure to capture core and memory module events properties
+ * For memory module default error group mask enables,
+ *	DM_ECC_Error_Scrub_2bit,
+ *	DM_ECC_Error_2bit,
+ *	DM_Parity_Error_Bank_2,
+ *	DM_Parity_Error_Bank_3,
+ *	DM_Parity_Error_Bank_4,
+ *	DM_Parity_Error_Bank_5,
+ *	DM_Parity_Error_Bank_6,
+ *	DM_Parity_Error_Bank_7,
+ *	DMA_S2MM_0_Error,
+ *	DMA_S2MM_1_Error,
+ *	DMA_MM2S_0_Error,
+ *	DMA_MM2S_1_Error.
+ * For core module default error group mask enables,
+ *	TLAST_in_WSS_words_0_2,
+ *	PM_Reg_Access_Failure,
+ *	Stream_Pkt_Parity_Error,
+ *	Control_Pkt_Error,
+ *	AXI_MM_Slave_Error,
+ *	Instruction_Decompression_Error,
+ *	DM_address_out_of_range,
+ *	PM_ECC_Error_Scrub_2bit,
+ *	PM_ECC_Error_2bit,
+ *	PM_address_out_of_range,
+ *	DM_access_to_Unavailable,
+ *	Lock_Access_to_Unavailable.
+ */
 static const XAie_EvntMod AieTileEvntMod[] =
 {
 	{
@@ -1700,6 +1729,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.NumSwitches = 1U,
 		.BaseGroupEventRegOff = XAIEGBL_MEM_EVTGRP0ENA,
 		.NumGroupEvents = 8U,
+		.DefaultGroupErrorMask = 0x3FFAU,
 		.Group = AieMemGroupEvent,
 		.BasePCEventRegOff = XAIE_FEATURE_UNAVAILABLE,
 		.NumPCEvents = XAIE_FEATURE_UNAVAILABLE,
@@ -1735,6 +1765,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.NumSwitches = 1U,
 		.BaseGroupEventRegOff = XAIEGBL_CORE_EVTGRP0ENA,
 		.NumGroupEvents = 9U,
+		.DefaultGroupErrorMask = 0xF5FC0U,
 		.Group = AieCoreGroupEvent,
 		.BasePCEventRegOff = XAIEGBL_CORE_PCEVT0,
 		.NumPCEvents = 4U,
@@ -1743,7 +1774,20 @@ static const XAie_EvntMod AieTileEvntMod[] =
 	},
 };
 
-/* Data structure to capture PL module events properties */
+/* Data structure to capture PL module events properties.
+ * For PL module default error group mask enables,
+ *	AXI_MM_Slave_Tile_Error,
+ *	Control_Pkt_Error,
+ *	AXI_MM_Decode_NSU_Error,
+ *	AXI_MM_Slave_NSU_Error,
+ *	AXI_MM_Unsupported_Traffic,
+ *	AXI_MM_Unsecure_Access_in_Secure_Mode,
+ *	AXI_MM_Byte_Strobe_Error,
+ *	DMA_S2MM_0_Error,
+ *	DMA_S2MM_1_Error,
+ *	DMA_MM2S_0_Error,
+ *	DMA_MM2S_1_Error.
+ */
 static const XAie_EvntMod AiePlEvntMod =
 {
 	.XAie_EventNumber = AieTilePlModEventMapping,
@@ -1774,6 +1818,7 @@ static const XAie_EvntMod AiePlEvntMod =
 	.NumSwitches = 2U,
 	.BaseGroupEventRegOff = XAIEGBL_PL_EVTGRP0ENA,
 	.NumGroupEvents = 7U,
+	.DefaultGroupErrorMask = 0x7FFU,
 	.Group = AiePlGroupEvent,
 	.BasePCEventRegOff = XAIE_FEATURE_UNAVAILABLE,
 	.NumPCEvents = XAIE_FEATURE_UNAVAILABLE,

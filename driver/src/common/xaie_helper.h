@@ -25,6 +25,7 @@
 * 1.4   Tejus   04/13/2020  Remove helper functions for range apis
 * 1.5   Tejus   06/10/2020  Add helper functions for IO backend.
 * 1.6   Nishad  07/06/2020  Add helper functions for stream switch module.
+* 1.7   Nishad  07/24/2020  Add _XAie_GetFatalGroupErrors() helper function.
 * </pre>
 *
 ******************************************************************************/
@@ -143,6 +144,8 @@ AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
 		u8 PortNum, u8 *SlaveIdx);
 AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 		u8 PortNum, u8 *MasterIdx);
+u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
 
 #endif		/* end of protection macro */
 /** @} */

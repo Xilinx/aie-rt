@@ -24,6 +24,7 @@
 * 1.5   Dishita 04/29/2020  Add api to check module & tile type combination
 * 1.6   Nishad  07/06/2020  Add _XAie_GetMstrIdx() helper API and move
 *			    _XAie_GetSlaveIdx() API.
+* 1.7   Nishad  07/24/2020  Add _XAie_GetFatalGroupErrors() helper function.
 * </pre>
 *
 ******************************************************************************/
@@ -203,6 +204,37 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This API returns the default value of group errors marked as fatal.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+*
+* @return	Default value of group fatal errors.
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module)
+{
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+
+	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(Module == XAIE_PL_MOD)
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	else
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+
+	return EvntMod->DefaultGroupErrorMask;
+}
 
 void XAie_Log(FILE *Fd, const char *prefix, const char *Format, ...)
 {
