@@ -23,6 +23,7 @@
 * 1.4   Tejus   04/09/2020  Remove unused argument from interleave enable api
 * 1.5   Tejus   04/13/2020  Remove use of range in apis
 * 1.6   Tejus   06/05/2020  Add api to enable fifo mode.
+* 1.7   Tejus   06/10/2020  Switch to new io backend apis.
 * </pre>
 *
 ******************************************************************************/
@@ -706,15 +707,14 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	Val = XAie_SetField(Reset, DmaMod->ChProp->Reset.Lsb,
 			DmaMod->ChProp->Reset.Mask);
 
-	XAieGbl_MaskWrite32(Addr, Val, DmaMod->ChProp->Reset.Mask);
+	XAie_MaskWrite32(DevInst, Addr, Val, DmaMod->ChProp->Reset.Mask);
 
 	return XAIE_OK;
 }
@@ -819,12 +819,12 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Value = XAie_SetField(Pause, DmaMod->ChProp->PauseStream.Lsb,
 			DmaMod->ChProp->PauseStream.Mask);
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	XAieGbl_MaskWrite32(Addr, DmaMod->ChProp->PauseStream.Mask, Value);
+	XAie_MaskWrite32(DevInst, Addr, DmaMod->ChProp->PauseStream.Mask,
+			Value);
 
 	return XAIE_OK;
 }
@@ -878,12 +878,11 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	Value = XAie_SetField(Pause, DmaMod->ChProp->PauseMem.Lsb,
 			DmaMod->ChProp->PauseMem.Mask);
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	XAieGbl_MaskWrite32(Addr, DmaMod->ChProp->PauseMem.Mask, Value);
+	XAie_MaskWrite32(DevInst, Addr, DmaMod->ChProp->PauseMem.Mask, Value);
 
 	return XAIE_OK;
 }
@@ -981,13 +980,12 @@ AieRC XAie_DmaChannelConfig(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	ChWordMask[DmaMod->ChProp->EnOutofOrder.Idx] |=
 		DmaMod->ChProp->EnOutofOrder.Mask;
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	for(u8 i = 0U; i < XAIE_DMA_CHCTRL_NUM_WORDS; i++) {
-		XAieGbl_MaskWrite32(Addr + (i * 4U),
+		XAie_MaskWrite32(DevInst, Addr + (i * 4U),
 				ChWordMask[i], ChWord[i]);
 	}
 
@@ -1042,12 +1040,11 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_BD_NUM;
 	}
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	XAieGbl_MaskWrite32(Addr + (DmaMod->ChProp->StartBd.Idx * 4U),
+	XAie_MaskWrite32(DevInst, Addr + (DmaMod->ChProp->StartBd.Idx * 4U),
 			DmaMod->ChProp->StartBd.Mask, BdNum);
 
 	return XAIE_OK;
@@ -1094,12 +1091,11 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
-	Addr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	XAieGbl_MaskWrite32(Addr + (DmaMod->ChProp->Enable.Idx * 4U),
+	XAie_MaskWrite32(DevInst, Addr + (DmaMod->ChProp->Enable.Idx * 4U),
 			DmaMod->ChProp->Enable.Mask, Enable);
 
 	return XAIE_OK;
