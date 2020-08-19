@@ -49,6 +49,7 @@
 * 1.8   Tejus   03/23/2020  Organize header files in alphabetical order
 * 1.9   Tejus   03/23/2020  Add register properties for dmas
 * 2.0   Dishita 03/24/2020  Add performance counter properties
+* 2.1   Dishita 04/16/2020  Fix compiler warnings
 * </pre>
 *
 ******************************************************************************/
@@ -932,7 +933,7 @@ const static XAie_DmaMod AieShimDmaMod =
 };
 
 /* Enum to Event Number mapping of all events of AIE Core module */
-const static u8 AieTileCoreModEventMapping[] =
+static const u8 AieTileCoreModEventMapping[] =
 {
 	XAIEGBL_CORE_EVENT_NONE,
 	XAIEGBL_CORE_EVENT_TRUE,
@@ -1065,7 +1066,7 @@ const static u8 AieTileCoreModEventMapping[] =
 	XAIEGBL_CORE_EVENT_INSTR_EVENT_2,
 };
 /* Enum to Event Number mapping of all events of AIE Mem module */
-const static u8 AieTileMemModEventMapping[] =
+static const u8 AieTileMemModEventMapping[] =
 {
 	XAIEGBL_MEM_EVENT_NONE,
 	XAIEGBL_MEM_EVENT_TRUE,
@@ -1220,7 +1221,7 @@ const static u8 AieTileMemModEventMapping[] =
 };
 
 /* Enum to Event Number mapping of all events of AIE PL module */
-const static u8 AieTilePlModEventMapping[] =
+static const u8 AieTilePlModEventMapping[] =
 {
 	XAIEGBL_PL_EVENT_NONE,
 	XAIEGBL_PL_EVENT_TRUE,
@@ -1356,7 +1357,7 @@ const static u8 AieTilePlModEventMapping[] =
  * Data Structure contains all registers and offset info for perf counter
  * of AIE Core and Memory Module.
  */
-const static XAie_PerfMod AieTilePerfCnt[] =
+static const XAie_PerfMod AieTilePerfCnt[] =
 {
 	{
 		.MaxCounterVal = 4U,
@@ -1392,7 +1393,7 @@ const static XAie_PerfMod AieTilePerfCnt[] =
  * Data Structure contains all registers and offset info for perf counter
  * of AIE PL Module.
  */
-static XAie_PerfMod AiePlPerfCnt =
+static const XAie_PerfMod AiePlPerfCnt =
 {
 	.MaxCounterVal = 2U,
 	.StartStopShift = 16U,
@@ -1409,7 +1410,7 @@ static XAie_PerfMod AiePlPerfCnt =
 };
 
 /* Data structure to capture core and memory module events properties */
-const static XAie_EvntMod AieTileEvntMod[] =
+static const XAie_EvntMod AieTileEvntMod[] =
 {
 	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
@@ -1424,7 +1425,7 @@ const static XAie_EvntMod AieTileEvntMod[] =
 };
 
 /* Data structure to capture PL module events properties */
-const static XAie_EvntMod AiePlEvntMod =
+static const XAie_EvntMod AiePlEvntMod =
 {
 	.XAie_EventNumber = AieTilePlModEventMapping,
 	.EventMin = 2000U,
@@ -1449,8 +1450,8 @@ XAie_TileMod AieMod[] =
 		.MemMod  = &AieTileMemMod,
 		.PlIfMod = NULL,
 		.LockMod = &AieTileLockMod,
-		.PerfMod = &AieTilePerfCnt,
-		.EvntMod = &AieTileEvntMod,
+		.PerfMod = AieTilePerfCnt,
+		.EvntMod = AieTileEvntMod,
 	},
 	{
 		/*

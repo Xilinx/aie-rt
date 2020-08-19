@@ -40,6 +40,7 @@
 * 1.3  Nishad  12/05/2018  Renamed ME attributes to AIE
 * 1.4  Hyun    01/08/2019  Add the mask poll function
 * 1.5  Tejus   08/01/2019  Restructure code for AIE
+* 1.6  Dishita 04/17/2020  Fix compiler warning
 * </pre>
 *
 ******************************************************************************/
@@ -76,7 +77,7 @@
 #define XAie_print			XAieLib_print
 #define XAie_usleep			XAieLib_usleep
 
-#define XAie_SetField(Val, Lsb, Mask)	(((u32)Val << Lsb) & Mask)
+#define XAie_SetField(Val, Lsb, Mask)	(((u32)Val << (Lsb)) & Mask)
 #define XAie_GetField(Val, Lsb, Mask)	(((u32)Val & Mask) >> Lsb)
 
 #define XAieGbl_Read32		XAieLib_Read32

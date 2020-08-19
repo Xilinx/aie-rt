@@ -36,6 +36,7 @@
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   Dishita 11/22/2019  Initial creation
 * 1.1   Tejus   04/13/2020  Remove use of range in apis
+* 1.2   Dishita 04/16/2020  Fix compiler warnings
 *
 * </pre>
 *
@@ -59,8 +60,8 @@
 * @note
 *
 ******************************************************************************/
-u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
-		XAie_LocType Loc)
+u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_PerfCounters Counter)
 {
 	u32 CounterRegOffset;
 	u64 CounterRegAddr;
@@ -79,7 +80,7 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = DevInst->DevProp.DevMod[TileType].PerfMod;
+	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
 	/*
 	 * Checking if the counter is memory module counter of AIE tile
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
@@ -119,7 +120,7 @@ u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
 * @note
 *
 ******************************************************************************/
-AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
+AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_PerfCounters Counter, XAie_Events StartEvent,
 		XAie_Events StopEvent)
 {
@@ -141,8 +142,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = DevInst->DevProp.DevMod[TileType].PerfMod;
-	EvntMod = DevInst->DevProp.DevMod[TileType].EvntMod;
+	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
+	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
 	/*
 	 * Checking if the counter is memory module counter of AIE tile
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
@@ -216,9 +217,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
 * @note
 *
 ******************************************************************************/
-AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
-		XAie_PerfCounters Counter, XAie_LocType Loc,
-		XAie_Events ResetEvent)
+AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_PerfCounters Counter, XAie_Events ResetEvent)
 {
 	u32 ResetRegOffset, ResetFldMask;
 	u64 ResetRegAddr, ResetFldVal;
@@ -238,8 +238,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = DevInst->DevProp.DevMod[TileType].PerfMod;
-	EvntMod = DevInst->DevProp.DevMod[TileType].EvntMod;
+	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
+	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
 	/*
 	 * Checking if the counter is memory module counter of AIE tile
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
@@ -325,7 +325,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = DevInst->DevProp.DevMod[TileType].PerfMod;
+	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
 	/*
 	 * Checking if the counter is memory module counter of AIE tile
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4
@@ -384,7 +384,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	PerfMod = DevInst->DevProp.DevMod[TileType].PerfMod;
+	PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0];
 	/*
 	 * Checking if the counter is memory module counter of AIE tile
 	 * XAie_PerfCounters Enum number corresponds to mem module - counter 4

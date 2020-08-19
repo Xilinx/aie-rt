@@ -65,15 +65,15 @@ typedef enum {
 } XAie_PerfCounters;
 
 /************************** Function Prototypes  *****************************/
-u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
-			XAie_LocType Loc);
-AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst,XAie_LocType Loc,
+u32 XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
+				XAie_PerfCounters Counter);
+AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 				XAie_PerfCounters Counter, XAie_Events StartEvent,
 				XAie_Events StopEvent);
-AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_PerfCounters Counter,
-					XAie_LocType Loc, XAie_Events ResetEvent);
+AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+				XAie_PerfCounters Counter, XAie_Events ResetEvent);
 AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 				XAie_PerfCounters Counter, u32 CounterVal);
 AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-					XAie_PerfCounters Counter, u32 EventVal);
+				XAie_PerfCounters Counter, u32 EventVal);
 #endif		/* end of protection macro */

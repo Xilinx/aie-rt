@@ -44,6 +44,7 @@
 * 1.6   Tejus  03/21/2020  Add data structures for stream switch slot registers
 * 1.7   Tejus  03/23/2020  Re-organize data structure to capture aie dmas
 * 1.8  Dishita 03/24/2020  Add data structure for performance counter
+* 1.9  Dishita 04/16/2020  Fix compiler warnings related to performance counter
 * </pre>
 *
 ******************************************************************************/
@@ -455,7 +456,7 @@ typedef struct XAie_PerfMod {
 
 /* This typedef contains attributes of Events module */
 typedef struct XAie_EvntMod {
-	u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
+	const u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
 	u32 EventMin;		/* number corresponding to evt 0 in the enum */
 	u32 EventMax;		/* number corresponding to last evt in enum */
 } XAie_EvntMod;
