@@ -17,6 +17,7 @@
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
 * 1.0   Tejus   03/17/2020  Initial creation
+* 1.1   Tejus   06/10/2020  Switch to new io backend.
 * </pre>
 *
 ******************************************************************************/
@@ -72,10 +73,9 @@ AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 			(Lock.LockVal * LockMod->LockValOff);
 	}
 
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	if(XAieGbl_MaskPoll(RegAddr, XAIE_LOCK_RESULT_MASK,
+	if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 				(XAIE_LOCK_RESULT_SUCCESS <<
 				 XAIE_LOCK_RESULT_LSB), TimeOut)) {
 
@@ -126,10 +126,9 @@ AieRC _XAie_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 			(Lock.LockVal * LockMod->LockValOff);
 	}
 
-	RegAddr = DevInst->BaseAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	if(XAieGbl_MaskPoll(RegAddr, XAIE_LOCK_RESULT_MASK,
+	if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 				(XAIE_LOCK_RESULT_SUCCESS <<
 				 XAIE_LOCK_RESULT_LSB), TimeOut)) {
 
