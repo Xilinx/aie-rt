@@ -45,6 +45,7 @@
 *			    implementation
 * 1.6   Tejus   03/23/2020  Add data structures for common dma apis.
 * 1.7   Tejus   04/13/2020  Remove range structure and helper function.
+* 1.8   Dishita 04/27/2020  Add enum for reset and modules.
 * </pre>
 *
 ******************************************************************************/
@@ -303,6 +304,24 @@ typedef enum{
 	XAIE_INVALID_BURST_LENGTH,
 	XAIE_ERR_MAX
 } AieRC;
+
+/*
+ * This enum is to identify different hardware modules within a tile type.
+ * An AIE tile can have memory or core module. A PL or Shim tile will have
+ * Pl module. A mem tile will have memory module. Any hardware module
+ * addition in future generations of AIE needs to be appended to this enum.
+ */
+typedef enum{
+	XAIE_MEM_MOD,
+	XAIE_CORE_MOD,
+	XAIE_PL_MOD,
+} XAie_ModuleType;
+
+/* This enum contains reset input values. */
+typedef enum {
+	XAIE_RESETDISABLE,
+	XAIE_RESETENABLE,
+} XAie_Reset;
 
 /* Data structure to capture lock id and value */
 typedef struct {

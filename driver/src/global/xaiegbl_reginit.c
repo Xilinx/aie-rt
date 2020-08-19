@@ -50,6 +50,7 @@
 * 1.9   Tejus   03/23/2020  Add register properties for dmas
 * 2.0   Dishita 03/24/2020  Add performance counter properties
 * 2.1   Dishita 04/16/2020  Fix compiler warnings
+* 2.2   Dishita 04/20/2020  Add timer properties
 * </pre>
 *
 ******************************************************************************/
@@ -1413,15 +1414,15 @@ static const XAie_PerfMod AiePlPerfCnt =
 static const XAie_EvntMod AieTileEvntMod[] =
 {
 	{
+		.XAie_EventNumber = AieTileMemModEventMapping,
+		.EventMin = 1000U,
+		.EventMax = 1149U,
+	},
+	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
 		.EventMin = 0U,
 		.EventMax = 128U,
 	},
-	{
-		.XAie_EventNumber = AieTileMemModEventMapping,
-		.EventMin = 1000U,
-		.EventMax = 1149U,
-	}
 };
 
 /* Data structure to capture PL module events properties */
@@ -1430,6 +1431,41 @@ static const XAie_EvntMod AiePlEvntMod =
 	.XAie_EventNumber = AieTilePlModEventMapping,
 	.EventMin = 2000U,
 	.EventMax = 2160U,
+};
+
+/* Data structure to capture core and mem module timer properties */
+static XAie_TimerMod AieTileTimerMod[] =
+{
+	{
+		.TrigEventLowValOff = XAIEGBL_MEM_TIMTRIEVTLOWVAL,
+		.TrigEventHighValOff = XAIEGBL_MEM_TIMTRIEVTHIGVAL,
+		.LowOff = XAIEGBL_MEM_TIMLOW,
+		.HighOff = XAIEGBL_MEM_TIMHIG,
+		.CtrlOff = XAIEGBL_MEM_TIMCTRL,
+		{XAIEGBL_MEM_TIMCTRL_RST_LSB, XAIEGBL_MEM_TIMCTRL_RST_MASK},
+		{XAIEGBL_MEM_TIMCTRL_RSTEVT_LSB, XAIEGBL_MEM_TIMCTRL_RSTEVT_MASK},
+	},
+	{
+		.TrigEventLowValOff = XAIEGBL_CORE_TIMTRIEVTLOWVAL,
+		.TrigEventHighValOff = XAIEGBL_CORE_TIMTRIEVTHIGVAL,
+		.LowOff = XAIEGBL_CORE_TIMLOW,
+		.HighOff = XAIEGBL_CORE_TIMHIG,
+		.CtrlOff = XAIEGBL_CORE_TIMCTRL,
+		{XAIEGBL_CORE_TIMCTRL_RST_LSB, XAIEGBL_CORE_TIMCTRL_RST_MASK},
+		{XAIEGBL_CORE_TIMCTRL_RSTEVT_LSB, XAIEGBL_CORE_TIMCTRL_RSTEVT_MASK},
+	},
+};
+
+/* Data structure to capture PL module timer properties */
+static XAie_TimerMod AiePlTimerMod =
+{
+	.TrigEventLowValOff = XAIEGBL_PL_TIMTRIEVTLOWVAL,
+	.TrigEventHighValOff = XAIEGBL_PL_TIMTRIEVTHIGVAL,
+	.LowOff = XAIEGBL_PL_TIMLOW,
+	.HighOff = XAIEGBL_PL_TIMHIG,
+	.CtrlOff = XAIEGBL_PL_TIMCTRL,
+	{XAIEGBL_PL_TIMCTRL_RST_LSB, XAIEGBL_PL_TIMCTRL_RST_MASK},
+	{XAIEGBL_PL_TIMCTRL_RSTEVT_LSB, XAIEGBL_PL_TIMCTRL_RSTEVT_MASK},
 };
 
 /*
@@ -1452,6 +1488,7 @@ XAie_TileMod AieMod[] =
 		.LockMod = &AieTileLockMod,
 		.PerfMod = AieTilePerfCnt,
 		.EvntMod = AieTileEvntMod,
+		.TimerMod = AieTileTimerMod,
 	},
 	{
 		/*
@@ -1465,6 +1502,7 @@ XAie_TileMod AieMod[] =
 		.LockMod = &AieShimNocLockMod,
 		.PerfMod = &AiePlPerfCnt,
 		.EvntMod = &AiePlEvntMod,
+		.TimerMod = &AiePlTimerMod,
 	},
 	{
 		/*
@@ -1478,6 +1516,7 @@ XAie_TileMod AieMod[] =
 		.LockMod = NULL,
 		.PerfMod = &AiePlPerfCnt,
 		.EvntMod = &AiePlEvntMod,
+		.TimerMod = &AiePlTimerMod,
 	},
 	{
 		/*
@@ -1491,6 +1530,7 @@ XAie_TileMod AieMod[] =
 		.LockMod = NULL,
 		.PerfMod = NULL,
 		.EvntMod = NULL,
+		.TimerMod = NULL,
 	}
 };
 

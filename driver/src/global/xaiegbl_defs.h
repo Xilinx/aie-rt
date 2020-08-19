@@ -41,6 +41,7 @@
 * 1.4  Hyun    01/08/2019  Add the mask poll function
 * 1.5  Tejus   08/01/2019  Restructure code for AIE
 * 1.6  Dishita 04/17/2020  Fix compiler warning
+* 1.7  Dishita 05/07/2020  Removed Reset related macros
 * </pre>
 *
 ******************************************************************************/
@@ -61,8 +62,6 @@
 #define XAIE_NULL			(void *)0U
 #define XAIE_ENABLE			1U
 #define XAIE_DISABLE			0U
-#define XAIE_RESETENABLE			1U
-#define XAIE_RESETDISABLE		0U
 
 #define XAIEGBL_TILE_TYPE_AIETILE	0U
 #define XAIEGBL_TILE_TYPE_SHIMNOC	1U

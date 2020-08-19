@@ -45,6 +45,7 @@
 * 1.7   Tejus  03/23/2020  Re-organize data structure to capture aie dmas
 * 1.8  Dishita 03/24/2020  Add data structure for performance counter
 * 1.9  Dishita 04/16/2020  Fix compiler warnings related to performance counter
+* 2.0  Dishita 04/20/2020  Add data structure for timer
 * </pre>
 *
 ******************************************************************************/
@@ -461,6 +462,17 @@ typedef struct XAie_EvntMod {
 	u32 EventMax;		/* number corresponding to last evt in enum */
 } XAie_EvntMod;
 
+/* This typedef contains attributes of timer module */
+typedef struct XAie_TimerMod {
+	u32 TrigEventLowValOff;  /* Timer trigger evel low val register offset */
+	u32 TrigEventHighValOff; /* Timer trigger evel high val register offset */
+	u32 LowOff;              /* Timer low value Register offset */
+	u32 HighOff;             /* Timer high value Register offset */
+	u32 CtrlOff;             /* Timer control Register offset */
+	const XAie_RegFldAttr CtrlReset; /* Timer control reset field */
+	const XAie_RegFldAttr CtrlResetEvent; /* Timer control reset event field */
+} XAie_TimerMod;
+
 /*
  * This typedef contains all the modules for a Tile type
  */
@@ -473,6 +485,7 @@ typedef struct XAie_TileMod {
 	const XAie_LockMod *LockMod;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
+	const XAie_TimerMod *TimerMod;
 } XAie_TileMod;
 
 #endif
