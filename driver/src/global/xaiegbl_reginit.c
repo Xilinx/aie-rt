@@ -44,6 +44,7 @@
 * 2.9   Nishad  06/16/2020  Add trace module properties
 * 3.0   Nishad  06/28/2020  Populate stream switch port event selection, event
 * 			    generation and combo event properties
+* 3.1   Nishad  07/01/2020  Populate MstrConfigBaseAddr stream switch property
 * </pre>
 *
 ******************************************************************************/
@@ -363,6 +364,7 @@ static const XAie_StrmPort AieTileStrmSlaveSlot[SS_PORT_TYPE_MAX] =
 static const XAie_StrmMod AieTileStrmSw =
 {
 	.SlvConfigBaseAddr = XAIEGBL_CORE_STRSWISLVMECORE0CFG,
+	.MstrConfigBaseAddr = XAIEGBL_CORE_STRSWIMSTRCFGMECORE0,
 	.PortOffset = 0x4,
 	.NumSlaveSlots = 4U,
 	.SlotOffsetPerPort = 0x10,
@@ -389,6 +391,7 @@ static const XAie_StrmMod AieTileStrmSw =
 static const XAie_StrmMod AieShimStrmSw =
 {
 	.SlvConfigBaseAddr = XAIEGBL_PL_STRSWISLVTILCTRCFG,
+	.MstrConfigBaseAddr = XAIEGBL_PL_STRSWIMSTRCFGTILCTR,
 	.PortOffset = 0x4,
 	.NumSlaveSlots = 4U,
 	.SlotOffsetPerPort = 0x10,

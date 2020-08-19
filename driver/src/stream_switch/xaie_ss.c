@@ -25,6 +25,8 @@
 * 1.6   Tejus   04/13/2020  Remove range apis and change to single tile apis
 * 1.7   Nishad  06/19/2020  Move XAIE_PACKETID_MAX to xaiegbl.h
 * 1.8   Tejus   06/10/2020  Switch to new io backend apis.
+* 1.9   Nishad  07/01/2020  Move _XAie_GetSlaveIdx() helper API common
+*			    directory.
 * </pre>
 *
 ******************************************************************************/
@@ -43,47 +45,6 @@
 #define XAIE_SS_MSELEN_MAX			0xF
 
 /************************** Function Definitions *****************************/
-/*****************************************************************************/
-/**
-*
-* To configure stream switch master registers, slave index has to be calculated
-* from the internal data structure. The routine calculates the slave index for
-* any tile type.
-*
-* @param	StrmMod: Stream Module pointer
-* @param	Slave: Stream switch port type
-* @param	PortNum: Slave port number
-* @param	SlaveIdx: Place holder for the routine to store the slave idx
-*
-* @return	XAIE_OK on success and XAIE_INVALID_RANGE on failure
-*
-* @note		Internal API only.
-*
-******************************************************************************/
-static AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
-		u8 PortNum, u8 *SlaveIdx)
-{
-	u32 BaseAddr;
-	u32 RegAddr;
-	const XAie_StrmPort *PortPtr;
-
-	/* Get Base Addr of the slave tile from Stream Switch Module */
-	BaseAddr = StrmMod->SlvConfigBaseAddr;
-
-	PortPtr = &StrmMod->SlvConfig[Slave];
-
-	/* Return error if the Slave Port Type is not valid */
-	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
-		XAieLib_print("Error: Invalid Slave Port\n");
-		return XAIE_ERR_STREAM_PORT;
-	}
-
-	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
-	*SlaveIdx = (RegAddr - BaseAddr) / 4;
-
-	return XAIE_OK;
-}
-
 /*****************************************************************************/
 /**
 *

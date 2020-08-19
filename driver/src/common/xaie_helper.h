@@ -24,6 +24,7 @@
 * 1.3   Tejus   04/13/2020  Add api to get tile type from Loc
 * 1.4   Tejus   04/13/2020  Remove helper functions for range apis
 * 1.5   Tejus   06/10/2020  Add helper functions for IO backend.
+* 1.6   Nishad  07/06/2020  Add helper functions for stream switch module.
 * </pre>
 *
 ******************************************************************************/
@@ -114,5 +115,10 @@ static inline void XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row,
 u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
+AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
+		u8 PortNum, u8 *SlaveIdx);
+AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
+		u8 PortNum, u8 *MasterIdx);
+
 #endif		/* end of protection macro */
 /** @} */

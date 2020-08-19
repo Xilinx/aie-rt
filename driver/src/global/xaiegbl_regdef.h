@@ -34,6 +34,8 @@
 * 2.4   Nishad 06/16/2020  Add data structures for trace module
 * 2.5   Nishad 06/28/2020  Add data structures for event selection and combo
 *			   event registers
+* 2.6   Nishad 07/01/2020  Add MstConfigBaseAddr property to stream switch data
+*			   structure
 * </pre>
 *
 ******************************************************************************/
@@ -107,6 +109,7 @@ typedef struct {
 typedef struct {
 	u8 NumSlaveSlots;
 	u32 SlvConfigBaseAddr;
+	u32 MstrConfigBaseAddr;
 	u32 PortOffset;		  /**< Offset between ports */
 	u32 SlotOffsetPerPort;
 	u32 SlotOffset;
