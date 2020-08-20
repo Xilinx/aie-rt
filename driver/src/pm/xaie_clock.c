@@ -27,7 +27,6 @@
 
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
-#define CheckBit(bitmap, pos)	(bitmap[ pos / (sizeof(bitmap[0]) * 8U)] & (1U << pos % (sizeof(bitmap[0]) * 8U)))
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -159,45 +158,6 @@ static void _XAie_PmUngateTiles(XAie_DevInst *DevInst, XAie_LocType FromLoc,
 
 /*****************************************************************************/
 /**
-* This is an internal API to set bit corresponding to tile requested in
-* the TilesInUse bitmap.
-*
-* @param        DevInst: Device Instance
-* @param        set_bit: Bit position corresponding to the tile requested.
-* @return       XAIE_OK on success
-*
-* @note         None
-*
-******************************************************************************/
-static void _XAiePm_SetTileInUse(XAie_DevInst *DevInst, u32 StartSetBit,
-		u32 NumSetBit)
-{
-	for(u32 i = StartSetBit; i < StartSetBit + NumSetBit; i++) {
-		DevInst->TilesInUse[i / (sizeof(DevInst->TilesInUse[0]) * 8U)] |=
-			1U << (i % (sizeof(DevInst->TilesInUse[0]) * 8U));
-	}
-}
-
-/*****************************************************************************/
-/**
-* This is an internal API to get bit position corresponding to tile location in
-* the TilesInUse bitmap. This bitmap does not represent Shim tile so this API
-* only accepts AIE tile.
-*
-* @param        DevInst: Device Instance
-* @param        Loc: Location of AIE tile
-* @return       Bit position in the TilesInUse bitmap
-*
-* @note         None
-*
-******************************************************************************/
-static u32 _XAie_PmGetBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	return Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U;
-}
-
-/*****************************************************************************/
-/**
 * This API enables clock for all the tiles passed as argument to this API.
 *
 * @param	DevInst: Device Instance
@@ -240,8 +200,8 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
 		NumTiles = (DevInst->NumRows - 1) * (DevInst->NumCols);
 
-		SetTileStatus = _XAie_PmGetBitPosFromLoc(DevInst, TileLoc);
-		_XAiePm_SetTileInUse(DevInst, SetTileStatus, NumTiles);
+		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
+		_XAie_SetBitInBitmap(DevInst->TilesInUse, SetTileStatus, NumTiles);
 		_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
 
 		return XAIE_OK;
@@ -263,7 +223,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 			continue;
 
 		/* Calculate bit number in bit map for the tile requested */
-		SetTileStatus = _XAie_PmGetBitPosFromLoc(DevInst, Loc[i]);
+		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc[i]);
 
 		for(u32 row = DevInst->NumRows - 1U; row > 0U; row--) {
 			/*
@@ -274,7 +234,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 			TileLoc.Col = Loc[i].Col;
 			TileLoc.Row = row;
-			CheckTileStatus = _XAie_PmGetBitPosFromLoc(DevInst,
+			CheckTileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 					TileLoc);
 			if(CheckBit(DevInst->TilesInUse, CheckTileStatus)) {
 				flag = 1;
@@ -302,7 +262,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 			TileLoc.Row = Loc[i].Row;
 			_XAie_PmGateTiles(DevInst, TileLoc);
 		}
-		_XAiePm_SetTileInUse(DevInst, SetTileStatus, 1U);
+		_XAie_SetBitInBitmap(DevInst->TilesInUse, SetTileStatus, 1U);
 	}
 
 	return XAIE_OK;

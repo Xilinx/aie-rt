@@ -37,6 +37,8 @@
 #include "xaiegbl_regdef.h"
 
 /***************************** Macro Definitions *****************************/
+#define CheckBit(bitmap, pos)   (bitmap[ pos / (sizeof(bitmap[0]) * 8U)] & (1U << pos % (sizeof(bitmap[0]) * 8U)))
+
 #define XAIE_ERROR(...) \
 	do { XAie_Log(stderr, "[AIE ERROR]: \t", __VA_ARGS__); } while(0)
 
@@ -146,6 +148,7 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 		u8 PortNum, u8 *MasterIdx);
 u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
-
+u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
+void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit, u32 NumSetBit);
 #endif		/* end of protection macro */
 /** @} */

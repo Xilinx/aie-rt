@@ -25,6 +25,7 @@
 * 1.6   Nishad  07/06/2020  Add _XAie_GetMstrIdx() helper API and move
 *			    _XAie_GetSlaveIdx() API.
 * 1.7   Nishad  07/24/2020  Add _XAie_GetFatalGroupErrors() helper function.
+* 1.8   Dishita 08/10/2020  Add api to get bit position from tile location
 * </pre>
 *
 ******************************************************************************/
@@ -245,4 +246,44 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *Format, ...)
 	va_end(ArgPtr);
 }
 
+/*****************************************************************************/
+/**
+* This is an internal API to get bit position corresponding to tile location in
+* bitmap. This bitmap does not represent Shim tile so this API
+* only accepts AIE tile.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE tile
+* @return       Bit position in the TilesInUse bitmap
+*
+* @note         None
+*
+******************************************************************************/
+u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	return Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U;
+}
+
+/*****************************************************************************/
+/**
+* This API sets given number of bits from given start bit in the given bitmap.
+*
+* @param        Bitmap: bitmap to be set
+* @param        StartSetBit: Bit position in the bitmap
+* @param        NumSetBit: Number of bits to be set.
+*
+* @return       none
+*
+* @note         This API is internal, hence all the argument checks are taken
+*               care of in the caller API.
+*
+******************************************************************************/
+void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit,
+		u32 NumSetBit)
+{
+	for(u32 i = StartSetBit; i < StartSetBit + NumSetBit; i++) {
+		Bitmap[i / (sizeof(Bitmap[0]) * 8U)] |=
+			1U << (i % (sizeof(Bitmap[0]) * 8U));
+	}
+}
 /** @} */
