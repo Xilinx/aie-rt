@@ -24,12 +24,13 @@
 * 1.5   Tejus   05/26/2020  Implement elf loader using program sections.
 * 1.6   Tejus   06/03/2020  Fix compilation error for simulation.
 * 1.7   Tejus   06/10/2020  Switch to new io backend.
+* 1.8   Dishita 08/10/2020  Add calls to turn ECC on and off for PM and DM.
 * </pre>
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_elfloader.h"
-
+#include "xaie_ecc.h"
 /************************** Constant Definitions *****************************/
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -273,6 +274,15 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Addr = (SectionAddr & AddrMask) +
 			_XAie_GetTileAddr(DevInst, TgtLoc.Row, TgtLoc.Col);
 
+		/* Turn ECC On if EccStatus flag is set. */
+		if(DevInst->EccStatus) {
+			RC = _XAie_EccOnDM(DevInst, TgtLoc);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Unable to turn ECC On for Data Memory\n");
+				return RC;
+			}
+		}
+
 		/* ceil(number of 32bit words to write)*/
 		XAie_BlockWrite32(DevInst, Addr, (u32 *)ProgSec,
 				(BytesToWrite + 4U - 1U) / 4U);
@@ -305,6 +315,15 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		BytesToWrite = SectionSize - OverFlowBytes;
 		Addr = (SectionAddr & AddrMask) +
 			_XAie_GetTileAddr(DevInst, TgtLoc.Row, TgtLoc.Col);
+
+		/* Turn ECC On if the EccStatus flag is set */
+		if(DevInst->EccStatus) {
+			RC = _XAie_EccOnDM(DevInst, TgtLoc);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Unable to turn ECC On for Data Memory\n");
+				return RC;
+			}
+		}
 
 		/* ceil(number of 32bit words to write)*/
 		XAie_BlockSet32(DevInst, Addr, 0U,
@@ -357,6 +376,11 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Ehdr = (Elf32_Ehdr *) ElfMem;
 	_XAie_PrintElfHdr(Ehdr);
 
+	/* For AIE, turn ECC Off before program memory load */
+	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		_XAie_EccEvntResetPM(DevInst, Loc);
+	}
+
 	for(u8 phnum = 0U; phnum < Ehdr->e_phnum; phnum++) {
 		Phdr = (Elf32_Phdr*) (ElfMem + sizeof(*Ehdr) +
 			phnum * sizeof(*Phdr));
@@ -368,6 +392,15 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 			if(RC != XAIE_OK) {
 				return RC;
 			}
+		}
+	}
+
+	/* Turn ECC On after program memory load */
+	if(DevInst->EccStatus) {
+		RC = _XAie_EccOnPM(DevInst, Loc);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Unable to turn ECC On for Program Memory\n");
+			return RC;
 		}
 	}
 
