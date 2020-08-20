@@ -110,6 +110,8 @@ typedef struct {
 	u8 IsReady;
 	u8 EccStatus;		/* Ecc On/Off status of the partition */
 	u32 TilesInUse[XAIE_TILES_BITMAP_SIZE]; /* Bitmap for tiles in use */
+	u32 MemInUse[XAIE_TILES_BITMAP_SIZE];/* Bitmap for ECC status of DM */
+	u32 CoreInUse[XAIE_TILES_BITMAP_SIZE];/* Bitmap for ECC status of PM */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
