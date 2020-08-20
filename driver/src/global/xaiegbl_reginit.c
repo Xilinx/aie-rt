@@ -534,6 +534,7 @@ static const XAie_CoreMod AieCoreMod =
 	.ProgMemHostOffset = XAIEGBL_CORE_PRGMEM,
 	.DataMemSize = 32 * 1024,
 	.DataMemShift = 15U,
+	.EccEvntRegOff = 0x00032110,
 	.CoreCtrl = &AieCoreCtrlReg,
 	.CoreSts = &AieCoreStsReg,
 	.CoreDebug = &AieCoreDebugReg
@@ -543,7 +544,8 @@ static const XAie_CoreMod AieCoreMod =
 static const XAie_MemMod AieTileMemMod =
 {
 	.Size = 32 * 1024,
-	.MemAddr = XAIEGBL_MEM_DATMEM
+	.MemAddr = XAIEGBL_MEM_DATMEM,
+	.EccEvntRegOff = 0x00012110,
 };
 
 /* PL Interface module for SHIMPL Tiles */
