@@ -146,6 +146,7 @@ typedef struct {
 	u32 DataMemAddr;
 	u32 DataMemSize;
 	u32 DataMemShift;
+	u32 EccEvntRegOff;
 	const XAie_RegCoreSts *CoreSts;
 	const XAie_RegCoreCtrl *CoreCtrl;
 	const XAie_RegCoreDebug *CoreDebug;
@@ -417,6 +418,7 @@ typedef struct XAie_DmaMod {
 typedef struct {
 	u32 Size;
 	u32 MemAddr;
+	u32 EccEvntRegOff;
 } XAie_MemMod;
 
 /*
