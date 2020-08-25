@@ -55,12 +55,12 @@
 ******************************************************************************/
 void _XAie_TileDmaInit(XAie_DmaDesc *Desc)
 {
-	Desc->MultiDimDesc.Gen1MultiDimDesc.X_Incr = XAIE_DMA_TILEDMA_2DX_DEFAULT_INCR;
-	Desc->MultiDimDesc.Gen1MultiDimDesc.X_Wrap = XAIE_DMA_TILEDMA_2DX_DEFAULT_WRAP;
-	Desc->MultiDimDesc.Gen1MultiDimDesc.X_Offset = XAIE_DMA_TILEDMA_2DX_DEFAULT_OFFSET;
-	Desc->MultiDimDesc.Gen1MultiDimDesc.Y_Incr = XAIE_DMA_TILEDMA_2DY_DEFAULT_INCR;
-	Desc->MultiDimDesc.Gen1MultiDimDesc.Y_Wrap = XAIE_DMA_TILEDMA_2DY_DEFAULT_WRAP;
-	Desc->MultiDimDesc.Gen1MultiDimDesc.Y_Offset = XAIE_DMA_TILEDMA_2DY_DEFAULT_OFFSET;
+	Desc->MultiDimDesc.AieMultiDimDesc.X_Incr = XAIE_DMA_TILEDMA_2DX_DEFAULT_INCR;
+	Desc->MultiDimDesc.AieMultiDimDesc.X_Wrap = XAIE_DMA_TILEDMA_2DX_DEFAULT_WRAP;
+	Desc->MultiDimDesc.AieMultiDimDesc.X_Offset = XAIE_DMA_TILEDMA_2DX_DEFAULT_OFFSET;
+	Desc->MultiDimDesc.AieMultiDimDesc.Y_Incr = XAIE_DMA_TILEDMA_2DY_DEFAULT_INCR;
+	Desc->MultiDimDesc.AieMultiDimDesc.Y_Wrap = XAIE_DMA_TILEDMA_2DY_DEFAULT_WRAP;
+	Desc->MultiDimDesc.AieMultiDimDesc.Y_Offset = XAIE_DMA_TILEDMA_2DY_DEFAULT_OFFSET;
 
 	return;
 }
@@ -150,17 +150,17 @@ AieRC _XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel,
 ******************************************************************************/
 AieRC _XAie_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
 {
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Offset =
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Offset =
 		Tensor->Dim[0].AieDimDesc.Offset;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Wrap =
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Wrap =
 		Tensor->Dim[0].AieDimDesc.Wrap - 1U;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Incr =
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Incr =
 		Tensor->Dim[0].AieDimDesc.Incr - 1U;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.Y_Offset =
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Offset =
 		Tensor->Dim[1].AieDimDesc.Offset;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.Y_Wrap =
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Wrap =
 		Tensor->Dim[1].AieDimDesc.Wrap - 1U;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.Y_Incr =
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Incr =
 		Tensor->Dim[1].AieDimDesc.Incr - 1U;
 
 	return XAIE_OK;
@@ -186,10 +186,10 @@ AieRC _XAie_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
 AieRC _XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 		u8 IntrleaveCount, u16 IntrleaveCurr)
 {
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.EnInterleaved = XAIE_ENABLE;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.IntrleaveBufSelect = DoubleBuff;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.IntrleaveCount = IntrleaveCount;
-	DmaDesc->MultiDimDesc.Gen1MultiDimDesc.CurrPtr = IntrleaveCurr;
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.EnInterleaved = XAIE_ENABLE;
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveBufSelect = DoubleBuff;
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveCount = IntrleaveCount;
+	DmaDesc->MultiDimDesc.AieMultiDimDesc.CurrPtr = IntrleaveCurr;
 
 	return XAIE_OK;
 }
@@ -388,24 +388,24 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 				BdProp->DoubleBuffer->BaseAddr_B.Mask);
 
 	BdWord[2U] = XAie_SetField(
-			DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Incr,
+			DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Incr,
 			BdProp->AddrMode->AieMultiDimAddr.X_Incr.Lsb,
 			BdProp->AddrMode->AieMultiDimAddr.X_Incr.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Wrap,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Wrap,
 				BdProp->AddrMode->AieMultiDimAddr.X_Wrap.Lsb,
 				BdProp->AddrMode->AieMultiDimAddr.X_Wrap.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Offset,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Offset,
 				BdProp->AddrMode->AieMultiDimAddr.X_Offset.Lsb,
 				BdProp->AddrMode->AieMultiDimAddr.X_Offset.Mask);
 
 	BdWord[3U] = XAie_SetField(
-			DmaDesc->MultiDimDesc.Gen1MultiDimDesc.Y_Incr,
+			DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Incr,
 			BdProp->AddrMode->AieMultiDimAddr.Y_Incr.Lsb,
 			BdProp->AddrMode->AieMultiDimAddr.Y_Incr.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.X_Wrap,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Wrap,
 				BdProp->AddrMode->AieMultiDimAddr.Y_Wrap.Lsb,
 				BdProp->AddrMode->AieMultiDimAddr.Y_Wrap.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.Y_Offset,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Offset,
 				BdProp->AddrMode->AieMultiDimAddr.Y_Offset.Lsb,
 				BdProp->AddrMode->AieMultiDimAddr.Y_Offset.Mask);
 
@@ -416,10 +416,10 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 				BdProp->Pkt->PktType.Mask);
 
 	BdWord[5U] = XAie_SetField(
-			DmaDesc->MultiDimDesc.Gen1MultiDimDesc.IntrleaveBufSelect,
+			DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveBufSelect,
 			BdProp->DoubleBuffer->BuffSelect.Lsb,
 			BdProp->DoubleBuffer->BuffSelect.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.CurrPtr,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.CurrPtr,
 				BdProp->AddrMode->AieMultiDimAddr.CurrPtr.Lsb,
 				BdProp->AddrMode->AieMultiDimAddr.CurrPtr.Mask);
 
@@ -436,10 +436,10 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 				BdProp->DoubleBuffer->FifoMode.Mask) |
 		XAie_SetField(DmaDesc->PktDesc.PktEn, BdProp->Pkt->EnPkt.Lsb,
 				BdProp->Pkt->EnPkt.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.Gen1MultiDimDesc.EnInterleaved,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.EnInterleaved,
 				BdProp->DoubleBuffer->EnIntrleaved.Lsb,
 				BdProp->DoubleBuffer->EnIntrleaved.Mask) |
-		XAie_SetField((DmaDesc->MultiDimDesc.Gen1MultiDimDesc.IntrleaveCount - 1U),
+		XAie_SetField((DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveCount - 1U),
 				BdProp->DoubleBuffer->IntrleaveCnt.Lsb,
 				BdProp->DoubleBuffer->IntrleaveCnt.Mask) |
 		XAie_SetField(DmaDesc->BdEnDesc.NxtBd,

@@ -185,10 +185,10 @@ typedef struct {
 	u32 Offset;
 	u32 Incr;
 	u32 Wrap;
-} XAie_Gen1DmaDimDesc;
+} XAie_AieDmaDimDesc;
 
 typedef union {
-	XAie_Gen1DmaDimDesc AieDimDesc;
+	XAie_AieDmaDimDesc AieDimDesc;
 	XAie_Gen2DmaDimDesc Aie2DimDesc;
 } XAie_DmaDimDesc;
 
@@ -245,7 +245,7 @@ typedef struct {
 	u16 CurrPtr;
 	u8 IntrleaveCount;
 	u8 EnInterleaved;
-} XAie_Gen1MultiDimDesc;
+} XAie_AieMultiDimDesc;
 
 typedef struct {
 	u16 Wrap;
@@ -259,7 +259,7 @@ typedef struct {
 } XAie_Gen2MultiDimDesc;
 
 typedef union {
-	XAie_Gen1MultiDimDesc Gen1MultiDimDesc;
+	XAie_AieMultiDimDesc AieMultiDimDesc;
 	XAie_Gen2MultiDimDesc Gen2MultiDimDesc;
 } XAie_MultiDimDesc;
 
