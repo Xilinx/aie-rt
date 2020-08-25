@@ -289,6 +289,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 		SectionSize -= BytesToWrite;
 		SectionAddr += BytesToWrite;
+		ProgSec += BytesToWrite;
 	}
 
 	/* Write un-initialized section to data memory */
