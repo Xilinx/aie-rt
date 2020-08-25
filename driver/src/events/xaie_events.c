@@ -184,8 +184,8 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegOffset = EvntMod->ComboInputRegOff;
-	Event1Lsb = ComboId * EvntMod->ComboEventOff;
-	Event2Lsb = (ComboId + 1) * EvntMod->ComboEventOff;
+	Event1Lsb = (ComboId * 2U) * EvntMod->ComboEventOff;
+	Event2Lsb = (ComboId * 2U + 1) * EvntMod->ComboEventOff;
 	Event1Mask = EvntMod->ComboEventMask << Event1Lsb;
 	Event2Mask = EvntMod->ComboEventMask << Event2Lsb;
 	FldVal = XAie_SetField(MappedEvent1, Event1Lsb, Event1Mask) |
