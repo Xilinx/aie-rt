@@ -29,6 +29,9 @@
 #include "xaie_events.h"
 #include "xaie_helper.h"
 
+/***************************** Macro Definitions *****************************/
+#define XAIE_EVENT_PC_RESET		0xFFFF
+
 /************************** Constant Definitions *****************************/
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -1085,6 +1088,14 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(Valid == XAIE_DISABLE) {
 		FldVal = XAie_SetField(Valid, EvntMod->PCValid.Lsb,
 				EvntMod->PCValid.Mask);
+
+		if(PCAddr == XAIE_EVENT_PC_RESET) {
+			FldVal |= XAie_SetField(0U, EvntMod->PCAddr.Lsb,
+						EvntMod->PCAddr.Mask);
+			XAie_Write32(DevInst, RegAddr, FldVal);
+			return XAIE_OK;
+		}
+
 		XAie_MaskWrite32(DevInst, RegAddr, EvntMod->PCValid.Mask,
 				FldVal);
 	} else {
@@ -1198,7 +1209,8 @@ AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 		return XAIE_INVALID_TILE;
 	}
 
-	return _XAie_EventPCConfig(DevInst, Loc, PCEventId, 0U, XAIE_DISABLE);
+	return _XAie_EventPCConfig(DevInst, Loc, PCEventId,
+					XAIE_EVENT_PC_RESET, XAIE_DISABLE);
 }
 
 /** @} */
