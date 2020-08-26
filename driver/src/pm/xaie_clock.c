@@ -173,6 +173,8 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		u32 NumTiles)
 {
 	u32 SetTileStatus, CheckTileStatus;
+	XAie_BackendTilesArray TilesArray;
+	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -190,6 +192,66 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if (NumTiles != 0 && Loc == NULL) {
+		XAIE_ERROR("NumTiles is not 0, but Location array is empty.\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Check validity of all tiles in the list passed to this API */
+	for(u32 j = 0; j < NumTiles; j++) {
+		if(Loc[j].Row >= DevInst->NumRows ||
+			Loc[j].Col >= DevInst->NumCols) {
+			XAIE_ERROR("Invalid Loc Col:%d Row:%d\n", Loc[j].Col, Loc[j].Row);
+			return XAIE_INVALID_ARGS;
+		}
+	}
+
+	TilesArray.NumTiles = NumTiles;
+	TilesArray.Locs = Loc;
+	/*
+	 * Try IO backend request tiles operation first. If the operation is
+	 * not supported, use the common implementation.
+	 */
+	RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_REQUEST_TILES,
+			(void *)&TilesArray);
+	if (RC != XAIE_FEATURE_NOT_SUPPORTED) {
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to request tiles from backend.\n");
+			return RC;
+		}
+
+		/* Setup the requested tiles bitmap locally */
+		if (Loc == NULL) {
+			u32 StartBit;
+
+			NumTiles = DevInst->NumCols * (DevInst->NumRows - 1);
+			/* Loc is NULL, it suggests all tiles are requested */
+			StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
+						XAie_TileLoc(0, 1));
+			_XAie_SetBitInBitmap(DevInst->TilesInUse, StartBit,
+					NumTiles);
+		} else {
+			for(u32 i = 0; i < NumTiles; i++) {
+				u32 Bit;
+
+				if(Loc[i].Row == 0) {
+					continue;
+				}
+
+				/*
+				 * If a tile is ungated, the rows below it are
+				 * ungated.
+				 */
+				Bit = _XAie_GetTileBitPosFromLoc(DevInst,
+						XAie_TileLoc(Loc[i].Col, 1));
+				_XAie_SetBitInBitmap(DevInst->TilesInUse,
+						Bit, Loc[i].Row);
+			}
+		}
+
+		return XAIE_OK;
+	}
+
 	/*
 	 * Passing empty list to enable all tiles of device instance is
 	 * temporary and will be removed soon.
@@ -205,15 +267,6 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
 
 		return XAIE_OK;
-	}
-
-	/* Check validity of all tiles in the list passed to this API */
-	for(u32 j = 0; j < NumTiles; j++) {
-		if(Loc[j].Row >= DevInst->NumRows ||
-			Loc[j].Col >= DevInst->NumCols) {
-			XAIE_ERROR("Invalid Loc Col:%d Row:%d\n", Loc[j].Col, Loc[j].Row);
-			return XAIE_INVALID_ARGS;
-		}
 	}
 
 	for(u32 i = 0; i < NumTiles; i++) {
