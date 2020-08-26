@@ -1164,6 +1164,54 @@ static AieRC _XAie_LinuxIO_RequestTiles(void *IOInst,
 /*****************************************************************************/
 /**
 *
+* This is function to release AI engine tiles
+*
+* @param	IOInst: IO instance pointer
+* @param	Args: Tiles array argument
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxIO_ReleaseTiles(void *IOInst,
+		XAie_BackendTilesArray *Args)
+{
+	struct aie_tiles_array TilesArray;
+	int Ret;
+
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+
+	TilesArray.num_tiles = Args->NumTiles;
+	TilesArray.locs = XAIE_NULL;
+	if (TilesArray.num_tiles != 0) {
+		TilesArray.locs = malloc(TilesArray.num_tiles *
+					 sizeof(TilesArray.locs[0]));
+		if (TilesArray.locs == XAIE_NULL) {
+			XAIE_ERROR("release tiles, failed to allocate memory for tiles\n");
+			return XAIE_ERR;
+		}
+
+		for (u32 i = 0; i < TilesArray.num_tiles; i++) {
+			TilesArray.locs[i].col = Args->Locs[i].Col;
+			TilesArray.locs[i].row = Args->Locs[i].Row;
+		}
+	}
+
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RELEASE_TILES_IOCTL,
+			&TilesArray);
+	free(TilesArray.locs);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to request tiles\n");
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the function to run backend operations
 *
 * @param	IOInst: IO instance pointer
@@ -1185,6 +1233,8 @@ AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		return _XAie_LinuxIO_ConfigShimDmaBd(IOInst, Arg);
 	case XAIE_BACKEND_OP_REQUEST_TILES:
 		return _XAie_LinuxIO_RequestTiles(IOInst, Arg);
+	case XAIE_BACKEND_OP_RELEASE_TILES:
+		return _XAie_LinuxIO_ReleaseTiles(IOInst, Arg);
 	default:
 		XAIE_ERROR("Linux backend does not support operation %d\n", Op);
 		return XAIE_FEATURE_NOT_SUPPORTED;
