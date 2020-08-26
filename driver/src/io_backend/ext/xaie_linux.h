@@ -40,6 +40,8 @@ void XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff, u32 *Data, u32 Size);
 void XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size);
 void XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 		u32 CmdWd1, const char *CmdStr);
+AieRC XAie_LinuxIO_OpSupported(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op);
 AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		XAie_BackendOpCode Op, void *Arg);
 XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst *DevInst, u64 Size,

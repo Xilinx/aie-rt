@@ -39,6 +39,7 @@ typedef enum {
 	XAIE_BACKEND_OP_ASSERT_SHIMRST,
 	XAIE_BACKEND_OP_SET_PROTREG,
 	XAIE_BACKEND_OP_CONFIG_SHIMDMABD,
+	XAIE_BACKEND_OP_REQUEST_TILES,
 } XAie_BackendOpCode;
 
 /*
@@ -48,6 +49,14 @@ typedef struct XAie_BackendNpiWrReq {
 	u32 NpiRegOff;
 	u32 Val;
 } XAie_BackendNpiWrReq;
+
+/*
+ * Typedef for structure for tiles array
+ */
+typedef struct XAie_BackendTilesArray {
+	XAie_LocType *Locs;
+	u32 NumTiles;
+} XAie_BackendTilesArray;
 
 /*
  * Typdef to capture all the backend IO operations
