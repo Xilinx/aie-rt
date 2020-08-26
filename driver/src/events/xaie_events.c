@@ -368,10 +368,13 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 
 	SelectRegOffId = SelectId / EvntMod->StrmPortSelectIdsPerReg;
 	RegOffset = EvntMod->BaseStrmPortSelectRegOff + SelectRegOffId * 4U;
-	PortIdLsb = SelectId * EvntMod->PortIdOff;
+	PortIdLsb = EvntMod->PortIdOff *
+			(SelectId % EvntMod->StrmPortSelectIdsPerReg);
 	PortIdMask = EvntMod->PortIdMask << PortIdLsb;
-	PortMstrSlvLsb = SelectId * EvntMod->PortMstrSlvOff;
-	PortMstrSlvMask = EvntMod->PortMstrSlvMask << PortMstrSlvLsb;
+	PortMstrSlvLsb = EvntMod->PortMstrSlvOff + 8U *
+				(SelectId % EvntMod->StrmPortSelectIdsPerReg);
+	PortMstrSlvMask = EvntMod->PortMstrSlvMask << (8U *
+				(SelectId % EvntMod->StrmPortSelectIdsPerReg));
 	FldVal = XAie_SetField(PortIdx, PortIdLsb, PortIdMask) |
 		 XAie_SetField(PortIntf, PortMstrSlvLsb, PortMstrSlvMask);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
