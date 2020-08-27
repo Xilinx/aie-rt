@@ -289,7 +289,7 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Event = XAIE_EVENT_NONE_PL;
 	} else if(Module == XAIE_MEM_MOD) {
 		if(TileType == XAIEGBL_TILE_TYPE_RESERVED)
-			Event = XAIE_EVENT_NONE_MEM_TILE;
+			Event = XAIE_EVENT_NONE_MEM;
 		else
 			Event = XAIE_EVENT_NONE_MEM;
 	}
@@ -621,7 +621,7 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Event = XAIE_EVENT_NONE_PL;
 	} else if(Module == XAIE_MEM_MOD) {
 		if(TileType == XAIEGBL_TILE_TYPE_RESERVED)
-			Event = XAIE_EVENT_NONE_MEM_TILE;
+			Event = XAIE_EVENT_NONE_MEM;
 		else
 			Event = XAIE_EVENT_NONE_MEM;
 	}
