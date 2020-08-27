@@ -44,7 +44,6 @@
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	Event: Event to be triggered
 *
 * @return	XAIE_OK on success, error code on failure.
@@ -116,7 +115,6 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	ComboId: Combo index.
 * @param	Op: Logical operation between Event1 and Event2 to trigger combo
 *		    event.
@@ -210,7 +208,6 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	ComboId: Combo index.
 * @param	Op: Logical operation between Event1 and Event2 to trigger combo
 *		    event.
@@ -261,7 +258,6 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	ComboId: Combo index.
 *
 * @return	XAIE_OK on success, error code on failure.
@@ -490,7 +486,6 @@ AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	BroadcastId: Broadcast index.
 * @param	Event: Event to broadcast.
 *
@@ -556,7 +551,6 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	BroadcastId: Broadcast index.
 * @param	Event: Event to broadcast.
 *
@@ -596,7 +590,6 @@ AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	BroadcastId: Broadcast index.
 *
 * @return	XAIE_OK on success, error code on failure.
@@ -647,10 +640,9 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	Switch: Event switch in the given module.
 *			for AIE Tile switch value is XAIE_EVENT_SWITCH_A,
-*			for Shim tile and Mem tile switch value could be
+*			for Shim tile switch value could be
 *			XAIE_EVENT_SWITCH_A or XAIE_EVENT_SWITCH_B.
 * @param	BroadcastId: Broadcast index.
 * @parma	Dir: Direction to block events on given broadcast index. Values
@@ -733,10 +725,9 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	Switch: Event switch in the given module.
 *			for AIE Tile switch value is XAIE_EVENT_SWITCH_A,
-*			for Shim tile and Mem tile switch value could be
+*			for Shim tile switch value could be
 *			XAIE_EVENT_SWITCH_A or XAIE_EVENT_SWITCH_B.
 * @param	ChannelBitMap: Bitmap to block broadcast channels.
 * @parma	Dir: Direction to block events on given broadcast index. Values
@@ -819,10 +810,9 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	Switch: Event switch in the given module.
 *			for AIE Tile switch value is XAIE_EVENT_SWITCH_A,
-*			for Shim tile and Mem tile switch value could be
+*			for Shim tile switch value could be
 *			XAIE_EVENT_SWITCH_A or XAIE_EVENT_SWITCH_B.
 * @param	BroadcastId: Broadcast index.
 * @parma	Dir: Direction to unblock events on given broadcast index.
@@ -906,7 +896,6 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	GroupEvent: Group event ID.
 * @param	GroupBitMap: Bit mask.
 * @param	Reset: XAIE_RESETENABLE or XAIE_RESETDISABLE to reset or unreset
@@ -973,7 +962,6 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	GroupEvent: Group event ID.
 * @param	GroupBitMap: Bit mask.
 *
@@ -1014,7 +1002,6 @@ AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	GroupEvent: Group event ID.
 *
 * @return	XAIE_OK on success, error code on failure.
@@ -1054,7 +1041,6 @@ AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
 * @param	PCEventId: PC Event index.
 * @param	PCAddr: PC event on this instruction address.
 * @param	Valid: XAIE_ENABLE or XAIE_DISABLE to enable or disable PC

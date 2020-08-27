@@ -59,7 +59,6 @@
 * @param	Module: Module of tile.
 *			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			For Pl or Shim tile - XAIE_PL_MOD,
-*			For Mem tile - XAIE_MEM_MOD.
 * @param	Counter:Performance Counter
 * @param	CounterVal: Pointer to store Counter Value
 * @return	XAIE_OK on success
@@ -129,7 +128,6 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			For Pl or Shim tile - XAIE_PL_MOD,
-*			For Mem tile - XAIE_MEM_MOD.
 * @param	Counter:Performance Counter
 * @param	StartEvent:Event that triggers start to the counter
 * @Param	StopEvent: Event that triggers stop to the counter
@@ -236,7 +234,6 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			For Pl or Shim tile - XAIE_PL_MOD,
-*			For Mem tile - XAIE_MEM_MOD.
 * @param	Counter:Performance Counter
 * @param	ResetEvent:Event that triggers reset to the counter
 * @return	XAIE_OK on success
@@ -335,7 +332,6 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			For Pl or Shim tile - XAIE_PL_MOD,
-*			For Mem tile - XAIE_MEM_MOD.
 *
 * @param	Counter:Performance Counter
 * @param	CounterVal:Performance Counter Value
@@ -406,7 +402,6 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Module: Module of tile.
 *			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			For Pl or Shim tile - XAIE_PL_MOD,
-*			For Mem tile - XAIE_MEM_MOD.
 * @param	Counter:Performance Counter
 * @param	EventVal:Event value to set
 * @return	XAIE_OK on success
@@ -476,7 +471,6 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param        Module: Module of tile.
 *                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *                       For Pl or Shim tile - XAIE_PL_MOD,
-*                       For Mem tile - XAIE_MEM_MOD.
 * @param        Counter:Performance Counter
 * @return       XAIE_OK on success
 *               XAIE_INVALID_ARGS if any argument is invalid
@@ -499,7 +493,6 @@ AieRC XAie_PerfCounterEventValueReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param        Module: Module of tile.
 *                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *                       For Pl or Shim tile - XAIE_PL_MOD,
-*                       For Mem tile - XAIE_MEM_MOD.
 *
 * @param        Counter:Performance Counter
 * @return       XAIE_OK on success
@@ -524,7 +517,6 @@ AieRC XAie_PerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param        Module: Module of tile.
 *                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *                       For Pl or Shim tile - XAIE_PL_MOD,
-*                       For Mem tile - XAIE_MEM_MOD.
 * @param        Counter:Performance Counter
 * @return       XAIE_OK on success
 *               XAIE_INVALID_ARGS if any argument is invalid
@@ -585,7 +577,6 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param        Module: Module of tile.
 *                       For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *                       For Pl or Shim tile - XAIE_PL_MOD,
-*                       For Mem tile - XAIE_MEM_MOD.
 * @param        Counter:Performance Counter
 * @return       XAIE_OK on success
 *               XAIE_INVALID_ARGS if any argument is invalid
