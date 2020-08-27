@@ -2375,7 +2375,7 @@ XAie_TileMod AieMod[] =
 	},
 	{
 		/*
-		 * AIE Reserved Module indexed using XAIEGBL_TILE_TYPE_RESERVED
+		 * AIE MemTile Module indexed using XAIEGBL_TILE_TYPE_MEMTILE
 		 */
 		.CoreMod = NULL,
 		.StrmSw  = NULL,

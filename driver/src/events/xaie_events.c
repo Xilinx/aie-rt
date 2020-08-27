@@ -292,7 +292,7 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	} else if(Module == XAIE_PL_MOD) {
 		Event = XAIE_EVENT_NONE_PL;
 	} else if(Module == XAIE_MEM_MOD) {
-		if(TileType == XAIEGBL_TILE_TYPE_RESERVED)
+		if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
 			Event = XAIE_EVENT_NONE_MEM_TILE;
 		else
 			Event = XAIE_EVENT_NONE_MEM;
@@ -471,7 +471,7 @@ AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	else if(TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
 		TileType == XAIEGBL_TILE_TYPE_SHIMNOC)
 		Port = CTRL;
-	else if(TileType == XAIEGBL_TILE_TYPE_RESERVED)
+	else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
 		Port = DMA;
 
 	return _XAie_EventSelectStrmPortConfig(DevInst, Loc, SelectId,
@@ -627,7 +627,7 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	} else if(Module == XAIE_PL_MOD) {
 		Event = XAIE_EVENT_NONE_PL;
 	} else if(Module == XAIE_MEM_MOD) {
-		if(TileType == XAIEGBL_TILE_TYPE_RESERVED)
+		if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
 			Event = XAIE_EVENT_NONE_MEM_TILE;
 		else
 			Event = XAIE_EVENT_NONE_MEM;
