@@ -49,6 +49,9 @@ AieRC XAie_DmaSetOutofOrderBdId(XAie_DmaDesc *DmaDesc, u8 OutofOrderBdId);
 AieRC XAie_DmaSetDoubleBuffer(XAie_DmaDesc *DmaDesc, u64 Addr, XAie_Lock Acq,
 		XAie_Lock Rel);
 AieRC XAie_DmaSetAddrLen(XAie_DmaDesc *DmaDesc, u64 Addr, u32 Len);
+AieRC XAie_DmaSetMemInst(XAie_DmaDesc *DmaDesc, XAie_MemInst *MemInst);
+AieRC XAie_DmaSetAddrOffsetLen(XAie_DmaDesc *DmaDesc, XAie_MemInst *MemInst,
+			       u64 Offset, u32 Len);
 AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 		u64 Addr, u32 Len);
 AieRC XAie_DmaEnableCompression(XAie_DmaDesc *DmaDesc);
