@@ -102,5 +102,7 @@ AieRC XAie_DmaChannelEnCompression(XAie_DmaChannelDesc *DmaChannelDesc,
 		u8 EnCompression);
 AieRC XAie_DmaChannelDescInit(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc);
+AieRC XAie_DmaSetZeroPadding(XAie_DmaDesc *DmaDesc, u8 Dim,
+		XAie_DmaZeroPaddingPos Pos, u8 NumZeros);
 
 #endif		/* end of protection macro */
