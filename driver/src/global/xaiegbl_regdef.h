@@ -385,6 +385,7 @@ typedef struct {
 	XAie_RegFldAttr StalledLockAcq;
 	XAie_RegFldAttr StalledStreamStarve;
 	XAie_RegFldAttr TaskQSize;
+	XAie_RegFldAttr StalledTCT;
 } XAie_Gen2DmaChStatus;
 
 typedef union {
