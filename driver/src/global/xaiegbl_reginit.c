@@ -59,6 +59,7 @@
 #include "xaie_events_aie.h"
 #include "xaie_locks_aie.h"
 #include "xaie_reset_aie.h"
+#include "xaie_ss_aie.h"
 #include "xaiegbl_regdef.h"
 #include "xaiegbl_params.h"
 
@@ -925,6 +926,7 @@ static const XAie_StrmMod AieTileStrmSw =
 	.MaxSlavePhyPortId = 26U,
 	.MasterPortMap = AieTileStrmSwMasterPortMap,
 	.SlavePortMap = AieTileStrmSwSlavePortMap,
+	.PortVerify = _XAie_StrmSwCheckPortValidity,
 };
 
 /*
@@ -956,6 +958,7 @@ static const XAie_StrmMod AieShimStrmSw =
 	.MaxSlavePhyPortId = 23U,
 	.MasterPortMap = AieShimStrmSwMasterPortMap,
 	.SlavePortMap = AieShimStrmSwSlavePortMap,
+	.PortVerify = _XAie_StrmSwCheckPortValidity,
 };
 
 /* Register field attributes for PL interface down sizer for 32 and 64 bits */
