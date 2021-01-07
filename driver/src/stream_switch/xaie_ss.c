@@ -244,10 +244,12 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 	MstrAddr = MstrOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	SlvAddr = SlvOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	XAie_Write32(DevInst, MstrAddr, MstrVal);
-	XAie_Write32(DevInst, SlvAddr, SlvVal);
+	RC = XAie_Write32(DevInst, MstrAddr, MstrVal);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
-	return XAIE_OK;
+	return XAie_Write32(DevInst, SlvAddr, SlvVal);
 }
 
 /*****************************************************************************/
@@ -368,9 +370,7 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	XAie_Write32(DevInst, Addr, RegVal);
-
-	return XAIE_OK;
+	return XAie_Write32(DevInst, Addr, RegVal);
 }
 
 /*****************************************************************************/
@@ -510,9 +510,7 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	XAie_Write32(DevInst, Addr, RegVal);
-
-	return XAIE_OK;
+	return XAie_Write32(DevInst, Addr, RegVal);
 }
 
 /*****************************************************************************/
@@ -648,9 +646,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 					StrmMod->SlotArbitor.Mask);
 	}
 
-	XAie_Write32(DevInst, RegAddr, RegVal);
-
-	return XAIE_OK;
+	return XAie_Write32(DevInst, RegAddr, RegVal);
 }
 
 /*****************************************************************************/
