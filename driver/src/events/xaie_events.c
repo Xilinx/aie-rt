@@ -103,9 +103,7 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 	FldVal = XAie_SetField(MappedEvent, EvntMod->GenEvent.Lsb, FldMask);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
-
-	return XAIE_OK;
+	return XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 }
 
 /*****************************************************************************/
@@ -164,7 +162,10 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	FldVal = XAie_SetField(Op, ComboId * EvntMod->ComboConfigOff, FldMask);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
+	RC = XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	/* Skip combo input event register config for XAIE_COMBO2 combo ID */
 	if(ComboId == XAIE_EVENT_COMBO2)
@@ -197,9 +198,8 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 XAie_SetField(MappedEvent2, Event2Lsb, Event2Mask);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAie_MaskWrite32(DevInst, RegAddr, Event1Mask | Event2Mask, FldVal);
-
-	return XAIE_OK;
+	return XAie_MaskWrite32(DevInst, RegAddr, Event1Mask | Event2Mask,
+			FldVal);
 }
 
 /*****************************************************************************/
@@ -384,9 +384,8 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 		 XAie_SetField(PortIntf, PortMstrSlvLsb, PortMstrSlvMask);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAie_MaskWrite32(DevInst, RegAddr, PortIdMask | PortMstrSlvMask, FldVal);
-
-	return XAIE_OK;
+	return XAie_MaskWrite32(DevInst, RegAddr, PortIdMask | PortMstrSlvMask,
+			FldVal);
 }
 
 /*****************************************************************************/
@@ -543,9 +542,7 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegOffset = EvntMod->BaseBroadcastRegOff + BroadcastId * 4U;
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
-	XAie_Write32(DevInst, RegAddr, MappedEvent);
-
-	return XAIE_OK;
+	return XAie_Write32(DevInst, RegAddr, MappedEvent);
 }
 
 /*****************************************************************************/
@@ -719,7 +716,10 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 			    Switch * EvntMod->BroadcastSwOff;
 		RegAddr   = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
-		XAie_Write32(DevInst, RegAddr, XAIE_ENABLE << BroadcastId);
+		RC = XAie_Write32(DevInst, RegAddr, XAIE_ENABLE << BroadcastId);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
 	}
 
 	return XAIE_OK;
@@ -805,7 +805,10 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 			    Switch * EvntMod->BroadcastSwOff;
 		RegAddr   = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
-		XAie_Write32(DevInst, RegAddr, ChannelBitMap);
+		RC = XAie_Write32(DevInst, RegAddr, ChannelBitMap);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
 	}
 
 	return XAIE_OK;
@@ -891,7 +894,10 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 			    Switch * EvntMod->BroadcastSwOff;
 		RegAddr   = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
-		XAie_Write32(DevInst, RegAddr, XAIE_ENABLE << BroadcastId);
+		RC = XAie_Write32(DevInst, RegAddr, XAIE_ENABLE << BroadcastId);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
 	}
 
 	return XAIE_OK;
@@ -955,7 +961,10 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 				FldVal = XAie_SetField(GroupBitMap, 0U,
 					 EvntMod->Group[Index].GroupMask);
 
-			XAie_Write32(DevInst, RegAddr, FldVal);
+			RC = XAie_Write32(DevInst, RegAddr, FldVal);
+			if(RC != XAIE_OK) {
+				return RC;
+			}
 
 			return XAIE_OK;
 		}
@@ -1070,6 +1079,7 @@ AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId, u16 PCAddr, u8 Valid)
 {
+	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal;
 	u8 TileType;
@@ -1094,18 +1104,24 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		if(PCAddr == XAIE_EVENT_PC_RESET) {
 			FldVal |= XAie_SetField(0U, EvntMod->PCAddr.Lsb,
 						EvntMod->PCAddr.Mask);
-			XAie_Write32(DevInst, RegAddr, FldVal);
-			return XAIE_OK;
+			RC = XAie_Write32(DevInst, RegAddr, FldVal);
+
+			return RC;
 		}
 
-		XAie_MaskWrite32(DevInst, RegAddr, EvntMod->PCValid.Mask,
+		RC = XAie_MaskWrite32(DevInst, RegAddr, EvntMod->PCValid.Mask,
 				FldVal);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
 	} else {
 		FldVal = XAie_SetField(PCAddr, EvntMod->PCAddr.Lsb,
 				EvntMod->PCAddr.Mask) |
 			 XAie_SetField(Valid, EvntMod->PCValid.Lsb,
 				EvntMod->PCValid.Mask);
-		XAie_Write32(DevInst, RegAddr, FldVal);
+		RC = XAie_Write32(DevInst, RegAddr, FldVal);
+
+		return RC;
 	}
 
 	return XAIE_OK;
