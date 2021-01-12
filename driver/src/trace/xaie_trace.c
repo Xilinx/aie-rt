@@ -452,7 +452,10 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = TraceMod->StatusRegOff;
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
-	RegValue = XAie_Read32(DevInst, RegAddr);
+	RC = XAie_Read32(DevInst, RegAddr, &RegValue);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	*State = XAie_GetField(RegValue, TraceMod->State.Lsb,
 			TraceMod->State.Mask);
@@ -515,7 +518,10 @@ AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = TraceMod->StatusRegOff;
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
-	RegValue = XAie_Read32(DevInst, RegAddr);
+	RC = XAie_Read32(DevInst, RegAddr, &RegValue);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	*Mode = XAie_GetField(RegValue, TraceMod->ModeSts.Lsb,
 			TraceMod->ModeSts.Mask);
