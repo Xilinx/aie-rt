@@ -4,7 +4,7 @@ CC ?= gcc
 CP = cp
 EXT = ../examples/aie_sim_test/ext/top
 LIBSOURCES = $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)
-CFLAGS += -Wall -Wextra
+CFLAGS += -Wall -Wextra --std=c11
 
 DOCS_DIR = ../tmp
 DOXYGEN_CONFIG_FILE = ../docs/aie_driver_docs_config.dox
