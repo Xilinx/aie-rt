@@ -2962,7 +2962,7 @@ XAie_TileMod AieMod[] =
 		/*
 		 * AIE MemTile Module indexed using XAIEGBL_TILE_TYPE_MEMTILE
 		 */
-		.NumModules = NULL,
+		.NumModules = 0U,
 		.CoreMod = NULL,
 		.StrmSw  = NULL,
 		.DmaMod  = NULL,
