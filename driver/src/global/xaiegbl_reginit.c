@@ -2509,6 +2509,12 @@ static const XAie_EventMap ShimTilePlModUserEventStart =
 	.Event = XAIE_EVENT_USER_EVENT_0_PL,
 };
 
+static const XAie_EventMap AieTileCoreModPCEventMap =
+{
+	.RscId = 0U,
+	.Event = XAIE_EVENT_PC_0_CORE,
+};
+
 /*
  * Data structure to capture core and memory module events properties
  * For memory module default error group mask enables,
@@ -2578,6 +2584,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.BaseStatusRegOff = XAIEGBL_MEM_EVTSTA0,
 		.NumUserEvents = 4U,
 		.UserEventMap = &AieTileMemModUserEventStart,
+		.PCEventMap = &AieTileCoreModPCEventMap,
 	},
 	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
@@ -2617,6 +2624,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.BaseStatusRegOff = XAIEGBL_CORE_EVTSTA0,
 		.NumUserEvents = 4U,
 		.UserEventMap = &AieTileCoreModUserEventMap,
+		.PCEventMap = NULL,
 	},
 };
 
@@ -2673,6 +2681,7 @@ static const XAie_EvntMod AieNocEvntMod =
 	.BaseStatusRegOff = XAIEGBL_PL_EVTSTA0,
 	.NumUserEvents = 4U,
 	.UserEventMap = &ShimTilePlModUserEventStart,
+	.PCEventMap = NULL,
 };
 
 /* Data structure to capture PL module events properties.
