@@ -18,7 +18,7 @@ INCLUDEFILES = ./*/*.h ./*/*/*.h
 INCLUDEDIR = ../include
 NAME := xaiengine
 MAJOR = 2
-MINOR = 0
+MINOR = 1
 VERSION = $(MAJOR).$(MINOR)
 
 all: include lib$(NAME).so
