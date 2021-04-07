@@ -565,4 +565,28 @@ AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This API is used to check the validity of Bd number and Channel number
+* combination.
+*
+* @param	BdNum: Buffer descriptor number.
+* @param	ChNum: Channel number of the DMA.
+* @param        TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only. For AIE Tiles only. This is a dummy function as
+*		there is no restriction in AIE.
+*
+******************************************************************************/
+AieRC _XAie_DmaCheckBdChValidity(u8 BdNum, u8 ChNum)
+{
+	(void)BdNum;
+	(void)ChNum;
+
+	return XAIE_OK;
+}
+
 /** @} */

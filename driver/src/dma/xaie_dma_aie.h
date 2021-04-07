@@ -44,6 +44,7 @@ AieRC _XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
 		u32 TimeOutUs);
+AieRC _XAie_DmaCheckBdChValidity(u8 BdNum, u8 ChNum);
 
 #endif /* XAIE_DMA_AIE_H */
 /** @} */

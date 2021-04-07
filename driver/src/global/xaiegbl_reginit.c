@@ -1416,6 +1416,7 @@ static const XAie_DmaMod AieTileDmaMod =
 	.WriteBd = &_XAie_TileDmaWriteBd,
 	.PendingBd = &_XAie_DmaGetPendingBdCount,
 	.WaitforDone = &_XAie_DmaWaitForDone,
+	.BdChValidity = &_XAie_DmaCheckBdChValidity,
 };
 
 /* shim dma structures */
@@ -1614,6 +1615,7 @@ static const XAie_DmaMod AieShimDmaMod =
 	.WriteBd = &_XAie_ShimDmaWriteBd,
 	.PendingBd = &_XAie_DmaGetPendingBdCount,
 	.WaitforDone = &_XAie_DmaWaitForDone,
+	.BdChValidity = &_XAie_DmaCheckBdChValidity,
 };
 
 /* Enum to Event Number mapping of all events of AIE Core module */
