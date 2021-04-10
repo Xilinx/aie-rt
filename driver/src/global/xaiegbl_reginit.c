@@ -2511,6 +2511,27 @@ static const XAie_EventMap ShimTilePlModUserEventStart =
 	.Event = XAIE_EVENT_USER_EVENT_0_PL,
 };
 
+/* mapping of broadcast events for core module */
+static const XAie_EventMap AieTileCoreModBroadcastEventMap =
+{
+	.RscId = 0U,
+	.Event = XAIE_EVENT_BROADCAST_0_CORE,
+};
+
+/* mapping of broadcast events for memory module */
+static const XAie_EventMap AieTileMemModBroadcastEventStart =
+{
+	.RscId = 0U,
+	.Event = XAIE_EVENT_BROADCAST_0_MEM,
+};
+
+/* mapping of broadcast events for Pl module */
+static const XAie_EventMap ShimTilePlModBroadcastEventStart =
+{
+	.RscId = 0U,
+	.Event = XAIE_EVENT_BROADCAST_A_0_PL,
+};
+
 static const XAie_EventMap AieTileCoreModPCEventMap =
 {
 	.RscId = 0U,
@@ -2587,6 +2608,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.NumUserEvents = 4U,
 		.UserEventMap = &AieTileMemModUserEventStart,
 		.PCEventMap = NULL,
+		.BroadcastEventMap = &AieTileMemModBroadcastEventStart,
 	},
 	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
@@ -2627,6 +2649,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.NumUserEvents = 4U,
 		.UserEventMap = &AieTileCoreModUserEventMap,
 		.PCEventMap = &AieTileCoreModPCEventMap,
+		.BroadcastEventMap = &AieTileCoreModBroadcastEventMap,
 	},
 };
 
@@ -2683,6 +2706,7 @@ static const XAie_EvntMod AieNocEvntMod =
 	.BaseStatusRegOff = XAIEGBL_PL_EVTSTA0,
 	.NumUserEvents = 4U,
 	.UserEventMap = &ShimTilePlModUserEventStart,
+	.BroadcastEventMap = &ShimTilePlModBroadcastEventStart,
 	.PCEventMap = NULL,
 };
 
@@ -2739,6 +2763,7 @@ static const XAie_EvntMod AiePlEvntMod =
 	.BaseStatusRegOff = XAIEGBL_PL_EVTSTA0,
 	.NumUserEvents = 4U,
 	.UserEventMap = &ShimTilePlModUserEventStart,
+	.BroadcastEventMap = &ShimTilePlModBroadcastEventStart,
 };
 
 /* Data structure to capture core and mem module timer properties */
