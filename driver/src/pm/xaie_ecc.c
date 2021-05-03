@@ -126,7 +126,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	const XAie_MemMod *MemMod;
 	const XAie_EvntMod *EvntMod;
 
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	/* Check if tile is shim noc or shim pl */
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMNOC) ||
@@ -239,7 +239,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	const XAie_CoreMod *CoreMod;
 	const XAie_EvntMod *EvntMod;
 
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	/* Check if tile is shim noc or shim pl */
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMNOC) ||
@@ -302,7 +302,7 @@ void _XAie_EccEvntResetPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -389,7 +389,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 	const XAie_MemMod *MemMod;
 	const XAie_EvntMod *EvntMod;
 
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	/* Check if tile type is Mem tile */
 	if(TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
 		XAIE_ERROR("ECC cannot be enabled for this tile.\n");
