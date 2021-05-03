@@ -96,7 +96,6 @@ static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, int R, int C)
 }
 
 void XAie_Log(FILE *Fd, const char* prefix, const char *Format, ...);
-u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
 AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
