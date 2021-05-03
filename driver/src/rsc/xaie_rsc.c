@@ -327,7 +327,7 @@ u32 _XAie_GetStartBit(XAie_DevInst *DevInst, XAie_LocType Loc, u32 MaxRscVal)
 	u8 TileType;
 	u32 StartRow, BitmapNumRows;
 
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	StartRow = _XAie_GetStartRow(DevInst, TileType);
 	BitmapNumRows = _XAie_GetNumRows(DevInst, TileType);
 
@@ -358,7 +358,7 @@ void _XAie_MarkChannelBitmapAndRscId(XAie_DevInst *DevInst,
 	XAie_BitmapOffsets Offsets;
 
 	for(u32 i = 0; i < UserRscNum; i++) {
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Rscs[i].Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Rscs[i].Loc);
 		Bitmap = DevInst->RscMapping[TileType].
 				Bitmaps[XAIE_BCAST_CHANNEL_RSC];
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, XAIE_BCAST_CHANNEL_RSC,
@@ -568,7 +568,7 @@ u32 _XAie_RscMgr_GetMaxRscVal(XAie_DevInst *DevInst, XAie_RscType RscType,
 	{
 		const XAie_PerfMod *PerfMod;
 		u8 TileType;
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 		PerfMod = _XAie_GetPerfMod(DevInst, TileType, Mod);
 		return PerfMod->MaxCounterVal;
 	}
@@ -577,7 +577,7 @@ u32 _XAie_RscMgr_GetMaxRscVal(XAie_DevInst *DevInst, XAie_RscType RscType,
 		const XAie_EvntMod *EventMod;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 		EventMod = _XAie_GetEventMod(DevInst, TileType, Mod);
 		return EventMod->NumUserEvents;
 	}
@@ -586,7 +586,7 @@ u32 _XAie_RscMgr_GetMaxRscVal(XAie_DevInst *DevInst, XAie_RscType RscType,
 		const XAie_EvntMod *EventMod;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 		EventMod = _XAie_GetEventMod(DevInst, TileType, Mod);
 		return EventMod->NumPCEvents;
 	}
@@ -599,7 +599,7 @@ u32 _XAie_RscMgr_GetMaxRscVal(XAie_DevInst *DevInst, XAie_RscType RscType,
 		const XAie_EvntMod *EventMod;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 		EventMod = _XAie_GetEventMod(DevInst, TileType, Mod);
 		return EventMod->NumStrmPortSelectIds;
 	}
@@ -608,7 +608,7 @@ u32 _XAie_RscMgr_GetMaxRscVal(XAie_DevInst *DevInst, XAie_RscType RscType,
 		const XAie_EvntMod *EventMod;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 		EventMod = _XAie_GetEventMod(DevInst, TileType, Mod);
 		return EventMod->NumGroupEvents;
 	}
@@ -648,7 +648,7 @@ void _XAie_RscMgr_GetBitmapOffsets(XAie_DevInst *DevInst, XAie_RscType RscType,
 	u32 MaxRscVal;
 	u8 TileType;
 
-	TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	MaxRscVal = _XAie_RscMgr_GetMaxRscVal(DevInst, RscType, Loc, Mod);
 	if(Mod == XAIE_CORE_MOD)
 		BitmapOffset = _XAie_GetCoreBitmapOffset(DevInst,
@@ -700,7 +700,7 @@ AieRC _XAie_RscMgr_RequestRsc(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_BitmapOffsets Offsets;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, RscReq[i].Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, RscReq[i].Loc);
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, RscType,
 				RscReq[i].Loc, RscReq[i].Mod, &Offsets);
 
@@ -748,7 +748,7 @@ AieRC _XAie_RscMgr_RequestRscContiguous(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_BitmapOffsets Offsets;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, RscReq[i].Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, RscReq[i].Loc);
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, RscType,
 				RscReq[i].Loc, RscReq[i].Mod, &Offsets);
 
@@ -812,7 +812,7 @@ AieRC _XAie_RscMgr_FreeRscs(XAie_DevInst *DevInst, u32 RscNum,
 		XAie_BitmapOffsets Offsets;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Rscs[i].Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Rscs[i].Loc);
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, RscType,
 				Rscs[i].Loc, Rscs[i].Mod, &Offsets);
 
@@ -861,7 +861,7 @@ AieRC _XAie_RscMgr_ReleaseRscs(XAie_DevInst *DevInst, u32 RscNum,
 		XAie_BitmapOffsets Offsets;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Rscs[i].Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Rscs[i].Loc);
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, RscType,
 				Rscs[i].Loc, Rscs[i].Mod, &Offsets);
 
@@ -916,7 +916,7 @@ AieRC _XAie_RscMgr_RequestAllocatedRsc(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_BitmapOffsets Offsets;
 		u8 TileType;
 
-		TileType = _XAie_GetTileTypefromLoc(DevInst, Rscs[i].Loc);
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Rscs[i].Loc);
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, RscType,
 				Rscs[i].Loc, Rscs[i].Mod, &Offsets);
 
