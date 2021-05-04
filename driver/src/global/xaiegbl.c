@@ -48,9 +48,11 @@
 /************************** Variable Definitions *****************************/
 extern XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_TileMod Aie2Mod[XAIEGBL_TILE_TYPE_MAX];
+extern XAie_TileMod Aie2IpuMod[XAIEGBL_TILE_TYPE_MAX];
 
 extern XAie_DeviceOps AieDevOps;
 extern XAie_DeviceOps AieMlDevOps;
+extern XAie_DeviceOps Aie2IpuDevOps;
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -93,6 +95,10 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = AieMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 		InstPtr->DevOps = &AieDevOps;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2IPU) {
+		InstPtr->DevProp.DevMod = Aie2IpuMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;
+		InstPtr->DevOps = &Aie2IpuDevOps;
 	} else {
 		XAIE_ERROR("Invalid device\n",
 				XAIE_INVALID_DEVICE);
