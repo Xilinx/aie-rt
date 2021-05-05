@@ -4,12 +4,12 @@ The userspace library for ai-engine provides APIs to configure AIE registers.
 
 ## Hardware support
 
-The user space library is supports both AIE and AIEML
+The user space library is supports both AIE, AIEML and AIE2IPU
 
-| BRANCH     	| DEVICE         	|
-|------------	|----------------	|
-| master     	| AIE and AIE ML 	|
-| master-aie 	| AIE only       	|
+| BRANCH     	| DEVICE         		|
+|------------	|------------------------	|
+| master     	| AIE, AIE ML and AIE2IPU	|
+| master-aie 	| AIE only       		|
 
 ## IO Backends
 
@@ -18,7 +18,7 @@ can execute the low level register IO operations for the following backends:
 1. Linux Kernel(-D__AIELINUX__): IO operations are executed by linux kernel.
 2. Simulation (-D__AIESIM__): IO operation are executed by simulation functions
 			      provided by aie-tools.
-3. CDO generator(-D__AIECDO): IO operations are executed by cdo functions
+3. CDO generator(-D__AIECDO__): IO operations are executed by cdo functions
 			      provided by aie-tools.
 4. Baremetal(-D_AIEBAREMETAL__): IO operations are executed by baremetal
 				 functions.
