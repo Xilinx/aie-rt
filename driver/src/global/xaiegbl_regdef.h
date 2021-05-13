@@ -496,6 +496,8 @@ typedef struct XAie_DmaMod {
 	AieRC (*BdChValidity)(u8 BdNum, u8 ChNum);
 	AieRC (*UpdateBdLen)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 			XAie_LocType Loc, u32 Len, u8 BdNum);
+	AieRC (*UpdateBdAddr)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
+			XAie_LocType Loc, u64 Addr, u8 BdNum);
 } XAie_DmaMod;
 
 /*
