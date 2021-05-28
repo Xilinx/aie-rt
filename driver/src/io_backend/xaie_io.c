@@ -39,6 +39,8 @@
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CDO
 #elif defined (__AIEBAREMETAL__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_BAREMETAL
+#elif defined (__AIEIPU__)
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_IPU
 #else
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
 #endif
@@ -50,6 +52,7 @@ extern const XAie_Backend CdoBackend;
 extern const XAie_Backend BaremetalBackend;
 extern const XAie_Backend DebugBackend;
 extern const XAie_Backend LinuxBackend;
+extern const XAie_Backend IpuBackend;
 
 static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
@@ -59,6 +62,7 @@ static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 	&BaremetalBackend,
 	&DebugBackend,
 	&LinuxBackend,
+	&IpuBackend,
 };
 
 /************************** Function Definitions *****************************/

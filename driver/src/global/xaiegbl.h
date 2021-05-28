@@ -80,6 +80,7 @@ typedef enum {
 	XAIE_IO_BACKEND_BAREMETAL, /* Baremetal backend */
 	XAIE_IO_BACKEND_DEBUG, /* IO debug backend */
 	XAIE_IO_BACKEND_LINUX, /* Linux kernel backend */
+	XAIE_IO_BACKEND_IPU, /* IPU Backend */
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 
