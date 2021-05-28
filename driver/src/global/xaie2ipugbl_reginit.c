@@ -3780,19 +3780,18 @@ XAie_TileMod Aie2IpuMod[] =
 		/*
 		 * AIE2 Shim PL Module indexed using XAIEGBL_TILE_TYPE_SHIMPL
 		 */
-		.NumModules = 0U,
+		.NumModules = 1U,
 		.CoreMod = NULL,
-		.StrmSw  = NULL,
+		.StrmSw  = &Aie2ShimStrmSw,
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
-		.PlIfMod = NULL,
+		.PlIfMod = &Aie2ShimTilePlIfMod,
 		.LockMod = NULL,
-		.PerfMod = NULL,
-		.EvntMod = NULL,
-		.TimerMod = NULL,
-		.TraceMod = NULL,
-		.ClockMod = NULL,
-		.L1IntrMod = NULL,
+		.PerfMod = &Aie2PlPerfCnt,
+		.EvntMod = &Aie2NocEvntMod,
+		.TimerMod = &Aie2PlTimerMod,
+		.TraceMod = &Aie2PlTraceMod,
+		.L1IntrMod = &Aie2PlL1IntrMod,
 		.L2IntrMod = NULL,
 	},
 	{
