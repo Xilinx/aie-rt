@@ -3820,6 +3820,7 @@ XAie_DeviceOps Aie2IpuDevOps =
 {
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
 	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
+	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
 };
 
 /** @} */
