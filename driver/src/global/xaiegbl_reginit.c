@@ -3022,6 +3022,7 @@ XAie_TileMod AieMod[] =
 		.L1IntrMod = NULL,
 		.L2IntrMod = NULL,
 		.TileCtrlMod = &AieCoreTileCtrlMod,
+		.MemCtrlMod = NULL,
 	},
 	{
 		/*
@@ -3042,6 +3043,7 @@ XAie_TileMod AieMod[] =
 		.L1IntrMod = &AiePlL1IntrMod,
 		.L2IntrMod = &AieNoCL2IntrMod,
 		.TileCtrlMod = &AieShimTileCtrlMod,
+		.MemCtrlMod = NULL,
 	},
 	{
 		/*
@@ -3062,6 +3064,7 @@ XAie_TileMod AieMod[] =
 		.L1IntrMod = &AiePlL1IntrMod,
 		.L2IntrMod = NULL,
 		.TileCtrlMod = &AieShimTileCtrlMod,
+		.MemCtrlMod = NULL,
 	},
 	{
 		/*
@@ -3082,6 +3085,7 @@ XAie_TileMod AieMod[] =
 		.L1IntrMod = NULL,
 		.L2IntrMod = NULL,
 		.TileCtrlMod = NULL,
+		.MemCtrlMod = NULL,
 	}
 };
 
