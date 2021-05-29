@@ -25,6 +25,7 @@
 /***************************** Include Files *********************************/
 #include "xaie_core_aieml.h"
 #include "xaie_device_aie2ipu.h"
+#include "xaie_device_aieml.h"
 #include "xaie_dma_aieml.h"
 #include "xaie_events.h"
 #include "xaie_events_aieml.h"
@@ -3818,6 +3819,7 @@ XAie_TileMod Aie2IpuMod[] =
 XAie_DeviceOps Aie2IpuDevOps =
 {
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
+	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
 };
 
 /** @} */
