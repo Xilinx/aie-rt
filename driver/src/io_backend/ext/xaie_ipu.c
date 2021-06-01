@@ -34,10 +34,12 @@
 #include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaie_io_common.h"
+#include "xaie_io_privilege.h"
 
 /****************************** Type Definitions *****************************/
 typedef struct {
 	u64 BaseAddr;
+	u64 NpiBaseAddr;
 } XAie_IpuIO;
 
 /************************** Variable Definitions *****************************/
@@ -261,6 +263,30 @@ static AieRC XAie_IpuIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 /*****************************************************************************/
 /**
 *
+* This is the function to write to AI engine NPI registers
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write.
+* @param	RegVal: Register value to write
+*
+* @return	None.
+*
+* @note		None.
+*
+*******************************************************************************/
+static void _XAie_IpuIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
+{
+	XAie_IpuIO *IpuIOInst = (XAie_IpuIO *)IOInst;
+	u64 RegAddr;
+
+	RegAddr = IpuIOInst->NpiBaseAddr + RegOff;
+
+	reg_write32(RegOff, RegVal);
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the function to run backend operations
 *
 * @param	IOInst: IO instance pointer
@@ -278,6 +304,14 @@ static AieRC XAie_IpuIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 {
 	(void)DevInst;
 	switch(Op) {
+		case XAIE_BACKEND_OP_NPIWR32:
+		{
+			XAie_BackendNpiWrReq *Req = Arg;
+
+			_XAie_IpuIO_NpiWrite32(IOInst, Req->NpiRegOff,
+					Req->Val);
+			break;
+		}
 		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
 		{
 			XAie_ShimDmaBdArgs *BdArgs =
@@ -302,6 +336,11 @@ static AieRC XAie_IpuIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			return _XAie_FreeRscCommon(Arg);
 		case XAIE_BACKEND_OP_REQUEST_ALLOCATED_RESOURCE:
 			return _XAie_RequestAllocatedRscCommon(DevInst, Arg);
+		case XAIE_BACKEND_OP_PARTITION_INITIALIZE:
+			return _XAie_PrivilegeInitPart(DevInst,
+					(XAie_PartInitOpts *)Arg);
+		case XAIE_BACKEND_OP_PARTITION_TEARDOWN:
+			return _XAie_PrivilegeTeardownPart(DevInst);
 		default:
 			XAIE_ERROR("Linux backend does not support operation "
 					"%d\n", Op);
