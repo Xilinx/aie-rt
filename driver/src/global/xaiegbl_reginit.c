@@ -1105,6 +1105,7 @@ static const XAie_CoreMod AieCoreMod =
 	.DataMemSize = 32 * 1024,
 	.DataMemShift = 15U,
 	.EccEvntRegOff = 0x00032110,
+	.CorePCOff = XAIEGBL_CORE_COREPC,
 	.CoreCtrl = &AieCoreCtrlReg,
 	.CoreDebugStatus = &AieCoreDebugStatus,
 	.CoreSts = &AieCoreStsReg,
