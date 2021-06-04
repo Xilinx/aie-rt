@@ -54,6 +54,22 @@ extern XAie_TileMod Aie2IpuMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_DeviceOps AieDevOps;
 extern XAie_DeviceOps AieMlDevOps;
 extern XAie_DeviceOps Aie2IpuDevOps;
+
+#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
+#define XAIE_DEV_SINGLE_MOD Aie2IpuMod
+#define XAIE_DEV_SINGLE_DEVOPS Aie2IpuDevOps
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2
+#define XAIE_DEV_SINGLE_MOD Aie2Mod
+#define XAIE_DEV_SINGLE_DEVOPS AieMlDevOps
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
+#define XAIE_DEV_SINGLE_MOD AieMod
+#define XAIE_DEV_SINGLE_DEVOPS AieDevOps
+#else
+#ifdef XAIE_DEV_SINGLE_GEN
+#error "Unsupported device defined."
+#endif
+#endif
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -88,6 +104,12 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		return XAIE_OK;
 
 	/* Initialize device property according to Device Type */
+#ifdef XAIE_DEV_SINGLE_GEN
+	if (ConfigPtr->AieGen == XAIE_DEV_SINGLE_GEN) {
+		InstPtr->DevProp.DevMod = XAIE_DEV_SINGLE_MOD;
+		InstPtr->DevProp.DevGen = XAIE_DEV_SINGLE_GEN;
+		InstPtr->DevOps = &XAIE_DEV_SINGLE_DEVOPS;
+#else
 	if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2) {
 		InstPtr->DevProp.DevMod = Aie2Mod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2;
@@ -100,6 +122,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = Aie2IpuMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;
 		InstPtr->DevOps = &Aie2IpuDevOps;
+#endif
 	} else {
 		XAIE_ERROR("Invalid device\n",
 				XAIE_INVALID_DEVICE);
