@@ -22,6 +22,7 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#ifndef XAIE_RSC_DISABLE
 #include <stdlib.h>
 
 #include "xaie_rsc.h"
@@ -998,5 +999,6 @@ AieRC XAie_RequestAllocatedComboEvents(XAie_DevInst *DevInst, u32 NumReq,
 	return _XAie_RscMgr_RequestAllocatedRsc(DevInst, NumReq, RscReq,
 			XAIE_COMBO_EVENTS_RSC);
 }
+#endif /* !XAIE_RSC_DISABLE */
 
 /** @} */
