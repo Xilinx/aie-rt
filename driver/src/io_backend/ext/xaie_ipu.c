@@ -27,7 +27,7 @@
 
 #ifdef __AIEIPU__
 
-#include "com_io_generic.h"
+#include "com_helper.h"
 
 #endif
 
@@ -194,7 +194,7 @@ static AieRC XAie_IpuIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 		if((RegVal & Mask) == Value) {
 			return XAIE_OK;
 		}
-		usleep(MinTimeOutUs);
+		com_usleep(MinTimeOutUs);
 		Count--;
 	}
 
