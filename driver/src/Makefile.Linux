@@ -49,4 +49,4 @@ doc-clean:
 
 clean:
 	rm -rf $(OUTS) *.so *.so.*
-	rm -rf $(INCLUDEDIR)/*.h
+	rm -rf $(INCLUDEDIR)
