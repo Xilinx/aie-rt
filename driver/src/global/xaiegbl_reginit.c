@@ -3121,6 +3121,7 @@ XAie_DeviceOps AieDevOps =
 	.SetPartColClockAfterRst = &_XAie_SetPartColClockAfterRst,
 	.SetPartIsolationAfterRst = &_XAie_SetPartIsolationAfterRst,
 	.PartMemZeroInit = &_XAie_PartMemZeroInit,
+	.RequestTiles = &_XAie_RequestTiles,
 };
 
 /** @} */
