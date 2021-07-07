@@ -63,6 +63,8 @@ static XAie_IpuIO IpuIO;
 *******************************************************************************/
 static AieRC XAie_IpuIO_Finish(void *IOInst)
 {
+	(void)IOInst;
+
 	return XAIE_OK;
 }
 
