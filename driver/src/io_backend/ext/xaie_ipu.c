@@ -279,7 +279,7 @@ static void _XAie_IpuIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
 
 	RegAddr = IpuIOInst->NpiBaseAddr + RegOff;
 
-	reg_write32(RegOff, RegVal);
+	reg_write32(RegAddr, RegVal);
 }
 
 /*****************************************************************************/
