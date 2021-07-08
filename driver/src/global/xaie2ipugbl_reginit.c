@@ -3930,6 +3930,7 @@ XAie_DeviceOps Aie2IpuDevOps =
 	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
 	.SetPartIsolationAfterRst = &_XAieMl_SetPartIsolationAfterRst,
 	.PartMemZeroInit = &_XAieMl_PartMemZeroInit,
+	.RequestTiles = &_XAieMl_RequestTiles,
 };
 
 /** @} */
