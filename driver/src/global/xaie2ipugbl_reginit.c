@@ -3925,6 +3925,7 @@ XAie_TileMod Aie2IpuMod[] =
 /* Device level operations for aieml */
 XAie_DeviceOps Aie2IpuDevOps =
 {
+	.IsCheckerBoard = 0U,
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
 	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
 	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
