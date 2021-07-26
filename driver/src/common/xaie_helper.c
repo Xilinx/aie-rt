@@ -899,7 +899,7 @@ AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value)
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Mask writing "
 					"to register\n");
-			goto write;
+			return Backend->Ops.Write32((void*)(DevInst->IOInst), RegOff, Value);
 		}
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
@@ -915,8 +915,6 @@ AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value)
 
 		return XAIE_OK;
 	}
-
-write:
 	return Backend->Ops.Write32((void*)(DevInst->IOInst), RegOff, Value);
 }
 
@@ -934,7 +932,7 @@ AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data)
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Reading "
 					"from register\n");
-			goto read;
+			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
 		}
 
 		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
@@ -949,17 +947,15 @@ AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data)
 			}
 
 			TxnInst->NumCmds = 0;
-			goto read;
+			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
 		} else if(TxnInst->NumCmds == 0) {
-			goto read;
+			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
 		} else {
 			XAIE_ERROR("Read operation is not supported "
 					"when auto flush is disabled\n");
 			return XAIE_ERR;
 		}
 	}
-
-read:
 	return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
 }
 
@@ -977,7 +973,8 @@ AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value)
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Writing "
 					"to register\n");
-			goto maskwrite;
+			return Backend->Ops.MaskWrite32((void *)(DevInst->IOInst), RegOff, Mask,
+					Value);
 		}
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
@@ -993,8 +990,6 @@ AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value)
 
 		return XAIE_OK;
 	}
-
-maskwrite:
 	return Backend->Ops.MaskWrite32((void *)(DevInst->IOInst), RegOff, Mask,
 			Value);
 }
@@ -1014,7 +1009,8 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Polling "
 					"from register\n");
-			goto maskpoll;
+			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
+					Value, TimeOutUs);
 		}
 
 		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
@@ -1029,17 +1025,17 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			}
 
 			TxnInst->NumCmds = 0;
-			goto maskpoll;
+			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
+					Value, TimeOutUs);
 		} else if(TxnInst->NumCmds == 0) {
-			goto maskpoll;
+			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
+					Value, TimeOutUs);
 		} else {
 			XAIE_ERROR("MaskPoll operation is not supported "
 					"when auto flush is disabled\n");
 			return XAIE_ERR;
 		}
 	}
-
-maskpoll:
 	return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
 			Value, TimeOutUs);
 }
@@ -1059,7 +1055,8 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data, u32 Size)
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Block write "
 					"to register\n");
-			goto blockwrite;
+			return Backend->Ops.BlockWrite32((void *)(DevInst->IOInst), RegOff,
+					Data, Size);
 		}
 
 		if(TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) {
@@ -1075,7 +1072,8 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data, u32 Size)
 			}
 
 			TxnInst->NumCmds = 0;
-			goto blockwrite;
+			return Backend->Ops.BlockWrite32((void *)(DevInst->IOInst), RegOff,
+					Data, Size);
 		}
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
@@ -1099,8 +1097,6 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data, u32 Size)
 
 		return XAIE_OK;
 	}
-
-blockwrite:
 	return Backend->Ops.BlockWrite32((void *)(DevInst->IOInst), RegOff,
 			Data, Size);
 }
@@ -1119,7 +1115,8 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Block set "
 					"to register\n");
-			goto blockset;
+			return Backend->Ops.BlockSet32((void *)(DevInst->IOInst), RegOff, Data,
+					Size);
 		}
 
 		if(TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) {
@@ -1135,7 +1132,8 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 			}
 
 			TxnInst->NumCmds = 0;
-			goto blockset;
+			return Backend->Ops.BlockSet32((void *)(DevInst->IOInst), RegOff, Data,
+					Size);
 		}
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
@@ -1152,8 +1150,6 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 
 		return XAIE_OK;
 	}
-
-blockset:
 	return Backend->Ops.BlockSet32((void *)(DevInst->IOInst), RegOff, Data,
 			Size);
 }
@@ -1173,7 +1169,8 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Writing cmd "
 					"to register\n");
-			goto cmdwrite;
+			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
+					Command, CmdWd0, CmdWd1, CmdStr);
 		}
 
 		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
@@ -1188,17 +1185,17 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 			}
 
 			TxnInst->NumCmds = 0;
-			goto cmdwrite;
+			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
+					Command, CmdWd0, CmdWd1, CmdStr);
 		} else if(TxnInst->NumCmds == 0) {
-			goto cmdwrite;
+			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
+					Command, CmdWd0, CmdWd1, CmdStr);
 		} else {
 			XAIE_ERROR("Cmd Write operation is not supported "
 					"when auto flush is disabled\n");
 			return XAIE_ERR;
 		}
 	}
-
-cmdwrite:
 	return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
 			Command, CmdWd0, CmdWd1, CmdStr);
 }
@@ -1216,7 +1213,7 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 		if(TxnInst == NULL) {
 			XAIE_DBG("Could not find transaction instance "
 					"associated with thread. Running Op.\n");
-			goto runop;
+			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		}
 
 		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
@@ -1229,17 +1226,15 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 			}
 
 			TxnInst->NumCmds = 0;
-			goto runop;
+			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else if(TxnInst->NumCmds == 0) {
-			goto runop;
+			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else {
 			XAIE_ERROR("Cmd Write operation is not supported "
 					"when auto flush is disabled\n");
 			return XAIE_ERR;
 		}
 	}
-
-runop:
 	return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 }
 
