@@ -29,6 +29,7 @@
 #include "xaie_dma_aieml.h"
 #include "xaie_events.h"
 #include "xaie_events_aieml.h"
+#include "xaie_interrupt_aie2ipu.h"
 #include "xaie_locks_aieml.h"
 #include "xaie_reset_aieml.h"
 #include "xaie_ss_aieml.h"
@@ -3776,6 +3777,8 @@ static const XAie_L1IntrMod Aie2PlL1IntrMod =
 	.NumIrqEvents = 4U,
 	.IrqEventOff = 8U,
 	.NumBroadcastIds = 16U,
+	.MaxErrorBcIdsRvd = 4U,
+	.IntrCtrlL1IrqId = &_XAie2Ipu_IntrCtrlL1IrqId,
 };
 
 /*
