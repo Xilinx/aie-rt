@@ -29,6 +29,7 @@
 #include "xaie_dma_aieml.h"
 #include "xaie_events.h"
 #include "xaie_events_aieml.h"
+#include "xaie_feature_config.h"
 #include "xaie_interrupt_aie2ipu.h"
 #include "xaie_locks_aieml.h"
 #include "xaie_reset_aieml.h"
@@ -43,6 +44,7 @@
 /**************************** Macro Definitions ******************************/
 
 /************************** Variable Definitions *****************************/
+#ifdef XAIE_FEATURE_CORE_ENABLE
 /*
  * Global instance for Core module Core_Control register.
  */
@@ -127,7 +129,9 @@ static const XAie_RegCoreAccumCtrl AieMlCoreAccumCtrlReg =
 	.CascadeOutput.Lsb = XAIEMLGBL_CORE_MODULE_ACCUMULATOR_CONTROL_OUTPUT_LSB,
 	.CascadeOutput.Mask = XAIEMLGBL_CORE_MODULE_ACCUMULATOR_CONTROL_OUTPUT_MASK,
 };
+#endif /* XAIE_FEATURE_CORE_ENABLE */
 
+#ifdef XAIE_FEATURE_DMA_ENABLE
 static const  XAie_DmaBdEnProp Aie2MemTileDmaBdEnProp =
 {
 	.NxtBd.Idx = 1U,
@@ -851,7 +855,9 @@ static const  XAie_DmaMod Aie2ShimDmaMod =
 	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_ShimDmaUpdateBdAddr,
 };
+#endif /* XAIE_FEATURE_DMA_ENABLE */
 
+#ifdef XAIE_FEATURE_SS_ENABLE
 /*
  * Array of all Tile Stream Switch Master Config registers
  * The data structure contains number of ports and the register offsets
@@ -2079,7 +2085,9 @@ static const  XAie_StrmMod Aie2MemTileStrmSw =
 	.DetMerge = &AieMlMemTileStrmSwDetMerge,
 	.PortVerify = _XAieMl_MemTile_StrmSwCheckPortValidity,
 };
+#endif /* XAIE_FEATURE_SS_ENABLE */
 
+#ifdef XAIE_FEATURE_PL_ENABLE
 /* Register field attributes for PL interface down sizer for 32 and 64 bits */
 static const  XAie_RegFldAttr Aie2DownSzr32_64Bit[] =
 {
@@ -2163,6 +2171,7 @@ static const  XAie_RegFldAttr Aie2ShimDeMuxConfig[] =
 	{XAIEMLGBL_NOC_MODULE_DEMUX_CONFIG_SOUTH5_LSB, XAIEMLGBL_NOC_MODULE_DEMUX_CONFIG_SOUTH5_MASK}
 };
 
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 /* Register to set SHIM clock buffer control */
 static const XAie_ShimClkBufCntr Aie2ShimClkBufCntr =
 {
@@ -2185,7 +2194,10 @@ static const XAie_ShimNocAxiMMConfig Aie2ShimNocAxiMMConfig =
 	.NsuSlvErr = {XAIEMLGBL_NOC_MODULE_ME_AXIMM_CONFIG_SLVERR_BLOCK_LSB, XAIEMLGBL_NOC_MODULE_ME_AXIMM_CONFIG_SLVERR_BLOCK_MASK},
 	.NsuDecErr = {XAIEMLGBL_NOC_MODULE_ME_AXIMM_CONFIG_DECERR_BLOCK_LSB, XAIEMLGBL_NOC_MODULE_ME_AXIMM_CONFIG_DECERR_BLOCK_MASK}
 };
+#endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
+#endif /* XAIE_FEATURE_PL_ENABLE */
 
+#ifdef XAIE_FEATURE_CORE_ENABLE
 /* Register field attribute for core process bus control */
 static const XAie_RegCoreProcBusCtrl AieMlCoreProcBusCtrlReg =
 {
@@ -2216,7 +2228,9 @@ static const  XAie_CoreMod Aie2CoreMod =
 	.WaitForDone = &_XAieMl_CoreWaitForDone,
 	.ReadDoneBit = &_XAieMl_CoreReadDoneBit,
 };
+#endif /* XAIE_FEATURE_CORE_ENABLE */
 
+#ifdef XAIE_FEATURE_DATAMEM_ENABLE
 /* Data Memory Module for Tile data memory*/
 static const  XAie_MemMod Aie2TileMemMod =
 {
@@ -2232,7 +2246,9 @@ static const  XAie_MemMod Aie2MemTileMemMod =
 	.MemAddr = XAIEMLGBL_MEM_TILE_MODULE_DATAMEMORY,
 	.EccEvntRegOff = XAIEMLGBL_MEM_TILE_MODULE_ECC_SCRUBBING_EVENT,
 };
+#endif /* XAIE_FEATURE_DATAMEM_ENABLE */
 
+#ifdef XAIE_FEATURE_PL_ENABLE
 /* PL Interface module for SHIMNOC Tiles */
 static const  XAie_PlIfMod Aie2ShimTilePlIfMod =
 {
@@ -2254,12 +2270,20 @@ static const  XAie_PlIfMod Aie2ShimTilePlIfMod =
 	.ShimNocDeMuxOff = XAIEMLGBL_NOC_MODULE_DEMUX_CONFIG,
 	.ShimNocMux = Aie2ShimMuxConfig,
 	.ShimNocDeMux = Aie2ShimDeMuxConfig,
-	.ClkBufCntr = &Aie2ShimClkBufCntr,
 	.ColRst = {0, 0x1},
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+	.ClkBufCntr = &Aie2ShimClkBufCntr,
 	.ShimTileRst = &Aie2ShimTileRst,
 	.ShimNocAxiMM = &Aie2ShimNocAxiMMConfig,
+#else
+	.ClkBufCntr = NULL,
+	.ShimTileRst = NULL,
+	.ShimNocAxiMM = NULL,
+#endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 };
+#endif /* XAIE_FEATURE_PL_ENABLE */
 
+#ifdef XAIE_FEATURE_LOCK_ENABLE
 static const XAie_RegFldAttr AieMlTileLockInit =
 {
 	.Lsb = XAIEMLGBL_MEMORY_MODULE_LOCK0_VALUE_LOCK_VALUE_LSB,
@@ -2331,7 +2355,9 @@ static const  XAie_LockMod Aie2MemTileLockMod =
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
 };
+#endif /* XAIE_FEATURE_LOCK_ENABLE */
 
+#ifdef XAIE_FEATURE_EVENTS_ENABLE
 /* Enum to event number mapping of all events of AIE2 Core Mod of aie tile */
 static const u8 Aie2CoreModEventMapping[] =
 {
@@ -2980,7 +3006,9 @@ static const u8 Aie2MemTileModEventMapping[] =
 	XAIE2_EVENTS_MEM_TILE_USER_EVENT_0,
 	XAIE2_EVENTS_MEM_TILE_USER_EVENT_1,
 };
+#endif /* XAIE_FEATURE_EVENTS_ENABLE */
 
+#ifdef XAIE_FEATURE_PERFCOUNT_ENABLE
 /*
  * Data structure to capture registers & offsets for Core and memory Module of
  * performance counter.
@@ -3053,7 +3081,9 @@ static const XAie_PerfMod Aie2MemTilePerfCnt =
 	{XAIEMLGBL_MEM_TILE_MODULE_PERFORMANCE_CONTROL0_CNT0_STOP_EVENT_LSB, XAIEMLGBL_MEM_TILE_MODULE_PERFORMANCE_CONTROL0_CNT0_STOP_EVENT_MASK},
 	{XAIEMLGBL_MEM_TILE_MODULE_PERFORMANCE_CONTROL2_CNT0_RESET_EVENT_LSB, XAIEMLGBL_MEM_TILE_MODULE_PERFORMANCE_CONTROL2_CNT0_RESET_EVENT_MASK},
 };
+#endif /* XAIE_FEATURE_PERFCOUNT_ENABLE */
 
+#ifdef XAIE_FEATURE_EVENTS_ENABLE
 static const XAie_EventGroup Aie2MemGroupEvent[] =
 {
 	{
@@ -3566,7 +3596,9 @@ static const XAie_EvntMod Aie2MemTileEvntMod =
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &AieMlMemTileMemModBroadcastEventStart,
 };
+#endif /* XAIE_FEATURE_EVENTS_ENABLE */
 
+#ifdef XAIE_FEATURE_TIMER_ENABLE
 static const XAie_TimerMod Aie2TileTimerMod[] =
 {
 	 {
@@ -3610,7 +3642,9 @@ static const XAie_TimerMod Aie2MemTileTimerMod =
 	{XAIEMLGBL_MEM_TILE_MODULE_TIMER_CONTROL_RESET_LSB, XAIEMLGBL_MEM_TILE_MODULE_TIMER_CONTROL_RESET_MASK},
 	{XAIEMLGBL_MEM_TILE_MODULE_TIMER_CONTROL_RESET_EVENT_LSB, XAIEMLGBL_MEM_TILE_MODULE_TIMER_CONTROL_RESET_EVENT_MASK}
 };
+#endif /* XAIE_FEATURE_TIMER_ENABLE */
 
+#ifdef XAIE_FEATURE_TRACE_ENABLE
 /*
  * Data structure to configure trace event register for XAIE_MEM_MOD module
  * type
@@ -3758,7 +3792,9 @@ static const XAie_TraceMod Aie2MemTileTraceMod =
 	.ModeSts = {XAIEMLGBL_MEM_TILE_MODULE_TRACE_STATUS_MODE_LSB, XAIEMLGBL_MEM_TILE_MODULE_TRACE_STATUS_MODE_MASK},
 	.Event = Aie2MemTileTraceEvent
 };
+#endif /* XAIE_FEATURE_TRACE_ENABLE */
 
+#ifdef XAIE_FEATURE_INTR_L1_ENABLE
 /*
  * Data structure to configures first level interrupt controller for
  * XAIEGBL_TILE_TYPE_SHIMPL tile type
@@ -3780,7 +3816,9 @@ static const XAie_L1IntrMod Aie2PlL1IntrMod =
 	.MaxErrorBcIdsRvd = 4U,
 	.IntrCtrlL1IrqId = &_XAie2Ipu_IntrCtrlL1IrqId,
 };
+#endif /* XAIE_FEATURE_INTR_L1_ENABLE */
 
+#ifdef XAIE_FEATURE_INTR_L2_ENABLE
 /*
  * Data structure to configures second level interrupt controller for
  * XAIEGBL_TILE_TYPE_SHIMNOC tile type
@@ -3793,7 +3831,9 @@ static const XAie_L2IntrMod Aie2NoCL2IntrMod =
 	.NumBroadcastIds = 16U,
 	.NumNoCIntr = 4U,
 };
+#endif /* XAIE_FEATURE_INTR_L2_ENABLE */
 
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 /*
  * Data structure to configures tile control for
  * XAIEGBL_TILE_TYPE_AIETILE tile type
@@ -3861,6 +3901,113 @@ static const XAie_MemCtrlMod Aie2MemTileMemCtrlMod =
 	.MemCtrlRegOff = XAIEMLGBL_MEM_TILE_MODULE_MEMORY_CONTROL,
 	.MemZeroisation = {XAIEMLGBL_MEM_TILE_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_LSB, XAIEMLGBL_MEM_TILE_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_MASK},
 };
+#endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
+
+#ifdef XAIE_FEATURE_CORE_ENABLE
+	#define AIE2COREMOD &Aie2CoreMod
+#else
+	#define AIE2COREMOD NULL
+#endif
+#ifdef XAIE_FEATURE_SS_ENABLE
+	#define AIE2TILESTRMSW &Aie2TileStrmSw
+	#define AIE2SHIMSTRMSW &Aie2ShimStrmSw
+	#define AIE2MEMTILESTRMSW &Aie2MemTileStrmSw
+#else
+	#define AIE2TILESTRMSW NULL
+	#define AIE2SHIMSTRMSW NULL
+	#define AIE2MEMTILESTRMSW NULL
+#endif
+#ifdef XAIE_FEATURE_DMA_ENABLE
+	#define AIE2TILEDMAMOD &Aie2TileDmaMod
+	#define AIE2SHIMDMAMOD &Aie2ShimDmaMod
+	#define AIE2MEMTILEDMAMOD &Aie2MemTileDmaMod
+#else
+	#define AIE2TILEDMAMOD NULL
+	#define AIE2SHIMDMAMOD NULL
+	#define AIE2MEMTILEDMAMOD NULL
+#endif
+#ifdef XAIE_FEATURE_DATAMEM_ENABLE
+	#define AIE2TILEMEMMOD &Aie2TileMemMod
+	#define AIE2MEMTILEMEMMOD &Aie2MemTileMemMod
+#else
+	#define AIE2TILEMEMMOD NULL
+	#define AIE2MEMTILEMEMMOD NULL
+#endif
+#ifdef XAIE_FEATURE_LOCK_ENABLE
+	#define AIE2TILELOCKMOD &Aie2TileLockMod
+	#define AIE2SHIMNOCLOCKMOD &Aie2ShimNocLockMod
+	#define AIE2MEMTILELOCKMOD &Aie2MemTileLockMod
+#else
+	#define AIE2TILELOCKMOD NULL
+	#define AIE2SHIMNOCLOCKMOD NULL
+	#define AIE2MEMTILELOCKMOD NULL
+#endif
+#ifdef XAIE_FEATURE_PERFCOUNT_ENABLE
+	#define AIE2TILEPERFCNT Aie2TilePerfCnt
+	#define AIE2PLPERFCNT &Aie2PlPerfCnt
+	#define AIE2MEMTILEPERFCNT &Aie2MemTilePerfCnt
+#else
+	#define AIE2TILEPERFCNT NULL
+	#define AIE2PLPERFCNT NULL
+	#define AIE2MEMTILEPERFCNT NULL
+#endif
+#ifdef XAIE_FEATURE_EVENTS_ENABLE
+	#define AIE2TILEEVNTMOD Aie2TileEvntMod
+	#define AIE2NOCEVNTMOD &Aie2NocEvntMod
+	#define AIE2PLEVNTMOD &Aie2PlEvntMod
+	#define AIE2MEMTILEEVNTMOD &Aie2MemTileEvntMod
+#else
+	#define AIE2TILEEVNTMOD NULL
+	#define AIE2NOCEVNTMOD NULL
+	#define AIE2PLEVNTMOD NULL
+	#define AIE2MEMTILEEVNTMOD NULL
+#endif
+#ifdef XAIE_FEATURE_TIMER_ENABLE
+	#define AIE2TILETIMERMOD Aie2TileTimerMod
+	#define AIE2PLTIMERMOD &Aie2PlTimerMod
+	#define AIE2MEMTILETIMERMOD &Aie2MemTileTimerMod
+#else
+	#define AIE2TILETIMERMOD NULL
+	#define AIE2PLTIMERMOD NULL
+	#define AIE2MEMTILETIMERMOD NULL
+#endif
+#ifdef XAIE_FEATURE_TRACE_ENABLE
+	#define AIE2TILETRACEMOD Aie2TileTraceMod
+	#define AIE2PLTRACEMOD &Aie2PlTraceMod
+	#define AIE2MEMTILETRACEMOD &Aie2MemTileTraceMod
+#else
+	#define AIE2TILETRACEMOD NULL
+	#define AIE2PLTRACEMOD NULL
+	#define AIE2MEMTILETRACEMOD NULL
+#endif
+#ifdef XAIE_FEATURE_PL_ENABLE
+	#define AIE2SHIMTILEPLIFMOD &Aie2ShimTilePlIfMod
+#else
+	#define AIE2SHIMTILEPLIFMOD NULL
+#endif
+#ifdef XAIE_FEATURE_INTR_L1_ENABLE
+	#define AIE2PLL1INTRMOD &Aie2PlL1IntrMod
+#else
+	#define AIE2PLL1INTRMOD NULL
+#endif
+#ifdef XAIE_FEATURE_INTR_L2_ENABLE
+	#define AIE2NOCL2INTRMOD &Aie2NoCL2IntrMod
+#else
+	#define AIE2NOCL2INTRMOD NULL
+#endif
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+	#define AIE2CORETILECTRLMOD &Aie2CoreTileCtrlMod
+	#define AIE2TILEMEMCTRLMOD Aie2TileMemCtrlMod
+	#define AIE2SHIMTILECTRLMOD &Aie2ShimTileCtrlMod
+	#define AIE2MEMTILECTRLMOD &Aie2MemTileCtrlMod
+	#define AIE2MEMTILEMEMCTRLMOD &Aie2MemTileMemCtrlMod
+#else
+	#define AIE2CORETILECTRLMOD NULL
+	#define AIE2TILEMEMCTRLMOD NULL
+	#define AIE2SHIMTILECTRLMOD NULL
+	#define AIE2MEMTILECTRLMOD NULL
+	#define AIE2MEMTILEMEMCTRLMOD NULL
+#endif
 
 /*
  * AIE2 Module
@@ -3875,20 +4022,20 @@ XAie_TileMod Aie2IpuMod[] =
 		 * AIE2 Tile Module indexed using XAIEGBL_TILE_TYPE_AIETILE
 		 */
 		.NumModules = 2U,
-		.CoreMod = &Aie2CoreMod,
-		.StrmSw  = &Aie2TileStrmSw,
-		.DmaMod  = &Aie2TileDmaMod,
-		.MemMod  = &Aie2TileMemMod,
+		.CoreMod = AIE2COREMOD,
+		.StrmSw  = AIE2TILESTRMSW,
+		.DmaMod  = AIE2TILEDMAMOD,
+		.MemMod  = AIE2TILEMEMMOD,
 		.PlIfMod = NULL,
-		.LockMod = &Aie2TileLockMod,
-		.PerfMod = Aie2TilePerfCnt,
-		.EvntMod = Aie2TileEvntMod,
-		.TimerMod = Aie2TileTimerMod,
-		.TraceMod = Aie2TileTraceMod,
+		.LockMod = AIE2TILELOCKMOD,
+		.PerfMod = AIE2TILEPERFCNT,
+		.EvntMod = AIE2TILEEVNTMOD,
+		.TimerMod = AIE2TILETIMERMOD,
+		.TraceMod = AIE2TILETRACEMOD,
 		.L1IntrMod = NULL,
 		.L2IntrMod = NULL,
-		.TileCtrlMod = &Aie2CoreTileCtrlMod,
-		.MemCtrlMod = Aie2TileMemCtrlMod,
+		.TileCtrlMod = AIE2CORETILECTRLMOD,
+		.MemCtrlMod = AIE2TILEMEMCTRLMOD,
 	},
 	{
 		/*
@@ -3896,18 +4043,18 @@ XAie_TileMod Aie2IpuMod[] =
 		 */
 		.NumModules = 1U,
 		.CoreMod = NULL,
-		.StrmSw  = &Aie2ShimStrmSw,
-		.DmaMod  = &Aie2ShimDmaMod,
+		.StrmSw  = AIE2SHIMSTRMSW,
+		.DmaMod  = AIE2SHIMDMAMOD,
 		.MemMod  = NULL,
-		.PlIfMod = &Aie2ShimTilePlIfMod,
-		.LockMod = &Aie2ShimNocLockMod,
-		.PerfMod = &Aie2PlPerfCnt,
-		.EvntMod = &Aie2NocEvntMod,
-		.TimerMod = &Aie2PlTimerMod,
-		.TraceMod = &Aie2PlTraceMod,
-		.L1IntrMod = &Aie2PlL1IntrMod,
-		.L2IntrMod = &Aie2NoCL2IntrMod,
-		.TileCtrlMod = &Aie2ShimTileCtrlMod,
+		.PlIfMod = AIE2SHIMTILEPLIFMOD,
+		.LockMod = AIE2SHIMNOCLOCKMOD,
+		.PerfMod = AIE2PLPERFCNT,
+		.EvntMod = AIE2NOCEVNTMOD,
+		.TimerMod = AIE2PLTIMERMOD,
+		.TraceMod = AIE2PLTRACEMOD,
+		.L1IntrMod = AIE2PLL1INTRMOD,
+		.L2IntrMod = AIE2NOCL2INTRMOD,
+		.TileCtrlMod = AIE2SHIMTILECTRLMOD,
 		.MemCtrlMod = NULL,
 	},
 	{
@@ -3916,18 +4063,18 @@ XAie_TileMod Aie2IpuMod[] =
 		 */
 		.NumModules = 1U,
 		.CoreMod = NULL,
-		.StrmSw  = &Aie2ShimStrmSw,
+		.StrmSw  = AIE2SHIMSTRMSW,
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
-		.PlIfMod = &Aie2ShimTilePlIfMod,
+		.PlIfMod = AIE2SHIMTILEPLIFMOD,
 		.LockMod = NULL,
-		.PerfMod = &Aie2PlPerfCnt,
-		.EvntMod = &Aie2NocEvntMod,
-		.TimerMod = &Aie2PlTimerMod,
-		.TraceMod = &Aie2PlTraceMod,
-		.L1IntrMod = &Aie2PlL1IntrMod,
+		.PerfMod = AIE2PLPERFCNT,
+		.EvntMod = AIE2NOCEVNTMOD,
+		.TimerMod = AIE2PLTIMERMOD,
+		.TraceMod = AIE2PLTRACEMOD,
+		.L1IntrMod = AIE2PLL1INTRMOD,
 		.L2IntrMod = NULL,
-		.TileCtrlMod = &Aie2ShimTileCtrlMod,
+		.TileCtrlMod = AIE2SHIMTILECTRLMOD,
 		.MemCtrlMod = NULL,
 	},
 	{
@@ -3936,19 +4083,19 @@ XAie_TileMod Aie2IpuMod[] =
 		 */
 		.NumModules = 1U,
 		.CoreMod = NULL,
-		.StrmSw  = &Aie2MemTileStrmSw,
-		.DmaMod  = &Aie2MemTileDmaMod,
-		.MemMod  = &Aie2MemTileMemMod,
+		.StrmSw  = AIE2MEMTILESTRMSW,
+		.DmaMod  = AIE2MEMTILEDMAMOD,
+		.MemMod  = AIE2MEMTILEMEMMOD,
 		.PlIfMod = NULL,
-		.LockMod = &Aie2MemTileLockMod,
-		.PerfMod = &Aie2MemTilePerfCnt,
-		.EvntMod = &Aie2MemTileEvntMod,
-		.TimerMod = &Aie2MemTileTimerMod,
-		.TraceMod = &Aie2MemTileTraceMod,
+		.LockMod = AIE2MEMTILELOCKMOD,
+		.PerfMod = AIE2MEMTILEPERFCNT,
+		.EvntMod = AIE2MEMTILEEVNTMOD,
+		.TimerMod = AIE2MEMTILETIMERMOD,
+		.TraceMod = AIE2MEMTILETRACEMOD,
 		.L1IntrMod = NULL,
 		.L2IntrMod = NULL,
-		.TileCtrlMod = &Aie2MemTileCtrlMod,
-		.MemCtrlMod = &Aie2MemTileMemCtrlMod,
+		.TileCtrlMod = AIE2MEMTILECTRLMOD,
+		.MemCtrlMod = AIE2MEMTILEMEMCTRLMOD,
 	}
 };
 
@@ -3957,11 +4104,19 @@ XAie_DeviceOps Aie2IpuDevOps =
 {
 	.IsCheckerBoard = 0U,
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
 	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
 	.SetPartIsolationAfterRst = &_XAieMl_SetPartIsolationAfterRst,
 	.PartMemZeroInit = &_XAieMl_PartMemZeroInit,
 	.RequestTiles = &_XAieMl_RequestTiles,
+#else
+	.SetPartColShimReset = NULL,
+	.SetPartColClockAfterRst = NULL,
+	.SetPartIsolationAfterRst = NULL,
+	.PartMemZeroInit = NULL,
+	.RequestTiles = NULL,
+#endif
 };
 
 /** @} */
