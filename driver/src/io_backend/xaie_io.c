@@ -25,6 +25,7 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_io.h"
 
@@ -42,7 +43,44 @@
 #elif defined (__AIEIPU__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_IPU
 #else
+	#define __AIEDEBUG__
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
+#endif
+
+#if defined (__AIELINUX__)
+	#define LINUXBACKEND &LinuxBackend
+#else
+	#define LINUXBACKEND NULL
+#endif
+#if defined (__AIEMETAL__)
+	#define METALBACKEND &MetalBackend
+#else
+	#define METALBACKEND NULL
+#endif
+#if defined (__AIESIM__)
+	#define SIMBACKEND &SimBackend
+#else
+	#define SIMBACKEND NULL
+#endif
+#if defined (__AIECDO__)
+	#define CDOBACKEND &CdoBackend
+#else
+	#define CDOBACKEND NULL
+#endif
+#if defined (__AIEBAREMETAL__)
+	#define BAREMETALBACKEND &BaremetalBackend
+#else
+	#define BAREMETALBACKEND NULL
+#endif
+#if defined (__AIEIPU__)
+	#define IPUBACKEND &IpuBackend
+#else
+	#define IPUBACKEND NULL
+#endif
+#if defined (__AIEDEBUG__)
+	#define DEBUGBACKEND &DebugBackend
+#else
+	#define DEBUGBACKEND NULL
 #endif
 
 /************************** Variable Definitions *****************************/
@@ -56,13 +94,13 @@ extern const XAie_Backend IpuBackend;
 
 static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
-	&MetalBackend,
-	&SimBackend,
-	&CdoBackend,
-	&BaremetalBackend,
-	&DebugBackend,
-	&LinuxBackend,
-	&IpuBackend,
+	METALBACKEND,
+	SIMBACKEND,
+	CDOBACKEND,
+	BAREMETALBACKEND,
+	DEBUGBACKEND,
+	LINUXBACKEND,
+	IPUBACKEND,
 };
 
 /************************** Function Definitions *****************************/
