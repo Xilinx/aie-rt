@@ -57,7 +57,7 @@
 #else
 	#define METALBACKEND NULL
 #endif
-#if defined (__AIESIM__)
+#if defined (__AIESIM__) || defined (__AIEDEBUG__)
 	#define SIMBACKEND &SimBackend
 #else
 	#define SIMBACKEND NULL
