@@ -85,6 +85,7 @@ static AieRC XAie_IpuIO_Init(XAie_DevInst *DevInst)
 	XAie_IpuIO *IOInst = &IpuIO;
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
+	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	DevInst->IOInst = IOInst;
 
 	return XAIE_OK;
