@@ -225,7 +225,7 @@ typedef enum{
 typedef struct {
 	u32 StepSize;
 	u32 Wrap;
-} XAie_Gen2DmaDimDesc;
+} XAie_AieMlDmaDimDesc;
 
 typedef struct {
 	u32 Offset;
@@ -235,7 +235,7 @@ typedef struct {
 
 typedef union {
 	XAie_AieDmaDimDesc AieDimDesc;
-	XAie_Gen2DmaDimDesc Aie2DimDesc;
+	XAie_AieMlDmaDimDesc AieMlDimDesc;
 } XAie_DmaDimDesc;
 
 typedef struct {
@@ -296,17 +296,17 @@ typedef struct {
 typedef struct {
 	u16 Wrap;
 	u32 StepSize;
-} XAie_Gen2DimDesc;
+} XAie_AieMlDimDesc;
 
 typedef struct {
 	u8 IterCurr;
-	XAie_Gen2DimDesc IterDesc;
-	XAie_Gen2DimDesc DimDesc[4U];	/* Max 4D addressing supported */
-} XAie_Gen2MultiDimDesc;
+	XAie_AieMlDimDesc IterDesc;
+	XAie_AieMlDimDesc DimDesc[4U];	/* Max 4D addressing supported */
+} XAie_AieMlMultiDimDesc;
 
 typedef union {
 	XAie_AieMultiDimDesc AieMultiDimDesc;
-	XAie_Gen2MultiDimDesc Gen2MultiDimDesc;
+	XAie_AieMlMultiDimDesc AieMlMultiDimDesc;
 } XAie_MultiDimDesc;
 
 typedef struct {
