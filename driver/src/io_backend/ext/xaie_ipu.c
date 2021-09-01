@@ -45,6 +45,8 @@ typedef struct {
 /************************** Variable Definitions *****************************/
 static XAie_IpuIO IpuIO;
 
+#define XAIE_IPU_MASKPOLL_COUNT 100
+
 /************************** Function Definitions *****************************/
 #ifdef __AIEIPU__
 
@@ -183,21 +185,18 @@ static AieRC XAie_IpuIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 		u32 Value, u32 TimeOutUs)
 {
 	AieRC Ret = XAIE_ERR;
-	u32 Count, MinTimeOutUs, RegVal;
+	u32 Count, RegVal;
+	(void)TimeOutUs;
 
-	/*
-	 * Any value less than 200 us becomes noticable overhead. This is based
-	 * on some profiling, and it may vary between platforms.
-	 */
-	MinTimeOutUs = 200;
-	Count = ((u64)TimeOutUs + MinTimeOutUs - 1) / MinTimeOutUs;
+	/* current rtos implementation doesn't support sleep */
+	Count = XAIE_IPU_MASKPOLL_COUNT;
 
 	while (Count > 0U) {
 		XAie_IpuIO_Read32(IOInst, RegOff, &RegVal);
 		if((RegVal & Mask) == Value) {
 			return XAIE_OK;
 		}
-		com_usleep(MinTimeOutUs);
+		com_usleep(0U);
 		Count--;
 	}
 
@@ -288,6 +287,76 @@ static void _XAie_IpuIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
 /*****************************************************************************/
 /**
 *
+* This is the memory IO function to read 32bit data from the specified NPI
+* address.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to read from.
+* @param	Data: Pointer to store the 32 bit value
+*
+* @return	XAIE_OK on success.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+
+static AieRC XAie_IpuIO_NpiRead32(void *IOInst, u64 RegOff, u32 *Data)
+{
+	XAie_IpuIO *IpuIOInst = (XAie_IpuIO *)IOInst;
+
+	*Data = reg_read32(IpuIOInst->NpiBaseAddr + RegOff);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory IO function to mask poll a NPI address for a value.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to read from.
+* @param	Mask: Mask to be applied to Data.
+* @param	Value: 32-bit value to poll for
+* @param	TimeOutUs: Timeout in micro seconds.
+*
+* @return	XAIE_OK or XAIE_ERR.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_IpuIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
+		u32 Value, u32 TimeOutUs)
+{
+	AieRC Ret = XAIE_ERR;
+	u32 Count, RegVal;
+	(void)TimeOutUs;
+
+	/* current rtos implementation doesn't support sleep */
+	Count = XAIE_IPU_MASKPOLL_COUNT;
+
+	while (Count > 0U) {
+		XAie_IpuIO_NpiRead32(IOInst, RegOff, &RegVal);
+		if((RegVal & Mask) == Value) {
+			return XAIE_OK;
+		}
+		com_usleep(0U);
+		Count--;
+	}
+
+	/* Check for the break from timed-out loop */
+	XAie_IpuIO_NpiRead32(IOInst, RegOff, &RegVal);
+	if((RegVal & Mask) == Value) {
+		Ret = XAIE_OK;
+	}
+
+	return Ret;
+}
+
+
+/*****************************************************************************/
+/**
+*
 * This is the function to run backend operations
 *
 * @param	IOInst: IO instance pointer
@@ -312,6 +381,13 @@ static AieRC XAie_IpuIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			_XAie_IpuIO_NpiWrite32(IOInst, Req->NpiRegOff,
 					Req->Val);
 			break;
+		}
+		case XAIE_BACKEND_OP_NPIMASKPOLL32:
+		{
+			XAie_BackendNpiMaskPollReq *Req = Arg;
+
+			return _XAie_IpuIO_NpiMaskPoll(IOInst, Req->NpiRegOff,
+					Req->Mask, Req->Val, Req->TimeOutUs);
 		}
 		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
 		{
