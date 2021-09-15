@@ -53,6 +53,7 @@
 #define UPDT_NEXT_NOC_TILE_LOC(Loc)	((Loc).Col == 0 ? (Loc).Col = 1 : (Loc).Col++)
 
 #include "xaie_lite_regdef_aieml.h"
+#include "xaie_lite_regops_aieml.h"
 
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/

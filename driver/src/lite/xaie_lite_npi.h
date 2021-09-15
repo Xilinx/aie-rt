@@ -62,6 +62,39 @@
 /*****************************************************************************/
 /**
 *
+* This is function to write value to NPI register and will not return until it
+* is written to the register.
+*
+* @param	RegAddr: NPI register address
+* @param	Val: value to write to the register
+*
+* @note		This function is internal.
+*******************************************************************************/
+static inline void _XAie_LNpiWriteCheck32(u64 RegAddr, u32 Val)
+{
+	_XAie_LRawWrite32((XAIE_NPI_BASEADDR + RegAddr), Val);
+	_XAie_LRawPoll32((XAIE_NPI_BASEADDR + RegAddr), 0, 0, 0);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is function to write value to NPI register
+*
+* @param	RegAddr: NPI register address
+* @param	Val: value to write to the register
+*
+* @note		This function is internal.
+*		This function is for the NPI registers which are write only.
+*******************************************************************************/
+static inline void _XAie_LNpiWrite32(u64 RegAddr, u32 Val)
+{
+	_XAie_LRawWrite32((XAIE_NPI_BASEADDR + RegAddr), Val);
+}
+
+/*****************************************************************************/
+/**
+*
 * This is function to set NPI lock
 *
 * @param	Lock : XAIE_ENABLE to lock, XAIE_DISABLE to unlock
