@@ -264,13 +264,8 @@ AieRC _XAie_NpiIrqConfig(XAie_DevInst *DevInst, u8 Ops, u8 NpiIrqID,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * For generation of devices which don't support this feature, silently
-	 * return XAIE_OK as these registers are inactive.
-	 */
-	if (NpiMod->NpiIrqNum == XAIE_FEATURE_UNAVAILABLE) {
-		return XAIE_OK;
-	}
+	if (NpiMod->NpiIrqNum == XAIE_FEATURE_UNAVAILABLE)
+		return XAIE_FEATURE_NOT_SUPPORTED;
 
 	if (Ops > XAIE_ENABLE) {
 		XAIE_ERROR("Invalid NPI IRQ operations\n");
