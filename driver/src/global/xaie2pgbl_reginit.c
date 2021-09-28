@@ -2113,6 +2113,24 @@ static const  XAie_DmaMod Aie2PShimDmaMod =
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
+#ifdef XAIE_FEATURE_DATAMEM_ENABLE
+/* Data Memory Module for Tile data memory*/
+static const  XAie_MemMod Aie2PTileMemMod =
+{
+	.Size = 0x10000,
+	.MemAddr = XAIE2PGBL_MEMORY_MODULE_DATAMEMORY,
+	.EccEvntRegOff = XAIE2PGBL_MEMORY_MODULE_ECC_SCRUBBING_EVENT,
+};
+
+/* Data Memory Module for Mem Tile data memory*/
+static const  XAie_MemMod Aie2PMemTileMemMod =
+{
+	.Size = 0x80000,
+	.MemAddr = XAIE2PGBL_MEM_TILE_MODULE_DATAMEMORY,
+	.EccEvntRegOff = XAIE2PGBL_MEM_TILE_MODULE_ECC_SCRUBBING_EVENT,
+};
+#endif /* XAIE_FEATURE_DATAMEM_ENABLE */
+
 #ifdef XAIE_FEATURE_CORE_ENABLE
 	#define AIE2PCOREMOD &Aie2PCoreMod
 #else
@@ -2136,6 +2154,13 @@ static const  XAie_DmaMod Aie2PShimDmaMod =
 	#define AIE2PSHIMDMAMOD NULL
 	#define AIE2PMEMTILEDMAMOD NULL
 #endif
+#ifdef XAIE_FEATURE_DATAMEM_ENABLE
+	#define AIE2PTILEMEMMOD &Aie2PTileMemMod
+	#define AIE2PMEMTILEMEMMOD &Aie2PMemTileMemMod
+#else
+	#define AIE2PTILEMEMMOD NULL
+	#define AIE2PMEMTILEMEMMOD NULL
+#endif
 
 /*
  * AIE2P Module
@@ -2153,6 +2178,7 @@ XAie_TileMod Aie2PMod[] =
 		.CoreMod = AIE2PCOREMOD,
 		.StrmSw  = AIE2PTILESTRMSW,
 		.DmaMod  = AIE2PTILEDMAMOD,
+		.MemMod  = AIE2PTILEMEMMOD,
 	},
 	{
 		/*
@@ -2162,6 +2188,7 @@ XAie_TileMod Aie2PMod[] =
 		.CoreMod = NULL,
 		.StrmSw  = AIE2PSHIMSTRMSW,
 		.DmaMod  = AIE2PSHIMDMAMOD,
+		.MemMod  = NULL,
 	},
 	{
 		/*
@@ -2171,6 +2198,7 @@ XAie_TileMod Aie2PMod[] =
 		.CoreMod = NULL,
 		.StrmSw  = AIE2PSHIMSTRMSW,
 		.DmaMod  = NULL,
+		.MemMod  = NULL,
 	},
 	{
 		/*
@@ -2180,6 +2208,7 @@ XAie_TileMod Aie2PMod[] =
 		.CoreMod = NULL,
 		.StrmSw  = AIE2PMEMTILESTRMSW,
 		.DmaMod  = AIE2PMEMTILEDMAMOD,
+		.MemMod  = AIE2PMEMTILEMEMMOD,
 	},
 };
 
