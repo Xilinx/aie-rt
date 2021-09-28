@@ -50,10 +50,12 @@
 extern XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_TileMod Aie2IpuMod[XAIEGBL_TILE_TYPE_MAX];
+extern XAie_TileMod Aie2PMod[XAIEGBL_TILE_TYPE_MAX];
 
 extern XAie_DeviceOps AieDevOps;
 extern XAie_DeviceOps AieMlDevOps;
 extern XAie_DeviceOps Aie2IpuDevOps;
+extern XAie_DeviceOps Aie2PDevOps;
 
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
 #define XAIE_DEV_SINGLE_MOD Aie2IpuMod
@@ -61,6 +63,9 @@ extern XAie_DeviceOps Aie2IpuDevOps;
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 #define XAIE_DEV_SINGLE_MOD AieMlMod
 #define XAIE_DEV_SINGLE_DEVOPS AieMlDevOps
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P
+#define XAIE_DEV_SINGLE_MOD Aie2PMod
+#define XAIE_DEV_SINGLE_DEVOPS Aie2PDevOps
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
 #define XAIE_DEV_SINGLE_MOD AieMod
 #define XAIE_DEV_SINGLE_DEVOPS AieDevOps
@@ -122,6 +127,10 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = Aie2IpuMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;
 		InstPtr->DevOps = &Aie2IpuDevOps;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P) {
+		InstPtr->DevProp.DevMod = Aie2PMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P;
+		InstPtr->DevOps = &Aie2PDevOps;
 #endif
 	} else {
 		XAIE_ERROR("Invalid device\n",
