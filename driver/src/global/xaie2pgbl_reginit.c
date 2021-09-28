@@ -24,6 +24,7 @@
 
 /***************************** Include Files *********************************/
 #include "xaie_core_aieml.h"
+#include "xaie_device_aieml.h"
 #include "xaie2pgbl_params.h"
 #include "xaiegbl_regdef.h"
 
@@ -201,6 +202,8 @@ XAie_TileMod Aie2PMod[] =
 /* Device level operations for aieml */
 XAie_DeviceOps Aie2PDevOps =
 {
+	.IsCheckerBoard = 0U,
+	.GetTTypefromLoc = &_XAieMl_GetTTypefromLoc,
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = NULL,
 	.SetPartIsolationAfterRst = NULL,
