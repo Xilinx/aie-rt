@@ -26,6 +26,7 @@
 #include "xaie_core_aieml.h"
 #include "xaie_device_aieml.h"
 #include "xaie_dma_aieml.h"
+#include "xaie_locks_aieml.h"
 #include "xaie_reset_aieml.h"
 #include "xaie_ss_aieml.h"
 #include "xaie2pgbl_params.h"
@@ -2307,6 +2308,80 @@ static const  XAie_PlIfMod Aie2PShimTilePlIfMod =
 };
 #endif /* XAIE_FEATURE_PL_ENABLE */
 
+#ifdef XAIE_FEATURE_LOCK_ENABLE
+static const XAie_RegFldAttr Aie2PTileLockInit =
+{
+	.Lsb = XAIE2PGBL_MEMORY_MODULE_LOCK0_VALUE_LOCK_VALUE_LSB,
+	.Mask = XAIE2PGBL_MEMORY_MODULE_LOCK0_VALUE_LOCK_VALUE_MASK,
+};
+
+/* Lock Module for AIE Tiles  */
+static const  XAie_LockMod Aie2PTileLockMod =
+{
+	.BaseAddr = XAIE2PGBL_MEMORY_MODULE_LOCK_REQUEST,
+	.NumLocks = 16U,
+	.LockIdOff = 0x400,
+	.RelAcqOff = 0x200,
+	.LockValOff = 0x4,
+	.LockValUpperBound = 63,
+	.LockValLowerBound = -64,
+	.LockSetValBase = XAIE2PGBL_MEMORY_MODULE_LOCK0_VALUE,
+	.LockSetValOff = 0x10,
+	.LockInit = &Aie2PTileLockInit,
+	.Acquire = &_XAieMl_LockAcquire,
+	.Release = &_XAieMl_LockRelease,
+	.SetValue = &_XAieMl_LockSetValue,
+};
+
+static const XAie_RegFldAttr Aie2PShimNocLockInit =
+{
+	.Lsb = XAIE2PGBL_NOC_MODULE_LOCK0_VALUE_LOCK_VALUE_LSB,
+	.Mask = XAIE2PGBL_NOC_MODULE_LOCK0_VALUE_LOCK_VALUE_MASK,
+};
+
+/* Lock Module for SHIM NOC Tiles  */
+static const  XAie_LockMod Aie2PShimNocLockMod =
+{
+	.BaseAddr = XAIE2PGBL_NOC_MODULE_LOCK_REQUEST,
+	.NumLocks = 16U,
+	.LockIdOff = 0x400,
+	.RelAcqOff = 0x200,
+	.LockValOff = 0x4,
+	.LockValUpperBound = 63,
+	.LockValLowerBound = -64,
+	.LockSetValBase = XAIE2PGBL_NOC_MODULE_LOCK0_VALUE,
+	.LockSetValOff = 0x10,
+	.LockInit = &Aie2PShimNocLockInit,
+	.Acquire = &_XAieMl_LockAcquire,
+	.Release = &_XAieMl_LockRelease,
+	.SetValue = &_XAieMl_LockSetValue,
+};
+
+static const XAie_RegFldAttr Aie2PMemTileLockInit =
+{
+	.Lsb = XAIE2PGBL_MEM_TILE_MODULE_LOCK0_VALUE_LOCK_VALUE_LSB,
+	.Mask = XAIE2PGBL_MEM_TILE_MODULE_LOCK0_VALUE_LOCK_VALUE_MASK,
+};
+
+/* Lock Module for Mem Tiles  */
+static const  XAie_LockMod Aie2PMemTileLockMod =
+{
+	.BaseAddr = XAIE2PGBL_MEM_TILE_MODULE_LOCK_REQUEST,
+	.NumLocks = 64U,
+	.LockIdOff = 0x400,
+	.RelAcqOff = 0x200,
+	.LockValOff = 0x4,
+	.LockValUpperBound = 63,
+	.LockValLowerBound = -64,
+	.LockSetValBase = XAIE2PGBL_MEM_TILE_MODULE_LOCK0_VALUE,
+	.LockSetValOff = 0x10,
+	.LockInit = &Aie2PMemTileLockInit,
+	.Acquire = &_XAieMl_LockAcquire,
+	.Release = &_XAieMl_LockRelease,
+	.SetValue = &_XAieMl_LockSetValue,
+};
+#endif /* XAIE_FEATURE_LOCK_ENABLE */
+
 #ifdef XAIE_FEATURE_CORE_ENABLE
 	#define AIE2PCOREMOD &Aie2PCoreMod
 #else
@@ -2344,6 +2419,15 @@ static const  XAie_PlIfMod Aie2PShimTilePlIfMod =
 	#define AIE2PSHIMTILEPLIFMOD NULL
 	#define AIE2PPLIFMOD NULL
 #endif
+#ifdef XAIE_FEATURE_LOCK_ENABLE
+	#define AIE2PTILELOCKMOD &Aie2PTileLockMod
+	#define AIE2PSHIMNOCLOCKMOD &Aie2PShimNocLockMod
+	#define AIE2PMEMTILELOCKMOD &Aie2PMemTileLockMod
+#else
+	#define AIE2PTILELOCKMOD NULL
+	#define AIE2PSHIMNOCLOCKMOD NULL
+	#define AIE2PMEMTILELOCKMOD NULL
+#endif
 
 /*
  * AIE2P Module
@@ -2363,6 +2447,7 @@ XAie_TileMod Aie2PMod[] =
 		.DmaMod  = AIE2PTILEDMAMOD,
 		.MemMod  = AIE2PTILEMEMMOD,
 		.PlIfMod = NULL,
+		.LockMod = AIE2PTILELOCKMOD,
 	},
 	{
 		/*
@@ -2374,6 +2459,7 @@ XAie_TileMod Aie2PMod[] =
 		.DmaMod  = AIE2PSHIMDMAMOD,
 		.MemMod  = NULL,
 		.PlIfMod = AIE2PSHIMTILEPLIFMOD,
+		.LockMod = AIE2PSHIMNOCLOCKMOD,
 	},
 	{
 		/*
@@ -2385,6 +2471,7 @@ XAie_TileMod Aie2PMod[] =
 		.DmaMod  = NULL,
 		.MemMod  = NULL,
 		.PlIfMod = AIE2PPLIFMOD,
+		.LockMod = NULL,
 	},
 	{
 		/*
@@ -2396,6 +2483,7 @@ XAie_TileMod Aie2PMod[] =
 		.DmaMod  = AIE2PMEMTILEDMAMOD,
 		.MemMod  = AIE2PMEMTILEMEMMOD,
 		.PlIfMod = NULL,
+		.LockMod = AIE2PMEMTILELOCKMOD,
 	},
 };
 
