@@ -47,7 +47,7 @@ u8 _XAie2Ipu_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	if(Loc.Row == 0U) {
-		if(Loc.Col == 0U)
+		if((DevInst->StartCol + Loc.Col) == 0U)
 			return XAIEGBL_TILE_TYPE_SHIMPL;
 
 		return XAIEGBL_TILE_TYPE_SHIMNOC;
