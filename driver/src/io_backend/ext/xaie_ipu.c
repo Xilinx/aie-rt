@@ -36,6 +36,7 @@
 #include "xaie_io_common.h"
 #include "xaie_io_privilege.h"
 
+#ifdef __AIEIPU__
 /****************************** Type Definitions *****************************/
 typedef struct {
 	u64 BaseAddr;
@@ -48,8 +49,6 @@ static XAie_IpuIO IpuIO;
 #define XAIE_IPU_MASKPOLL_COUNT 100
 
 /************************** Function Definitions *****************************/
-#ifdef __AIEIPU__
-
 /*****************************************************************************/
 /**
 *
