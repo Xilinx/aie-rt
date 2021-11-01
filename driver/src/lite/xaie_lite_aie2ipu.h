@@ -34,6 +34,10 @@
 #define XAIE_BASE_ADDR			IPU_AIE_BASEADDR
 #endif
 
+#ifndef XAIE_NPI_BASEADDR
+#define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
+#endif
+
 #ifndef XAIE_NUM_ROWS
 #define XAIE_NUM_ROWS			6
 #endif
