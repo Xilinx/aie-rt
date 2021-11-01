@@ -35,6 +35,7 @@
 #include "xaie_io.h"
 #include "xaie_io_common.h"
 #include "xaie_io_privilege.h"
+#include "xaie_npi.h"
 
 #ifdef __AIEIPU__
 /****************************** Type Definitions *****************************/

@@ -19,10 +19,18 @@
 #include "xaiegbl.h"
 #include "xaiegbl_regdef.h"
 
+#ifdef __AIEIPU__
+#include <platform-hw-config.h>
+#endif
+
 /************************** Constant Definitions *****************************/
 
 #ifndef XAIE_NPI_BASEADDR
+#ifdef __AIEIPU__
+#define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
+#else
 #define XAIE_NPI_BASEADDR		0xF70A0000
+#endif
 #endif
 
 #define XAIE_NPI_TIMEOUT_US		0x00000005U
