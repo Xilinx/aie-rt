@@ -89,42 +89,24 @@ static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
-* This is API returns the tile type for a given device instance and tile
+* This is API returns the shim tile type for a given device instance and tile
 * location.
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of the AIE tile.
-* @return	TileType (AIETILE/MEMTILE/SHIMPL/SHIMNOC on success and MAX on
-*		error)
+*
+* @return	TileType SHIMPL/SHIMNOC.
 *
 * @note		Internal only.
 *
 ******************************************************************************/
-static inline u8 _XAie_LGetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
+static inline u8 _XAie_LGetShimTTypefromLoc(XAie_DevInst *DevInst,
+			XAie_LocType Loc)
 {
-	if(Loc.Col >= DevInst->NumCols) {
-		XAIE_ERROR_RETURN("Invalid column: %d\n", Loc.Col);
-		return XAIEGBL_TILE_TYPE_MAX;
-	}
+	if((DevInst->StartCol + Loc.Col) == 0U)
+		return XAIEGBL_TILE_TYPE_SHIMPL;
 
-	if(Loc.Row == 0U) {
-		if((DevInst->StartCol + Loc.Col) == 0U)
-			return XAIEGBL_TILE_TYPE_SHIMPL;
-
-		return XAIEGBL_TILE_TYPE_SHIMNOC;
-	} else if(Loc.Row >= DevInst->MemTileRowStart &&
-			(Loc.Row < (DevInst->MemTileRowStart +
-				     DevInst->MemTileNumRows))) {
-		return XAIEGBL_TILE_TYPE_MEMTILE;
-	} else if (Loc.Row >= DevInst->AieTileRowStart &&
-			(Loc.Row < (DevInst->AieTileRowStart +
-				     DevInst->AieTileNumRows))) {
-		return XAIEGBL_TILE_TYPE_AIETILE;
-	}
-
-	XAIE_ERROR_RETURN("Cannot find Tile Type\n");
-
-	return XAIEGBL_TILE_TYPE_MAX;
+	return XAIEGBL_TILE_TYPE_SHIMNOC;
 }
 
 /*****************************************************************************/
