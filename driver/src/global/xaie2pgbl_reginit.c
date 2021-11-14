@@ -4227,11 +4227,19 @@ XAie_DeviceOps Aie2PDevOps =
 {
 	.IsCheckerBoard = 0U,
 	.GetTTypefromLoc = &_XAieMl_GetTTypefromLoc,
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+	.SetPartColShimReset = NULL,
+	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
+	.SetPartIsolationAfterRst = NULL,
+	.PartMemZeroInit = NULL,
+	.RequestTiles = &_XAieMl_RequestTiles,
+#else
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = NULL,
 	.SetPartIsolationAfterRst = NULL,
 	.PartMemZeroInit = NULL,
 	.RequestTiles = NULL,
+#endif
 };
 
 /** @} */
