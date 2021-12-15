@@ -194,8 +194,12 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
-	InstPtr->EccStatus = XAIE_ENABLE;
 	InstPtr->TxnList.Next = NULL;
+
+	if (InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU)
+		InstPtr->EccStatus = XAIE_DISABLE;
+	else
+		InstPtr->EccStatus = XAIE_ENABLE;
 
 	RC = _XAie_RscMgrInit(InstPtr);
 	if(RC != XAIE_OK) {
@@ -714,6 +718,11 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
+	}
+
+	if (DevInst->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU) {
+		XAIE_ERROR("ECC feature not supported\n");
+		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
 	/* Reserve broadcast channel for ECC */
