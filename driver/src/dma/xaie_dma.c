@@ -1765,7 +1765,7 @@ AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, XAie_DmaPadTensor *PadTensor)
 	}
 
 	DmaMod = DmaDesc->DmaMod;
-	if(DmaMod->ZeroPadding == XAIE_FEATURE_UNAVAILABLE) {
+	if(DmaMod->Padding == XAIE_FEATURE_UNAVAILABLE) {
 		XAIE_ERROR("Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
@@ -1806,7 +1806,7 @@ AieRC XAie_DmaSetZeroPadding(XAie_DmaDesc *DmaDesc, u8 Dim,
 	}
 
 	DmaMod = DmaDesc->DmaMod;
-	if(DmaMod->ZeroPadding == XAIE_FEATURE_UNAVAILABLE) {
+	if(DmaMod->Padding == XAIE_FEATURE_UNAVAILABLE) {
 		XAIE_ERROR("Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
