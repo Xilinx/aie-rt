@@ -81,14 +81,14 @@ typedef enum {
 	XAIE_IO_BLOCKSET,
 } XAie_TxnOpcode;
 
-typedef struct XAie_TxnCmd {
+struct XAie_TxnCmd {
 	XAie_TxnOpcode Opcode;
 	u32 Mask;
 	u64 RegOff;
 	u32 Value;
 	u64 DataPtr;
 	u32 Size;
-} XAie_TxnCmd;
+};
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/

@@ -172,10 +172,10 @@ typedef struct XAie_BackendOps {
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */
-typedef struct XAie_Backend {
+struct XAie_Backend {
 	XAie_BackendType Type;
 	XAie_BackendOps Ops;
-} XAie_Backend;
+};
 
 /* Typedef to capture shimdma Bd arguments */
 typedef struct XAie_ShimDmaBdArgs {

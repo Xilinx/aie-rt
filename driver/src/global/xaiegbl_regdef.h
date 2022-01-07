@@ -487,7 +487,7 @@ typedef struct {
 /*
  * The typedef contains attributes of Dma Modules for AIE Tiles and Mem Tiles
  */
-typedef struct XAie_DmaMod {
+struct XAie_DmaMod {
 	u8  NumBds;
 	u8  NumLocks;
 	u8  ChIdxOffset;
@@ -532,7 +532,7 @@ typedef struct XAie_DmaMod {
 			XAie_LocType Loc, u32 Len, u8 BdNum);
 	AieRC (*UpdateBdAddr)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 			XAie_LocType Loc, u64 Addr, u8 BdNum);
-} XAie_DmaMod;
+};
 
 /*
  * The typedef contains the attributes of Memory Module
@@ -611,7 +611,7 @@ typedef struct {
  * details, please refer to the AI Engine hardware architecture specification
  * document.
  */
-typedef struct XAie_LockMod {
+struct XAie_LockMod {
 	u8  NumLocks;		/* Number of lock in the module */
 	s8  LockValUpperBound; 	/* Upper bound of the lock value */
 	s8  LockValLowerBound; 	/* Lower bound of the lock value */
@@ -631,7 +631,7 @@ typedef struct XAie_LockMod {
 	AieRC (*SetValue)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
 			XAie_Lock Lock);
-} XAie_LockMod;
+};
 
 /* This typedef contains attributes of Performace Counter module */
 typedef struct XAie_PerfMod {
@@ -801,14 +801,14 @@ typedef struct XAie_MemCtrlMod{
 /*
  * This structure captures all attributes related to resource manager.
  */
-typedef struct XAie_ResourceManager {
+struct XAie_ResourceManager {
 	u32 **Bitmaps;
-} XAie_ResourceManager;
+};
 
 /*
  * This typedef contains all the modules for a Tile type
  */
-typedef struct XAie_TileMod {
+struct XAie_TileMod {
 	const u8 NumModules;
 	const XAie_CoreMod *CoreMod;
 	const XAie_StrmMod *StrmSw;
@@ -825,10 +825,10 @@ typedef struct XAie_TileMod {
 	const XAie_L2IntrMod *L2IntrMod;
 	const XAie_TileCtrlMod *TileCtrlMod;
 	const XAie_MemCtrlMod *MemCtrlMod;
-} XAie_TileMod;
+};
 
 
-typedef struct XAie_DeviceOps {
+struct XAie_DeviceOps {
 	u8 IsCheckerBoard;
 	u8 (*GetTTypefromLoc)(XAie_DevInst *DevInst, XAie_LocType Loc);
 	AieRC (*SetPartColShimReset)(XAie_DevInst *DevInst, u8 Enable);
@@ -837,7 +837,7 @@ typedef struct XAie_DeviceOps {
 	AieRC (*PartMemZeroInit)(XAie_DevInst *DevInst);
 	AieRC (*RequestTiles)(XAie_DevInst *DevInst,
 			XAie_BackendTilesArray *Args);
-} XAie_DeviceOps;
+};
 
 #endif
 
