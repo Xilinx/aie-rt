@@ -720,7 +720,7 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	if (DevInst->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU) {
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) {
 		XAIE_ERROR("ECC feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
