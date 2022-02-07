@@ -1,0 +1,386 @@
+Copyright License Summary
+================================================================================
+Source code directory searched: /scratch/workspace/Code/aie-rt
+
+Total files scanned:		239
+Total possible licenses found:	159
+
+
+Actual Licences found [word for word]
+================================================================================
+License                 	Number of licenses found
+-------                 	------------------------
+AGPL:                    	0
+Apache-2.0:              	0
+BSD-2:                   	0
+BSD-3:                   	0
+Boost-1.0:               	0
+Boost-1.0-ver1:          	0
+Boost-1.0-ver2:          	0
+Free-Software-Foundation:	0
+GPL-2.0:                 	0
+GPL-3.0:                 	0
+Google:                  	0
+LGPL-2.1:                	0
+LGPL-3.0:                	0
+MIT:                     	0
+MPL-2.0:                 	0
+Sleepycat:               	0
+unknown:                 	159
+
+
+Broad estimation of possible licenses found [NOT accurate]
+================================================================================
+License                 	Number of possible licenses found
+-------                 	---------------------------------
+AGPL:                    	0
+Apache-2.0:              	0
+BSD:                     	0
+BSD-2:                   	0
+BSD-3:                   	0
+Boost-1.0:               	0
+CDDL-1.0:                	0
+CPL-1.0:                 	0
+Creative-Commons:        	0
+EPL-1.0:                 	0
+EUPL-1.1:                	0
+Free-Software-Foundation:	0
+GPL:                     	2
+Google:                  	1
+LGPL:                    	0
+MIT:                     	0
+MPL-2.0:                 	0
+NPL-1.0:                 	0
+Oracle-Berkeley-DB:      	0
+Sleepycat:               	0
+
+
+Detailed summary of each copyright license found:
+================================================================================
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (C) 2021 Xilinx, Inc. All rights reserved. SPDX-License-Identifier:
+MIT
+
+FILES:
+driver/src/Makefile.rsc
+driver/src/device/xaie_device_aie.c
+driver/src/device/xaie_device_aie.h
+driver/src/device/xaie_device_aieml.c
+driver/src/device/xaie_device_aieml.h
+driver/src/global/xaie_feature_config.h
+driver/src/interrupt/xaie_interrupt_aie.c
+driver/src/interrupt/xaie_interrupt_aie.h
+driver/src/interrupt/xaie_interrupt_aieml.c
+driver/src/interrupt/xaie_interrupt_aieml.h
+driver/src/interrupt/xaie_interrupt_backtrack.c
+driver/src/interrupt/xaie_interrupt_control.c
+driver/src/io_backend/ext/xaie_io_common.c
+driver/src/io_backend/ext/xaie_io_common.h
+driver/src/io_backend/privilege/xaie_io_privilege.c
+driver/src/io_backend/privilege/xaie_io_privilege.h
+driver/src/lite/xaie_lite.h
+driver/src/lite/xaie_lite_aie.h
+driver/src/lite/xaie_lite_aieml.h
+driver/src/lite/xaie_lite_io.h
+driver/src/lite/xaie_lite_npi.h
+driver/src/lite/xaie_lite_privilege_pm.c
+driver/src/lite/xaie_lite_regdef_aie.h
+driver/src/lite/xaie_lite_regdef_aieml.h
+driver/src/lite/xaie_lite_regops_aie.h
+driver/src/lite/xaie_lite_regops_aieml.h
+driver/src/pm/xaie_tilectrl.c
+driver/src/pm/xaie_tilectrl.h
+driver/src/rsc/xaie_rsc.c
+driver/src/rsc/xaie_rsc.h
+driver/src/rsc/xaie_rsc_bcast.c
+driver/src/rsc/xaie_rsc_events.c
+driver/src/rsc/xaie_rsc_internal.h
+driver/src/rsc/xaie_rsc_perfcnt.c
+driver/src/rsc/xaie_rsc_trace.c
+fal/CMakeLists.txt
+fal/cmake/collect.cmake
+fal/cmake/depends.cmake
+fal/cmake/modules/FindLibxaiengine.cmake
+fal/cmake/options.cmake
+fal/cmake/platforms/cross-genric-g++.cmake
+fal/cmake/platforms/cross-linux-g++.cmake
+fal/cmake/platforms/versal-linux.cmake
+fal/data/aiefal.mdd
+fal/doc/CMakeLists.txt
+fal/examples/CMakeLists.txt
+fal/src/CMakeLists.txt
+fal/tests/CMakeLists.txt
+fal/tests/utests/CMakeLists.txt
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+(c) Copyright(C) 2020 - 2021 by Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+fal/examples/profile-aie.cpp
+fal/examples/profile-io-aie.cpp
+fal/examples/trace-pc-aie.cpp
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (C) 2018 - 2020 Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+driver/data/aienginev2.mdd
+driver/data/aienginev2.tcl
+driver/src/Makefile
+fal/src/Makefile
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright(C) 2020 - 2021 by Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+fal/src/common/xaiefal-common.hpp
+fal/src/common/xaiefal-log.hpp
+fal/src/profile/xaiefal-profile.hpp
+fal/src/rsc/xaiefal-bc.hpp
+fal/src/rsc/xaiefal-events.hpp
+fal/src/rsc/xaiefal-groupevent.hpp
+fal/src/rsc/xaiefal-pc.hpp
+fal/src/rsc/xaiefal-perf.hpp
+fal/src/rsc/xaiefal-ss.hpp
+fal/src/rsc/xaiefal-trace.hpp
+fal/src/xaiefal.hpp
+fal/tests/utests/tc/common/tc_config.h
+fal/tests/utests/tc/test.cpp
+fal/tests/utests/tc/test_bc.cpp
+fal/tests/utests/tc/test_combo.cpp
+fal/tests/utests/tc/test_groupevent.cpp
+fal/tests/utests/tc/test_pc.cpp
+fal/tests/utests/tc/test_perf.cpp
+fal/tests/utests/tc/test_rscs_stat.cpp
+fal/tests/utests/tc/test_ss.cpp
+fal/tests/utests/tc/test_trace.cpp
+fal/tests/utests/tc/test_userevent.cpp
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (C) 2020 Xilinx, Inc. All rights reserved. SPDX-License-Identifier:
+MIT
+
+FILES:
+driver/examples/xaie_tile_dma_loopback.c
+driver/src/core/xaie_core_aie.c
+driver/src/core/xaie_core_aie.h
+driver/src/core/xaie_core_aieml.c
+driver/src/core/xaie_core_aieml.h
+driver/src/events/xaie_events.c
+driver/src/interrupt/xaie_interrupt.h
+driver/src/io_backend/ext/xaie_baremetal.c
+driver/src/io_backend/ext/xaie_cdo.c
+driver/src/io_backend/ext/xaie_debug.c
+driver/src/io_backend/ext/xaie_sim.c
+driver/src/io_backend/xaie_io.c
+driver/src/io_backend/xaie_io.h
+driver/src/npi/xaie_npi.c
+driver/src/npi/xaie_npi.h
+driver/src/npi/xaie_npi_aie.c
+driver/src/npi/xaie_npi_aieml.c
+driver/src/pm/xaie_reset.c
+driver/src/pm/xaie_reset_aie.c
+driver/src/pm/xaie_reset_aie.h
+driver/src/pm/xaie_reset_aieml.c
+driver/src/pm/xaie_reset_aieml.h
+driver/src/stream_switch/xaie_ss_aie.c
+driver/src/stream_switch/xaie_ss_aie.h
+driver/src/stream_switch/xaie_ss_aieml.c
+driver/src/stream_switch/xaie_ss_aieml.h
+driver/src/trace/xaie_trace.c
+driver/src/trace/xaie_trace.h
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (C) 2018 - 2021 Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+driver/examples/Makefile
+driver/src/Makefile.Linux
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (C) 2019 - 2020 Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+driver/src/common/xaie_helper.c
+driver/src/common/xaie_helper.h
+driver/src/core/xaie_core.c
+driver/src/core/xaie_core.h
+driver/src/core/xaie_elfloader.c
+driver/src/core/xaie_elfloader.h
+driver/src/dma/xaie_dma.c
+driver/src/dma/xaie_dma.h
+driver/src/dma/xaie_dma_aie.c
+driver/src/dma/xaie_dma_aie.h
+driver/src/dma/xaie_dma_aieml.c
+driver/src/dma/xaie_dma_aieml.h
+driver/src/events/xaie_events.h
+driver/src/events/xaie_events_aie.h
+driver/src/events/xaie_events_aieml.h
+driver/src/global/xaiegbl.c
+driver/src/global/xaiegbl.h
+driver/src/global/xaiegbl_defs.h
+driver/src/global/xaiegbl_params.h
+driver/src/global/xaiegbl_regdef.h
+driver/src/global/xaiegbl_reginit.c
+driver/src/global/xaiemlgbl_params.h
+driver/src/global/xaiemlgbl_reginit.c
+driver/src/locks/xaie_locks.c
+driver/src/locks/xaie_locks.h
+driver/src/locks/xaie_locks_aie.c
+driver/src/locks/xaie_locks_aie.h
+driver/src/locks/xaie_locks_aieml.c
+driver/src/locks/xaie_locks_aieml.h
+driver/src/memory/xaie_mem.c
+driver/src/memory/xaie_mem.h
+driver/src/perfcnt/xaie_perfcnt.c
+driver/src/perfcnt/xaie_perfcnt.h
+driver/src/pl/xaie_plif.c
+driver/src/pl/xaie_plif.h
+driver/src/pm/xaie_clock.c
+driver/src/pm/xaie_clock.h
+driver/src/pm/xaie_ecc.c
+driver/src/pm/xaie_ecc.h
+driver/src/pm/xaie_reset.h
+driver/src/stream_switch/xaie_ss.c
+driver/src/stream_switch/xaie_ss.h
+driver/src/timer/xaie_timer.c
+driver/src/timer/xaie_timer.h
+driver/src/xaiengine.h
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (c) 2021 Xilinx, Inc. All rights reserved. SPDX-License-Identifier:
+MIT
+
+FILES:
+driver/src/io_backend/ext/xaie_socket.c
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): [GPL] [Google] 
+
+COPYRIGHT TEXT:
+---------------
+
+SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
+drivers/staging/android/uapi/ion.h Copyright (C) 2011 Google, Inc.
+
+FILES:
+driver/src/io_backend/ext/ion.h
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (c) 2020 Xilinx, Inc. All rights reserved. SPDX-License-Identifier:
+MIT
+
+FILES:
+driver/src/io_backend/ext/xaie_linux.c
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): [GPL] 
+
+COPYRIGHT TEXT:
+---------------
+
+SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note /
+
+FILES:
+driver/src/io_backend/ext/xlnx-ai-engine.h
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (c) 2018 - 2020 Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+driver/src/io_backend/ext/xaie_metal.c
+--------------------------------------------------------------------------------
+
+
+
+POSSIBLE NOTICE(S): 
+
+COPYRIGHT TEXT:
+---------------
+
+Copyright (C) 2020 - 2021 Xilinx, Inc. All rights reserved. SPDX-License-
+Identifier: MIT
+
+FILES:
+driver/src/interrupt/xaie_interrupt_init.c
+--------------------------------------------------------------------------------
+
+
