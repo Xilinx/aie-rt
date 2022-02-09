@@ -19,10 +19,9 @@ make
 ```
 
 ### Includes to build `libxaiengine` library
-Use `git submodule` to sync the `aienginev2` driver submodule. Use the following
-cmake commands to configure the build:
+Use the following cmake commands to configure the build:
+For Linux to run on target:
 ```
-# For Linux to run on target:
 mkdir build
 cd build
 cmake ../ -DCMAKE_TOOLCHAIN_FILE=versal-linux -DWITH_BUILD_XAIEDRV=on
@@ -38,8 +37,8 @@ make VERBOSE=1
 ### Not build `libxaiengine` library
 If excludes building `libxaiengine` library, user will need to provide where
 `libxaiengine` is as this library depends on the AI engine driver library.
+For Linux to run on target:
 ```
-# For Linux to run on target:
 mkdir build
 cd build
 cmake ../ -DCMAKE_TOOLCHAIN_FILE=versal-linux -DCMAKE_LIBRARY_PATH=<DIR_TO_XAIENGINE_LIB> -DCMAKE_INCLUDE_PATH=<DIR_TO_XAIENGINE_HEADER>

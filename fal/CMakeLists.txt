@@ -33,16 +33,16 @@ if (WITH_BUILD_XAIEDRV)
   set (CC ${CMAKE_C_COMPILER})
   set (CFLAGS -Wall -Wextra ${AIEDRV_BACKEND})
   find_program(MAKE_EXE NAMES gmake nmake make)
-  ExternalProject_Add(aienginev2
-    URL "${CMAKE_CURRENT_SOURCE_DIR}/../aienginev2"
-    SOURCE_DIR "${CMAKE_BINARY_DIR}/aienginev2-src"
+  ExternalProject_Add(driver
+    URL "${CMAKE_CURRENT_SOURCE_DIR}/../driver"
+    SOURCE_DIR "${CMAKE_BINARY_DIR}/driver-src"
     BUILD_IN_SOURCE true
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ${MAKE_EXE} -C src -f ${_makefile} CC=${CC} "CFLAGS=-std=c99 -Wall -Wextra ${AIEDRV_BACKEND}"
     INSTALL_COMMAND ""
   )
-collect (PROJECT_INC_DIRS ${CMAKE_BINARY_DIR}/aienginev2-src/include)
-collect (PROJECT_LIB_DIRS ${CMAKE_BINARY_DIR}/aienginev2-src/src)
+collect (PROJECT_INC_DIRS ${CMAKE_BINARY_DIR}/driver-src/include)
+collect (PROJECT_LIB_DIRS ${CMAKE_BINARY_DIR}/driver-src/src)
 endif (WITH_BUILD_XAIEDRV)
 
 enable_testing ()
