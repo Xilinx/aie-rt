@@ -60,15 +60,19 @@ typedef struct XAie_MemMap {
 } XAie_MemMap;
 
 typedef struct XAie_LinuxIO {
+	XAie_DevInst *DevInst;
 	int DeviceFd;		/* File descriptor of the device */
 	int PartitionFd;	/* File descriptor of the partition */
 	XAie_MemMap RegMap;	/* Read only mapping of registers */
 	XAie_MemMap ProgMem;	/* Mapping of program memory of aie */
 	XAie_MemMap DataMem;  	/* Mapping of data memory of aie */
+	XAie_MemMap MemTileMem;	/* Mapping of memory tile mem */
 	u64 ProgMemAddr;
 	u64 ProgMemSize;
 	u64 DataMemAddr;
 	u64 DataMemSize;
+	u64 MemTileMemAddr;
+	u64 MemTileMemSize;
 	u32 NumMems;
 	u32 NumCols;
 	u32 NumRows;
@@ -203,16 +207,12 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 		DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	const XAie_MemMod *MemMod =
 		DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].MemMod;
+	const XAie_MemMod *MemTileMod =
+		DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemMod;
 
 	Ret = ioctl(IOInst->PartitionFd, AIE_GET_MEM_IOCTL, &MemArgs);
 	if(Ret < 0) {
 		XAIE_ERROR("Failed to get number of memories\n");
-		return XAIE_ERR;
-	}
-
-	if(MemArgs.num_mems > 2) {
-		XAIE_ERROR("Got invalid number of memories: %u\n",
-				MemArgs.num_mems);
 		return XAIE_ERR;
 	}
 
@@ -236,6 +236,8 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 		u64 MMapSize = Mem->size * Mem->range.size.col *
 			Mem->range.size.row;
 
+		XAIE_DBG("Mapping memory: Offset: 0x%x, Size: 0x%x, MMapSize: 0x%lx\n",
+				Mem->offset, Mem->size, MMapSize);
 		MemVAddr = mmap(NULL, MMapSize, PROT_READ | PROT_WRITE,
 				MAP_SHARED, Mem->fd, 0);
 		if(MemVAddr == MAP_FAILED) {
@@ -249,10 +251,16 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 			IOInst->ProgMem.VAddr = MemVAddr;
 			IOInst->ProgMem.MapSize = MMapSize;
 			IOInst->ProgMem.Fd = Mem->fd;
-		} else if(Mem->offset == MemMod->MemAddr) {
+		} else if((Mem->offset == MemMod->MemAddr) &&
+				(Mem->size == MemMod->Size)) {
 			IOInst->DataMem.VAddr = MemVAddr;
 			IOInst->DataMem.MapSize = MMapSize;
 			IOInst->DataMem.Fd = Mem->fd;
+		} else if((Mem->offset == MemTileMod->MemAddr) &&
+				(Mem->size == MemTileMod->Size)) {
+			IOInst->MemTileMem.VAddr = MemVAddr;
+			IOInst->MemTileMem.MapSize = MMapSize;
+			IOInst->MemTileMem.Fd = Mem->fd;
 		} else {
 			XAIE_ERROR("Memory offset 0x%x is not valid.",
 					Mem->offset);
@@ -263,11 +271,14 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 
 	XAIE_DBG("Prog memory mapped to 0x%p\n", IOInst->ProgMem.VAddr);
 	XAIE_DBG("Data memory mapped to 0x%p\n", IOInst->DataMem.VAddr);
+	XAIE_DBG("Mem tile memory mapped to 0x%p\n", IOInst->MemTileMem.VAddr);
 
 	IOInst->ProgMemAddr = CoreMod->ProgMemHostOffset;
 	IOInst->ProgMemSize = CoreMod->ProgMemSize;
 	IOInst->DataMemAddr = MemMod->MemAddr;
 	IOInst->DataMemSize = MemMod->Size;
+	IOInst->MemTileMemAddr = MemTileMod->MemAddr;
+	IOInst->MemTileMemSize = MemTileMod->Size;
 
 	free(MemArgs.mems);
 
@@ -292,11 +303,6 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	AieRC RC;
 	XAie_LinuxIO *IOInst;
 	int Fd;
-
-	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
-		XAIE_ERROR("Backend not supported for device\n");
-		return XAIE_FEATURE_NOT_SUPPORTED;
-	}
 
 	IOInst = (XAie_LinuxIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -332,6 +338,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	}
 
 	DevInst->IOInst = (void *)IOInst;
+	IOInst->DevInst = DevInst;
 
 	return XAIE_OK;
 }
@@ -558,19 +565,23 @@ static inline u8 _XAie_GetColNum(XAie_LinuxIO *IOInst, u64 RegOff)
 *
 * @return	Memory offset.
 *
-* @note		Internal only. This api currently works for aie only. With the
-*		assumption that row 0 is shim row.
+* @note		Internal only.
 *
 *******************************************************************************/
-static inline u64 _XAie_GetMemOffset(XAie_LinuxIO *IOInst, u8 Col, u8 Row,
-		u64 MemSize)
+static inline u64 _XAie_GetMemOffset(XAie_LinuxIO *IOInst, u8 TileType, u8 Col,
+		u8 Row, u64 MemSize)
 {
-	/*
-	 * 1 has to be subtracted from the num rows to account for the
-	 * shim row.
-	 */
-	return ((u64)(Col * (IOInst->NumRows - 1)) * MemSize) +
-		((u64)(Row - 1) * MemSize);
+	u8 AieTileNumRows = IOInst->DevInst->AieTileNumRows;
+	u8 MemTileNumRows = IOInst->DevInst->MemTileNumRows;
+
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE)
+		return (u64)(Col * AieTileNumRows * MemSize) +
+			((u64)(Row - MemTileNumRows - 1) * MemSize);
+	else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
+		return (u64)(Col * MemTileNumRows * MemSize) +
+			((u64)(Row - 1) * MemSize);
+
+	return 0;
 }
 
 /*****************************************************************************/
@@ -655,14 +666,27 @@ static u32* _XAie_GetVirtAddrFromOffset(XAie_LinuxIO *IOInst, u64 RegOff,
 {
 	u32 *VirtAddr = NULL;
 	u64 MemOffset;
+	XAie_DevInst *DevInst = IOInst->DevInst;
 	u64 RegAddr = _XAie_GetRegAddr(IOInst, RegOff);
 	u8 Row = _XAie_GetRowNum(IOInst, RegOff);
 	u8 Col = _XAie_GetColNum(IOInst, RegOff);
+	XAie_LocType Loc = {Row, Col};
+	u8 TileType;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+		MemOffset = _XAie_GetMemOffset(IOInst, TileType, Col, Row,
+				IOInst->MemTileMemSize);
+		VirtAddr = (u32 *)((char *)IOInst->MemTileMem.VAddr +
+				MemOffset + RegAddr);
+
+		return VirtAddr;
+	}
 
 	if(((RegAddr + Size) < (IOInst->ProgMemAddr + IOInst->ProgMemSize)) &&
 			(RegAddr >= IOInst->ProgMemAddr)) {
 		/* Handle program memory block write */
-		MemOffset = _XAie_GetMemOffset(IOInst, Col, Row,
+		MemOffset = _XAie_GetMemOffset(IOInst, TileType, Col, Row,
 				IOInst->ProgMemSize);
 		VirtAddr = (u32 *)((char *) IOInst->ProgMem.VAddr + MemOffset +
 				RegAddr - IOInst->ProgMemAddr);
@@ -670,7 +694,7 @@ static u32* _XAie_GetVirtAddrFromOffset(XAie_LinuxIO *IOInst, u64 RegOff,
 					IOInst->DataMemSize)) &&
 			(RegAddr >= IOInst->DataMemAddr)) {
 		/* Handle data memory block write */
-		MemOffset = _XAie_GetMemOffset(IOInst, Col, Row,
+		MemOffset = _XAie_GetMemOffset(IOInst, TileType, Col, Row,
 				IOInst->DataMemSize);
 		VirtAddr = (u32 *)((char *)IOInst->DataMem.VAddr + MemOffset +
 				RegAddr);
