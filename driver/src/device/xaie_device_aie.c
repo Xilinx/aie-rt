@@ -430,7 +430,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		NumTiles = (DevInst->NumRows - 1) * (DevInst->NumCols);
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
-		_XAie_SetBitInBitmap(DevInst->TilesInUse, SetTileStatus,
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
 				NumTiles);
 		_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
 
@@ -459,7 +459,8 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 			TileLoc.Row = row;
 			CheckTileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 					TileLoc);
-			if(CheckBit(DevInst->TilesInUse, CheckTileStatus)) {
+			if(CheckBit(DevInst->DevOps->TilesInUse,
+						CheckTileStatus)) {
 				flag = 1;
 				if(SetTileStatus > CheckTileStatus) {
 					XAie_LocType ToLoc, FromLoc;
@@ -489,7 +490,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 * Mark the tile and below are ungated.
 		 * Assuming the row starts from 0.
 		 */
-		_XAie_SetBitInBitmap(DevInst->TilesInUse,
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 				SetTileStatus - Args->Locs[i].Row + 1,
 				Args->Locs[i].Row);
 	}

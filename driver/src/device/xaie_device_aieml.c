@@ -299,7 +299,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		NumTiles = (DevInst->NumRows - 1) * (DevInst->NumCols);
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
-		_XAie_SetBitInBitmap(DevInst->TilesInUse, SetTileStatus,
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
 				NumTiles);
 
 		return DevInst->DevOps->SetPartColClockAfterRst(DevInst,
@@ -317,7 +317,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 */
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				Args->Locs[i]);
-		if(CheckBit(DevInst->TilesInUse, ColClockStatus))
+		if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus))
 			continue;
 
 		RC = _XAieMl_PmSetColumnClockBuffer(DevInst, Args->Locs[i],
@@ -328,8 +328,8 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 			return RC;
 		}
 
-		_XAie_SetBitInBitmap(DevInst->TilesInUse, ColClockStatus,
-				DevInst->NumRows);
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+				ColClockStatus, DevInst->NumRows);
 	}
 
 	return XAIE_OK;
