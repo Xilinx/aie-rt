@@ -71,8 +71,14 @@
 /**************************** Type Definitions *******************************/
 
 /**************************** Macro Definitions ******************************/
+#define XAIE_TILES_BITMAPSIZE	32U
 
 /************************** Variable Definitions *****************************/
+/* bitmaps to capture modules being used by the application */
+static u32 AieTilesInUse[XAIE_TILES_BITMAPSIZE];
+static u32 AieMemInUse[XAIE_TILES_BITMAPSIZE];
+static u32 AieCoreInUse[XAIE_TILES_BITMAPSIZE];
+
 #ifdef XAIE_FEATURE_CORE_ENABLE
 /*
  * Global instance for Core module Core_Control register.
@@ -3279,6 +3285,9 @@ XAie_TileMod AieMod[] =
 XAie_DeviceOps AieDevOps =
 {
 	.IsCheckerBoard = 1,
+	.TilesInUse = AieTilesInUse,
+	.MemInUse = AieMemInUse,
+	.CoreInUse = AieCoreInUse,
 	.GetTTypefromLoc = &_XAie_GetTTypefromLoc,
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.SetPartColShimReset = &_XAie_SetPartColShimReset,

@@ -143,7 +143,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	/* Check bitmap for data memory already in use */
 	CheckTileEccStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-	if(CheckBit(DevInst->MemInUse, CheckTileEccStatus)) {
+	if(CheckBit(DevInst->DevOps->MemInUse, CheckTileEccStatus)) {
 		return XAIE_OK;
 	}
 
@@ -199,8 +199,8 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	 * Skip perf counter 0 configuration in core module if program memory
 	 * already in use.
 	 */
-	if(CheckBit(DevInst->CoreInUse, CheckTileEccStatus)) {
-		_XAie_SetBitInBitmap(DevInst->MemInUse,
+	if(CheckBit(DevInst->DevOps->CoreInUse, CheckTileEccStatus)) {
+		_XAie_SetBitInBitmap(DevInst->DevOps->MemInUse,
 				CheckTileEccStatus, 1U);
 		return XAIE_OK;
 	}
@@ -213,7 +213,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	/* Set bit corresponding to tile in MemInUse bitmap */
-	_XAie_SetBitInBitmap(DevInst->MemInUse, CheckTileEccStatus, 1U);
+	_XAie_SetBitInBitmap(DevInst->DevOps->MemInUse, CheckTileEccStatus, 1U);
 
 	return XAIE_OK;
 }
@@ -268,7 +268,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	/* Before configuring performance counter check if the DM in use */
 	CheckTileEccStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-	if(CheckBit(DevInst->MemInUse, CheckTileEccStatus)) {
+	if(CheckBit(DevInst->DevOps->MemInUse, CheckTileEccStatus)) {
 		return XAIE_OK;
 	}
 
@@ -280,7 +280,8 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	/* Set bit corresponding to tile in CoreInUse bitmap */
-	_XAie_SetBitInBitmap(DevInst->CoreInUse, CheckTileEccStatus, 1U);
+	_XAie_SetBitInBitmap(DevInst->DevOps->CoreInUse, CheckTileEccStatus,
+			1U);
 
 	return XAIE_OK;
 }

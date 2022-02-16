@@ -633,7 +633,7 @@ void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 		/* Loc is NULL, it suggests all tiles are requested */
 		StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
 					XAie_TileLoc(0, 1));
-		_XAie_SetBitInBitmap(DevInst->TilesInUse, StartBit,
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, StartBit,
 				NumTiles);
 	} else {
 		for(u32 i = 0; i < Args->NumTiles; i++) {
@@ -649,7 +649,7 @@ void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 			 */
 			Bit = _XAie_GetTileBitPosFromLoc(DevInst,
 					XAie_TileLoc(Args->Locs[i].Col, 1));
-			_XAie_SetBitInBitmap(DevInst->TilesInUse,
+			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 					Bit, Args->Locs[i].Row);
 		}
 	}
