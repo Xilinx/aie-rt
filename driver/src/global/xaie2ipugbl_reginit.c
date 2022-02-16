@@ -42,8 +42,14 @@
 /**************************** Type Definitions *******************************/
 
 /**************************** Macro Definitions ******************************/
+#define XAIE2IPU_TILES_BITMAPSIZE	0U
 
 /************************** Variable Definitions *****************************/
+/* bitmaps to capture modules being used by the application */
+static u32 Aie2IpuTilesInUse[XAIE2IPU_TILES_BITMAPSIZE];
+static u32 Aie2IpuMemInUse[XAIE2IPU_TILES_BITMAPSIZE];
+static u32 Aie2IpuCoreInUse[XAIE2IPU_TILES_BITMAPSIZE];
+
 #ifdef XAIE_FEATURE_CORE_ENABLE
 /*
  * Global instance for Core module Core_Control register.
@@ -4114,6 +4120,9 @@ XAie_TileMod Aie2IpuMod[] =
 XAie_DeviceOps Aie2IpuDevOps =
 {
 	.IsCheckerBoard = 0U,
+	.TilesInUse = Aie2IpuTilesInUse,
+	.MemInUse = Aie2IpuMemInUse,
+	.CoreInUse = Aie2IpuCoreInUse,
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
