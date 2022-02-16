@@ -53,13 +53,13 @@ u8 _XAieMl_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 		if (((Loc.Col / 4) * 4 + 2) < DevInst->NumCols) {
 			/* There is SHIM NOC on the right */
-			return (Loc.Col % 4) * 2 + Switch;
+			return (Loc.Col % 4) * 2 + (u8)Switch;
 		} else {
 			/*
 			 * if there is no SHIM NOC on the right, use the
 			 * SHIM NoC on the left.
 			 */
-			return (Loc.Col % 4) * 2 + Switch + 2;
+			return (Loc.Col % 4) * 2 + (u8)Switch + 2;
 		}
 	} else {
 		if ((Loc.Col % 4) == 2) {

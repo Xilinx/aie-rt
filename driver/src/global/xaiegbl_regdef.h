@@ -681,7 +681,7 @@ typedef struct XAie_EvntMod {
 	u8 ComboConfigOff;
 	u32 BaseStrmPortSelectRegOff;
 	u32 NumStrmPortSelectIds;
-	u32 StrmPortSelectIdsPerReg;
+	u8 StrmPortSelectIdsPerReg;
 	u32 PortIdMask;
 	u8 PortIdOff;
 	u32 PortMstrSlvMask;

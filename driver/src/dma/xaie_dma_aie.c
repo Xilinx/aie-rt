@@ -520,7 +520,7 @@ AieRC _XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StartQSize++;
 	}
 
-	*PendingBd = StartQSize;
+	*PendingBd = (u8)StartQSize;
 
 	return XAIE_OK;
 }
