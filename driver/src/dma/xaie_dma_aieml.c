@@ -648,9 +648,7 @@ AieRC _XAieMl_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 	Args.Addr = Addr;
 	Args.MemInst = DmaDesc->MemInst;
 
-	XAie_RunOp(DevInst, XAIE_BACKEND_OP_CONFIG_SHIMDMABD, (void *)&Args);
-
-	return XAIE_OK;
+	return XAie_RunOp(DevInst, XAIE_BACKEND_OP_CONFIG_SHIMDMABD, (void *)&Args);
 }
 
 /*****************************************************************************/
