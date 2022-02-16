@@ -222,13 +222,13 @@ typedef enum{
 /* Data structures to capture data shape for dmas */
 typedef struct {
 	u32 StepSize;
-	u32 Wrap;
+	u16 Wrap;
 } XAie_AieMlDmaDimDesc;
 
 typedef struct {
 	u32 Offset;
 	u32 Incr;
-	u32 Wrap;
+	u16 Wrap;
 } XAie_AieDmaDimDesc;
 
 typedef union {

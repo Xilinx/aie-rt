@@ -253,7 +253,7 @@ AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
 	}
 
 	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
-	*SlaveIdx = (RegAddr - BaseAddr) / 4;
+	*SlaveIdx = (u8)(RegAddr - BaseAddr) / 4;
 
 	return XAIE_OK;
 }
@@ -292,7 +292,7 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 	}
 
 	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
-	*MasterIdx = (RegAddr - BaseAddr) / 4;
+	*MasterIdx = (u8)(RegAddr - BaseAddr) / 4;
 
 	return XAIE_OK;
 }

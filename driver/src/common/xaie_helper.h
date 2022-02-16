@@ -113,7 +113,7 @@ struct XAie_TxnCmd {
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, int R, int C)
+static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
 {
 	return (((u64)R & 0xFF) << DevInst->DevProp.RowShift) |
 		(((u64)C & 0xFF) << DevInst->DevProp.ColShift);

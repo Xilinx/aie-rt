@@ -1511,7 +1511,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
-	*Status =  (RegVal >> (PhyEvent % 32U)) & 1U;
+	*Status =  (u8)(RegVal >> (PhyEvent % 32U)) & 1U;
 
 	return XAIE_OK;
 }
