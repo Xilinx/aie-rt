@@ -224,25 +224,31 @@ static AieRC _XAie_RstAllShims(XAie_DevInst *DevInst)
 *******************************************************************************/
 AieRC XAie_ResetPartition(XAie_DevInst *DevInst)
 {
+	AieRC RC;
+
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	_XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
+	RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	_XAie_RstSetAllColumnsReset(DevInst, XAIE_ENABLE);
 
-	_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
+	RC = _XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	_XAie_RstAllShims(DevInst);
 
 	_XAie_RstSetBlockAllShimsNocAxiMmNsuErr(DevInst, XAIE_ENABLE);
 
-	_XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
-
-	return XAIE_OK;
+	return _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 }
 
 
