@@ -270,9 +270,9 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 		}
 	}
 
-	XAIE_DBG("Prog memory mapped to 0x%p\n", IOInst->ProgMem.VAddr);
-	XAIE_DBG("Data memory mapped to 0x%p\n", IOInst->DataMem.VAddr);
-	XAIE_DBG("Mem tile memory mapped to 0x%p\n", IOInst->MemTileMem.VAddr);
+	XAIE_DBG("Prog memory mapped to %p\n", IOInst->ProgMem.VAddr);
+	XAIE_DBG("Data memory mapped to %p\n", IOInst->DataMem.VAddr);
+	XAIE_DBG("Mem tile memory mapped to %p\n", IOInst->MemTileMem.VAddr);
 
 	IOInst->ProgMemAddr = CoreMod->ProgMemHostOffset;
 	IOInst->ProgMemSize = CoreMod->ProgMemSize;
