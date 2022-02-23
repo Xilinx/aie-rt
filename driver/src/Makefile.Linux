@@ -8,7 +8,6 @@ APP = aiengine
 
 CC ?= gcc
 CP = cp
-EXT = ../examples/aie_sim_test/ext/top
 LIBSOURCES = $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)
 CFLAGS += -Wall -Wextra --std=c11
 
