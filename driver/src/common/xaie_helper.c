@@ -334,7 +334,7 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 {
 	va_list ArgPtr;
 	va_start(ArgPtr, Format);
-	fprintf(Fd, "%s %s:%d: ", prefix, func, line);
+	fprintf(Fd, "%s %s():%d: ", prefix, func, line);
 	vfprintf(Fd, Format, ArgPtr);
 	va_end(ArgPtr);
 }
