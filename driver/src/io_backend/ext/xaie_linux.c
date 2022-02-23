@@ -256,8 +256,9 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 			IOInst->DataMem.VAddr = MemVAddr;
 			IOInst->DataMem.MapSize = MMapSize;
 			IOInst->DataMem.Fd = Mem->fd;
-		} else if((Mem->offset == MemTileMod->MemAddr) &&
-				(Mem->size == MemTileMod->Size)) {
+		} else if((MemTileMod != NULL) &&
+			  (Mem->offset == MemTileMod->MemAddr) &&
+			  (Mem->size == MemTileMod->Size)) {
 			IOInst->MemTileMem.VAddr = MemVAddr;
 			IOInst->MemTileMem.MapSize = MMapSize;
 			IOInst->MemTileMem.Fd = Mem->fd;
@@ -277,8 +278,14 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 	IOInst->ProgMemSize = CoreMod->ProgMemSize;
 	IOInst->DataMemAddr = MemMod->MemAddr;
 	IOInst->DataMemSize = MemMod->Size;
-	IOInst->MemTileMemAddr = MemTileMod->MemAddr;
-	IOInst->MemTileMemSize = MemTileMod->Size;
+
+	if (MemTileMod != NULL) {
+		IOInst->MemTileMemAddr = MemTileMod->MemAddr;
+		IOInst->MemTileMemSize = MemTileMod->Size;
+	} else {
+		IOInst->MemTileMemAddr = 0L;
+		IOInst->MemTileMemSize = 0L;
+	}
 
 	free(MemArgs.mems);
 
