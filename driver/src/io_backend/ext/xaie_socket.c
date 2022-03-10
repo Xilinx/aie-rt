@@ -26,6 +26,7 @@
 
 #define  _POSIX_C_SOURCE 200112L
 
+#include <errno.h>
 #include <netdb.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -117,14 +118,15 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	Fd = fopen("./mesim_output/mesimulator_aximm_port", "r");
 	if(Fd == NULL){
 		XAIE_ERROR("Unable to open file to read port number of "
-				"simulator\n");
+				"simulator, %d: %s\n", errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
 	ret = fseek(Fd, 0L, SEEK_END);
 	if(ret != 0U) {
 		fclose(Fd);
-		XAIE_ERROR("Failed to get end of file\n");
+		XAIE_ERROR("Failed to get end of file, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -260,7 +262,8 @@ static AieRC XAie_SocketIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 
 	Ret = read(SocketIOInst->SocketFd, RdBuf, XAIE_IO_SOCKET_RDBUFSIZE);
 	if(Ret == -1) {
-		XAIE_ERROR("Failed to read from socket\n");
+		XAIE_ERROR("Failed to read from socket, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -466,7 +469,8 @@ static AieRC _XAie_SocketIO_NpiRead32(void *IOInst, u64 RegOff, u32 *Data)
 
 	Ret = read(SocketIOInst->SocketFd, RdBuf, XAIE_IO_SOCKET_RDBUFSIZE);
 	if(Ret == -1) {
-		XAIE_ERROR("Failed to read from socket\n");
+		XAIE_ERROR("Failed to read from socket, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
