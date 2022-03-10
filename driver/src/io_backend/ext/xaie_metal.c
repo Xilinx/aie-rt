@@ -28,6 +28,7 @@
 #ifdef __AIEMETAL__
 
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -162,10 +163,16 @@ static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 
 	/* iterate over all uio devices and check device name */
 	Dir = opendir(XAIE_UIO_SYSFS_PATH);
+	if(Dir == NULL) {
+		XAIE_ERROR("Unable to open UIO directory, %d: %s\n",
+			errno, strerror(errno));
+		return XAIE_ERR;
+	}
 	while(1U) {
 		DirEntry = readdir(Dir);
 		if(DirEntry == NULL) {
-			XAIE_ERROR("UIO device for aie not found\n");
+			XAIE_ERROR("UIO device for aie not found, %d: %s\n",
+				errno, strerror(errno));
 			closedir(Dir);
 			return XAIE_ERR;
 		}
@@ -186,14 +193,16 @@ static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 	closedir(Dir);
 	Fd = open(path, O_RDWR);
 	if(Fd < 0) {
-		XAIE_ERROR("Failed to open uio device\n");
+		XAIE_ERROR("Failed to open uio device, %d: %s\n",
+			errno, strerror(errno));
 		free(MetalIOInst);
 		return XAIE_ERR;
 	}
 
 	Addr = mmap(NULL, Size, PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0);
 	if(Addr == MAP_FAILED) {
-		XAIE_ERROR("Failed to map device region.\n");
+		XAIE_ERROR("Failed to map device region, %d: %s\n",
+			errno, strerror(errno));
 		free(MetalIOInst);
 		close(Fd);
 		return XAIE_ERR;

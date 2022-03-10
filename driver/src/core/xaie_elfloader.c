@@ -29,7 +29,9 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "xaie_elfloader.h"
 #include "xaie_feature_config.h"
@@ -470,7 +472,8 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 
 	Fd = fopen(MapPtr, "r");
 	if(Fd == NULL) {
-		XAIE_ERROR("Invalid Map file\n");
+		XAIE_ERROR("Invalid Map file, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -585,15 +588,17 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	(void)LoadSym;
 	Fd = fopen(ElfPtr, "r");
 	if(Fd == XAIE_NULL) {
-		XAIE_ERROR("Unable to open elf file\n");
+		XAIE_ERROR("Unable to open elf file, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_INVALID_ELF;
 	}
 
 	/* Get the file size of the elf */
 	Ret = fseek(Fd, 0L, SEEK_END);
 	if(Ret != 0U) {
+		XAIE_ERROR("Failed to get end of file, %d: %s\n",
+			errno, strerror(errno));
 		fclose(Fd);
-		XAIE_ERROR("Failed to get end of file\n");
 		return XAIE_INVALID_ELF;
 	}
 

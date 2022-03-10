@@ -156,8 +156,8 @@ static AieRC _XAie_LinuxIO_GetPartition(XAie_DevInst *DevInst,
 		PartReq.flag = DevInst->PartProp.CntrFlag;
 		Fd = ioctl(IOInst->DeviceFd, AIE_REQUEST_PART_IOCTL, &PartReq);
 		if(Fd < 0) {
-			XAIE_ERROR("Failed to request partition %u.\n",
-					PartitionId);
+			XAIE_ERROR("Failed to request partition %u, %d: %s\n",
+					PartitionId, errno, strerror(errno));
 			return XAIE_ERR;
 		}
 
@@ -174,7 +174,8 @@ static AieRC _XAie_LinuxIO_GetPartition(XAie_DevInst *DevInst,
 			IOInst->PartitionFd, 0);
 	if(IOInst->RegMap.VAddr == MAP_FAILED) {
 		XAIE_ERROR("Failed to map register space for read"
-				" operations\n");
+				" operations, %d: %s\n",
+				errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -211,7 +212,8 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 
 	Ret = ioctl(IOInst->PartitionFd, AIE_GET_MEM_IOCTL, &MemArgs);
 	if(Ret < 0) {
-		XAIE_ERROR("Failed to get number of memories\n");
+		XAIE_ERROR("Failed to get number of memories, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -224,7 +226,8 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 
 	Ret = ioctl(IOInst->PartitionFd, AIE_GET_MEM_IOCTL, &MemArgs);
 	if(Ret < 0) {
-		XAIE_ERROR("Failed to get memory information.\n");
+		XAIE_ERROR("Failed to get memory information, %d: %s\n",
+			errno, strerror(errno));
 		free(MemArgs.mems);
 		return XAIE_ERR;
 	}
@@ -240,8 +243,8 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 		MemVAddr = mmap(NULL, MMapSize, PROT_READ | PROT_WRITE,
 				MAP_SHARED, Mem->fd, 0);
 		if(MemVAddr == MAP_FAILED) {
-			XAIE_ERROR("Failed to mmap memory. Offset 0x%x\n",
-					Mem->offset);
+			XAIE_ERROR("Failed to mmap memory. Offset 0x%x, %d: %s\n",
+					Mem->offset, errno, strerror(errno));
 			free(MemArgs.mems);
 			return XAIE_ERR;
 		}
@@ -318,7 +321,8 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 
 	Fd = open("/dev/aie0", O_RDWR);
 	if(Fd < 0) {
-		XAIE_ERROR("Failed to open aie device %s\n", "/dev/aie0");
+		XAIE_ERROR("Failed to open aie device %s, %d: %s\n",
+			"/dev/aie0", errno, strerror(errno));
 		free(IOInst);
 		return XAIE_ERR;
 	}
@@ -380,7 +384,8 @@ static AieRC XAie_LinuxIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 	 */
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_REG_IOCTL, &Args);
 	if(Ret < 0) {
-		XAIE_ERROR("Register write failed for offset 0x%lx.\n", RegOff);
+		XAIE_ERROR("Register write failed for offset 0x%lx, %d: %s\n",
+			RegOff, errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -444,7 +449,8 @@ static AieRC XAie_LinuxIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 	 */
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_REG_IOCTL, &Args);
 	if(Ret < 0) {
-		XAIE_ERROR("Register write failed for offset 0x%lx.\n", RegOff);
+		XAIE_ERROR("Register write failed for offset 0x%lx, %d: %s\n",
+			RegOff, errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -805,7 +811,8 @@ static AieRC _XAie_LinuxMemAttach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
 	Ret = ioctl(IOInst->PartitionFd, AIE_ATTACH_DMABUF_IOCTL,
 			MemInst->BufferFd);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to attach to dmabuf\n");
+		XAIE_ERROR("Failed to attach to dmabuf, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -832,7 +839,8 @@ static AieRC _XAie_LinuxMemDetach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
 	Ret = ioctl(IOInst->PartitionFd, AIE_DETACH_DMABUF_IOCTL,
 			MemInst->BufferFd);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to detach dmabuf\n");
+		XAIE_ERROR("Failed to detach dmabuf, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -965,7 +973,8 @@ static AieRC _XAie_LinuxIO_ConfigShimDmaBd(void *IOInst,
 	}
 
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to configure shim dma bd\n");
+		XAIE_ERROR("Failed to configure shim dma bd, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1013,7 +1022,8 @@ static AieRC _XAie_LinuxIO_RequestTiles(void *IOInst,
 			&TilesArray);
 	free(TilesArray.locs);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to request tiles\n");
+		XAIE_ERROR("Failed to request tiles, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1061,7 +1071,8 @@ static AieRC _XAie_LinuxIO_ReleaseTiles(void *IOInst,
 			&TilesArray);
 	free(TilesArray.locs);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to request tiles\n");
+		XAIE_ERROR("Failed to request tiles, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1108,7 +1119,8 @@ static AieRC _XAie_LinuxIO_RequestBcRsc(void *IOInst,
 	Ret = ioctl(LinuxIOInst->PartitionFd,
 			AIE_RSC_GET_COMMON_BROADCAST_IOCTL, &RscReq);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to request broadcast channel.\n");
+		XAIE_ERROR("Failed to request broadcast channel, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1192,7 +1204,8 @@ static AieRC _XAie_LinuxIO_ReleaseRsc(void *IOInst, XAie_BackendTilesRsc *Args)
 
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_RELEASE_IOCTL, &Rsc);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to release resource %u.\n", Args->RscType);
+		XAIE_ERROR("Failed to release resource %u, %d: %s\n",
+			Args->RscType, errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1229,7 +1242,8 @@ static AieRC _XAie_LinuxIO_FreeRsc(void *IOInst, XAie_BackendTilesRsc *Args)
 
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_FREE_IOCTL, &Rsc);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to free resource %u.\n", Args->RscType);
+		XAIE_ERROR("Failed to free resource %u, %d: %s\n",
+			Args->RscType, errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1268,8 +1282,8 @@ AieRC _XAie_LinuxIO_RequestAllocatedRsc(void *IOInst,
 
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_REQ_SPECIFIC_IOCTL, &Rsc);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to request specific resource %u\n",
-				Args->RscType);
+		XAIE_ERROR("Failed to request specific resource %u, %d: %s\n",
+				Args->RscType, errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1310,7 +1324,8 @@ AieRC _XAie_LinuxIO_GetRscStat(void *IOInst, XAie_BackendRscStat *Arg)
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_GET_STAT_IOCTL,
 			    &RStatArray);
 	if (Ret != 0) {
-		XAIE_ERROR("Failed to request resource statistics from Linux Partition.\n");
+		XAIE_ERROR("Failed to request resource statistics from Linux Partition, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
@@ -1394,8 +1409,8 @@ static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)
 
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_TRANSACTION_IOCTL, &Args);
 	if(Ret < 0) {
-		XAIE_ERROR("Submitting transaction to device failed with "
-				"error code: %d\n", Ret);
+		XAIE_ERROR("Submitting transaction to device failed, %d: %s\n",
+			errno, strerror(errno));
 		return XAIE_ERR;
 	}
 
