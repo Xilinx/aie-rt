@@ -417,7 +417,7 @@ int main()
 
 	/* Allocate buffer to query the location of an error interrupt in AIE */
 	Buffer = (XAie_ErrorPayload *) malloc(Size);
-	if (BUffer == NULL) {
+	if (Buffer == NULL) {
 		XAie_Print("Memory allocation failed.\n");
 		return -1;
 	}
