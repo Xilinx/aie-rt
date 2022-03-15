@@ -11,6 +11,7 @@ INCLUDEDIR = ../include
 LIBDIR = ../src
 
 SRCS = $(wildcard *.c)
+SRCS := $(filter-out xaie_error_interrupt_test.c, $(SRCS))
 APPS = $(patsubst %.c, %, $(SRCS))
 APPSTMPS = $(patsubst %.c, %.out, $(SRCS))
 
