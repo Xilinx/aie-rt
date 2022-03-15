@@ -1,3 +1,6 @@
+// Copyright(C) 2021 - 2022 by Xilinx, Inc. All rights reserved.
+// SPDX-License-Identifier: MIT
+
 #include "xaiefal/xaiefal.hpp"
 
 #include "CppUTest/CommandLineTestRunner.h"
