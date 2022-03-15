@@ -71,3 +71,7 @@ Add the following cmake options along with `-DWITH_TESTS=ON -DWITH_TESTS_EXEC=ON
 
 The generated coverage information file will be in:
 `<build_dir>/tests/utests/`.
+
+## License
+Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+SPDX-License-Identifier: MIT
