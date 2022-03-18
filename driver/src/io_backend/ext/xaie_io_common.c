@@ -93,9 +93,10 @@ static AieRC _XAie_FindAvailableRscContig(u32 *Bitmap, u32 SBmOff,
 				CheckBit(Bitmap, (i + SBmOff)))) {
 			*Index = i - StartBit;
 			for(j = i + 1; j < i + NumContigRscs; j++) {
-				if(CheckBit(Bitmap, j) ||
-						CheckBit(Bitmap, (j + SBmOff)))
+				if (CheckBit(Bitmap, j) ||
+						CheckBit(Bitmap, (j + SBmOff))) {
 					break;
+				}
 			}
 
 			if(j == (i + NumContigRscs)) {
@@ -139,14 +140,16 @@ static AieRC _XAie_RequestRsc(u32 *Bitmap, u32 StartBit,
 		u32 Index;
 		RC = _XAie_FindAvailableRsc(Bitmap, StaticBitmapOffset,
 				StartBit, MaxRscVal, &Index);
-		if(RC != XAIE_OK)
+		if (RC != XAIE_OK) {
 			return XAIE_ERR;
+		}
 
 		RscArrPerTile[i] = Index;
 	}
 
-	for(u32 i = 0; i < NumRscPerTile; i++)
+	for(u32 i = 0; i < NumRscPerTile; i++) {
 		_XAie_SetBitInBitmap(Bitmap, RscArrPerTile[i] + StartBit, 1U);
+	}
 
 	return XAIE_OK;
 }
@@ -183,11 +186,13 @@ AieRC _XAie_RequestRscContig(u32 *Bitmaps, u32 StartBit,
 		RC = _XAie_FindAvailableRscContig(Bitmaps, StaticBitmapOffset,
 				StartBit, MaxRscVal, &Index, NumContigRscs,
 				RscType);
-		if(RC != XAIE_OK)
+		if (RC != XAIE_OK) {
 			return XAIE_ERR;
+		}
 
-		for(u8 j = 0U; j < NumContigRscs; j++)
+		for(u8 j = 0U; j < NumContigRscs; j++) {
 			RscArrPerTile[i + j] = Index + j;
+		}
 	}
 
 	/* Set the bit as allocated if the request was successful*/
@@ -222,10 +227,11 @@ static u32 _XAie_GetChannelStatusPerMod(u32 *Bitmap, u32 StaticBitmapOffset,
 	u32 ChannelStatus = (XAIE_BROADCAST_CHANNEL_MASK &
 			(Bitmap[StartBit / Size] >> (StartBit % Size)));
 
-	if(StaticAllocCheckFlag)
+	if (StaticAllocCheckFlag) {
 		return ChannelStatus | (XAIE_BROADCAST_CHANNEL_MASK &
 			(Bitmap[(StartBit  + StaticBitmapOffset) / Size] >>
 			((StartBit + StaticBitmapOffset) % Size)));
+	}
 
 	return ChannelStatus;
 }
@@ -388,8 +394,9 @@ AieRC _XAie_RequestRscCommon(XAie_DevInst *DevInst, XAie_BackendTilesRsc *Args)
 	AieRC RC;
 	u32 RscArrPerTile[Args->NumRscPerTile];
 
-	if(Args->RscType == XAIE_BCAST_CHANNEL_RSC)
+	if (Args->RscType == XAIE_BCAST_CHANNEL_RSC) {
 		return _XAie_RequestBroadcastChannelRscCommon(DevInst, Args);
+	}
 
 	/*
 	* RscArrPerTile initalized to zeros by memset to avoid MISRA violation.
@@ -407,10 +414,11 @@ AieRC _XAie_RequestRscCommon(XAie_DevInst *DevInst, XAie_BackendTilesRsc *Args)
 			 * Return resource granted to caller by populating
 			 * UserRsc
 			 */
-			for(u32 j = 0; j < Args->NumRscPerTile; j++)
+			for (u32 j = 0; j < Args->NumRscPerTile; j++) {
 				Args->Rscs[j].RscId = RscArrPerTile[j];
-		}
+			}
 
+		}
 		return RC;
 	}
 

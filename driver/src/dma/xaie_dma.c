@@ -887,15 +887,19 @@ AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Reset MM2S */
 	for(u8 i = 0U; i < DmaMod->NumChannels; i++) {
 		RC = XAie_DmaChannelReset(DevInst, Loc, i, DMA_MM2S, Reset);
-		if(RC != XAIE_OK) return RC;
-	}
+		if (RC != XAIE_OK) {
+			return RC;
+		}
 
+	}
 	/* Reset S2MM */
 	for(u8 i = 0U; i < DmaMod->NumChannels; i++) {
 		RC = XAie_DmaChannelReset(DevInst, Loc, i, DMA_S2MM, Reset);
-		if(RC != XAIE_OK) return RC;
-	}
+		if (RC != XAIE_OK) {
+			return RC;
+		}
 
+	}
 	return  XAIE_OK;
 }
 
@@ -1079,8 +1083,9 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RC = DmaMod->BdChValidity(BdNum, ChNum);
-	if(RC != XAIE_OK)
+	if (RC != XAIE_OK) {
 		return RC;
+	}
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +

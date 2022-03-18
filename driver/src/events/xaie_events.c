@@ -83,10 +83,12 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
 		XAIE_ERROR("Invalid event ID\n");
@@ -153,11 +155,11 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
-
+	}
 	RegOffset = EvntMod->ComboCtrlRegOff;
 	FldMask = EvntMod->ComboConfigMask << (ComboId * EvntMod->ComboConfigOff);
 	FldVal = XAie_SetField(Op, ComboId * EvntMod->ComboConfigOff, FldMask);
@@ -169,8 +171,9 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Skip combo input event register config for XAIE_COMBO2 combo ID */
-	if(ComboId == XAIE_EVENT_COMBO2)
+	if (ComboId == XAIE_EVENT_COMBO2) {
 		return XAIE_OK;
+	}
 
 	if(Event1 < EvntMod->EventMin || Event1 > EvntMod->EventMax ||
 		Event2 < EvntMod->EventMin || Event2 > EvntMod->EventMax)
@@ -348,12 +351,12 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Event = XAIE_EVENT_NONE_PL;
 	} else {
 		/* Memory module */
-		if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
+		if (TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 			Event = XAIE_EVENT_NONE_MEM_TILE;
-		else
+		} else {
 			Event = XAIE_EVENT_NONE_MEM;
+		}
 	}
-
 	return _XAie_EventComboControl(DevInst, Loc, Module, ComboId,
 			XAIE_EVENT_COMBO_E1_AND_E2, Event, Event);
 }
@@ -403,10 +406,11 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_AIETILE)
+	if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
+	}
 
 	if(SelectId >= EvntMod->NumStrmPortSelectIds) {
 		XAIE_ERROR("Invalid selection ID\n");
@@ -416,10 +420,11 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 	/* Get stream switch module pointer from device instance */
 	StrmMod = DevInst->DevProp.DevMod[TileType].StrmSw;
 
-	if(PortIntf == XAIE_STRMSW_SLAVE)
+	if (PortIntf == XAIE_STRMSW_SLAVE) {
 		RC = _XAie_GetSlaveIdx(StrmMod, Port, PortNum, &PortIdx);
-	else
+	} else {
 		RC = _XAie_GetMstrIdx(StrmMod, Port, PortNum, &PortIdx);
+	}
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to compute port index\n");
 		return RC;
@@ -517,14 +522,14 @@ AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
-	if(TileType == XAIEGBL_TILE_TYPE_AIETILE)
+	if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 		Port = CORE;
-	else if(TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
-		TileType == XAIEGBL_TILE_TYPE_SHIMNOC)
+	} else if (TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
+		TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
 		Port = CTRL;
-	else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
+	} else if (TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 		Port = DMA;
-	else {
+	} else {
 		XAIE_ERROR("Failed to reset event select strm port. Invalid tile type\n");
 		return XAIE_INVALID_TILE;
 	}
@@ -620,10 +625,11 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds) {
 		XAIE_ERROR("Invalid event ID\n");
@@ -734,12 +740,13 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Event = XAIE_EVENT_NONE_PL;
 	} else {
 		/* Memory module */
-		if(TileType == XAIEGBL_TILE_TYPE_MEMTILE)
+		if (TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 			Event = XAIE_EVENT_NONE_MEM_TILE;
-		else
+		} else {
 			Event = XAIE_EVENT_NONE_MEM;
-	}
+		}
 
+	}
 	return _XAie_EventBroadcastConfig(DevInst, Loc, Module, BroadcastId,
 			Event);
 }
@@ -803,10 +810,11 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds ||
 					Switch > EvntMod->NumSwitches) {
@@ -815,8 +823,9 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
-		if(!(Dir & 1U << DirShift))
+		if (!(Dir & 1U << DirShift)) {
 			continue;
+		}
 
 		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
 			    DirShift * EvntMod->BroadcastSwBlockOff +
@@ -891,10 +900,11 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	if(ChannelBitMap >= (XAIE_ENABLE << EvntMod->NumBroadcastIds) ||
 					Switch > EvntMod->NumSwitches) {
@@ -903,8 +913,9 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
-		if(!(Dir & 1U << DirShift))
+		if (!(Dir & 1U << DirShift)) {
 			continue;
+		}
 
 		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
 			    DirShift * EvntMod->BroadcastSwBlockOff +
@@ -979,10 +990,11 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds ||
 					Switch > EvntMod->NumSwitches) {
@@ -991,8 +1003,9 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
-		if(!(Dir & 1U << DirShift))
+		if (!(Dir & 1U << DirShift)) {
 			continue;
+		}
 
 		RegOffset = EvntMod->BaseBroadcastSwUnblockRegOff +
 			    DirShift * EvntMod->BroadcastSwUnblockOff +
@@ -1047,10 +1060,11 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	for(u32 Index = 0; Index < EvntMod->NumGroupEvents; Index++) {
 		if(GroupEvent == EvntMod->Group[Index].GroupEvent) {
@@ -1059,11 +1073,12 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 			RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 					RegOffset;
 
-			if(Reset == XAIE_RESETENABLE)
+			if (Reset == XAIE_RESETENABLE) {
 				FldVal = EvntMod->Group[Index].ResetValue;
-			else
+			} else {
 				FldVal = XAie_SetField(GroupBitMap, 0U,
 					 EvntMod->Group[Index].GroupMask);
+			}
 
 			RC = XAie_Write32(DevInst, RegAddr, FldVal);
 			if(RC != XAIE_OK) {
@@ -1493,10 +1508,11 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, Events,
 								&PhyEvent);

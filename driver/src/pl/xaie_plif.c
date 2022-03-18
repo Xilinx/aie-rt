@@ -97,8 +97,9 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Port number 4-6 are mapped to bits 3-5 */
-	if(PortNum > 3U)
+	if (PortNum > 3U) {
 		PortNum--;
+	}
 
 	Mask = PlIfMod->DownSzrByPass[PortNum].Mask;
 	FldVal = XAie_SetField(Enable, PlIfMod->DownSzrByPass[PortNum].Lsb,

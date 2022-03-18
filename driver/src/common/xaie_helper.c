@@ -321,10 +321,11 @@ u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 	const XAie_EvntMod *EvntMod;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(Module == XAIE_PL_MOD)
+	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
 
 	return EvntMod->DefaultGroupErrorMask;
 }
@@ -676,9 +677,10 @@ static AieRC _XAie_Txn_FlushCmdBuf(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 	for(u32 i = 0U; i < TxnInst->NumCmds; i++) {
 		RC = _XAie_ExecuteCmd(DevInst, &TxnInst->CmdBuf[i],
 				TxnInst->Flags);
-		if(RC != XAIE_OK) return RC;
+		if (RC != XAIE_OK) {
+			 return RC;
+		}
 	}
-
 	return XAIE_OK;
 }
 
@@ -870,7 +872,9 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 	while(NodePtr != NULL) {
 		TxnInst = XAIE_CONTAINER_OF(NodePtr, XAie_TxnInst, Node);
 
-		if(TxnInst == NULL) continue;
+		if (TxnInst == NULL) {
+			 continue;
+		}
 
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
@@ -905,7 +909,9 @@ AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value)
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
-			if(RC != XAIE_OK) return RC;
+			if (RC != XAIE_OK) {
+				return RC;
+			}
 		}
 
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_WRITE;
@@ -980,9 +986,11 @@ AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value)
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
-			if(RC != XAIE_OK) return RC;
-		}
+			if (RC != XAIE_OK) {
+				 return RC;
+			}
 
+		}
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_WRITE;
 		TxnInst->CmdBuf[TxnInst->NumCmds].RegOff = RegOff;
 		TxnInst->CmdBuf[TxnInst->NumCmds].Mask = Mask;
@@ -1066,7 +1074,7 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 					"buffer.\n");
 			if(TxnInst->NumCmds > 0) {
 				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-				if(RC != XAIE_OK) {
+				if (RC != XAIE_OK) {
 					XAIE_ERROR("Failed to flush cmd buffer\n");
 					return RC;
 				}
@@ -1079,7 +1087,9 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
-			if(RC != XAIE_OK) return RC;
+			if (RC != XAIE_OK) {
+				return RC;
+			}
 		}
 
 		Buf = (u32 *)malloc(sizeof(u32) * Size);
@@ -1139,7 +1149,9 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
-			if(RC != XAIE_OK) return RC;
+			if (RC != XAIE_OK) {
+				return RC;
+			}
 		}
 
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_BLOCKSET;

@@ -12,7 +12,14 @@
 * This file contains AIE specific interrupt routines which are not exposed to
 * the user.
 *
-******************************************************************************/
+* <pre>
+*  MODIFICATION HISTORY:
+*
+*  Ver   Who     Date     Changes
+*  ----- ------  -------- -----------------------------------------------------
+*  </pre>
+*
+*********************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
@@ -50,8 +57,9 @@ u8 _XAie_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u8 IrqId = (((Loc.Col % 4) % 3) * 2) + (u8)Switch;
 
-	if(Loc.Col + 3 > DevInst->NumCols)
+	if (Loc.Col + 3 > DevInst->NumCols) {
 		IrqId += 2;
+	}
 
 	return IrqId;
 }
