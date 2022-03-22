@@ -273,8 +273,9 @@ AieRC _XAieMl_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 	const XAie_DmaBdProp *BdProp;
 
 	RC = _XAieMl_DmaMemTileCheckPaddingConfig(DmaDesc);
-	if(RC != XAIE_OK)
+	if (RC != XAIE_OK) {
 		return RC;
+	}
 
 	DmaMod = DevInst->DevProp.DevMod[DmaDesc->TileType].DmaMod;
 	BdProp = DmaMod->BdProp;

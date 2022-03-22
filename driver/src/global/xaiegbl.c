@@ -132,8 +132,9 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(InstPtr->IsReady)
+	if (InstPtr->IsReady) {
 		return XAIE_OK;
+	}
 
 	/* Initialize device property according to Device Type */
 #ifdef XAIE_DEV_SINGLE_GEN

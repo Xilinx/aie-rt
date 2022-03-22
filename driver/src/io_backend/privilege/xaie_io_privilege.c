@@ -313,8 +313,9 @@ static AieRC _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 
 	for (Loc.Col = 0; Loc.Col < DevInst->NumCols; Loc.Col++) {
 		u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-		if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC)
+		if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 			continue;
+		}
 
 		RC = _XAie_PrivilegeSetL2IrqId(DevInst, Loc,
 				XAIE_ERROR_NPI_INTR_ID);
@@ -565,8 +566,9 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAIE_ERROR("Request tiles failed\n");
 	}
 
-	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE)
+	if (DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
 		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+	}
 
 	return RC;
 }

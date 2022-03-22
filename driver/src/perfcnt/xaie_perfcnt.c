@@ -695,15 +695,17 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegEvent = StartStopEvent & PerfMod->Start.Mask;
 	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, RegEvent,
 			StartEvent);
-	if(RC != XAIE_OK)
+	if (RC != XAIE_OK) {
 		return RC;
+	}
 
 	RegEvent = (StartStopEvent & PerfMod->Stop.Mask) >>
 			PerfMod->StartStopShift / 2U;
 	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, RegEvent,
 			StopEvent);
-	if(RC != XAIE_OK)
+	if (RC != XAIE_OK) {
 		return RC;
+	}
 
 	/* Compute absolute address and read the reset event register */
 	ResetRegOffset = PerfMod->PerfCtrlResetBaseAddr;
@@ -719,8 +721,9 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegEvent &= PerfMod->Reset.Mask;
 	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, RegEvent,
 			ResetEvent);
-	if(RC != XAIE_OK)
+	if (RC != XAIE_OK) {
 		return RC;
+	}
 
 	return XAIE_OK;
 }
