@@ -76,7 +76,7 @@
 *******************************************************************************/
 int main()
 {
-	AieRC RC = XAIE_OK;
+	int RC = XAIE_OK;
 	uint32_t data[NUM_ELEMS];
 	uint32_t buffer[NUM_ELEMS];
 	XAie_LocType Tile_1, Tile_2;
