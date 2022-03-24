@@ -440,8 +440,9 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u8 flag = 0;
 
-		if(Args->Locs[i].Row == 0)
+		if (Args->Locs[i].Row == 0) {
 			continue;
+		}
 
 		/* Calculate bit number in bit map for the tile requested */
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst,

@@ -92,8 +92,9 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 
 	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
 
-	if(Enable != XAIE_ENABLE)
+	if (Enable != XAIE_ENABLE) {
 		return XAIE_OK;
+	}
 
 	/* Frame the 32-bit reg value */
 	*RegVal = XAie_SetField(Enable, StrmMod->SlvEn.Lsb,
@@ -140,8 +141,9 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 	}
 
 	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
-	if(Enable != XAIE_ENABLE)
+	if (Enable != XAIE_ENABLE) {
 		return XAIE_OK;
+	}
 
 	/* Extract the drop header field */
 	DropHdr = XAie_GetField(Config, StrmMod->DrpHdr.Lsb,

@@ -309,16 +309,18 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u32 ColClockStatus;
 
-		if(Args->Locs[i].Row == 0)
+		if (Args->Locs[i].Row == 0) {
 			continue;
+		}
 
 		/*
 		 * Check if column clock buffer is already enabled and continue
 		 */
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				Args->Locs[i]);
-		if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus))
+		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
 			continue;
+		}
 
 		RC = _XAieMl_PmSetColumnClockBuffer(DevInst, Args->Locs[i],
 				XAIE_ENABLE);

@@ -310,9 +310,10 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 
 		for(u32 UnalignedByte = FirstReadOffset;
 			UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE && RemBytes;
-			UnalignedByte++, RemBytes--)
+			UnalignedByte++, RemBytes--) {
 			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8) &
 									0xFF);
+		}
 	}
 
 	/* Aligned bytes */
@@ -334,9 +335,10 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 
 		for(u32 UnalignedByte = 0;
 			UnalignedByte < RemBytes % XAIE_MEM_WORD_ALIGN_SIZE;
-			UnalignedByte++)
+			UnalignedByte++) {
 			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8) &
 									0xFFU);
+		}
 	}
 
 	return XAIE_OK;
