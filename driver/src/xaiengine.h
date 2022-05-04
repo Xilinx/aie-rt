@@ -24,6 +24,7 @@ extern "C" {
 #include <xaiengine/xaie_timer.h>
 #include <xaiengine/xaie_trace.h>
 #include <xaiengine/xaie_lite.h>
+#include <xaiengine/xaie_util_events.h>
 #include <xaiengine/xaiegbl.h>
 #include <xaiengine/xaiegbl_defs.h>
 
