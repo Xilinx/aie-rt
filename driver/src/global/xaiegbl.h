@@ -724,6 +724,26 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 		(Mdata).ArraySize = (Size) / sizeof(XAie_ErrorPayload);	\
 	})
 
+/*****************************************************************************/
+/**
+*
+* Macro enabling the caller to get the base address of a given column in the
+* array.
+*
+* @param	BaseAddr: The base address of the AIE array.
+* @param	StartCol: The start column in the array.
+* @param	ColShift: Number of bits to shift the column.
+*
+* @return	None.
+*
+* @note	The column base address will be the absolute base address plus
+*		the offset of the column.
+*
+*******************************************************************************/
+
+#define XAie_GetCol_BaseAddr(BaseAddr, StartCol, ColShift)              \
+	(BaseAddr + (StartCol << ColShift))
+
 #endif	/* end of protection macro */
 
 /** @} */
