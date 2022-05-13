@@ -373,6 +373,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Loc: Starting location of the section.
 * @param	ProgSec: Pointer to the program section entry in the ELF buffer.
 * @param	Phdr: Pointer to the program header.
+* @param	Sections: Flag indicating which sections of the elf to load.
 *
 * @return	XAIE_OK on success and error code for failure.
 *
@@ -380,7 +381,8 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *ProgSec, const Elf32_Phdr *Phdr)
+		const unsigned char *ProgSec, const Elf32_Phdr *Phdr,
+		u8 Sections)
 {
 	const XAie_CoreMod *CoreMod;
 
@@ -388,48 +390,31 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Write to Program Memory */
 	if(Phdr->p_paddr < CoreMod->ProgMemSize) {
-		return _XAie_LoadProgMemSection(DevInst, Loc, ProgSec, Phdr);
+		if(Sections & XAIE_LOAD_ELF_TXT) {
+			return _XAie_LoadProgMemSection(DevInst, Loc, ProgSec,
+					Phdr);
+		} else {
+			XAIE_WARN("Program memory section is skipped as XAIE_LOAD_ELF_TXT flag is not set\n");
+			return XAIE_OK;
+		}
 	}
 
-	return _XAie_LoadDataMemSection(DevInst, Loc, ProgSec, Phdr);
+	if(((Sections & XAIE_LOAD_ELF_BSS) && (Phdr->p_filesz == 0U)) ||
+			((Sections & XAIE_LOAD_ELF_DATA) && (Phdr->p_filesz != 0U))) {
+		return _XAie_LoadDataMemSection(DevInst, Loc, ProgSec, Phdr);
+	} else  {
+		XAIE_WARN("Mismatch in program header to data memory loadable section. Skipping this program section.\n");
+		return XAIE_OK;
+	}
 }
 
-/*****************************************************************************/
-/**
-*
-* This function loads the elf from memory to the AIE Cores. The function writes
-* 0 for the unitialized data section.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE Tile.
-* @param	ElfMem: Pointer to the Elf contents in memory.
-* @param	ElfSz: Size of the elf pointed by *ElfMem
-*
-* @return	XAIE_OK on success and error code for failure.
-*
-* @note		None.
-*
-*******************************************************************************/
-AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem)
+static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const unsigned char* ElfMem, u8 Sections)
 {
 	AieRC RC;
 	const Elf32_Ehdr *Ehdr;
 	const Elf32_Phdr *Phdr;
 	const unsigned char *SectionPtr;
-	u8 TileType;
-
-	if((DevInst == XAIE_NULL) || (ElfMem == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type\n");
-		return XAIE_INVALID_TILE;
-	}
 
 	Ehdr = (const Elf32_Ehdr *) ElfMem;
 	_XAie_PrintElfHdr(Ehdr);
@@ -442,12 +427,12 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	for(u32 phnum = 0U; phnum < Ehdr->e_phnum; phnum++) {
 		Phdr = (Elf32_Phdr*) (ElfMem + sizeof(*Ehdr) +
-			phnum * sizeof(*Phdr));
+				phnum * sizeof(*Phdr));
 		_XAie_PrintProgSectHdr(Phdr);
 		if(Phdr->p_type == PT_LOAD) {
 			SectionPtr = ElfMem + Phdr->p_offset;
-			RC = _XAie_WriteProgramSection(DevInst, Loc,
-					SectionPtr, Phdr);
+			RC = _XAie_WriteProgramSection(DevInst, Loc, SectionPtr,
+					Phdr, Sections);
 			if(RC != XAIE_OK) {
 				return RC;
 			}
@@ -464,6 +449,41 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This function loads the elf from memory to the AIE Cores. The function writes
+* 0 for the uninitialized data section.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+* @param	ElfMem: Pointer to the Elf contents in memory.
+*
+* @return	XAIE_OK on success and error code for failure.
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const unsigned char* ElfMem)
+{
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) || (ElfMem == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	return _XAie_LoadElfFromMem(DevInst, Loc, ElfMem, XAIE_LOAD_ELF_ALL);
 }
 
 #ifdef __AIESIM__
@@ -524,6 +544,104 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 /*****************************************************************************/
 /**
 *
+* This API is used to load partial sections of the elf to the target.
+* A combination of the following sections can be loaded as needed:
+*	1. TEXT section (Program memory section of the elf)
+*	2. DATA section (Initialized symbols loaded to data memory)
+*	3. BSS section (Uninitialized symbols loaded to data memory)
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: AIE Tile location
+* @param	ElfPtr: Path to the elf file.
+* @param	Sections: Flags to indicate different sections that needs to be
+*		loaded:
+*		1. XAIE_LOAD_ELF_TXT (loads text section)
+*		2. XAIE_LOAD_ELF_BSS (loads uninitialized symbols)
+*		3. XAIE_LOAD_ELF_DATA (loads initialized symbols)
+*		4. XAIE_LOAD_ELF_ALL (loads all sections)
+*		Above flags can be passed individually or ORed together.
+*
+* @return	XAIE_OK on success and error code for failure.
+*
+* @note		The user is responsible to pass valid section pointers and
+*		corresponding size to this API. The API itself does not have
+*		any context of the whole section or the elf.
+*
+*******************************************************************************/
+AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const char* ElfPtr, u8 Sections)
+{
+	FILE *Fd;
+	int Ret;
+	unsigned char *ElfMem;
+	u8 TileType;
+	u64 ElfSz;
+	AieRC RC;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	if (ElfPtr == XAIE_NULL) {
+		XAIE_ERROR("Invalid ElfPtr\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	Fd = fopen(ElfPtr, "r");
+	if(Fd == XAIE_NULL) {
+		XAIE_ERROR("Unable to open elf file, %d: %s\n",
+			errno, strerror(errno));
+		return XAIE_INVALID_ELF;
+	}
+
+	/* Get the file size of the elf */
+	Ret = fseek(Fd, 0L, SEEK_END);
+	if(Ret != 0U) {
+		XAIE_ERROR("Failed to get end of file, %d: %s\n",
+			errno, strerror(errno));
+		fclose(Fd);
+		return XAIE_INVALID_ELF;
+	}
+
+	ElfSz = ftell(Fd);
+	rewind(Fd);
+	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
+
+	/* Read entire elf file into memory */
+	ElfMem = (unsigned char*) malloc(ElfSz);
+	if(ElfMem == NULL) {
+		fclose(Fd);
+		XAIE_ERROR("Memory allocation failed\n");
+		return XAIE_ERR;
+	}
+
+	Ret = fread((void*)ElfMem, ElfSz, 1U, Fd);
+	if(Ret == 0U) {
+		fclose(Fd);
+		free(ElfMem);
+		XAIE_ERROR("Failed to read Elf into memory\n");
+		return XAIE_ERR;
+	}
+
+	fclose(Fd);
+
+	RC = _XAie_LoadElfFromMem(DevInst, Loc, ElfMem, Sections);
+	free(ElfMem);
+
+	return RC;
+}
+
+/*****************************************************************************/
+/**
+*
 * This function loads the elf from file to the AIE Cores. The function writes
 * 0 for the unitialized data section.
 *
@@ -541,11 +659,7 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 		u8 LoadSym)
 {
-	FILE *Fd;
-	int Ret;
-	unsigned char *ElfMem;
 	u8 TileType;
-	u64 ElfSz;
 	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||
@@ -612,52 +726,9 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	}
 #endif
 	(void)LoadSym;
-	Fd = fopen(ElfPtr, "r");
-	if(Fd == XAIE_NULL) {
-		XAIE_ERROR("Unable to open elf file, %d: %s\n",
-			errno, strerror(errno));
-		return XAIE_INVALID_ELF;
-	}
+	(void)RC;
 
-	/* Get the file size of the elf */
-	Ret = fseek(Fd, 0L, SEEK_END);
-	if(Ret != 0U) {
-		XAIE_ERROR("Failed to get end of file, %d: %s\n",
-			errno, strerror(errno));
-		fclose(Fd);
-		return XAIE_INVALID_ELF;
-	}
-
-	ElfSz = ftell(Fd);
-	rewind(Fd);
-	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
-
-	/* Read entire elf file into memory */
-	ElfMem = (unsigned char*) malloc(ElfSz);
-	if(ElfMem == NULL) {
-		fclose(Fd);
-		XAIE_ERROR("Memory allocation failed\n");
-		return XAIE_ERR;
-	}
-
-	Ret = fread((void*)ElfMem, ElfSz, 1U, Fd);
-	if(Ret == 0U) {
-		fclose(Fd);
-		free(ElfMem);
-		XAIE_ERROR("Failed to read Elf into memory\n");
-		return XAIE_ERR;
-	}
-
-	fclose(Fd);
-
-	RC = XAie_LoadElfMem(DevInst, Loc, ElfMem);
-	if(RC != XAIE_OK) {
-		free(ElfMem);
-		return RC;
-	}
-
-	free(ElfMem);
-	return XAIE_OK;
+	return XAie_LoadElfPartial(DevInst, Loc, ElfPtr, XAIE_LOAD_ELF_ALL);
 }
 
 /*****************************************************************************/
@@ -694,7 +765,8 @@ AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	return _XAie_WriteProgramSection(DevInst, Loc, SectionPtr, Phdr);
+	return _XAie_WriteProgramSection(DevInst, Loc, SectionPtr, Phdr,
+			XAIE_LOAD_ELF_ALL);
 }
 
 /*****************************************************************************/

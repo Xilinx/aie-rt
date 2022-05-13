@@ -38,6 +38,11 @@
 #include "xaiegbl_defs.h"
 
 /************************** Constant Definitions *****************************/
+#define XAIE_LOAD_ELF_TXT	(1U << 0U)
+#define XAIE_LOAD_ELF_BSS	(1U << 1U)
+#define XAIE_LOAD_ELF_DATA	(1U << 2U)
+#define XAIE_LOAD_ELF_ALL	(XAIE_LOAD_ELF_TXT | XAIE_LOAD_ELF_BSS | \
+					XAIE_LOAD_ELF_DATA)
 
 /************************** Variable Definitions *****************************/
 typedef struct {
@@ -54,6 +59,8 @@ AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr);
 AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const unsigned char* SectionPtr, u64 TgtAddr, u32 Size);
+AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const char* ElfPtr, u8 Sections);
 
 #endif /* XAIE_FEATURE_ELF_ENABLE */
 
