@@ -202,21 +202,66 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This routine is used to write to the specified program section by reading the
-* corresponding data from the ELF buffer.
+* This routine is used to write the loadable sections of the elf belonging to
+* the program memory of ai engines.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Starting location of the section.
-* @param	ProgSec: Poiner to the program section entry in the ELF buffer.
-* @param	ElfPtr: Pointer to the program header.
+* @param	SectionPtr: Poiner to the program section entry in the ELF buffer.
+* @param	Phdr: Pointer to the program header.
 *
 * @return	XAIE_OK on success and error code for failure.
 *
 * @note		Internal API only.
 *
 *******************************************************************************/
-static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *ProgSec, const Elf32_Phdr *Phdr)
+static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
+{
+	u64 Addr;
+	const XAie_CoreMod *CoreMod;
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+
+	/* Write to Program Memory */
+	if((Phdr->p_paddr + Phdr->p_memsz) > CoreMod->ProgMemSize) {
+		XAIE_ERROR("Overflow of program memory\n");
+		return XAIE_INVALID_ELF;
+	}
+
+	Addr = CoreMod->ProgMemHostOffset + Phdr->p_paddr +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	/*
+	 * The program memory sections in the elf can end at 32bit
+	 * unaligned addresses. To factor this, we round up the number
+	 * of 32-bit words that has to be written to the program
+	 * memory. Since the elf has footers at the end, accessing
+	 * memory out of Progsec will not result in a segmentation
+	 * fault.
+	 */
+	return XAie_BlockWrite32(DevInst, Addr, (u32 *)SectionPtr,
+			(Phdr->p_memsz + 4U - 1U) / 4U);
+}
+
+/*****************************************************************************/
+/**
+*
+* This routine is used to write the loadable sections of the elf belonging to
+* the data memory of ai engines.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Starting location of the section.
+* @param	SectionPtr: Pointer to the program section entry in the ELF buffer.
+* @param	Phdr: Pointer to the program header.
+*
+* @return	XAIE_OK on success and error code for failure.
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
 {
 	AieRC RC;
 	u32 OverFlowBytes;
@@ -226,33 +271,11 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 AddrMask;
 	u64 Addr;
 	XAie_LocType TgtLoc;
+	const unsigned char *Buffer = SectionPtr;
+	unsigned char *Tmp;
 	const XAie_CoreMod *CoreMod;
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
-
-	/* Write to Program Memory */
-	if(Phdr->p_paddr < CoreMod->ProgMemSize) {
-		if((Phdr->p_paddr + Phdr->p_memsz) > CoreMod->ProgMemSize) {
-			XAIE_ERROR("Overflow of program memory\n");
-			return XAIE_INVALID_ELF;
-		}
-
-		Addr = CoreMod->ProgMemHostOffset + Phdr->p_paddr +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-
-		/*
-		 * The program memory sections in the elf can end at 32bit
-		 * unaligned addresses. To factor this, we round up the number
-		 * of 32-bit words that has to be written to the program
-		 * memory. Since the elf has footers at the end, accessing
-		 * memory out of Progsec will not result in a segmentation
-		 * fault.
-		 */
-		RC = XAie_BlockWrite32(DevInst, Addr, (u32 *)ProgSec,
-				(Phdr->p_memsz + 4U - 1U) / 4U);
-
-		return RC;
-	}
 
 	/* Check if section can access out of bound memory location on device */
 	if(((Phdr->p_paddr > CoreMod->ProgMemSize) &&
@@ -265,15 +288,30 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Write initialized section to data memory */
-	SectionSize = Phdr->p_filesz;
+	SectionSize = Phdr->p_memsz;
 	SectionAddr = Phdr->p_paddr;
 	AddrMask = CoreMod->DataMemSize - 1U;
+	/* Check if file size is 0. If yes, allocate memory and init to 0 */
+	if(Phdr->p_filesz == 0U) {
+		Buffer = (const unsigned char *)calloc(Phdr->p_memsz,
+				sizeof(char));
+		if(Buffer == XAIE_NULL) {
+			XAIE_ERROR("Memory allocation failed for buffer\n");
+			return XAIE_ERR;
+		}
+		/* Copy pointer to free allocated memory in case of error. */
+		Tmp = (unsigned char *)Buffer;
+	}
+
 	while(SectionSize > 0U) {
 		RC = _XAie_GetTargetTileLoc(DevInst, Loc, SectionAddr, &TgtLoc);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to get target "\
 					"location for p_paddr 0x%x\n",
 					SectionAddr);
+			if(Phdr->p_filesz == 0U) {
+				free(Tmp);
+			}
 			return RC;
 		}
 
@@ -293,79 +331,64 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			RC = _XAie_EccOnDM(DevInst, TgtLoc);
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Unable to turn ECC On for Data Memory\n");
+				if(Phdr->p_filesz == 0U) {
+					free(Tmp);
+				}
 				return RC;
 			}
 		}
 
 		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, Addr,
-				(const void*)ProgSec, BytesToWrite);
+				(const void*)Buffer, BytesToWrite);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Write to data memory failed\n");
+			if(Phdr->p_filesz == 0U) {
+				free(Tmp);
+			}
 			return RC;
 		}
 
 		SectionSize -= BytesToWrite;
 		SectionAddr += BytesToWrite;
-		ProgSec += BytesToWrite;
+		Buffer += BytesToWrite;
 	}
 
-	/* Write un-initialized section to data memory */
-	SectionSize = Phdr->p_memsz - Phdr->p_filesz;
-	SectionAddr = Phdr->p_paddr + Phdr->p_filesz;
-	while(SectionSize > 0U) {
-
-		void *TempSrc;
-
-		RC = _XAie_GetTargetTileLoc(DevInst, Loc, SectionAddr, &TgtLoc);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to get target "
-					"location for p_paddr 0x%x\n",
-					SectionAddr);
-			return RC;
-		}
-
-		/*Bytes to write in this section */
-		OverFlowBytes = 0U;
-		if((SectionAddr & AddrMask) + SectionSize >
-				CoreMod->DataMemSize) {
-			OverFlowBytes = (SectionAddr & AddrMask) + SectionSize -
-				CoreMod->DataMemSize;
-		}
-
-		BytesToWrite = SectionSize - OverFlowBytes;
-		Addr = (SectionAddr & AddrMask);
-
-		/* Turn ECC On if the EccStatus flag is set */
-		if(DevInst->EccStatus) {
-			RC = _XAie_EccOnDM(DevInst, TgtLoc);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Unable to turn ECC On for Data Memory\n");
-				return RC;
-			}
-		}
-
-		/* Allocate temporary buffer and set it to 0 */
-		TempSrc = calloc(BytesToWrite, sizeof(char));
-		if(TempSrc == XAIE_NULL) {
-			XAIE_ERROR("Memory allocation failed for temporary "\
-					"buffer\n");
-			return XAIE_ERR;
-		}
-
-		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, Addr, TempSrc,
-				BytesToWrite);
-		free(TempSrc);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Write to data memory failed for .bss "
-					"section.\n");
-			return RC;
-		}
-
-		SectionSize -= BytesToWrite;
-		SectionAddr += BytesToWrite;
+	if(Phdr->p_filesz == 0U) {
+		free(Tmp);
 	}
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This routine is used to write to the specified program section by reading the
+* corresponding data from the ELF buffer.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Starting location of the section.
+* @param	ProgSec: Pointer to the program section entry in the ELF buffer.
+* @param	ElfPtr: Pointer to the program header.
+*
+* @return	XAIE_OK on success and error code for failure.
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const unsigned char *ProgSec, const Elf32_Phdr *Phdr)
+{
+	const XAie_CoreMod *CoreMod;
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+
+	/* Write to Program Memory */
+	if(Phdr->p_paddr < CoreMod->ProgMemSize) {
+		return _XAie_LoadProgMemSection(DevInst, Loc, ProgSec, Phdr);
+	}
+
+	return _XAie_LoadDataMemSection(DevInst, Loc, ProgSec, Phdr);
 }
 
 /*****************************************************************************/
