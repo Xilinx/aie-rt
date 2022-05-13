@@ -113,7 +113,8 @@ static void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr)
 * @param	DevInst: Device Instance.
 * @param	Loc: Location specified by the user.
 * @param	Addr: Physical Address from Device's perspective.
-* @param	TgtLoc: Poiner to the target location based on physical address.
+* @param	TgtLoc: Pointer to the target location based on physical
+*		address.
 *
 * @return	XAIE_OK on success and error code for failure.
 *
@@ -207,7 +208,8 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Starting location of the section.
-* @param	SectionPtr: Poiner to the program section entry in the ELF buffer.
+* @param	SectionPtr: Pointer to the program section entry in the ELF
+*		buffer.
 * @param	Phdr: Pointer to the program header.
 *
 * @return	XAIE_OK on success and error code for failure.
@@ -252,7 +254,8 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Starting location of the section.
-* @param	SectionPtr: Pointer to the program section entry in the ELF buffer.
+* @param	SectionPtr: Pointer to the program section entry in the ELF
+*		buffer.
 * @param	Phdr: Pointer to the program header.
 *
 * @return	XAIE_OK on success and error code for failure.
@@ -369,7 +372,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	DevInst: Device Instance.
 * @param	Loc: Starting location of the section.
 * @param	ProgSec: Pointer to the program section entry in the ELF buffer.
-* @param	ElfPtr: Pointer to the program header.
+* @param	Phdr: Pointer to the program header.
 *
 * @return	XAIE_OK on success and error code for failure.
 *
@@ -665,7 +668,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: AIE Tile location
-* @param	SectionPtr: Poiner to the program section entry.
+* @param	SectionPtr: Pointer to the program section entry.
 * @param	Phdr: Pointer to the program header.
 *
 * @return	XAIE_OK on success and error code for failure.
@@ -702,7 +705,7 @@ AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: AIE Tile location
-* @param	SectionPtr: Poiner to the program section entry.
+* @param	SectionPtr: Pointer to the program section entry.
 * @param	TgtAddr: Target Address in the program memory.
 * @param	Size: Number of 32 bit words to be written to the program memory
 *
