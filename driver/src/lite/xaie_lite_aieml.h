@@ -31,23 +31,23 @@
 #endif
 
 #ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		0xF70A0000
+#define XAIE_NPI_BASEADDR		0xF6D10000
 #endif
 
 #ifndef XAIE_NUM_ROWS
-#define XAIE_NUM_ROWS			10
+#define XAIE_NUM_ROWS			11
 #endif
 
 #ifndef XAIE_NUM_COLS
-#define XAIE_NUM_COLS			50
+#define XAIE_NUM_COLS			38
 #endif
 
 #define XAIE_COL_SHIFT			25
 #define XAIE_ROW_SHIFT			20
 #define XAIE_SHIM_ROW			0
 #define XAIE_MEM_TILE_ROW_START		1
-#define XAIE_MEM_TILE_NUM_ROWS		1
-#define XAIE_AIE_TILE_ROW_START		2
+#define XAIE_MEM_TILE_NUM_ROWS		2
+#define XAIE_AIE_TILE_ROW_START		3
 #define XAIE_AIE_TILE_NUM_ROWS		8
 
 #define UPDT_NEXT_NOC_TILE_LOC(Loc)	\
