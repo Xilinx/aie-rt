@@ -46,9 +46,6 @@
 #define XAIE_NPI_PROT_REG_CNTR_LASTCOL_MSK		0x00007F00U
 #define XAIE_NPI_PROT_REG_CNTR_LASTCOL_LSB		8U
 
-#define XAIE_NPI_IRQ0_ENABLE_REG			0x00000038U
-#define XAIE_NPI_PER_IRQ_REGOFF				0x10U
-
 /***************************** Include Files *********************************/
 #include "xaie_lite_io.h"
 
@@ -160,28 +157,6 @@ static inline void _XAie_LNpiSetShimReset(u8 RstEnable)
 			XAIE_NPI_PCSR_CONTROL_SHIM_RESET_MSK);
 
 	_XAie_LNpiWritePcsr(RegVal, XAIE_NPI_PCSR_CONTROL_SHIM_RESET_MSK);
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the NPI function to set the SHIM set assert
-*
-* @param	NpiIrqId: NPI IRQ ID.
-* @param	AieIrqId: AIE IRQ ID.
-*
-* @note		This function is internal.
-*
-*******************************************************************************/
-static inline void _XAie_LNpiIrqEnable(u8 NpiIrqId, u8 AieIrqId)
-{
-	u64 RegOff;
-
-	RegOff = XAIE_NPI_IRQ0_ENABLE_REG + NpiIrqId * XAIE_NPI_PER_IRQ_REGOFF;
-	_XAie_LNpiSetLock(XAIE_DISABLE);
-
-	_XAie_LNpiWrite32(RegOff, (1 << AieIrqId));
-	_XAie_LNpiSetLock(XAIE_ENABLE);
 }
 
 #endif		/* end of protection macro */

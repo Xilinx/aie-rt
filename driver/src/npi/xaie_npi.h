@@ -53,11 +53,6 @@ typedef struct XAie_NpiMod {
 	u32 PcsrLockOff;
 	u32 ProtRegOff;
 	u32 PcsrUnlockCode;
-	u32 BaseIrqRegOff;
-	u8 AieIrqNum;
-	u8 NpiIrqNum;
-	u8 IrqEnableOff;
-	u8 IrqDisableOff;
 	XAie_RegFldAttr ShimReset;
 	XAie_RegFldAttr ProtRegEnable;
 	XAie_RegFldAttr ProtRegFirstCol;
@@ -72,8 +67,6 @@ typedef void (*NpiWrite32Func)(void *IOInst, u32 RegOff, u32 RegVal);
 AieRC _XAie_NpiSetShimReset(XAie_DevInst *DevInst, u8 RstEnable);
 AieRC _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst,
 				    XAie_NpiProtRegReq *Req);
-AieRC _XAie_NpiIrqEnable(XAie_DevInst *DevInst, u8 NpiIrqID, u8 AieIrqID);
-AieRC _XAie_NpiIrqDisable(XAie_DevInst *DevInst, u8 NpiIrqID, u8 AieIrqID);
 
 #endif	/* End of protection macro */
 
