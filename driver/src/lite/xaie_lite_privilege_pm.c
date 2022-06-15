@@ -407,5 +407,63 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+* This API checks if all the shim dmas in the paritition are idle.
+*
+* @param	DevInst: AI engine partition device instance pointer
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static inline AieRC _XAie_LPartIsShimDmaIdle(XAie_DevInst *DevInst)
+{
+	for(u8 C = DevInst->StartCol; C < DevInst->StartCol + DevInst->NumCols;
+			C++) {
+		AieRC RC;
+		u8 TType;
+
+		TType = _XAie_LGetTTypefromLoc(DevInst, XAie_TileLoc(C, 0));
+		if(TType == XAIEGBL_TILE_TYPE_SHIMNOC) {
+			RC = _XAie_LIsShimDmaIdle(DevInst, XAie_TileLoc(C, 0));
+			if(RC != XAIE_OK)
+				return RC;
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+* This API check if all the resources in the partition are idle. Currently,
+* we check only for dma status.
+*
+* @param	DevInst: AI engine partition device instance pointer
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst)
+{
+	AieRC RC = XAIE_OK;
+
+	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
+		XAIE_INVALID_ARGS,
+		"Partition idle check failed, invalid partition instance\n");
+
+	RC = _XAie_LPartIsDmaIdle(DevInst);
+	XAIE_ERROR_RETURN(RC == XAIE_OK, RC, "DMAs are not idle\n");
+
+	RC = _XAie_LPartIsShimDmaIdle(DevInst);
+	XAIE_ERROR_RETURN(RC == XAIE_OK, RC, "Shim DMA is not idle\n");
+
+	return RC;
+}
+
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && XAIE_FEATURE_LITE */
 /** @} */

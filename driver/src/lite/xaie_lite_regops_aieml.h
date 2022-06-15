@@ -27,6 +27,9 @@
 /***************************** Include Files *********************************/
 
 /************************** Constant Definitions *****************************/
+#define XAIEML_TILE_DMA_NUM_CH		2U
+#define XAIEML_MEM_TILE_DMA_NUM_CH	6U
+#define XAIEML_SHIM_DMA_NUM_CH		2U
 /********************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 
@@ -157,6 +160,109 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 	_XAie_LPartPoll32(DevInst, RegAddr,
 			XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
 
+}
+
+/*****************************************************************************/
+/**
+*
+* This API checks if all the Tile DMA and Mem Tile DMA channels in a partition
+* are idle.
+*
+* @param	DevInst: Device Instance
+*
+* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+*
+* @note		Internal API only. Checks for AIE Tile DMAs and Mem Tile DMAs
+*
+******************************************************************************/
+static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
+{
+	for(u8 C = DevInst->StartCol; C < DevInst->StartCol + DevInst->NumCols;
+			C++) {
+		u64 RegAddr;
+		u32 RegVal;
+
+		/* AIE TILE DMAs */
+		for(u8 R = XAIE_AIE_TILE_ROW_START; R < XAIE_NUM_ROWS; R++) {
+			for (u32 Ch = 0; Ch < XAIEML_TILE_DMA_NUM_CH; Ch++) {
+				/* S2MM Channel */
+				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
+					XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+				if(RegVal & XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_MASK)
+					return XAIE_ERR;
+
+				/* MM2S Channel */
+				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
+					XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+				if(RegVal & XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_MASK)
+					return XAIE_ERR;
+			}
+
+		}
+
+		/* MEM TILE DMAs */
+		for(u8 R = XAIE_MEM_TILE_ROW_START; R < XAIE_AIE_TILE_ROW_START;
+				R++) {
+			for(u32 Ch = 0; Ch < XAIEML_MEM_TILE_DMA_NUM_CH; Ch++) {
+				/* S2MM Channel */
+				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
+					XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+				if(RegVal & XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_MASK)
+					return XAIE_ERR;
+
+				/* MM2S Channel */
+				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
+					XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+				if(RegVal & XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_MASK)
+					return XAIE_ERR;
+			}
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API checks if all the DMA channels in a SHIM NOC tile are idle.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: ShimDma location
+*
+* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+*
+* @note		Internal API only. Checks for AIE Tile DMAs and Mem Tile DMAs
+*
+******************************************************************************/
+static inline AieRC _XAie_LIsShimDmaIdle(XAie_DevInst *DevInst,
+		XAie_LocType Loc)
+{
+	u64 RegAddr;
+	u32 RegVal;
+
+	for(u32 Ch = 0; Ch < XAIEML_SHIM_DMA_NUM_CH; Ch++) {
+		/* S2MM Channel */
+		RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + Ch * 4 +
+			XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+		RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+		if(RegVal & XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_MASK)
+			return XAIE_ERR;
+
+		/* MM2S Channel */
+		RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + Ch * 4 +
+			XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+		RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+		if(RegVal & XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_MASK)
+			return XAIE_ERR;
+
+	}
+
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
