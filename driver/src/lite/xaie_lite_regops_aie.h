@@ -30,6 +30,7 @@
 /********************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 
+#include "xaie_lite.h"
 #include "xaie_lite_io.h"
 #include "xaie_lite_npi.h"
 
@@ -134,6 +135,86 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 	}
 }
 
+/*****************************************************************************/
+/**
+*
+* This API checks if all the Tile DMA channels in a partition are idle.
+*
+* @param	DevInst: Device Instance
+*
+* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
+{
+	for(u8 C = DevInst->StartCol; C < DevInst->StartCol + DevInst->NumCols;
+			C++) {
+		u64 RegAddr;
+		u32 RegVal;
+
+		/* AIE TILE DMAs */
+		for(u8 R = XAIE_AIE_TILE_ROW_START; R < XAIE_NUM_ROWS; R++) {
+			/* S2MM Channel */
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+			RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+			if(RegVal & (XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_0_MASK |
+						XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_1_MASK))
+				return XAIE_ERR;
+
+			/* MM2S Channel */
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+			RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+			if(RegVal & (XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_0_MASK |
+						XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_1_MASK))
+				return XAIE_ERR;
+
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API checks if all the DMA channels in a SHIM NOC tile are idle.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: ShimDma location
+*
+* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+*
+* @note		Internal API only. Checks for AIE Tile DMAs and Mem Tile DMAs
+*
+******************************************************************************/
+static inline AieRC _XAie_LIsShimDmaIdle(XAie_DevInst *DevInst,
+		XAie_LocType Loc)
+{
+	u64 RegAddr;
+	u32 RegVal;
+
+	/* S2MM Channel */
+	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) +
+		XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+	RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+	if(RegVal & (XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_0_MASK |
+				XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_1_MASK))
+		return XAIE_ERR;
+
+	/* MM2S Channel */
+	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) +
+		XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+	RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+	if(RegVal & (XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_0_MASK |
+				XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_1_MASK))
+		return XAIE_ERR;
+
+	return XAIE_OK;
+}
 /*****************************************************************************/
 /**
 *
