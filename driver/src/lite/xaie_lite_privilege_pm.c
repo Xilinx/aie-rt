@@ -352,9 +352,6 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
 
-	/* Enable NPI interrupt to PS GIC */
-	_XAie_LNpiIrqEnable(XAIE_ERROR_NPI_INTR_ID, XAIE_ERROR_NPI_INTR_ID);
-
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
 
 	return XAIE_OK;
