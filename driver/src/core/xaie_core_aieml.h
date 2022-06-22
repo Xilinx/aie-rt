@@ -33,6 +33,8 @@ AieRC _XAieMl_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut, const struct XAie_CoreMod *CoreMod);
 AieRC _XAieMl_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *DoneBit, const struct XAie_CoreMod *CoreMod);
+AieRC _XAieMl_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 *CoreStatus, const struct XAie_CoreMod *CoreMod);
 
 #endif /* XAIECORE_AIEML_H */
 /** @} */
