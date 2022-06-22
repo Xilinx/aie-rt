@@ -312,7 +312,6 @@ typedef union {
  */
 typedef struct {
 	XAie_RegBdFldAttr BaseAddr;
-	XAie_RegBdFldAttr BufferLen;
 } XAie_TileDmaBuffer;
 
 /*
@@ -321,7 +320,6 @@ typedef struct {
 typedef struct {
 	XAie_RegBdFldAttr AddrLow;
 	XAie_RegBdFldAttr AddrHigh;
-	XAie_RegBdFldAttr BufferLen;
 } XAie_ShimDmaBuffer;
 
 /*
@@ -428,6 +426,7 @@ typedef struct {
 	u32 IterStepSizeMax;
 	u8 IterWrapMax;
 	u8 IterCurrMax;
+	XAie_RegBdFldAttr BufferLen;
 	const XAie_DmaBdBuffer *Buffer;
 	const XAie_DmaBdDoubleBuffer *DoubleBuffer;
 	const XAie_DmaBdLock *Lock;
