@@ -194,9 +194,6 @@ static const  XAie_DmaBdBuffer AieMlMemTileBufferProp =
 	.TileDmaBuff.BaseAddr.Idx = 1U,
 	.TileDmaBuff.BaseAddr.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_BD0_1_BASE_ADDRESS_LSB,
 	.TileDmaBuff.BaseAddr.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_BD0_1_BASE_ADDRESS_MASK,
-	.TileDmaBuff.BufferLen.Idx = 0U,
-	.TileDmaBuff.BufferLen.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
-	.TileDmaBuff.BufferLen.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
 };
 
 static const XAie_DmaBdDoubleBuffer AieMlMemTileDoubleBufferProp =
@@ -284,6 +281,9 @@ static const  XAie_DmaBdProp AieMlMemTileDmaProp =
 	.IterStepSizeMax = (1U << 17) - 1U,
 	.IterWrapMax = (1U << 6U) - 1U,
 	.IterCurrMax = (1U << 6) - 1U,
+	.BufferLen.Idx = 0U,
+	.BufferLen.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
+	.BufferLen.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
 	.Buffer = &AieMlMemTileBufferProp,
 	.DoubleBuffer = &AieMlMemTileDoubleBufferProp,
 	.Lock = &AieMlMemTileDmaLockProp,
@@ -446,9 +446,6 @@ static const  XAie_DmaBdBuffer AieMlTileDmaBufferProp =
 	.TileDmaBuff.BaseAddr.Idx = 0U,
 	.TileDmaBuff.BaseAddr.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_BD0_0_BASE_ADDRESS_LSB,
 	.TileDmaBuff.BaseAddr.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_BD0_0_BASE_ADDRESS_MASK,
-	.TileDmaBuff.BufferLen.Idx = 0U,
-	.TileDmaBuff.BufferLen.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
-	.TileDmaBuff.BufferLen.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
 };
 
 static const XAie_DmaBdDoubleBuffer AieMlTileDmaDoubleBufferProp =
@@ -511,6 +508,9 @@ static const  XAie_DmaBdProp AieMlTileDmaProp =
 	.IterStepSizeMax = (1U << 13) - 1U,
 	.IterWrapMax = (1U << 6U) - 1U,
 	.IterCurrMax = (1U << 6) - 1U,
+	.BufferLen.Idx = 0U,
+	.BufferLen.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
+	.BufferLen.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
 	.Buffer = &AieMlTileDmaBufferProp,
 	.DoubleBuffer = &AieMlTileDmaDoubleBufferProp,
 	.Lock = &AieMlTileDmaLockProp,
@@ -679,9 +679,6 @@ static const  XAie_DmaBdBuffer AieMlShimDmaBufferProp =
 	.ShimDmaBuff.AddrHigh.Idx = 2U,
 	.ShimDmaBuff.AddrHigh.Lsb = XAIEMLGBL_NOC_MODULE_DMA_BD0_2_BASE_ADDRESS_HIGH_LSB,
 	.ShimDmaBuff.AddrHigh.Mask = XAIEMLGBL_NOC_MODULE_DMA_BD0_2_BASE_ADDRESS_HIGH_MASK,
-	.ShimDmaBuff.BufferLen.Idx = 0U,
-	.ShimDmaBuff.BufferLen.Lsb = XAIEMLGBL_NOC_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
-	.ShimDmaBuff.BufferLen.Mask = XAIEMLGBL_NOC_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
 };
 
 static const  XAie_DmaBdDoubleBuffer AieMlShimDmaDoubleBufferProp =
@@ -756,6 +753,9 @@ static const  XAie_DmaBdProp AieMlShimDmaProp =
 	.IterStepSizeMax = (1U << 20) - 1U,
 	.IterWrapMax = (1U << 6U) - 1U,
 	.IterCurrMax = (1U << 6) - 1U,
+	.BufferLen.Idx = 0U,
+	.BufferLen.Lsb = XAIEMLGBL_NOC_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
+	.BufferLen.Mask = XAIEMLGBL_NOC_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
 	.Buffer = &AieMlShimDmaBufferProp,
 	.DoubleBuffer = &AieMlShimDmaDoubleBufferProp,
 	.Lock = &AieMlShimDmaLockProp,
