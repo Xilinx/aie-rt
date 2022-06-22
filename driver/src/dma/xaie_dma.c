@@ -1946,6 +1946,77 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 /*****************************************************************************/
 /**
 *
+* This API reads the length of the buffer descriptor in the dma module.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	Len: Stores the Length of all the BDs in bytes.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Returns 0 if the Buffer Descriptor Valid bit is 0.
+*
+******************************************************************************/
+AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
+		u8 BdNum)
+{
+	u8 TileType;
+	u64 RegAddr;
+	u32 RegVal, Valid;
+	AieRC RC;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) || (Len == NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		return XAIE_INVALID_BD_NUM;
+	}
+
+	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->BdProp->BdEn->ValidBd.Idx * 4U;
+	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	Valid = XAie_GetField(RegVal, DmaMod->BdProp->BdEn->ValidBd.Lsb,
+			DmaMod->BdProp->BdEn->ValidBd.Mask);
+	if(Valid == 1U) {
+		RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset
+			+ _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			DmaMod->BdProp->BufferLen.Idx * 4U;
+		RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
+
+		*Len = (XAie_GetField(RegVal, DmaMod->BdProp->BufferLen.Lsb,
+			DmaMod->BdProp->BufferLen.Mask) +
+			DmaMod->BdProp->LenActualOffset)
+			<< XAIE_DMA_32BIT_TXFER_LEN;
+	}
+	else {
+		*Len = 0;
+	}
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API updates the length of the buffer descriptor in the dma module.
 *
 * @param	DevInst: Device Instance.
