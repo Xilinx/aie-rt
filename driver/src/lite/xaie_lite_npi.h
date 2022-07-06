@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -48,6 +48,7 @@
 
 /***************************** Include Files *********************************/
 #include "xaie_lite_io.h"
+#include "xaiegbl_defs.h"
 
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/

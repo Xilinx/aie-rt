@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -24,43 +24,14 @@
 #define XAIE_LITE_IO_H
 
 /***************************** Include Files *********************************/
-#include "xaie_lite.h"
+#include "xaie_lite_hwcfg.h"
+#include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 
 /************************** Constant Definitions *****************************/
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
-
 #ifdef XAIE_FEATURE_LITE
-
-#ifdef XAIE_ENABLE_INPUT_CHECK
-#ifdef _ENABLE_IPU_LX6_
-#define _XAIEPRINT kprintf_
-extern int kprintf_(const char* format, ...);
-#else
-#define _XAIEPRINT printf
-#endif
-#define XAIE_ERROR_RETURN(ERRCON, RET, ...) {	\
-	if (ERRCON) {				\
-		_XAIEPRINT(__VA_ARGS__);	\
-		return (RET);			\
-	}					\
-}
-#else
-#define XAIE_ERROR_RETURN(...)
-#endif
-
-__FORCE_INLINE__
-static inline XAie_LocType XAie_LPartGetNextNocTile(XAie_DevInst *DevInst,
-		XAie_LocType Loc)
-{
-	XAie_LocType lLoc = XAie_TileLoc((Loc.Col + DevInst->StartCol),
-			Loc.Row);
-
-	UPDT_NEXT_NOC_TILE_LOC(lLoc);
-	return lLoc;
-}
-
 __FORCE_INLINE__
 static inline u64 _XAie_LGetTileAddr(u32 Row, u32 Col)
 {

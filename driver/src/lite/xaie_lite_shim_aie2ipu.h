@@ -1,91 +1,37 @@
 /******************************************************************************
-* Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
 
 /*****************************************************************************/
 /**
-* @file xaie_lite_aie2ipu.h
+* @file xaie_lite_shim_aie2ipu.h
 * @{
 *
-* This header file defines a lightweight version of AIE driver APIs for AIE2 IPU
-* device generation.
-
+* This header file defines a lite shim interface for AIE2IPU type devices.
+*
 * <pre>
 * MODIFICATION HISTORY:
 *
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
-* 1.0  Nishad  08/30/2021  Initial creation
+* 1.0   Nishad   06/23/2022  Initial creation
 * </pre>
 *
 ******************************************************************************/
-#ifndef XAIE_LITE_AIE2IPU_H
-#define XAIE_LITE_AIE2IPU_H
+#ifndef XAIE_LITE_SHIM_AIE2IPU_H
+#define XAIE_LITE_SHIM_AIE2IPU_H
 
 /***************************** Include Files *********************************/
-#ifdef __AIEIPU__
-#include <platform-hw-config.h>
-#endif
+#include "xaie_lite_hwcfg.h"
+#include "xaiegbl_defs.h"
+#include "xaiegbl.h"
 
 /************************** Constant Definitions *****************************/
-#ifndef XAIE_BASE_ADDR
-#define XAIE_BASE_ADDR			IPU_AIE_BASEADDR
-#endif
-
-#ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
-#endif
-
-#ifndef XAIE_NUM_ROWS
-#define XAIE_NUM_ROWS			6
-#endif
-
-#ifndef XAIE_NUM_COLS
-#define XAIE_NUM_COLS			5
-#endif
-
-#define XAIE_COL_SHIFT			25
-#define XAIE_ROW_SHIFT			20
-#define XAIE_SHIM_ROW			0
-#define XAIE_MEM_TILE_ROW_START		1
-#define XAIE_MEM_TILE_NUM_ROWS		1
-#define XAIE_AIE_TILE_ROW_START		2
-#define XAIE_AIE_TILE_NUM_ROWS		4
-
 #define UPDT_NEXT_NOC_TILE_LOC(Loc)	((Loc).Col == 0 ? (Loc).Col = 1 : (Loc).Col++)
 
-#define XAIE_ERROR_L2_DISABLE		0x3FU
-
-#include "xaie_lite_regdef_aieml.h"
-#include "xaie_lite_regops_aieml.h"
-
-/************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
-/*****************************************************************************/
-/**
-*
-* This API checks if an AI engine tile is in use.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Tile location.
-*
-* @return	XAIE_ENABLE if a tile is in use, otherwise XAIE_DISABLE.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
-			XAie_LocType Loc)
-{
-	(void) DevInst;
-	(void) Loc.Col;
-	(void) Loc.Row;
-
-	return XAIE_ENABLE;
-}
-
 /*****************************************************************************/
 /**
 *

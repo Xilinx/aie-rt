@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -9,15 +9,15 @@
 * @file xaie_lite_aie.h
 * @{
 *
-* This header file defines a lightweight version of AIE driver APIs for AIE
-* device generation.
+* This header file defines a lightweight version of AIE specific register
+* operations.
 *
 * <pre>
 * MODIFICATION HISTORY:
 *
 * Ver   Who     Date     Changes
 * ----- ------  -------- -----------------------------------------------------
-* 1.0  Nishad  08/30/2021  Initial creation
+* 1.0   Wendy   09/06/2021  Initial creation
 * </pre>
 *
 ******************************************************************************/
@@ -25,41 +25,15 @@
 #define XAIE_LITE_AIE_H
 
 /***************************** Include Files *********************************/
-/************************** Constant Definitions *****************************/
-#ifndef XAIE_BASE_ADDR
-#define XAIE_BASE_ADDR			0x20000000000
-#endif
-
-#ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		0xF70A0000
-#endif
-
-#ifndef XAIE_NUM_ROWS
-#define XAIE_NUM_ROWS			9
-#endif
-
-#ifndef XAIE_NUM_COLS
-#define XAIE_NUM_COLS			50
-#endif
-
-#define XAIE_COL_SHIFT			23
-#define XAIE_ROW_SHIFT			18
-#define XAIE_SHIM_ROW			0
-#define XAIE_MEM_TILE_ROW_START		0
-#define XAIE_MEM_TILE_NUM_ROWS		0
-#define XAIE_AIE_TILE_ROW_START		1
-#define XAIE_AIE_TILE_NUM_ROWS		8
-
-#define UPDT_NEXT_NOC_TILE_LOC(Loc)	\
-	({if ((Loc).Col <= 1) \
-		(Loc).Col = 2; \
-	else \
-		(Loc).Col += ((Loc).Col % 2) * 2 + 1;})
-
+#include "xaie_lite_hwcfg.h"
+#include "xaie_lite_io.h"
+#include "xaie_lite_npi.h"
 #include "xaie_lite_regdef_aie.h"
-#include "xaie_lite_regops_aie.h"
+#include "xaiegbl_defs.h"
+#include "xaiegbl.h"
 
-/************************** Variable Definitions *****************************/
+/************************** Constant Definitions *****************************/
+/********************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 /*****************************************************************************/
 /**
@@ -88,61 +62,208 @@ static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
-* This is API returns the shim tile type for a given device instance and tile
-* location.
+* This API set SHIM reset in the AI engine partition
 *
 * @param	DevInst: Device Instance
-* @param	Loc: Location of the AIE tile.
+* @param	Loc: SHIM tile location
+* @param	Reset: XAIE_ENABLE to enable reset,
+*			XAIE_DISABLE to disable reset
 *
-* @return	TileType SHIMPL/SHIMNOC on success.
+* @return	XAIE_OK for success, and error value for failure
 *
-* @note		Internal only.
+* @note		This function is internal.
 *
 ******************************************************************************/
-static inline u8 _XAie_LGetShimTTypefromLoc(XAie_DevInst *DevInst,
-			XAie_LocType Loc)
+static inline void _XAie_LSetPartColShimReset(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 Reset)
 {
-	u8 ColType = (DevInst->StartCol + Loc.Col) % 4U;
+	u64 RegAddr;
+	u32 FldVal;
 
-	if((ColType == 0U) || (ColType == 1U))
-		return XAIEGBL_TILE_TYPE_SHIMPL;
-
-	return XAIEGBL_TILE_TYPE_SHIMNOC;
+	RegAddr = _XAie_LGetTileAddr(0, Loc.Row) +
+		XAIE_PL_MOD_SHIM_RST_ENA_REGOFF;
+	FldVal = XAie_SetField(Reset, XAIE_PL_MOD_SHIM_RST_ENA_LSB,
+			XAIE_PL_MOD_SHIM_RST_ENA_MASK);
+	_XAie_LPartWrite32(DevInst, RegAddr, FldVal);
 }
 
 /*****************************************************************************/
 /**
 *
-* This API maps L2 status bit to its L1 switch.
+* This API sets isolation boundry of an AI engine partition after reset
 *
-* @param	DevInst: Device Instance.
-* @param	Index: Set bit position in L2 status.
-* @param	L2Col: Location of L2 column.
-* @param	L1Col: Mapped value of L1 column.
-* @param	Switch: Broadcast switch.
+* @param	DevInst: Device Instance
 *
-* @return	None.
-*
-* @note		Internal only.
+* @note		Internal API only.
 *
 ******************************************************************************/
-static inline void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
-			u8 L2Col, u8 *L1Col, XAie_BroadcastSw *Switch)
+static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst)
 {
-	if (L2Col + 3 >=  DevInst->NumCols) {
-	        *L1Col = L2Col + (Index % 6) / 2;
-	        *Switch = (Index % 6) % 2;
-	} else if ((L2Col) % 2 == 0) {
-	        /* Set bit position could be 0 - 5 */
-	        *L1Col = L2Col - (2 - (Index % 6) / 2);
-	        *Switch = (Index % 6) % 2;
-	} else {
-	        /* Set bit position could be 0 - 1 */
-	        *L1Col = L2Col;
-	        *Switch= Index;
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
+		u64 RegAddr;
+		u32 RegVal = 0;
+
+		if(C == 0) {
+			RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
+		} else if(C == (u8)(DevInst->NumCols - 1)) {
+			RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
+		} else {
+			/* No isolation for tiles by default for AIE */
+			continue;
+		}
+
+		/* Isolate boundrary of SHIM tiles */
+		RegAddr = _XAie_LGetTileAddr(0, C) +
+			XAIE_PL_MOD_TILE_CNTR_REGOFF;
+		_XAie_LPartWrite32(DevInst, RegAddr, RegVal);
+
+		/* Isolate boundrary of CORE tiles */
+		for (u8 R = XAIE_AIE_TILE_ROW_START; R < XAIE_NUM_ROWS; R++) {
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_CORE_MOD_TILE_CNTR_REGOFF;
+			_XAie_LPartWrite32(DevInst, RegAddr, RegVal);
+		}
 	}
 }
 
-#endif		/* end of protection macro */
+/*****************************************************************************/
+/**
+*
+* This API initialize the memories of the partition to zero.
+*
+* @param	DevInst: Device Instance
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
+{
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
+		/* Isolate boundrary of CORE tiles */
+		for (u8 R = XAIE_AIE_TILE_ROW_START;
+			R < XAIE_NUM_ROWS; R++) {
+			u64 RegAddr;
 
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_CORE_MOD_PMEM_START_ADDR;
+			_XAie_LPartBlockSet32(DevInst, RegAddr, 0,
+				XAIE_CORE_MOD_PMEM_SIZE);
+
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_MEM_MOD_DMEM_START_ADDR;
+			_XAie_LPartBlockSet32(DevInst, RegAddr, 0,
+				XAIE_MEM_MOD_DMEM_SIZE);
+		}
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API checks if all the Tile DMA channels in a partition are idle.
+*
+* @param	DevInst: Device Instance
+*
+* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
+{
+	for(u8 C = DevInst->StartCol; C < DevInst->StartCol + DevInst->NumCols;
+			C++) {
+		u64 RegAddr;
+		u32 RegVal;
+
+		/* AIE TILE DMAs */
+		for(u8 R = XAIE_AIE_TILE_ROW_START; R < XAIE_NUM_ROWS; R++) {
+			/* S2MM Channel */
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+			RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+			if(RegVal & (XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_0_MASK |
+						XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_1_MASK))
+				return XAIE_ERR;
+
+			/* MM2S Channel */
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+			RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+			if(RegVal & (XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_0_MASK |
+						XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_1_MASK))
+				return XAIE_ERR;
+
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API checks if all the DMA channels in a SHIM NOC tile are idle.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: ShimDma location
+*
+* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+*
+* @note		Internal API only. Checks for AIE Tile DMAs and Mem Tile DMAs
+*
+******************************************************************************/
+static inline AieRC _XAie_LIsShimDmaIdle(XAie_DevInst *DevInst,
+		XAie_LocType Loc)
+{
+	u64 RegAddr;
+	u32 RegVal;
+
+	/* S2MM Channel */
+	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) +
+		XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
+	RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+	if(RegVal & (XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_0_MASK |
+				XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_1_MASK))
+		return XAIE_ERR;
+
+	/* MM2S Channel */
+	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) +
+		XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
+	RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+	if(RegVal & (XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_0_MASK |
+				XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_1_MASK))
+		return XAIE_ERR;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is function to setup the protected register configuration value.
+*
+* @param	DevInst : AI engine partition device pointer
+* @param	Enable: Enable partition
+*
+* @note		None
+*
+*******************************************************************************/
+static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
+		u8 Enable)
+{
+	u32 RegVal;
+
+	(void)DevInst;
+	RegVal = XAie_SetField(Enable, XAIE_NPI_PROT_REG_CNTR_EN_LSB,
+			       XAIE_NPI_PROT_REG_CNTR_EN_MSK);
+
+	_XAie_LNpiSetLock(XAIE_DISABLE);
+	_XAie_LNpiWriteCheck32(XAIE_NPI_PROT_REG_CNTR_REG, RegVal);
+	_XAie_LNpiSetLock(XAIE_ENABLE);
+}
+
+#endif		/* end of protection macro */
 /** @} */
