@@ -48,16 +48,16 @@
 #include <xaie_custom_device.h>
 #endif
 
+#define XAIE_ERROR_MSG(...)						\
+	"[AIE ERROR] %s():%d: %s", __func__, __LINE__, __VA_ARGS__
+
 #ifdef XAIE_ENABLE_INPUT_CHECK
 #ifdef _ENABLE_IPU_LX6_
-#define _XAIEPRINT kprintf_
-extern int kprintf_(const char* format, ...);
-#else
-#define _XAIEPRINT printf
+#include <printf.h>
 #endif
 #define XAIE_ERROR_RETURN(ERRCON, RET, ...) {	\
 	if (ERRCON) {				\
-		_XAIEPRINT(__VA_ARGS__);	\
+		printf(__VA_ARGS__);		\
 		return (RET);			\
 	}					\
 }
@@ -87,7 +87,7 @@ AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
 static inline u8 _XAie_LGetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
 	XAIE_ERROR_RETURN((Loc.Col >= XAIE_NUM_COLS), XAIEGBL_TILE_TYPE_MAX,
-				"Invalid column: %d\n", Loc.Col);
+			XAIE_ERROR_MSG("Invalid column: %d\n", Loc.Col));
 
 	if(Loc.Row == 0U) {
 		return _XAie_LGetShimTTypefromLoc(DevInst, Loc);
@@ -101,7 +101,8 @@ static inline u8 _XAie_LGetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAIE_ERROR_RETURN(1U, XAIEGBL_TILE_TYPE_MAX, "Cannot find Tile Type\n");
+	XAIE_ERROR_RETURN(1U, XAIEGBL_TILE_TYPE_MAX,
+			XAIE_ERROR_MSG("Cannot find Tile Type\n"));
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
