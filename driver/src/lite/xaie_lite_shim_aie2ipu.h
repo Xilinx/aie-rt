@@ -29,7 +29,20 @@
 #include "xaiegbl.h"
 
 /************************** Constant Definitions *****************************/
-#define UPDT_NEXT_NOC_TILE_LOC(Loc)	((Loc).Col == 0 ? (Loc).Col = 1 : (Loc).Col++)
+#define UPDT_NEXT_NOC_TILE_LOC(Loc)	\
+({					\
+	if ((Loc).Col == 0)		\
+		(Loc).Col = 1;		\
+	else				\
+		(Loc).Col++;		\
+})
+
+#define IS_TILE_NOC_TILE(Loc)		\
+({					\
+	(Loc).Col ? 1: 0;		\
+})
+
+#define XAIE_MAX_NUM_NOC_INTR		4U
 
 /************************** Function Prototypes  *****************************/
 /*****************************************************************************/
@@ -82,6 +95,55 @@ static inline void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
 	} else {
 	        *L1Col = L2Col;
 	        *Switch= Index;
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This is API returns the range of columns programmed to generate interrupt on
+* the given IRQ channel.
+*
+* @param	IrqId: L2 IRQ ID.
+*
+* @return	Range of columns.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline XAie_Range _XAie_MapIrqIdToCols(u8 IrqId)
+{
+	XAie_Range _MapIrqIdToCols[] = {
+		{.Start = 0, .Num = 2},
+		{.Start = 2, .Num = 1},
+		{.Start = 3, .Num = 1},
+		{.Start = 4, .Num = 1},
+	};
+
+	return _MapIrqIdToCols[IrqId];
+}
+
+/*****************************************************************************/
+/**
+*
+* This is API returns the L2 IRQ ID for a given column.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+*
+* @return	L2 IRQ ID.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u8 _XAie_MapColToIrqId(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	u8 AbsCol = DevInst->StartCol + Loc.Col;
+
+	if (AbsCol < 2) {
+		return 0;
+	} else {
+		return AbsCol - 1;
 	}
 }
 

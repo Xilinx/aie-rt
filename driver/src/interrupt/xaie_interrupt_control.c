@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -98,17 +98,27 @@ static inline void _XAie_LIntrCtrlL2Disable(XAie_LocType Loc, u32 ChannelBitMap)
 *
 * This API disables all second-level interrupt controllers reporting errors.
 *
+* @param	IrqId: Zero indexed IRQ ID. Valid values corresponds to the
+*		       number of AIE IRQs mapped to the processor.
+*
 * @return	None.
 *
 * @note		None.
 *
 ******************************************************************************/
-void XAie_DisableErrorInterrupts()
+void XAie_DisableErrorInterrupts(u8 IrqId)
 {
-	XAie_LocType Loc = XAie_TileLoc(0, XAIE_SHIM_ROW);
+	XAie_Range Cols;
 
-	for (UPDT_NEXT_NOC_TILE_LOC(Loc); Loc.Col < XAIE_NUM_COLS;
-			UPDT_NEXT_NOC_TILE_LOC(Loc)) {
+	XAie_MapIrqIdToCols(IrqId, &Cols);
+
+	XAie_LocType Loc = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
+
+	if (!IS_TILE_NOC_TILE(Loc)) {
+		UPDT_NEXT_NOC_TILE_LOC(Loc);
+	}
+
+	while (Loc.Col < Cols.Start + Cols.Num) {
 		u32 Status;
 
 		Status = _XAie_LIntrCtrlL2Status(Loc);
@@ -118,6 +128,8 @@ void XAie_DisableErrorInterrupts()
 			_XAie_LIntrCtrlL2Disable(Loc, Status);
 			_XAie_LIntrCtrlL2Ack(Loc, Status);
 		}
+
+		UPDT_NEXT_NOC_TILE_LOC(Loc);
 	}
 }
 

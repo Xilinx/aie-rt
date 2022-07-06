@@ -193,6 +193,14 @@ typedef struct {
 } XAie_LocType;
 
 /*
+ * This typedef captures the start and total count of an attribute.
+ */
+typedef struct {
+	u8 Start;
+	u8 Num;
+} XAie_Range;
+
+/*
  * This typedef contains the attributes for an AIE partition initialization
  * options. The structure is used by the AI engine partition initialization
  * API.
@@ -482,6 +490,7 @@ typedef struct {
  * ArraySize: Array size of payload buffer. Value corresponds to total number of
  *	      XAie_ErrorPayload structs.
  * ErrorCount: total number of valid payloads returned.
+ * IrqId: IRQ index ID.
  */
 typedef struct {
 	u8 IsNextInfoValid;
@@ -490,6 +499,7 @@ typedef struct {
 	XAie_ErrorPayload *Payload;
 	u32 ArraySize;
 	u32 ErrorCount;
+	u8 IrqId;
 } XAie_ErrorMetaData;
 
 /**************************** Function prototypes ***************************/
@@ -518,6 +528,7 @@ XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
 AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
+AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
 /*****************************************************************************/
 /*
 *
@@ -680,23 +691,26 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 * Macro to initialize error metadata.
 *
 * @param	MDataInst: Name of the XAie_ErrorMetaData structure.
-* @param	Buffer: Pointer to a buffer for returning backtracked error
+* @param	_Buffer: Pointer to a buffer for returning backtracked error
 *			information.
-* @param	Size: Size of buffer in bytes.
+* @param	_Size: Size of buffer in bytes.
+* @param	_IrqId: Zero indexed IRQ ID. Valid values corresponds to the
+*		       number of AIE IRQs mapped to the processor.
 *
 * @return	None.
 *
 * @note		None.
 *
 *******************************************************************************/
-#define XAie_ErrorMetadataInit(Mdata, Buffer, Size)			\
+#define XAie_ErrorMetadataInit(Mdata, _Buffer, _Size, _IrqId)		\
 	XAie_ErrorMetaData Mdata = {					\
 		.IsNextInfoValid = 0,					\
 		.NextTile = {0, 0},					\
 		.NextModule = 0,					\
-		.Payload = (XAie_ErrorPayload *) (Buffer),		\
-		.ArraySize = (Size) / sizeof(XAie_ErrorPayload),	\
+		.Payload = (XAie_ErrorPayload *) (_Buffer),		\
+		.ArraySize = (_Size) / sizeof(XAie_ErrorPayload),	\
 		.ErrorCount = 0U,					\
+		.IrqId = (_IrqId),					\
 	}
 
 /*****************************************************************************/

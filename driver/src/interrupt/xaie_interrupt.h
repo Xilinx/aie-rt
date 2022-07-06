@@ -56,7 +56,7 @@ AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
 AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
-void XAie_DisableErrorInterrupts();
+void XAie_DisableErrorInterrupts(u8 IrqId);
 
 AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData);
