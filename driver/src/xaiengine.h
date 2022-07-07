@@ -14,6 +14,7 @@ extern "C" {
 #include <xaiengine/xaie_elfloader.h>
 #include <xaiengine/xaie_events.h>
 #include <xaiengine/xaie_interrupt.h>
+#include <xaiengine/xaie_lite.h>
 #include <xaiengine/xaie_locks.h>
 #include <xaiengine/xaie_mem.h>
 #include <xaiengine/xaie_perfcnt.h>
@@ -23,7 +24,6 @@ extern "C" {
 #include <xaiengine/xaie_ss.h>
 #include <xaiengine/xaie_timer.h>
 #include <xaiengine/xaie_trace.h>
-#include <xaiengine/xaie_lite.h>
 #include <xaiengine/xaie_util_events.h>
 #include <xaiengine/xaiegbl.h>
 #include <xaiengine/xaiegbl_defs.h>
