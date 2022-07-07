@@ -313,7 +313,8 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 		XAIE_INVALID_ARGS,
-		"Partition initialization failed, invalid partition instance\n");
+		XAIE_ERROR_MSG("Partition initialization failed, invalid partition instance\n"));
+
 	if(Opts != NULL) {
 		OptFlags = Opts->InitOpts;
 	} else {
@@ -381,7 +382,7 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 		XAIE_INVALID_ARGS,
-		"Partition teardown failed, invalid partition instance\n");
+		XAIE_ERROR_MSG("Partition teardown failed, invalid partition instance\n"));
 
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
 

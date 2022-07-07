@@ -624,11 +624,11 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 {
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 			XAIE_INVALID_ARGS,
-			"Error interrupt backtracking failed, invalid partition instance\n");
+			XAIE_ERROR_MSG("Error interrupt backtracking failed, invalid partition instance\n"));
 
 	XAIE_ERROR_RETURN(MData->Payload == NULL || MData->ArraySize == 0U,
 			XAIE_INVALID_ARGS,
-			"Invalid error payload buffer or size\n");
+			XAIE_ERROR_MSG("Invalid error payload buffer or size\n"));
 
 	XAIE_ERROR_RETURN(MData->IrqId >= XAIE_MAX_NUM_NOC_INTR,
 			XAIE_INVALID_ARGS, "Invalid AIE IRQ ID\n");

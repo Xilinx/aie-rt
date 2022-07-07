@@ -49,7 +49,7 @@
 AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range)
 {
 	XAIE_ERROR_RETURN(IrqId >= XAIE_MAX_NUM_NOC_INTR, XAIE_INVALID_ARGS,
-			"Invalid AIE IRQ ID\n");
+			XAIE_ERROR_MSG("Invalid AIE IRQ ID\n"));
 
 	XAie_Range Temp = _XAie_MapIrqIdToCols(IrqId);
 	Range->Start = Temp.Start;
