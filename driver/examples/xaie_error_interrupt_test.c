@@ -56,13 +56,16 @@
 #define XAIE_AIE_TILE_NUM_ROWS		8
 
 #define INTC_DEVICE_ID			XPAR_SCUGIC_0_DEVICE_ID
-#define AIE_IRQ_VECT_ID			180U
+#define AIE_IRQ_VECT_ID_0		180U
+#define AIE_IRQ_VECT_ID_1		181U
+#define AIE_IRQ_VECT_ID_2		182U
 
 #define MOD_ID_TO_STR(Id)		AIEModule[(Id)]
 
 #define XAie_Print(Format, Args...)					\
 	do {								\
-		printf("%s: %s(): "Format, "[INFO]", __func__, ##Args);	\
+		printf("%s: %s():%d: "Format, "[INFO]", __func__,	\
+				__LINE__,##Args);			\
 	} while(0)
 
 const char *AIEModule[] = {
@@ -127,6 +130,12 @@ u32 ErrorsBacktracked;
 
 /* Buffer size to backtrack 10 errors in one shot */
 ssize_t Size = 10 * sizeof(XAie_ErrorPayload);
+
+typedef struct {
+	XAie_DevInst *DevInst;
+	u8 ProcIrqId;
+	u8 IrqId;
+} XAie_AppPayload;
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -276,16 +285,18 @@ AieRC XAie_MockCoreErrors(XAie_DevInst *DevInst)
 void XAie_ErrorIsr(void *Data)
 {
 	AieRC RC;
-	XAie_DevInst *DevInst = (XAie_DevInst *) Data;
+	XAie_AppPayload *Payload = (XAie_AppPayload *) Data;
+	XAie_DevInst *DevInst = Payload->DevInst;
+	u8 IrqId = Payload->IrqId;
 
 	/* Initialize error metadata */
-	XAie_ErrorMetadataInit(MData, Buffer, Size);
+	XAie_ErrorMetadataInit(MData, Buffer, Size, IrqId);
 
-	XScuGic_Disable(&xInterruptController, AIE_IRQ_VECT_ID);
+	XScuGic_Disable(&xInterruptController, IrqId);
 
-	XAie_DisableErrorInterrupts();
+	XAie_DisableErrorInterrupts(IrqId);
 
-	XScuGic_Enable(&xInterruptController, AIE_IRQ_VECT_ID);
+	XScuGic_Enable(&xInterruptController, IrqId);
 
 	/*
 	 * Loop until all errors are successfully backtracked. This could also
@@ -294,8 +305,8 @@ void XAie_ErrorIsr(void *Data)
 	do {
 		RC = XAie_BacktrackErrorInterrupts(DevInst, &MData);
 		for (u32 Count = 0; Count < MData.ErrorCount; Count++) {
-			XAie_Print("%d: Error event %3d asserted in %s module at tile location (%d,%d)\n",
-				   Count, Buffer[Count].EventId,
+			XAie_Print("%d: [IRQ %d] Error event %3d asserted in %s module at tile location (%2d,%2d)\n",
+				   Count, IrqId, Buffer[Count].EventId,
 				   MOD_ID_TO_STR(Buffer[Count].Module),
 				   Buffer[Count].Loc.Col,
 				   Buffer[Count].Loc.Row);
@@ -310,7 +321,7 @@ void XAie_ErrorIsr(void *Data)
 		 * Insufficient error payload buffer. Consider increasing size
 		 * of error payload buffer to reduce backtracking latency.
 		 */
-		XAie_Print("Backtracking discontinued in %s module at tile location (%d,%d)\n",
+		XAie_Print("Backtracking discontinued in %s module at tile location (%2d,%2d)\n",
 			   MOD_ID_TO_STR(MData.NextModule), MData.NextTile.Col,
 			   MData.NextTile.Row);
 	} while (RC != XAIE_OK);
@@ -329,7 +340,7 @@ void XAie_ErrorIsr(void *Data)
 * @note		None.
 *
 *****************************************************************************/
-u32 XAie_IrqInit(XAie_DevInst *DevInst)
+u32 XAie_IrqInit(XAie_AppPayload *Payload)
 {
 	int Ret = 0;
 
@@ -353,16 +364,16 @@ u32 XAie_IrqInit(XAie_DevInst *DevInst)
 	 * logic in the ARM processor.
 	 */
 	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_IRQ_INT,
-				     (Xil_ExceptionHandler)XScuGic_InterruptHandler,
-				     &xInterruptController);
+			(Xil_ExceptionHandler) XScuGic_InterruptHandler,
+			&xInterruptController);
 
 	Xil_ExceptionEnable();
 
 	/* Connect Interrupt */
-	XScuGic_Connect(&xInterruptController, AIE_IRQ_VECT_ID,
-			(Xil_InterruptHandler)XAie_ErrorIsr, (void *)DevInst);
+	XScuGic_Connect(&xInterruptController, Payload->ProcIrqId,
+			(Xil_InterruptHandler) XAie_ErrorIsr, (void *) Payload);
 
-	XScuGic_Enable(&xInterruptController, AIE_IRQ_VECT_ID);
+	XScuGic_Enable(&xInterruptController, Payload->ProcIrqId);
 
 	return Ret;
 }
@@ -383,9 +394,34 @@ int main()
 {
 	AieRC RC;
 
+	XAie_AppPayload Payload[] = {
+		{
+			.DevInst = &DevInst,
+			.ProcIrqId = AIE_IRQ_VECT_ID_0,
+			.IrqId = 0,
+		},
+		{
+			.DevInst = &DevInst,
+			.ProcIrqId = AIE_IRQ_VECT_ID_1,
+			.IrqId = 1,
+		},
+		{
+			.DevInst = &DevInst,
+			.ProcIrqId = AIE_IRQ_VECT_ID_2,
+			.IrqId = 2,
+		},
+	};
+
 	init_platform();
 
 	XAie_Print("AIE error interrupt test\n");
+
+	/* Allocate buffer to query the location of an error interrupt in AIE */
+	Buffer = (XAie_ErrorPayload *) malloc(Size);
+	if (Buffer == NULL) {
+		XAie_Print("Memory allocation failed.\n");
+		return -1;
+	}
 
 	XAie_SetupConfig(ConfigPtr, HW_GEN, XAIE_BASE_ADDR,
 			 XAIE_COL_SHIFT, XAIE_ROW_SHIFT,
@@ -395,13 +431,21 @@ int main()
 
 	XAie_InstDeclare(DevInst, &ConfigPtr);
 
+	RC = XAie_SetupPartitionConfig(&DevInst, XAIE_BASE_ADDR, 0, 50);
+	if(RC != XAIE_OK) {
+		XAie_Print("Failed configure partition.\n");
+		return -1;
+	}
+
 	RC = XAie_CfgInitialize(&DevInst, &ConfigPtr);
 	if(RC != XAIE_OK) {
 		XAie_Print("Driver initialization failed.\n");
 		return -1;
 	}
 
-	XAie_IrqInit(&DevInst);
+	XAie_IrqInit(&Payload[0]);
+	XAie_IrqInit(&Payload[1]);
+	XAie_IrqInit(&Payload[2]);
 
 	RC = XAie_PartitionInitialize(&DevInst, NULL);
 	if(RC != XAIE_OK) {
@@ -415,13 +459,6 @@ int main()
 		return -1;
 	}
 
-	/* Allocate buffer to query the location of an error interrupt in AIE */
-	Buffer = (XAie_ErrorPayload *) malloc(Size);
-	if (Buffer == NULL) {
-		XAie_Print("Memory allocation failed.\n");
-		return -1;
-	}
-
 	XAie_MockCoreErrors(&DevInst);
 	XAie_MockMemErrors(&DevInst);
 
@@ -429,15 +466,19 @@ int main()
 	 * Mock errors more than it can fit in the allocated buffer in a single
 	 * backtrack routine.
 	 */
-	XScuGic_Disable(&xInterruptController, AIE_IRQ_VECT_ID);
+	XScuGic_Disable(&xInterruptController, AIE_IRQ_VECT_ID_0);
+	XScuGic_Disable(&xInterruptController, AIE_IRQ_VECT_ID_1);
+	XScuGic_Disable(&xInterruptController, AIE_IRQ_VECT_ID_2);
 	XAie_MockShimErrors(&DevInst);
-	XScuGic_Enable(&xInterruptController, AIE_IRQ_VECT_ID);
+	XScuGic_Enable(&xInterruptController, AIE_IRQ_VECT_ID_0);
+	XScuGic_Enable(&xInterruptController, AIE_IRQ_VECT_ID_1);
+	XScuGic_Enable(&xInterruptController, AIE_IRQ_VECT_ID_2);
 
 	do {
-		XAie_Print("Total errors mocked:\t\t%d.\n", ErrorsMocked);
-		XAie_Print("Total errors backtracked:\t%d.\n",
+		XAie_Print("Total errors mocked:\t%d\n", ErrorsMocked);
+		XAie_Print("Total errors backtracked:\t%d\n",
 			   ErrorsBacktracked);
-		sleep(3);
+		sleep(1);
 	} while(ErrorsMocked != ErrorsBacktracked);
 
 	free(Buffer);
