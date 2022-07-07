@@ -88,8 +88,9 @@ typedef struct {
  */
 typedef struct {
 	u32 RegOff;			/**< Register offset */
-	XAie_RegFldAttr Done;	/**< Done value field attributes */
-	XAie_RegFldAttr Rst;	/**< Reset value field attributes */
+	u32 Mask;			/**< Core status register Mask */
+	XAie_RegFldAttr	Done;
+	XAie_RegFldAttr Rst;		/**< Reset value field attributes */
 	XAie_RegFldAttr En;		/**< Enable value field attributes */
 } XAie_RegCoreSts;
 
@@ -246,6 +247,8 @@ typedef struct XAie_CoreMod {
 			u8 *DoneBit, const struct XAie_CoreMod *CoreMod);
 	AieRC (*Enable)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			const struct XAie_CoreMod *CoreMod);
+	AieRC (*GetCoreStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
+			u32 *CoreStatus, const struct XAie_CoreMod *CoreMod);
 } XAie_CoreMod;
 
 /*

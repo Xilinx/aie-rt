@@ -557,6 +557,43 @@ AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /*
 *
+* This API reads the status from the core status register.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	CoreStatus: Pointer to store the status from the core status
+                register.
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 *CoreStatus)
+{
+	u8 TileType;
+	const XAie_CoreMod *CoreMod;
+
+	if((DevInst == XAIE_NULL) || (CoreStatus == NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
+
+	return CoreMod->GetCoreStatus(DevInst, Loc, CoreStatus, CoreMod);
+}
+
+/*****************************************************************************/
+/*
+*
 * This API configures the debug control register of aie core
 *
 * @param	DevInst: Device Instance
