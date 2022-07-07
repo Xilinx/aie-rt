@@ -23,7 +23,6 @@
 ******************************************************************************/
 
 /***************************** Include Files *********************************/
-#include "xaie_clock.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_interrupt.h"
@@ -627,20 +626,31 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 			XAIE_INVALID_ARGS,
 			"Error interrupt backtracking failed, invalid partition instance\n");
 
-	XAIE_ERROR_RETURN(MData->Payload == NULL || ArraySize == NULL,
+	XAIE_ERROR_RETURN(MData->Payload == NULL || MData->ArraySize == 0U,
 			XAIE_INVALID_ARGS,
 			"Invalid error payload buffer or size\n");
 
-	XAie_LocType L2 = XAie_TileLoc(0, XAIE_SHIM_ROW);
-	XAie_LocType L1 = XAie_TileLoc(0, XAIE_SHIM_ROW);
+	XAIE_ERROR_RETURN(MData->IrqId >= XAIE_MAX_NUM_NOC_INTR,
+			XAIE_INVALID_ARGS, "Invalid AIE IRQ ID\n");
+
+	AieRC RC;
+	XAie_Range Cols;
+
+	RC = XAie_MapIrqIdToCols(MData->IrqId, &Cols);
+	if (RC != XAIE_OK)
+		return RC;
+
+	XAie_LocType L2 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
+	XAie_LocType L1 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
 
 	/* Reset the total error count from previous backtrack. */
 	MData->ErrorCount = 0U;
 
-	for (L2 = XAie_LPartGetNextNocTile(DevInst, L2);
-	     L2.Col < DevInst->NumCols;
-	     L2 = XAie_LPartGetNextNocTile(DevInst, L2)) {
-		AieRC RC;
+	if (_XAie_LGetTTypefromLoc(DevInst, L2) != XAIEGBL_TILE_TYPE_SHIMNOC)
+		L2 = XAie_LPartGetNextNocTile(DevInst, L2);
+
+	for (; L2.Col < Cols.Start + Cols.Num;
+			L2 = XAie_LPartGetNextNocTile(DevInst, L2)) {
 		XAie_BroadcastSw Switch;
 		u32 Enable = 0, Mask, Index;
 
