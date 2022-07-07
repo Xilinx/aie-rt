@@ -1349,9 +1349,6 @@ static const XAie_DmaBdBuffer AieTileDmaBufferProp =
 	.TileDmaBuff.BaseAddr.Idx = 0U,
 	.TileDmaBuff.BaseAddr.Lsb = XAIEGBL_MEM_DMABD0ADDA_BASADDA_LSB,
 	.TileDmaBuff.BaseAddr.Mask = XAIEGBL_MEM_DMABD0ADDA_BASADDA_MASK,
-	.TileDmaBuff.BufferLen.Idx = 6U,
-	.TileDmaBuff.BufferLen.Lsb = XAIEGBL_MEM_DMABD0CTRL_LEN_LSB,
-	.TileDmaBuff.BufferLen.Mask = XAIEGBL_MEM_DMABD0CTRL_LEN_MASK,
 };
 
 static const XAie_DmaBdDoubleBuffer AieTileDmaDoubleBufferProp =
@@ -1407,6 +1404,9 @@ static const XAie_DmaBdProp AieTileDmaProp =
 	.AddrAlignShift = 0x2,
 	.AddrMax = 0x10000,
 	.LenActualOffset = 1U,
+	.BufferLen.Idx = 6U,
+	.BufferLen.Lsb = XAIEGBL_MEM_DMABD0CTRL_LEN_LSB,
+	.BufferLen.Mask = XAIEGBL_MEM_DMABD0CTRL_LEN_MASK,
 	.Buffer = &AieTileDmaBufferProp,
 	.DoubleBuffer = &AieTileDmaDoubleBufferProp,
 	.Lock = &AieTileDmaLockProp,
@@ -1577,9 +1577,6 @@ static const XAie_DmaBdBuffer AieShimDmaBufferProp =
 	.ShimDmaBuff.AddrHigh.Idx = 2U,
 	.ShimDmaBuff.AddrHigh.Lsb = XAIEGBL_NOC_DMABD0CTRL_ADDHIG_LSB,
 	.ShimDmaBuff.AddrHigh.Mask = XAIEGBL_NOC_DMABD0CTRL_ADDHIG_MASK,
-	.ShimDmaBuff.BufferLen.Idx = 1U,
-	.ShimDmaBuff.BufferLen.Lsb = XAIEGBL_NOC_DMABD0BUFLEN_BUFLEN_LSB,
-	.ShimDmaBuff.BufferLen.Mask = XAIEGBL_NOC_DMABD0BUFLEN_BUFLEN_MASK,
 };
 
 static const XAie_DmaSysProp AieShimDmaSysProp =
@@ -1607,6 +1604,9 @@ static const XAie_DmaBdProp AieShimDmaProp =
 	.AddrAlignShift = 0x0,
 	.AddrMax = 0x1000000000000,
 	.LenActualOffset = 0U,
+	.BufferLen.Idx = 1U,
+	.BufferLen.Lsb = XAIEGBL_NOC_DMABD0BUFLEN_BUFLEN_LSB,
+	.BufferLen.Mask = XAIEGBL_NOC_DMABD0BUFLEN_BUFLEN_MASK,
 	.Buffer = &AieShimDmaBufferProp,
 	.DoubleBuffer = NULL,
 	.Lock = &AieShimDmaLockProp,

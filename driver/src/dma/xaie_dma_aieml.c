@@ -293,9 +293,8 @@ AieRC _XAieMl_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_SetField(DmaDesc->BdEnDesc.OutofOrderBdId,
 				BdProp->BdEn->OutofOrderBdId.Lsb,
 				BdProp->BdEn->OutofOrderBdId.Mask) |
-		XAie_SetField(DmaDesc->AddrDesc.Length,
-				BdProp->Buffer->TileDmaBuff.BufferLen.Lsb,
-				BdProp->Buffer->TileDmaBuff.BufferLen.Mask);
+		XAie_SetField(DmaDesc->AddrDesc.Length,	BdProp->BufferLen.Lsb,
+				BdProp->BufferLen.Mask);
 
 	BdWord[1U] = XAie_SetField(DmaDesc->PadDesc[0U].Before,
 			BdProp->Pad->D0_PadBefore.Lsb,
@@ -431,9 +430,8 @@ AieRC _XAieMl_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 	BdWord[0U] = XAie_SetField(DmaDesc->AddrDesc.Address,
 				BdProp->Buffer->TileDmaBuff.BaseAddr.Lsb,
 				BdProp->Buffer->TileDmaBuff.BaseAddr.Mask) |
-		XAie_SetField(DmaDesc->AddrDesc.Length,
-				BdProp->Buffer->TileDmaBuff.BufferLen.Lsb,
-				BdProp->Buffer->TileDmaBuff.BufferLen.Mask);
+		XAie_SetField(DmaDesc->AddrDesc.Length,	BdProp->BufferLen.Lsb,
+				BdProp->BufferLen.Mask);
 
 	BdWord[1U] = XAie_SetField(DmaDesc->EnCompression,
 				BdProp->Compression->EnCompression.Lsb,
@@ -549,8 +547,8 @@ AieRC _XAieMl_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 
 	/* Setup BdWord with the right values from DmaDesc */
 	BdWord[0U] = XAie_SetField(DmaDesc->AddrDesc.Length,
-			BdProp->Buffer->ShimDmaBuff.BufferLen.Lsb,
-			BdProp->Buffer->ShimDmaBuff.BufferLen.Mask);
+			BdProp->BufferLen.Lsb,
+			BdProp->BufferLen.Mask);
 
 	BdWord[1U] = XAie_SetField(DmaDesc->AddrDesc.Address >>
 				BdProp->Buffer->ShimDmaBuff.AddrLow.Lsb,
@@ -833,12 +831,10 @@ AieRC _XAieMl_DmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 
 	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->Buffer->TileDmaBuff.BufferLen.Idx * 4U;
+		DmaMod->BdProp->BufferLen.Idx * 4U;
 
-	Mask = DmaMod->BdProp->Buffer->TileDmaBuff.BufferLen.Mask;
-	RegVal = XAie_SetField(Len,
-			DmaMod->BdProp->Buffer->TileDmaBuff.BufferLen.Lsb,
-			Mask);
+	Mask = DmaMod->BdProp->BufferLen.Mask;
+	RegVal = XAie_SetField(Len, DmaMod->BdProp->BufferLen.Lsb, Mask);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, RegVal);
 }
@@ -867,11 +863,11 @@ AieRC _XAieMl_ShimDmaUpdateBdLen(XAie_DevInst *DevInst,
 
 	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->Buffer->ShimDmaBuff.BufferLen.Idx * 4U;
+		DmaMod->BdProp->BufferLen.Idx * 4U;
 
 	RegVal = XAie_SetField(Len,
-			DmaMod->BdProp->Buffer->ShimDmaBuff.BufferLen.Lsb,
-			DmaMod->BdProp->Buffer->ShimDmaBuff.BufferLen.Mask);
+			DmaMod->BdProp->BufferLen.Lsb,
+			DmaMod->BdProp->BufferLen.Mask);
 
 	/* BD length register does not have other parameters */
 	return XAie_Write32(DevInst, RegAddr, RegVal);

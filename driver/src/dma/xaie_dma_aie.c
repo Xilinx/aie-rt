@@ -233,8 +233,7 @@ AieRC _XAie_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 			BdProp->Buffer->ShimDmaBuff.AddrLow.Mask);
 
 	BdWord[1U] = XAie_SetField(DmaDesc->AddrDesc.Length,
-			BdProp->Buffer->ShimDmaBuff.BufferLen.Lsb,
-			BdProp->Buffer->ShimDmaBuff.BufferLen.Mask);
+			BdProp->BufferLen.Lsb, BdProp->BufferLen.Mask);
 
 	BdWord[2U] = XAie_SetField((DmaDesc->AddrDesc.Address >> 32U),
 			BdProp->Buffer->ShimDmaBuff.AddrHigh.Lsb,
@@ -451,8 +450,8 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 				BdProp->BdEn->NxtBd.Lsb,
 				BdProp->BdEn->NxtBd.Mask) |
 		XAie_SetField(DmaDesc->AddrDesc.Length,
-				BdProp->Buffer->TileDmaBuff.BufferLen.Lsb,
-				BdProp->Buffer->TileDmaBuff.BufferLen.Mask);
+				BdProp->BufferLen.Lsb,
+				BdProp->BufferLen.Mask);
 
 	Addr = BdBaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -615,11 +614,11 @@ AieRC _XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 
 	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-	DmaMod->BdProp->Buffer->TileDmaBuff.BufferLen.Idx * 4U;
+	DmaMod->BdProp->BufferLen.Idx * 4U;
 
-	Mask = DmaMod->BdProp->Buffer->TileDmaBuff.BufferLen.Mask;
+	Mask = DmaMod->BdProp->BufferLen.Mask;
 	RegVal = XAie_SetField(Len,
-			DmaMod->BdProp->Buffer->TileDmaBuff.BufferLen.Lsb,
+			DmaMod->BdProp->BufferLen.Lsb,
 			Mask);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, RegVal);
@@ -649,11 +648,11 @@ AieRC _XAie_ShimDmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 
 	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->Buffer->ShimDmaBuff.BufferLen.Idx * 4U;
+		DmaMod->BdProp->BufferLen.Idx * 4U;
 
 	RegVal = XAie_SetField(Len,
-			DmaMod->BdProp->Buffer->ShimDmaBuff.BufferLen.Lsb,
-			DmaMod->BdProp->Buffer->ShimDmaBuff.BufferLen.Mask);
+			DmaMod->BdProp->BufferLen.Lsb,
+			DmaMod->BdProp->BufferLen.Mask);
 
 	/* BD length register does not have other parameters */
 	return XAie_Write32(DevInst, RegAddr, RegVal);
