@@ -25,17 +25,8 @@
 
 #ifdef XAIE_FEATURE_LITE
 
+#include "xaiegbl.h"
 #include "xaiegbl_defs.h"
-
-#define __FORCE_INLINE__			__attribute__((always_inline))
-
-#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
-#include "xaie_lite_aie.h"
-#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
-#include "xaie_lite_aieml.h"
-#else
-#include <xaie_custom_device.h>
-#endif
 
 #define XAie_LDeclareDevInst(DevInst, _BaseAddr, _StartCol, _NumCols) \
 	XAie_DevInst DevInst = { \
@@ -44,9 +35,34 @@
 		.NumCols = (_NumCols), \
 	}
 
+#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
+#include "xaie_lite_aie.h"
+#include "xaie_lite_shim_aie.h"
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
+#include "xaie_lite_aieml.h"
+#include "xaie_lite_shim_aie.h"
+#else
+#include <xaie_custom_device.h>
+#endif
+
+#ifdef XAIE_ENABLE_INPUT_CHECK
+#define _XAIEPRINT printf
+#endif
+#define XAIE_ERROR_RETURN(ERRCON, RET, ...) {	\
+	if (ERRCON) {				\
+		_XAIEPRINT(__VA_ARGS__);	\
+		return (RET);			\
+	}					\
+}
+#else
+#define XAIE_ERROR_RETURN(...)
+#endif
+
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
+
+/************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
 *
@@ -81,6 +97,28 @@ static inline u8 _XAie_LGetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 	XAIE_ERROR_RETURN(1U, XAIEGBL_TILE_TYPE_MAX, "Cannot find Tile Type\n");
 
 	return XAIEGBL_TILE_TYPE_MAX;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is API returns the location next NoC tile.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+__FORCE_INLINE__
+static inline XAie_LocType XAie_LPartGetNextNocTile(XAie_DevInst *DevInst,
+		XAie_LocType Loc)
+{
+	XAie_LocType lLoc = XAie_TileLoc((Loc.Col + DevInst->StartCol),
+			Loc.Row);
+
+	UPDT_NEXT_NOC_TILE_LOC(lLoc);
+	return lLoc;
 }
 
 #endif /* XAIE_FEATURE_LITE */

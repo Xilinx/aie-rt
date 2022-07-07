@@ -6,7 +6,7 @@
 
 /*****************************************************************************/
 /**
-* @file xaie_lite_privilege_pm.c
+* @file xaie_lite_privilege.c
 * @{
 *
 * This file contains lite version of AI engine partition management operations.
@@ -22,17 +22,18 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
-#include <stdlib.h>
 
 #include "xaie_feature_config.h"
 
 #if defined(XAIE_FEATURE_PRIVILEGED_ENABLE) && defined(XAIE_FEATURE_LITE)
 
 #include "xaie_lite.h"
+#include "xaie_lite_io.h"
+#include "xaiegbl_defs.h"
+#include "xaiegbl.h"
 
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
-
 #define XAIE_ISOLATE_EAST_MASK	(1U << 3)
 #define XAIE_ISOLATE_NORTH_MASK	(1U << 2)
 #define XAIE_ISOLATE_WEST_MASK	(1U << 1)
@@ -40,6 +41,7 @@
 #define XAIE_ISOLATE_ALL_MASK	((1U << 4) - 1)
 
 #define XAIE_ERROR_NPI_INTR_ID	0x1U
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -280,8 +282,9 @@ static void _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 	for(; Loc.Col < DevInst->NumCols;
 		Loc = XAie_LPartGetNextNocTile(DevInst, Loc)) {
 
-		_XAie_PrivilegeSetL2IrqId(DevInst, Loc,
-				XAIE_ERROR_NPI_INTR_ID);
+		u8 IrqId = _XAie_MapColToIrqId(DevInst, Loc);
+
+		_XAie_PrivilegeSetL2IrqId(DevInst, Loc, IrqId);
 	}
 }
 

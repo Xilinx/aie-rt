@@ -61,6 +61,8 @@ typedef uint64_t		u64;
 #define XAie_SetField(Val, Lsb, Mask)	(((u32)(Val) << (Lsb)) & (Mask))
 #define XAie_GetField(Val, Lsb, Mask)	(((u32)(Val) & (Mask)) >> (Lsb))
 
+#define __FORCE_INLINE__			__attribute__((always_inline))
+
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 #endif		/* end of protection macro */
