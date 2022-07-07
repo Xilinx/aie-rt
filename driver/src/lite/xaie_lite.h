@@ -44,6 +44,9 @@
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
 #include "xaie_lite_aieml.h"
 #include "xaie_lite_shim_aie2ipu.h"
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P
+#include "xaie_lite_aieml.h"
+#include "xaie_lite_shim_aie2p.h"
 #else
 #include <xaie_custom_device.h>
 #endif

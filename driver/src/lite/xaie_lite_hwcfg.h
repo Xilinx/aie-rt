@@ -110,6 +110,38 @@
 #define XAIE_AIE_TILE_ROW_START		2
 #define XAIE_AIE_TILE_NUM_ROWS		4
 
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P
+
+#ifdef __AIEIPU__
+#include <platform-hw-config.h>
+#endif
+
+#ifndef XAIE_BASE_ADDR
+#define XAIE_BASE_ADDR			IPU_AIE_BASEADDR
+#define XAIE_BASE_ADDR			0
+#endif
+
+#ifndef XAIE_NPI_BASEADDR
+#define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
+#define XAIE_NPI_BASEADDR		0
+#endif
+
+#ifndef XAIE_NUM_ROWS
+#define XAIE_NUM_ROWS			6
+#endif
+
+#ifndef XAIE_NUM_COLS
+#define XAIE_NUM_COLS			8
+#endif
+
+#define XAIE_COL_SHIFT			25
+#define XAIE_ROW_SHIFT			20
+#define XAIE_SHIM_ROW			0
+#define XAIE_MEM_TILE_ROW_START		1
+#define XAIE_MEM_TILE_NUM_ROWS		1
+#define XAIE_AIE_TILE_ROW_START		2
+#define XAIE_AIE_TILE_NUM_ROWS		4
+
 #else
 #include <xaie_custom_device.h>
 #endif
