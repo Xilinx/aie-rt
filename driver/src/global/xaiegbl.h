@@ -489,7 +489,7 @@ typedef struct {
  * ArraySize: Array size of payload buffer. Value corresponds to total number of
  *	      XAie_ErrorPayload structs.
  * ErrorCount: total number of valid payloads returned.
- * IrqId: IRQ index ID.
+ * Cols: Range of columns to be backtracked.
  */
 typedef struct {
 	u8 IsNextInfoValid;
@@ -498,7 +498,7 @@ typedef struct {
 	XAie_ErrorPayload *Payload;
 	u32 ArraySize;
 	u32 ErrorCount;
-	u8 IrqId;
+	XAie_Range Cols;
 } XAie_ErrorMetaData;
 
 /**************************** Function prototypes ***************************/
@@ -693,15 +693,13 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 * @param	_Buffer: Pointer to a buffer for returning backtracked error
 *			information.
 * @param	_Size: Size of buffer in bytes.
-* @param	_IrqId: Zero indexed IRQ ID. Valid values corresponds to the
-*		       number of AIE IRQs mapped to the processor.
 *
 * @return	None.
 *
 * @note		None.
 *
 *******************************************************************************/
-#define XAie_ErrorMetadataInit(Mdata, _Buffer, _Size, _IrqId)		\
+#define XAie_ErrorMetadataInit(Mdata, _Buffer, _Size)			\
 	XAie_ErrorMetaData Mdata = {					\
 		.IsNextInfoValid = 0,					\
 		.NextTile = {0, 0},					\
@@ -709,8 +707,23 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 		.Payload = (XAie_ErrorPayload *) (_Buffer),		\
 		.ArraySize = (_Size) / sizeof(XAie_ErrorPayload),	\
 		.ErrorCount = 0U,					\
-		.IrqId = (_IrqId),					\
+		.Cols = {0, 0},						\
 	}
+
+/*****************************************************************************/
+/**
+*
+* Macro to setup error backtrack column range.
+*
+* @param	MDataInst: Name of the XAie_ErrorMetaData structure.
+* @param	_Cols: XAie_Range column instance.
+*
+* @return	None.
+*
+* @note		None.
+*
+*******************************************************************************/
+#define XAie_ErrorSetBacktrackRange(MData, _Cols)	(MData)->Cols = _Cols
 
 /*****************************************************************************/
 /**
