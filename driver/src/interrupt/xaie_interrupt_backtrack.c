@@ -613,6 +613,8 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 *		  XAie_BacktrackErrorInterrupts().
 *		- Error metadata instance needs to initialized using
 *		  XAie_ErrorMetadataInit() helper.
+*		- Backtrack column range needs to be setup per IRQ channel using
+*		  XAie_MapIrqIdToCols() and XAie_ErrorSetBacktrackRange().
 *		- If more than one buffers are used to backtrack the same
 *		  partition, error metadata needs to be preserve. To override
 *		  error payload buffer only, use
@@ -630,15 +632,12 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 			XAIE_INVALID_ARGS,
 			XAIE_ERROR_MSG("Invalid error payload buffer or size\n"));
 
-	XAIE_ERROR_RETURN(MData->IrqId >= XAIE_MAX_NUM_NOC_INTR,
-			XAIE_INVALID_ARGS, "Invalid AIE IRQ ID\n");
+	XAIE_ERROR_RETURN(MData->Cols.Num == 0U || (MData->Cols.Start +
+			  MData->Cols.Num) > XAIE_NUM_COLS, XAIE_INVALID_ARGS,
+			  XAIE_ERROR_MSG("Invalid range of columns\n"));
 
 	AieRC RC;
-	XAie_Range Cols;
-
-	RC = XAie_MapIrqIdToCols(MData->IrqId, &Cols);
-	if (RC != XAIE_OK)
-		return RC;
+	XAie_Range Cols = MData->Cols;
 
 	XAie_LocType L2 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
 	XAie_LocType L1 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
