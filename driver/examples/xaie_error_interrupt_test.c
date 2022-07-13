@@ -287,16 +287,21 @@ void XAie_ErrorIsr(void *Data)
 	AieRC RC;
 	XAie_AppPayload *Payload = (XAie_AppPayload *) Data;
 	XAie_DevInst *DevInst = Payload->DevInst;
+	XAie_Range Cols;
 	u8 IrqId = Payload->IrqId;
-
-	/* Initialize error metadata */
-	XAie_ErrorMetadataInit(MData, Buffer, Size, IrqId);
 
 	XScuGic_Disable(&xInterruptController, IrqId);
 
 	XAie_DisableErrorInterrupts(IrqId);
 
 	XScuGic_Enable(&xInterruptController, IrqId);
+
+	/* Initialize error metadata */
+	XAie_ErrorMetadataInit(MData, Buffer, Size);
+
+	XAie_MapIrqIdToCols(IrqId, &Cols);
+
+	XAie_ErrorSetBacktrackRange(&MData, Cols);
 
 	/*
 	 * Loop until all errors are successfully backtracked. This could also
