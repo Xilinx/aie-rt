@@ -464,5 +464,27 @@ AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst)
 	return RC;
 }
 
+/*****************************************************************************/
+/**
+* This API resets all modules, clears registers needed for context switching.
+*
+* @param	DevInst: AI engine partition device instance pointer
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		None.
+*
+*******************************************************************************/
+AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
+{
+	_XAie_LResetCoreRegisters(DevInst);
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
+	_XAie_LPartDataMemZeroInit(DevInst);
+	_XAie_LPartResetModules(DevInst);
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
+
+	return XAIE_OK;
+}
+
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && XAIE_FEATURE_LITE */
 /** @} */
