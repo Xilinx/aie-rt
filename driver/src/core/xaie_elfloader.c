@@ -709,7 +709,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 	}
 
 	/* Send the stack range set command */
-	RC = XAie_CmdWrite(DevInst, Loc.Col, Loc.Row,
+	RC = XAie_CmdWrite(DevInst, DevInst->StartCol + Loc.Col, Loc.Row,
 			XAIESIM_CMDIO_CMD_SETSTACK, StackSz.start, StackSz.end,
 			XAIE_NULL);
 	if(RC != XAIE_OK) {
@@ -718,8 +718,9 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 
 	/* Load symbols if enabled */
 	if(LoadSym == XAIE_ENABLE) {
-		RC = XAie_CmdWrite(DevInst, Loc.Col, Loc.Row,
-				XAIESIM_CMDIO_CMD_LOADSYM, 0, 0, ElfPtr);
+		RC = XAie_CmdWrite(DevInst, DevInst->StartCol + Loc.Col,
+				Loc.Row, XAIESIM_CMDIO_CMD_LOADSYM, 0, 0,
+				ElfPtr);
 		if(RC != XAIE_OK) {
 			return RC;
 		}
