@@ -577,6 +577,9 @@ static AieRC XAie_SocketIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 					(XAie_PartInitOpts *)Arg);
 		case XAIE_BACKEND_OP_PARTITION_TEARDOWN:
 			return _XAie_PrivilegeTeardownPart(DevInst);
+		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
+			XAIE_WARN("NPI address cannot be updated for socket backend. Ignoring request.\n");
+			return XAIE_OK;
 		default:
 			XAIE_ERROR("Socket backend does not support operation "
 					"%d\n", Op);
