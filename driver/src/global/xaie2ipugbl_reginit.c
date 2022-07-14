@@ -2250,6 +2250,7 @@ static const  XAie_CoreMod AieMlCoreMod =
 	.DataMemSize = 64 * 1024,		/* AIEML Tile Memory is 64kB */
 	.DataMemShift = 16,
 	.EccEvntRegOff = XAIEMLGBL_CORE_MODULE_ECC_SCRUBBING_EVENT,
+	.CorePCOff = XAIEMLGBL_CORE_MODULE_CORE_PC,
 	.CoreCtrl = &AieMlCoreCtrlReg,
 	.CoreDebugStatus = &AieMlCoreDebugStatus,
 	.CoreSts = &AieMlCoreStsReg,
