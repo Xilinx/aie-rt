@@ -420,8 +420,7 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 *******************************************************************************/
 static inline AieRC _XAie_LPartIsShimDmaIdle(XAie_DevInst *DevInst)
 {
-	for(u8 C = DevInst->StartCol; C < DevInst->StartCol + DevInst->NumCols;
-			C++) {
+	for(u8 C = 0U; C < DevInst->NumCols; C++) {
 		AieRC RC;
 		u8 TType;
 
