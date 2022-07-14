@@ -135,6 +135,8 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 	}
 }
 
+#define _XAie_LPartDataMemZeroInit _XAie_LPartMemZeroInit
+
 /*****************************************************************************/
 /**
 *
@@ -237,6 +239,16 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 	_XAie_LNpiSetLock(XAIE_DISABLE);
 	_XAie_LNpiWriteCheck32(XAIE_NPI_PROT_REG_CNTR_REG, RegVal);
 	_XAie_LNpiSetLock(XAIE_ENABLE);
+}
+
+static inline void _XAie_LPartResetModules(XAie_DevInst *DevInst)
+{
+	/* No-op for AIE since there is no register to reset modules */
+}
+
+static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
+{
+	/* No-op for AIE since there is no register to reset modules */
 }
 
 #endif		/* end of protection macro */
