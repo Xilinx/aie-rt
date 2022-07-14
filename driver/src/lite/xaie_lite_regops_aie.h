@@ -149,8 +149,7 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 ******************************************************************************/
 static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 {
-	for(u8 C = DevInst->StartCol; C < DevInst->StartCol + DevInst->NumCols;
-			C++) {
+	for(u8 C = 0U; C < DevInst->NumCols; C++) {
 		u64 RegAddr;
 		u32 RegVal;
 
