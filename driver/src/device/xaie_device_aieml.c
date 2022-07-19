@@ -27,6 +27,10 @@
 #include "xaie_tilectrl.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+/***************************** Macro Definitions *****************************/
+/* set timeout to 1000us. */
+#define XAIEML_MEMZERO_POLL_TIMEOUT		1000
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -202,29 +206,29 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 			NumMods = DevInst->DevProp.DevMod[TileType].NumModules;
 			MCtrlMod = DevInst->DevProp.DevMod[TileType].MemCtrlMod;
 			for (u8 M = 0; M < NumMods; M++) {
-				RegAddr = MCtrlMod->MemCtrlRegOff +
+				RegAddr = MCtrlMod[M].MemCtrlRegOff +
 					_XAie_GetTileAddr(DevInst, R, C);
 				FldVal = XAie_SetField(XAIE_ENABLE,
-					MCtrlMod->MemZeroisation.Lsb,
-					MCtrlMod->MemZeroisation.Mask);
+					MCtrlMod[M].MemZeroisation.Lsb,
+					MCtrlMod[M].MemZeroisation.Mask);
 				RC = XAie_MaskWrite32(DevInst, RegAddr,
-					MCtrlMod->MemZeroisation.Mask,
+					MCtrlMod[M].MemZeroisation.Mask,
 					FldVal);
 				if(RC != XAIE_OK) {
 					XAIE_ERROR("Failed to zeroize partition mems.\n");
 					return RC;
 				}
-				MCtrlMod++;
+
 				if((C == DevInst->NumCols - 1) &&
 						(R == DevInst->NumRows - 1) &&
 						(M == NumMods - 1)) {
-					RegAddr = MCtrlMod->MemCtrlRegOff +
+					RegAddr = MCtrlMod[M].MemCtrlRegOff +
 						_XAie_GetTileAddr(DevInst,
 								Loc.Row,
 								Loc.Col);
 					return XAie_MaskPoll(DevInst, RegAddr,
-							MCtrlMod->MemZeroisation.Mask,
-							0, 0);
+							MCtrlMod[M].MemZeroisation.Mask,
+							0, XAIEML_MEMZERO_POLL_TIMEOUT);
 				}
 			}
 		}
