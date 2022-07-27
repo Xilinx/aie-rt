@@ -267,11 +267,13 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 static inline void _XAie_LPartResetModules(XAie_DevInst *DevInst)
 {
 	/* No-op for AIE since there is no register to reset modules */
+	(void) DevInst;
 }
 
 static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
 {
 	/* No-op for AIE since there is no register to reset modules */
+	(void) DevInst;
 }
 
 #endif		/* end of protection macro */
