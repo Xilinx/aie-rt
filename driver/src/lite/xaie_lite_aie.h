@@ -275,5 +275,11 @@ static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
 	(void) DevInst;
 }
 
+static inline void  _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
+{
+	// TODO
+	(void) DevInst;
+}
+
 #endif		/* end of protection macro */
 /** @} */

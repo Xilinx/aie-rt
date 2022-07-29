@@ -399,24 +399,6 @@ int main()
 {
 	AieRC RC;
 
-	XAie_AppPayload Payload[] = {
-		{
-			.DevInst = &DevInst,
-			.ProcIrqId = AIE_IRQ_VECT_ID_0,
-			.IrqId = 0,
-		},
-		{
-			.DevInst = &DevInst,
-			.ProcIrqId = AIE_IRQ_VECT_ID_1,
-			.IrqId = 1,
-		},
-		{
-			.DevInst = &DevInst,
-			.ProcIrqId = AIE_IRQ_VECT_ID_2,
-			.IrqId = 2,
-		},
-	};
-
 	init_platform();
 
 	XAie_Print("AIE error interrupt test\n");
@@ -435,6 +417,24 @@ int main()
 			 XAIE_AIE_TILE_ROW_START, XAIE_AIE_TILE_NUM_ROWS);
 
 	XAie_InstDeclare(DevInst, &ConfigPtr);
+
+	XAie_AppPayload Payload[] = {
+		{
+			.DevInst = &DevInst,
+			.ProcIrqId = AIE_IRQ_VECT_ID_0,
+			.IrqId = 0,
+		},
+		{
+			.DevInst = &DevInst,
+			.ProcIrqId = AIE_IRQ_VECT_ID_1,
+			.IrqId = 1,
+		},
+		{
+			.DevInst = &DevInst,
+			.ProcIrqId = AIE_IRQ_VECT_ID_2,
+			.IrqId = 2,
+		},
+	};
 
 	RC = XAie_SetupPartitionConfig(&DevInst, XAIE_BASE_ADDR, 0, 50);
 	if(RC != XAIE_OK) {
