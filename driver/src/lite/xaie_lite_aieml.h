@@ -439,8 +439,13 @@ static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
 					XAIE_AIE_TILE_CORE_WL0_PART1_SIZE);
 			RegAddr = _XAie_LGetTileAddr(R, C) +
 				XAIE_AIE_TILE_CORE_R0_REGOFF;
-			_XAie_LPartBlockSet32(DevInst, RegAddr, 0U,
-					XAIE_AIE_TILE_CORE_R0_SIZE);
+			for (u8 Count = 0;
+				Count < XAIE_AIE_TILE_CORE_R0_COUNT;
+				Count++) {
+				_XAie_LPartWrite32(DevInst, RegAddr + Count *
+						XAIE_AIE_TILE_CORE_R0_STEP_SIZE,
+						0U);
+			}
 		}
 	}
 }

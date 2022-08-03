@@ -165,7 +165,8 @@
 #define XAIE_AIE_TILE_CORE_WL0_PART1_SIZE		0x300
 
 #define XAIE_AIE_TILE_CORE_R0_REGOFF			XAIEMLGBL_CORE_MODULE_CORE_R0
-#define XAIE_AIE_TILE_CORE_R0_SIZE			0x200
+#define XAIE_AIE_TILE_CORE_R0_COUNT			32
+#define XAIE_AIE_TILE_CORE_R0_STEP_SIZE			0x10
 
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
