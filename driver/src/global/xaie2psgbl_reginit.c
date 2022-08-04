@@ -26,14 +26,15 @@
 
 #include "xaie_core_aieml.h"
 #include "xaie_device_aie2ipu.h"
+#include "xaie_device_aieml.h"
 #include "xaie_dma_aieml.h"
+#include "xaie_interrupt_aieml.h"
 #include "xaie_events_aie2ps.h"
 #include "xaie_locks_aieml.h"
 #include "xaie_reset_aieml.h"
 #include "xaie_ss_aieml.h"
 #include "xaie2psgbl_params.h"
 #include "xaiegbl_regdef.h"
-
 
 /************************** Constant Definitions *****************************/
 
@@ -190,6 +191,7 @@ static const  XAie_CoreMod Aie2PSCoreMod =
 	.Enable = &_XAieMl_CoreEnable,
 	.WaitForDone = &_XAieMl_CoreWaitForDone,
 	.ReadDoneBit = &_XAieMl_CoreReadDoneBit,
+	.GetCoreStatus = &_XAieMl_CoreGetStatus
 };
 #endif /* XAIE_FEATURE_CORE_ENABLE */
 
@@ -4549,6 +4551,119 @@ static const XAie_TraceMod Aie2PSMemTileTraceMod =
 };
 #endif /* XAIE_FEATURE_TRACE_ENABLE */
 
+#ifdef XAIE_FEATURE_INTR_L1_ENABLE
+/*
+ * Data structure to configures first level interrupt controller for
+ * XAIEGBL_TILE_TYPE_SHIMPL tile type
+ */
+static const XAie_L1IntrMod Aie2PSPlL1IntrMod =
+{
+	.BaseEnableRegOff = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_ENABLE_A,
+	.BaseDisableRegOff = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_DISABLE_A,
+	.BaseIrqRegOff = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_IRQ_NO_A,
+	.BaseIrqEventRegOff = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_IRQ_EVENT_A,
+	.BaseIrqEventMask = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_IRQ_EVENT_A_IRQ_EVENT0_MASK,
+	.BaseBroadcastBlockRegOff = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_BLOCK_NORTH_IN_A_SET,
+	.BaseBroadcastUnblockRegOff = XAIE2PSGBL_PL_MODULE_INTERRUPT_CONTROLLER_1ST_LEVEL_BLOCK_NORTH_IN_A_CLEAR,
+	.SwOff = 0x30U,
+	.NumIntrIds = 20U,
+	.NumIrqEvents = 4U,
+	.IrqEventOff = 8U,
+	.NumBroadcastIds = 16U,
+	.MaxErrorBcIdsRvd = 4U,
+#ifdef XAIE_FEATURE_INTR_INIT_ENABLE
+	.IntrCtrlL1IrqId = &_XAieMl_IntrCtrlL1IrqId,
+#else
+	.IntrCtrlL1IrqId = NULL,
+#endif
+};
+#endif /* XAIE_FEATURE_INTR_L1_ENABLE */
+
+#ifdef XAIE_FEATURE_INTR_L2_ENABLE
+/*
+ * Data structure to configures second level interrupt controller for
+ * XAIEGBL_TILE_TYPE_SHIMNOC tile type
+ */
+static const XAie_L2IntrMod Aie2PSNoCL2IntrMod =
+{
+	.EnableRegOff = XAIE2PSGBL_NOC_MODULE_INTERRUPT_CONTROLLER_2ND_LEVEL_ENABLE,
+	.DisableRegOff = XAIE2PSGBL_NOC_MODULE_INTERRUPT_CONTROLLER_2ND_LEVEL_DISABLE,
+	.IrqRegOff = XAIE2PSGBL_NOC_MODULE_INTERRUPT_CONTROLLER_2ND_LEVEL_INTERRUPT,
+	.NumBroadcastIds = 16U,
+	.NumNoCIntr = 4U,
+};
+#endif /* XAIE_FEATURE_INTR_L2_ENABLE */
+
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+/*
+ * Data structure to configures tile control for
+ * XAIEGBL_TILE_TYPE_AIETILE tile type
+ */
+static const XAie_TileCtrlMod Aie2PSCoreTileCtrlMod =
+{
+	.TileCtrlRegOff = XAIE2PSGBL_CORE_MODULE_TILE_CONTROL,
+	.IsolateEast = {XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_EAST_LSB, XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_EAST_MASK},
+	.IsolateNorth = {XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_NORTH_LSB, XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_NORTH_MASK},
+	.IsolateWest = {XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_WEST_LSB, XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_WEST_MASK},
+	.IsolateSouth = {XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_LSB, XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_MASK},
+	.IsolateDefaultOn = XAIE_ENABLE,
+};
+
+/*
+ * Data structure to configures tile control for
+ * XAIEGBL_TILE_TYPE_MEMTILE tile type
+ */
+static const XAie_TileCtrlMod Aie2PSMemTileCtrlMod =
+{
+	.TileCtrlRegOff = XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL,
+	.IsolateEast = {XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_EAST_LSB, XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_EAST_MASK},
+	.IsolateNorth = {XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_NORTH_LSB, XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_NORTH_MASK},
+	.IsolateWest = {XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_WEST_LSB, XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_WEST_MASK},
+	.IsolateSouth = {XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_LSB, XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_MASK},
+	.IsolateDefaultOn = XAIE_ENABLE,
+};
+
+/*
+ * Data structure to configures tile control for
+ * XAIEGBL_TILE_TYPE_SHIMPL/NOC tile type
+ */
+static const XAie_TileCtrlMod Aie2PSShimTileCtrlMod =
+{
+	.TileCtrlRegOff = XAIE2PSGBL_PL_MODULE_TILE_CONTROL,
+	.IsolateEast = {XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_EAST_LSB, XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_EAST_MASK},
+	.IsolateNorth = {XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_NORTH_LSB, XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_NORTH_MASK},
+	.IsolateWest = {XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_WEST_LSB, XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_WEST_MASK},
+	.IsolateSouth = {XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_LSB, XAIE2PSGBL_PL_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_MASK},
+	.IsolateDefaultOn = XAIE_ENABLE,
+};
+
+/*
+ * Data structure to configures memory control for
+ * XAIEGBL_TILE_TYPE_AIETILE tile type
+ */
+static const XAie_MemCtrlMod Aie2PSTileMemCtrlMod[] =
+{
+	{
+		.MemCtrlRegOff = XAIE2PSGBL_MEMORY_MODULE_MEMORY_CONTROL,
+		.MemZeroisation = {XAIE2PSGBL_MEMORY_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_LSB, XAIE2PSGBL_MEMORY_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_MASK},
+	},
+	{
+		.MemCtrlRegOff = XAIE2PSGBL_CORE_MODULE_MEMORY_CONTROL,
+		.MemZeroisation = {XAIE2PSGBL_CORE_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_LSB, XAIE2PSGBL_CORE_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_MASK},
+	},
+};
+
+/*
+ * Data structure to configures memory control for
+ * XAIEGBL_TILE_TYPE_MEMTILE tile type
+ */
+static const XAie_MemCtrlMod Aie2PSMemTileMemCtrlMod =
+{
+	.MemCtrlRegOff = XAIE2PSGBL_MEM_TILE_MODULE_MEMORY_CONTROL,
+	.MemZeroisation = {XAIE2PSGBL_MEM_TILE_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_LSB, XAIE2PSGBL_MEM_TILE_MODULE_MEMORY_CONTROL_MEMORY_ZEROISATION_MASK},
+};
+#endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
+
 #ifdef XAIE_FEATURE_CORE_ENABLE
 	#define AIE2PSCOREMOD &Aie2PSCoreMod
 #else
@@ -4633,6 +4748,29 @@ static const XAie_TraceMod Aie2PSMemTileTraceMod =
 	#define AIE2PSPLTRACEMOD NULL
 	#define AIE2PSMEMTILETRACEMOD NULL
 #endif
+#ifdef XAIE_FEATURE_INTR_L1_ENABLE
+	#define AIEMLPLL1INTRMOD &Aie2PSPlL1IntrMod
+#else
+	#define AIEMLPLL1INTRMOD NULL
+#endif
+#ifdef XAIE_FEATURE_INTR_L2_ENABLE
+	#define AIEMLNOCL2INTRMOD &Aie2PSNoCL2IntrMod
+#else
+	#define AIEMLNOCL2INTRMOD NULL
+#endif
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+	#define AIEMLCORETILECTRLMOD &Aie2PSCoreTileCtrlMod
+	#define AIEMLTILEMEMCTRLMOD Aie2PSTileMemCtrlMod
+	#define AIEMLSHIMTILECTRLMOD &Aie2PSShimTileCtrlMod
+	#define AIEMLMEMTILECTRLMOD &Aie2PSMemTileCtrlMod
+	#define AIEMLMEMTILEMEMCTRLMOD &Aie2PSMemTileMemCtrlMod
+#else
+	#define AIEMLCORETILECTRLMOD NULL
+	#define AIEMLTILEMEMCTRLMOD NULL
+	#define AIEMLSHIMTILECTRLMOD NULL
+	#define AIEMLMEMTILECTRLMOD NULL
+	#define AIEMLMEMTILEMEMCTRLMOD NULL
+#endif
 
 /*
  * AIE2PS Module
@@ -4657,6 +4795,10 @@ XAie_TileMod Aie2PSMod[] =
 		.EvntMod = AIE2PSTILEEVNTMOD,
 		.TimerMod = AIE2PSTILETIMERMOD,
 		.TraceMod = AIE2PSTILETRACEMOD,
+		.L1IntrMod = NULL,
+		.L2IntrMod = NULL,
+		.TileCtrlMod = AIEMLCORETILECTRLMOD,
+		.MemCtrlMod = AIEMLTILEMEMCTRLMOD,
 	},
 	{
 		/*
@@ -4673,6 +4815,10 @@ XAie_TileMod Aie2PSMod[] =
 		.EvntMod = AIE2PSNOCEVNTMOD,
 		.TimerMod = AIE2PSPLTIMERMOD,
 		.TraceMod = AIE2PSPLTRACEMOD,
+		.L1IntrMod = AIEMLPLL1INTRMOD,
+		.L2IntrMod = AIEMLNOCL2INTRMOD,
+		.TileCtrlMod = AIEMLSHIMTILECTRLMOD,
+		.MemCtrlMod = NULL,
 	},
 	{
 		/*
@@ -4689,6 +4835,10 @@ XAie_TileMod Aie2PSMod[] =
 		.EvntMod = AIE2PSPLEVNTMOD,
 		.TimerMod = AIE2PSPLTIMERMOD,
 		.TraceMod = AIE2PSPLTRACEMOD,
+		.L1IntrMod = AIEMLPLL1INTRMOD,
+		.L2IntrMod = NULL,
+		.TileCtrlMod = AIEMLSHIMTILECTRLMOD,
+		.MemCtrlMod = NULL,
 	},
 	{
 		/*
@@ -4705,6 +4855,10 @@ XAie_TileMod Aie2PSMod[] =
 		.EvntMod = AIE2PSMEMTILEEVNTMOD,
 		.TimerMod = AIE2PSMEMTILETIMERMOD,
 		.TraceMod = AIE2PSMEMTILETRACEMOD,
+		.L1IntrMod = NULL,
+		.L2IntrMod = NULL,
+		.TileCtrlMod = AIEMLMEMTILECTRLMOD,
+		.MemCtrlMod = AIEMLMEMTILEMEMCTRLMOD,
 	},
 };
 
@@ -4715,12 +4869,12 @@ XAie_DeviceOps Aie2PSDevOps =
 	.TilesInUse = Aie2PSTilesInUse,
 	.MemInUse = Aie2PSMemInUse,
 	.CoreInUse = Aie2PSCoreInUse,
-	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
-	#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+	.GetTTypefromLoc = &_XAie_GetTileTypefromLoc,
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
-	.SetPartIsolationAfterRst = NULL,
-	.PartMemZeroInit = NULL,
+	.SetPartIsolationAfterRst = &_XAieMl_SetPartIsolationAfterRst,
+	.PartMemZeroInit = &_XAieMl_PartMemZeroInit,
 	.RequestTiles = &_XAieMl_RequestTiles,
 	#else
 	.SetPartColShimReset = NULL,
