@@ -4716,11 +4716,19 @@ XAie_DeviceOps Aie2PSDevOps =
 	.MemInUse = Aie2PSMemInUse,
 	.CoreInUse = Aie2PSCoreInUse,
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
+	#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+	.SetPartColShimReset = NULL,
+	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
+	.SetPartIsolationAfterRst = NULL,
+	.PartMemZeroInit = NULL,
+	.RequestTiles = &_XAieMl_RequestTiles,
+	#else
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = NULL,
 	.SetPartIsolationAfterRst = NULL,
 	.PartMemZeroInit = NULL,
 	.RequestTiles = NULL,
+	#endif
 };
 
 /** @} */

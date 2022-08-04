@@ -51,7 +51,8 @@ static XAie_NpiMod *_XAie_NpiGetMod(XAie_DevInst *DevInst)
 		return &_XAieNpiMod;
 	} else if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIEML ||
 		DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU ||
-		DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P) {
+		DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P ||
+		DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
 		return &_XAieMlNpiMod;
 	}
 
