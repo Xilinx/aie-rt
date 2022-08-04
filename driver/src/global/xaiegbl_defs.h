@@ -45,8 +45,9 @@ typedef uint64_t		u64;
 
 #define XAIE_DEV_GEN_AIE		1U
 #define XAIE_DEV_GEN_AIEML		2U
-#define XAIE_DEV_GEN_AIE2IPU		3U
+#define XAIE_DEV_GEN_AIE2IPU    3U
 #define XAIE_DEV_GEN_AIE2P		4U
+#define XAIE_DEV_GEN_AIE2PS		5U
 
 #define XAIE_COMPONENT_IS_READY		1U
 

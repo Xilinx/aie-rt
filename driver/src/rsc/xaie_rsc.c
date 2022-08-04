@@ -100,6 +100,8 @@ u32 _XAie_GetTotalNumRscs(XAie_DevInst *DevInst, u8 TileType,
 
 		for(u8 i = 0U; i < NumMods; i++) {
 			PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[i];
+			if(!PerfMod)
+				return NumRscs;
 			NumRscs += PerfMod->MaxCounterVal;
 		}
 		return NumRscs;
