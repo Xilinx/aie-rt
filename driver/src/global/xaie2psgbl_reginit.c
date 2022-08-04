@@ -26,6 +26,7 @@
 
 #include "xaie_core_aieml.h"
 #include "xaie_device_aie2ipu.h"
+#include "xaie_dma_aieml.h"
 #include "xaie_ss_aieml.h"
 #include "xaie2psgbl_params.h"
 #include "xaiegbl_regdef.h"
@@ -1419,6 +1420,736 @@ static const  XAie_StrmMod Aie2PSMemTileStrmSw =
 };
 #endif /* XAIE_FEATURE_SS_ENABLE */
 
+
+#ifdef XAIE_FEATURE_DMA_ENABLE
+static const  XAie_DmaBdEnProp Aie2PSMemTileDmaBdEnProp =
+{
+	.NxtBd.Idx = 1U,
+	.NxtBd.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_NEXT_BD_LSB,
+	.NxtBd.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_NEXT_BD_MASK,
+	.UseNxtBd.Idx = 1U,
+	.UseNxtBd.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_USE_NEXT_BD_LSB,
+	.UseNxtBd.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_USE_NEXT_BD_MASK,
+	.ValidBd.Idx = 7U,
+	.ValidBd.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_VALID_BD_LSB,
+	.ValidBd.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_VALID_BD_MASK,
+	.OutofOrderBdId.Idx = 0U,
+	.OutofOrderBdId.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_OUT_OF_ORDER_BD_ID_LSB,
+	.OutofOrderBdId.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_OUT_OF_ORDER_BD_ID_MASK,
+	.TlastSuppress.Idx = 2U,
+	.TlastSuppress.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_TLAST_SUPPRESS_LSB,
+	.TlastSuppress.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_TLAST_SUPPRESS_MASK,
+};
+
+static const  XAie_DmaBdPkt Aie2PSMemTileDmaBdPktProp =
+{
+	.EnPkt.Idx = 0U,
+	.EnPkt.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_ENABLE_PACKET_LSB,
+	.EnPkt.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_ENABLE_PACKET_MASK,
+	.PktId.Idx = 0U,
+	.PktId.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_PACKET_ID_LSB,
+	.PktId.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_PACKET_ID_MASK,
+	.PktType.Idx = 0U,
+	.PktType.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_PACKET_TYPE_LSB,
+	.PktType.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_PACKET_TYPE_MASK,
+};
+
+static const  XAie_DmaBdLock Aie2PSMemTileDmaLockProp =
+{
+	.AieMlDmaLock.LckRelVal.Idx = 7U,
+	.AieMlDmaLock.LckRelVal.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_REL_VALUE_LSB,
+	.AieMlDmaLock.LckRelVal.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_REL_VALUE_MASK,
+	.AieMlDmaLock.LckRelId.Idx = 7U,
+	.AieMlDmaLock.LckRelId.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_REL_ID_LSB,
+	.AieMlDmaLock.LckRelId.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_REL_ID_MASK,
+	.AieMlDmaLock.LckAcqEn.Idx = 7U,
+	.AieMlDmaLock.LckAcqEn.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_ACQ_ENABLE_LSB,
+	.AieMlDmaLock.LckAcqEn.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_ACQ_ENABLE_MASK,
+	.AieMlDmaLock.LckAcqVal.Idx = 7U,
+	.AieMlDmaLock.LckAcqVal.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_ACQ_VALUE_LSB,
+	.AieMlDmaLock.LckAcqVal.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_ACQ_VALUE_MASK,
+	.AieMlDmaLock.LckAcqId.Idx = 7U,
+	.AieMlDmaLock.LckAcqId.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_ACQ_ID_LSB,
+	.AieMlDmaLock.LckAcqId.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_7_LOCK_ACQ_ID_MASK,
+};
+
+static const  XAie_DmaBdBuffer Aie2PSMemTileBufferProp =
+{
+	.TileDmaBuff.BaseAddr.Idx = 1U,
+	.TileDmaBuff.BaseAddr.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_BASE_ADDRESS_LSB,
+	.TileDmaBuff.BaseAddr.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_BASE_ADDRESS_MASK,
+};
+
+static const XAie_DmaBdDoubleBuffer Aie2PSMemTileDoubleBufferProp =
+{
+	.EnDoubleBuff = {0U},
+	.BaseAddr_B = {0U},
+	.FifoMode = {0U},
+	.EnIntrleaved = {0U},
+	.IntrleaveCnt = {0U},
+	.BuffSelect = {0U},
+};
+
+static const  XAie_DmaBdMultiDimAddr Aie2PSMemTileMultiDimProp =
+{
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_3_D1_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_3_D1_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Idx = 2U,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_D0_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_D0_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_3_D1_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_3_D1_WRAP_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Idx = 2U,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_D0_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_D0_WRAP_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Idx = 4U,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_D2_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_D2_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[2U].Wrap.Idx = 4U,
+	.AieMlMultiDimAddr.DmaDimProp[2U].Wrap.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_D2_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[2U].Wrap.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_D2_WRAP_MASK,
+	.AieMlMultiDimAddr.IterCurr.Idx = 6U,
+	.AieMlMultiDimAddr.IterCurr.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_6_ITERATION_CURRENT_LSB,
+	.AieMlMultiDimAddr.IterCurr.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_6_ITERATION_CURRENT_MASK,
+	.AieMlMultiDimAddr.Iter.Wrap.Idx = 6U,
+	.AieMlMultiDimAddr.Iter.Wrap.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_6_ITERATION_WRAP_LSB,
+	.AieMlMultiDimAddr.Iter.Wrap.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_6_ITERATION_WRAP_MASK,
+	.AieMlMultiDimAddr.Iter.StepSize.Idx = 6U,
+	.AieMlMultiDimAddr.Iter.StepSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_6_ITERATION_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.Iter.StepSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_6_ITERATION_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize.Idx = 5U,
+	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D3_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D3_STEPSIZE_MASK,
+};
+
+static const  XAie_DmaBdPad Aie2PSMemTilePadProp =
+{
+	.D0_PadBefore.Idx = 1U,
+	.D0_PadBefore.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_D0_PAD_BEFORE_LSB,
+	.D0_PadBefore.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_1_D0_PAD_BEFORE_MASK,
+	.D1_PadBefore.Idx = 3U,
+	.D1_PadBefore.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_3_D1_PAD_BEFORE_LSB,
+	.D1_PadBefore.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_3_D1_PAD_BEFORE_MASK,
+	.D2_PadBefore.Idx = 4U,
+	.D2_PadBefore.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_D2_PAD_BEFORE_LSB,
+	.D2_PadBefore.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_D2_PAD_BEFORE_MASK,
+	.D0_PadAfter.Idx = 5U,
+	.D0_PadAfter.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D0_PAD_AFTER_LSB,
+	.D0_PadAfter.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D0_PAD_AFTER_MASK,
+	.D1_PadAfter.Idx = 5U,
+	.D1_PadAfter.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D1_PAD_AFTER_LSB,
+	.D1_PadAfter.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D1_PAD_AFTER_MASK,
+	.D2_PadAfter.Idx = 5U,
+	.D2_PadAfter.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D2_PAD_AFTER_LSB,
+	.D2_PadAfter.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D2_PAD_AFTER_MASK,
+};
+
+static const  XAie_DmaBdCompression Aie2PSMemTileCompressionProp =
+{
+	.EnCompression.Idx = 4U,
+	.EnCompression.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_ENABLE_COMPRESSION_LSB,
+	.EnCompression.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_4_ENABLE_COMPRESSION_MASK,
+};
+
+/* Data structure to capture register offsets and masks for Mem Tile Dma */
+static const  XAie_DmaBdProp Aie2PSMemTileDmaProp =
+{
+	.AddrAlignMask = 0x3,
+	.AddrAlignShift = 0x2,
+	.AddrMax = 0x180000,
+	.LenActualOffset = 0U,
+	.StepSizeMax = (1U << 17) - 1U,
+	.WrapMax = (1U << 10U) - 1U,
+	.IterStepSizeMax = (1U << 17) - 1U,
+	.IterWrapMax = (1U << 6U) - 1U,
+	.IterCurrMax = (1U << 6) - 1U,
+	.BufferLen.Idx = 0U,
+	.BufferLen.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
+	.BufferLen.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
+	.Buffer = &Aie2PSMemTileBufferProp,
+	.DoubleBuffer = &Aie2PSMemTileDoubleBufferProp,
+	.Lock = &Aie2PSMemTileDmaLockProp,
+	.Pkt = &Aie2PSMemTileDmaBdPktProp,
+	.BdEn = &Aie2PSMemTileDmaBdEnProp,
+	.AddrMode = &Aie2PSMemTileMultiDimProp,
+	.Pad = &Aie2PSMemTilePadProp,
+	.Compression = &Aie2PSMemTileCompressionProp,
+	.SysProp = NULL
+};
+
+static const XAie_DmaChStatus Aie2PSMemTileDmaChStatus =
+{
+	/* This database is common for mm2s and s2mm channels */
+	.AieMlDmaChStatus.Status.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STATUS_LSB,
+	.AieMlDmaChStatus.Status.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STATUS_MASK,
+	.AieMlDmaChStatus.TaskQSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_LSB,
+	.AieMlDmaChStatus.TaskQSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_MASK,
+	.AieMlDmaChStatus.StalledLockAcq.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_LSB,
+	.AieMlDmaChStatus.StalledLockAcq.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_MASK,
+	.AieMlDmaChStatus.StalledLockRel.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_REL_LSB,
+	.AieMlDmaChStatus.StalledLockRel.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_REL_MASK,
+	.AieMlDmaChStatus.StalledStreamStarve.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_STREAM_STARVATION_LSB,
+	.AieMlDmaChStatus.StalledStreamStarve.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_STREAM_STARVATION_MASK,
+	.AieMlDmaChStatus.StalledTCT.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_TCT_OR_COUNT_FIFO_FULL_LSB,
+	.AieMlDmaChStatus.StalledTCT.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_TCT_OR_COUNT_FIFO_FULL_MASK,
+};
+
+static const  XAie_DmaChProp Aie2PSMemTileDmaChProp =
+{
+	.HasFoTMode = XAIE_FEATURE_AVAILABLE,
+	.HasControllerId = XAIE_FEATURE_AVAILABLE,
+	.HasEnCompression = XAIE_FEATURE_AVAILABLE,
+	.HasEnOutOfOrder = XAIE_FEATURE_AVAILABLE,
+	.MaxFoTMode = DMA_FoT_COUNTS_FROM_MM_REG,
+	.MaxRepeatCount = 256U,
+	.ControllerId.Idx = 0,
+	.ControllerId.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_CONTROLLER_ID_LSB,
+	.ControllerId.Mask =XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_CONTROLLER_ID_MASK ,
+	.EnCompression.Idx = 0,
+	.EnCompression.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_DECOMPRESSION_ENABLE_LSB,
+	.EnCompression.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_DECOMPRESSION_ENABLE_MASK,
+	.EnOutofOrder.Idx = 0,
+	.EnOutofOrder.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_ENABLE_OUT_OF_ORDER_LSB,
+	.EnOutofOrder.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_ENABLE_OUT_OF_ORDER_MASK,
+	.FoTMode.Idx = 0,
+	.FoTMode.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_FOT_MODE_LSB,
+	.FoTMode.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_FOT_MODE_MASK ,
+	.Reset.Idx = 0,
+	.Reset.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_RESET_LSB,
+	.Reset.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL_RESET_MASK,
+	.EnToken.Idx = 1,
+	.EnToken.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE_ENABLE_TOKEN_ISSUE_LSB,
+	.EnToken.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE_ENABLE_TOKEN_ISSUE_MASK,
+	.RptCount.Idx = 1,
+	.RptCount.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE_REPEAT_COUNT_LSB,
+	.RptCount.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE_REPEAT_COUNT_MASK,
+	.StartBd.Idx = 1,
+	.StartBd.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE_START_BD_ID_LSB,
+	.StartBd.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE_START_BD_ID_MASK,
+	.PauseStream = {0U},
+	.PauseMem = {0U},
+	.Enable = {0U},
+	.StartQSizeMax = 4U,
+	.DmaChStatus = &Aie2PSMemTileDmaChStatus,
+};
+
+/* Mem Tile Dma Module */
+static const  XAie_DmaMod Aie2PSMemTileDmaMod =
+{
+	.BaseAddr = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_0,
+	.IdxOffset = 0x20,  /* This is the offset between each BD */
+	.NumBds = 48,	   /* Number of BDs for AIE2PS Tile DMA */
+	.NumLocks = 192U,
+	.NumAddrDim = 4U,
+	.DoubleBuffering = XAIE_FEATURE_UNAVAILABLE,
+	.Compression = XAIE_FEATURE_AVAILABLE,
+	.Padding = XAIE_FEATURE_AVAILABLE,
+	.OutofOrderBdId = XAIE_FEATURE_AVAILABLE,
+	.InterleaveMode = XAIE_FEATURE_UNAVAILABLE,
+	.FifoMode = XAIE_FEATURE_UNAVAILABLE,
+	.EnTokenIssue = XAIE_FEATURE_AVAILABLE,
+	.RepeatCount = XAIE_FEATURE_AVAILABLE,
+	.TlastSuppress = XAIE_FEATURE_AVAILABLE,
+	.StartQueueBase = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_START_QUEUE,
+	.ChCtrlBase = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_0_CTRL,
+	.NumChannels = 6,  /* number of s2mm/mm2s channels */
+	.ChIdxOffset = 0x8,  /* This is the offset between each channel */
+	.ChStatusBase = XAIE2PSGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0,
+	.ChStatusOffset = 0x20,
+	.PadValueBase = XAIE2PSGBL_MEM_TILE_MODULE_DMA_MM2S_0_CONSTANT_PAD_VALUE,
+	.BdProp = &Aie2PSMemTileDmaProp,
+	.ChProp = &Aie2PSMemTileDmaChProp,
+	.DmaBdInit = &_XAieMl_MemTileDmaInit,
+	.SetLock = &_XAieMl_DmaSetLock,
+	.SetIntrleave = NULL,
+	.SetMultiDim = &_XAieMl_DmaSetMultiDim,
+	.SetBdIter = &_XAieMl_DmaSetBdIteration,
+	.WriteBd = &_XAieMl_MemTileDmaWriteBd,
+	.PendingBd = &_XAieMl_DmaGetPendingBdCount,
+	.WaitforDone = &_XAieMl_DmaWaitForDone,
+	.BdChValidity = &_XAieMl_MemTileDmaCheckBdChValidity,
+	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
+	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+};
+
+static const  XAie_DmaBdEnProp Aie2PSTileDmaBdEnProp =
+{
+	.NxtBd.Idx = 5U,
+	.NxtBd.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_NEXT_BD_LSB,
+	.NxtBd.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_NEXT_BD_MASK,
+	.UseNxtBd.Idx = 5U,
+	.UseNxtBd.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_USE_NEXT_BD_LSB,
+	.UseNxtBd.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_USE_NEXT_BD_MASK,
+	.ValidBd.Idx = 5U,
+	.ValidBd.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_VALID_BD_LSB,
+	.ValidBd.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_VALID_BD_MASK,
+	.OutofOrderBdId.Idx = 1U,
+	.OutofOrderBdId.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_OUT_OF_ORDER_BD_ID_LSB,
+	.OutofOrderBdId.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_OUT_OF_ORDER_BD_ID_MASK,
+	.TlastSuppress.Idx = 5U,
+	.TlastSuppress.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_TLAST_SUPPRESS_LSB,
+	.TlastSuppress.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_TLAST_SUPPRESS_MASK,
+};
+
+static const  XAie_DmaBdPkt Aie2PSTileDmaBdPktProp =
+{
+	.EnPkt.Idx = 1U,
+	.EnPkt.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_ENABLE_PACKET_LSB,
+	.EnPkt.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_ENABLE_PACKET_MASK,
+	.PktId.Idx = 1U,
+	.PktId.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_PACKET_ID_LSB,
+	.PktId.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_PACKET_ID_MASK,
+	.PktType.Idx = 1U,
+	.PktType.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_PACKET_TYPE_LSB,
+	.PktType.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_PACKET_TYPE_MASK,
+};
+
+static const  XAie_DmaBdLock Aie2PSTileDmaLockProp =
+{
+	.AieMlDmaLock.LckRelVal.Idx = 5U,
+	.AieMlDmaLock.LckRelVal.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_REL_VALUE_LSB,
+	.AieMlDmaLock.LckRelVal.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_REL_VALUE_MASK,
+	.AieMlDmaLock.LckRelId.Idx = 5U,
+	.AieMlDmaLock.LckRelId.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_REL_ID_LSB,
+	.AieMlDmaLock.LckRelId.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_REL_ID_MASK,
+	.AieMlDmaLock.LckAcqEn.Idx = 5U,
+	.AieMlDmaLock.LckAcqEn.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_ACQ_ENABLE_LSB,
+	.AieMlDmaLock.LckAcqEn.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_ACQ_ENABLE_MASK,
+	.AieMlDmaLock.LckAcqVal.Idx = 5U,
+	.AieMlDmaLock.LckAcqVal.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_ACQ_VALUE_LSB,
+	.AieMlDmaLock.LckAcqVal.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_ACQ_VALUE_MASK,
+	.AieMlDmaLock.LckAcqId.Idx = 5U,
+	.AieMlDmaLock.LckAcqId.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_ACQ_ID_LSB,
+	.AieMlDmaLock.LckAcqId.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_5_LOCK_ACQ_ID_MASK,
+};
+
+static const  XAie_DmaBdBuffer Aie2PSTileDmaBufferProp =
+{
+	.TileDmaBuff.BaseAddr.Idx = 0U,
+	.TileDmaBuff.BaseAddr.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_0_BASE_ADDRESS_LSB,
+	.TileDmaBuff.BaseAddr.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_0_BASE_ADDRESS_MASK,
+};
+
+static const XAie_DmaBdDoubleBuffer Aie2PSTileDmaDoubleBufferProp =
+{
+	.EnDoubleBuff = {0U},
+	.BaseAddr_B = {0U},
+	.FifoMode = {0U},
+	.EnIntrleaved = {0U},
+	.IntrleaveCnt = {0U},
+	.BuffSelect = {0U},
+};
+
+static const  XAie_DmaBdMultiDimAddr Aie2PSTileDmaMultiDimProp =
+{
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Idx = 2U,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_2_D0_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_2_D0_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_3_D0_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_3_D0_WRAP_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Idx = 2U,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_2_D1_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_2_D1_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_3_D1_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_3_D1_WRAP_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_3_D2_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_3_D2_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.IterCurr.Idx = 4U,
+	.AieMlMultiDimAddr.IterCurr.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_4_ITERATION_CURRENT_LSB,
+	.AieMlMultiDimAddr.IterCurr.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_4_ITERATION_CURRENT_MASK,
+	.AieMlMultiDimAddr.Iter.Wrap.Idx = 4U,
+	.AieMlMultiDimAddr.Iter.Wrap.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_4_ITERATION_WRAP_LSB,
+	.AieMlMultiDimAddr.Iter.Wrap.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_4_ITERATION_WRAP_MASK,
+	.AieMlMultiDimAddr.Iter.StepSize.Idx = 4U,
+	.AieMlMultiDimAddr.Iter.StepSize.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_4_ITERATION_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.Iter.StepSize.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_4_ITERATION_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[2U].Wrap = {0U},
+	.AieMlMultiDimAddr.DmaDimProp[3U].Wrap = {0U},
+	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize = {0U}
+};
+
+static const  XAie_DmaBdCompression Aie2PSTileDmaCompressionProp =
+{
+	.EnCompression.Idx = 1U,
+	.EnCompression.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_ENABLE_COMPRESSION_LSB,
+	.EnCompression.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_1_ENABLE_COMPRESSION_MASK,
+};
+
+/* Data structure to capture register offsets and masks for Tile Dma */
+static const  XAie_DmaBdProp Aie2PSTileDmaProp =
+{
+	.AddrAlignMask = 0x3,
+	.AddrAlignShift = 0x2,
+	.AddrMax = 0x20000,
+	.LenActualOffset = 0U,
+	.StepSizeMax = (1U << 13) - 1U,
+	.WrapMax = (1U << 8U) - 1U,
+	.IterStepSizeMax = (1U << 13) - 1U,
+	.IterWrapMax = (1U << 6U) - 1U,
+	.IterCurrMax = (1U << 6) - 1U,
+	.BufferLen.Idx = 0U,
+	.BufferLen.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
+	.BufferLen.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
+	.Buffer = &Aie2PSTileDmaBufferProp,
+	.DoubleBuffer = &Aie2PSTileDmaDoubleBufferProp,
+	.Lock = &Aie2PSTileDmaLockProp,
+	.Pkt = &Aie2PSTileDmaBdPktProp,
+	.BdEn = &Aie2PSTileDmaBdEnProp,
+	.AddrMode = &Aie2PSTileDmaMultiDimProp,
+	.Pad = NULL,
+	.Compression = &Aie2PSTileDmaCompressionProp,
+	.SysProp = NULL
+};
+
+static const XAie_DmaChStatus Aie2PSTileDmaChStatus =
+{
+	/* This database is common for mm2s and s2mm channels */
+	.AieMlDmaChStatus.Status.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STATUS_LSB,
+	.AieMlDmaChStatus.Status.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STATUS_MASK,
+	.AieMlDmaChStatus.TaskQSize.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_LSB,
+	.AieMlDmaChStatus.TaskQSize.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_MASK,
+	.AieMlDmaChStatus.StalledLockAcq.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_LSB,
+	.AieMlDmaChStatus.StalledLockAcq.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_MASK,
+	.AieMlDmaChStatus.StalledLockRel.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_REL_LSB,
+	.AieMlDmaChStatus.StalledLockRel.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_REL_MASK,
+	.AieMlDmaChStatus.StalledStreamStarve.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_STREAM_STARVATION_LSB,
+	.AieMlDmaChStatus.StalledStreamStarve.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_STREAM_STARVATION_MASK,
+	.AieMlDmaChStatus.StalledTCT.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_TCT_OR_COUNT_FIFO_FULL_LSB,
+	.AieMlDmaChStatus.StalledTCT.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_TCT_OR_COUNT_FIFO_FULL_MASK,
+};
+
+/* Data structure to capture register offsets and masks for Mem Tile and
+ * Tile Dma Channels
+ */
+static const  XAie_DmaChProp Aie2PSDmaChProp =
+{
+	.HasFoTMode = XAIE_FEATURE_AVAILABLE,
+	.HasControllerId = XAIE_FEATURE_AVAILABLE,
+	.HasEnCompression = XAIE_FEATURE_AVAILABLE,
+	.HasEnOutOfOrder = XAIE_FEATURE_AVAILABLE,
+	.MaxFoTMode = DMA_FoT_COUNTS_FROM_MM_REG,
+	.MaxRepeatCount = 256U,
+	.ControllerId.Idx = 0,
+	.ControllerId.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_CONTROLLER_ID_LSB,
+	.ControllerId.Mask =XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_CONTROLLER_ID_MASK ,
+	.EnCompression.Idx = 0,
+	.EnCompression.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_DECOMPRESSION_ENABLE_LSB,
+	.EnCompression.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_DECOMPRESSION_ENABLE_MASK,
+	.EnOutofOrder.Idx = 0,
+	.EnOutofOrder.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_ENABLE_OUT_OF_ORDER_LSB,
+	.EnOutofOrder.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_ENABLE_OUT_OF_ORDER_MASK,
+	.FoTMode.Idx = 0,
+	.FoTMode.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_FOT_MODE_LSB,
+	.FoTMode.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_FOT_MODE_MASK ,
+	.Reset.Idx = 0,
+	.Reset.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_RESET_LSB,
+	.Reset.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL_RESET_MASK,
+	.EnToken.Idx = 1,
+	.EnToken.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE_ENABLE_TOKEN_ISSUE_LSB,
+	.EnToken.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE_ENABLE_TOKEN_ISSUE_MASK,
+	.RptCount.Idx = 1,
+	.RptCount.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE_REPEAT_COUNT_LSB,
+	.RptCount.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE_REPEAT_COUNT_MASK,
+	.StartBd.Idx = 1,
+	.StartBd.Lsb = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE_START_BD_ID_LSB,
+	.StartBd.Mask = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE_START_BD_ID_MASK,
+	.PauseStream = {0U},
+	.PauseMem = {0U},
+	.Enable = {0U},
+	.StartQSizeMax = 4U,
+	.DmaChStatus = &Aie2PSTileDmaChStatus,
+};
+
+/* Tile Dma Module */
+static const  XAie_DmaMod Aie2PSTileDmaMod =
+{
+	.BaseAddr = XAIE2PSGBL_MEMORY_MODULE_DMA_BD0_0,
+	.IdxOffset = 0x20,  	/* This is the offset between each BD */
+	.NumBds = 16U,	   	/* Number of BDs for AIE2PS Tile DMA */
+	.NumLocks = 16U,
+	.NumAddrDim = 3U,
+	.DoubleBuffering = XAIE_FEATURE_UNAVAILABLE,
+	.Compression = XAIE_FEATURE_AVAILABLE,
+	.Padding = XAIE_FEATURE_UNAVAILABLE,
+	.OutofOrderBdId = XAIE_FEATURE_AVAILABLE,
+	.InterleaveMode = XAIE_FEATURE_UNAVAILABLE,
+	.FifoMode = XAIE_FEATURE_UNAVAILABLE,
+	.EnTokenIssue = XAIE_FEATURE_AVAILABLE,
+	.RepeatCount = XAIE_FEATURE_AVAILABLE,
+	.TlastSuppress = XAIE_FEATURE_AVAILABLE,
+	.StartQueueBase = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_START_QUEUE,
+	.ChCtrlBase = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_0_CTRL,
+	.NumChannels = 2U,  /* Number of s2mm/mm2s channels */
+	.ChIdxOffset = 0x8,  /* This is the offset between each channel */
+	.ChStatusBase = XAIE2PSGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0,
+	.ChStatusOffset = 0x10,
+	.PadValueBase = 0x0,
+	.BdProp = &Aie2PSTileDmaProp,
+	.ChProp = &Aie2PSDmaChProp,
+	.DmaBdInit = &_XAieMl_TileDmaInit,
+	.SetLock = &_XAieMl_DmaSetLock,
+	.SetIntrleave = NULL,
+	.SetMultiDim = &_XAieMl_DmaSetMultiDim,
+	.SetBdIter = &_XAieMl_DmaSetBdIteration,
+	.WriteBd = &_XAieMl_TileDmaWriteBd,
+	.PendingBd = &_XAieMl_DmaGetPendingBdCount,
+	.WaitforDone = &_XAieMl_DmaWaitForDone,
+	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
+	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
+	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+};
+
+static const  XAie_DmaBdEnProp Aie2PSShimDmaBdEnProp =
+{
+	.NxtBd.Idx = 7U,
+	.NxtBd.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_NEXT_BD_LSB,
+	.NxtBd.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_NEXT_BD_MASK,
+	.UseNxtBd.Idx = 7U,
+	.UseNxtBd.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_USE_NEXT_BD_LSB,
+	.UseNxtBd.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_USE_NEXT_BD_MASK,
+	.ValidBd.Idx = 7U,
+	.ValidBd.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_VALID_BD_LSB,
+	.ValidBd.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_VALID_BD_MASK,
+	.OutofOrderBdId.Idx = 2U,
+	.OutofOrderBdId.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_OUT_OF_ORDER_BD_ID_LSB,
+	.OutofOrderBdId.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_OUT_OF_ORDER_BD_ID_MASK,
+	.TlastSuppress.Idx = 7U,
+	.TlastSuppress.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_TLAST_SUPPRESS_LSB,
+	.TlastSuppress.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_TLAST_SUPPRESS_MASK,
+};
+
+static const  XAie_DmaBdPkt Aie2PSShimDmaBdPktProp =
+{
+	.EnPkt.Idx = 2U,
+	.EnPkt.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_ENABLE_PACKET_LSB,
+	.EnPkt.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_ENABLE_PACKET_MASK,
+	.PktId.Idx = 2U,
+	.PktId.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_PACKET_ID_LSB,
+	.PktId.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_PACKET_ID_MASK,
+	.PktType.Idx = 2U,
+	.PktType.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_PACKET_TYPE_LSB,
+	.PktType.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_PACKET_TYPE_MASK,
+};
+
+static const  XAie_DmaBdLock Aie2PSShimDmaLockProp =
+{
+	.AieMlDmaLock.LckRelVal.Idx = 7U,
+	.AieMlDmaLock.LckRelVal.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_REL_VALUE_LSB,
+	.AieMlDmaLock.LckRelVal.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_REL_VALUE_MASK,
+	.AieMlDmaLock.LckRelId.Idx = 7U,
+	.AieMlDmaLock.LckRelId.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_REL_ID_LSB,
+	.AieMlDmaLock.LckRelId.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_REL_ID_MASK,
+	.AieMlDmaLock.LckAcqEn.Idx = 7U,
+	.AieMlDmaLock.LckAcqEn.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_ACQ_ENABLE_LSB,
+	.AieMlDmaLock.LckAcqEn.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_ACQ_ENABLE_MASK,
+	.AieMlDmaLock.LckAcqVal.Idx = 7U,
+	.AieMlDmaLock.LckAcqVal.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_ACQ_VALUE_LSB,
+	.AieMlDmaLock.LckAcqVal.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_ACQ_VALUE_MASK,
+	.AieMlDmaLock.LckAcqId.Idx = 7U,
+	.AieMlDmaLock.LckAcqId.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_ACQ_ID_LSB,
+	.AieMlDmaLock.LckAcqId.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_7_LOCK_ACQ_ID_MASK,
+};
+
+static const  XAie_DmaBdBuffer Aie2PSShimDmaBufferProp =
+{
+	.ShimDmaBuff.AddrLow.Idx = 1U,
+	.ShimDmaBuff.AddrLow.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_1_BASE_ADDRESS_LOW_LSB,
+	.ShimDmaBuff.AddrLow.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_1_BASE_ADDRESS_LOW_MASK,
+	.ShimDmaBuff.AddrHigh.Idx = 2U,
+	.ShimDmaBuff.AddrHigh.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_BASE_ADDRESS_HIGH_LSB,
+	.ShimDmaBuff.AddrHigh.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_2_BASE_ADDRESS_HIGH_MASK,
+};
+
+static const  XAie_DmaBdDoubleBuffer Aie2PSShimDmaDoubleBufferProp =
+{
+	.EnDoubleBuff = {0U},
+	.BaseAddr_B = {0U},
+	.FifoMode = {0U},
+	.EnIntrleaved = {0U},
+	.IntrleaveCnt = {0U},
+	.BuffSelect = {0U},
+};
+
+static const  XAie_DmaBdMultiDimAddr Aie2PSShimDmaMultiDimProp =
+{
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_3_D0_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_3_D0_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_3_D0_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_3_D0_WRAP_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Idx =3U ,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_4_D1_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_4_D1_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Idx = 3U,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_4_D1_WRAP_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_4_D1_WRAP_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Idx = 5U,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_5_D2_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_5_D2_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.IterCurr.Idx = 6U,
+	.AieMlMultiDimAddr.IterCurr.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_6_ITERATION_CURRENT_LSB,
+	.AieMlMultiDimAddr.IterCurr.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_6_ITERATION_CURRENT_MASK,
+	.AieMlMultiDimAddr.Iter.Wrap.Idx = 6U,
+	.AieMlMultiDimAddr.Iter.Wrap.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_6_ITERATION_WRAP_LSB,
+	.AieMlMultiDimAddr.Iter.Wrap.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_6_ITERATION_WRAP_MASK,
+	.AieMlMultiDimAddr.Iter.StepSize.Idx = 6U,
+	.AieMlMultiDimAddr.Iter.StepSize.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_6_ITERATION_STEPSIZE_LSB,
+	.AieMlMultiDimAddr.Iter.StepSize.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_6_ITERATION_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.DmaDimProp[2U].Wrap = {0U},
+	.AieMlMultiDimAddr.DmaDimProp[3U].Wrap = {0U},
+	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize = {0U}
+};
+
+static const  XAie_DmaSysProp Aie2PSShimDmaSysProp =
+{
+	.SMID.Idx = 5U,
+	.SMID.Mask = XAIE2PSGBL_NOC_MODULE_SMID_SMID_MASK,
+	.SMID.Lsb = XAIE2PSGBL_NOC_MODULE_SMID_SMID_LSB,
+	.BurstLen.Idx = 4U,
+	.BurstLen.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_4_BURST_LENGTH_LSB,
+	.BurstLen.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_4_BURST_LENGTH_MASK,
+	.AxQos.Idx = 5U,
+	.AxQos.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_5_AXQOS_LSB,
+	.AxQos.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_5_AXQOS_MASK,
+	.SecureAccess.Idx = 3U,
+	.SecureAccess.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_3_SECURE_ACCESS_LSB,
+	.SecureAccess.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_3_SECURE_ACCESS_MASK,
+	.AxCache.Idx = 5U,
+	.AxCache.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_5_AXCACHE_LSB,
+	.AxCache.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_5_AXCACHE_MASK,
+};
+
+/* Data structure to capture register offsets and masks for Tile Dma */
+static const  XAie_DmaBdProp Aie2PSShimDmaProp =
+{
+	.AddrAlignMask = 0x3,
+	.AddrAlignShift = 0U,
+	.AddrMax = 0x1000000000000,
+	.LenActualOffset = 0U,
+	.StepSizeMax = (1U << 20) - 1U,
+	.WrapMax = (1U << 10U) - 1U,
+	.IterStepSizeMax = (1U << 20) - 1U,
+	.IterWrapMax = (1U << 6U) - 1U,
+	.IterCurrMax = (1U << 6) - 1U,
+	.BufferLen.Idx = 0U,
+	.BufferLen.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_BD0_0_BUFFER_LENGTH_LSB,
+	.BufferLen.Mask = XAIE2PSGBL_NOC_MODULE_DMA_BD0_0_BUFFER_LENGTH_MASK,
+	.Buffer = &Aie2PSShimDmaBufferProp,
+	.DoubleBuffer = &Aie2PSShimDmaDoubleBufferProp,
+	.Lock = &Aie2PSShimDmaLockProp,
+	.Pkt = &Aie2PSShimDmaBdPktProp,
+	.BdEn = &Aie2PSShimDmaBdEnProp,
+	.AddrMode = &Aie2PSShimDmaMultiDimProp,
+	.Pad = NULL,
+	.Compression = NULL,
+	.SysProp = &Aie2PSShimDmaSysProp
+};
+
+static const XAie_DmaChStatus Aie2PSShimDmaChStatus =
+{
+	/* This database is common for mm2s and s2mm channels */
+	.AieMlDmaChStatus.Status.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STATUS_LSB,
+	.AieMlDmaChStatus.Status.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STATUS_MASK,
+	.AieMlDmaChStatus.TaskQSize.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_LSB,
+	.AieMlDmaChStatus.TaskQSize.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_MASK,
+	.AieMlDmaChStatus.StalledLockAcq.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_LSB,
+	.AieMlDmaChStatus.StalledLockAcq.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_MASK,
+	.AieMlDmaChStatus.StalledLockRel.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_REL_LSB,
+	.AieMlDmaChStatus.StalledLockRel.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_REL_MASK,
+	.AieMlDmaChStatus.StalledStreamStarve.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_STREAM_STARVATION_LSB,
+	.AieMlDmaChStatus.StalledStreamStarve.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_STREAM_STARVATION_MASK,
+	.AieMlDmaChStatus.StalledTCT.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_TCT_OR_COUNT_FIFO_FULL_LSB,
+	.AieMlDmaChStatus.StalledTCT.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_TCT_OR_COUNT_FIFO_FULL_MASK,
+};
+
+/* Data structure to capture register offsets and masks for Mem Tile and
+ * Tile Dma Channels
+ */
+static const  XAie_DmaChProp Aie2PSShimDmaChProp =
+{
+	.HasFoTMode = XAIE_FEATURE_AVAILABLE,
+	.HasControllerId = XAIE_FEATURE_AVAILABLE,
+	.HasEnCompression = XAIE_FEATURE_AVAILABLE,
+	.HasEnOutOfOrder = XAIE_FEATURE_AVAILABLE,
+	.MaxFoTMode = DMA_FoT_COUNTS_FROM_MM_REG,
+	.MaxRepeatCount = 256U,
+	.ControllerId.Idx = 0U,
+	.ControllerId.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL_CONTROLLER_ID_LSB ,
+	.ControllerId.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL_CONTROLLER_ID_MASK ,
+	.EnCompression.Idx = 0U,
+	.EnCompression.Lsb = 0U,
+	.EnCompression.Mask = 0U,
+	.EnOutofOrder.Idx = 0U,
+	.EnOutofOrder.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL_ENABLE_OUT_OF_ORDER_LSB,
+	.EnOutofOrder.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL_ENABLE_OUT_OF_ORDER_MASK,
+	.FoTMode.Idx = 0,
+	.FoTMode.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL_FOT_MODE_LSB,
+	.FoTMode.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL_FOT_MODE_MASK ,
+	.Reset.Idx = 0U,
+	.Reset.Lsb = 0U,
+	.Reset.Mask = 0U,
+	.EnToken.Idx = 1U,
+	.EnToken.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE_ENABLE_TOKEN_ISSUE_LSB,
+	.EnToken.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE_ENABLE_TOKEN_ISSUE_MASK,
+	.RptCount.Idx = 1U,
+	.RptCount.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE_REPEAT_COUNT_LSB,
+	.RptCount.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE_REPEAT_COUNT_MASK,
+	.StartBd.Idx = 1U,
+	.StartBd.Lsb = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE_START_BD_ID_LSB,
+	.StartBd.Mask = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE_START_BD_ID_MASK,
+	.PauseStream = {0U},
+	.PauseMem = {0U},
+	.Enable = {0U},
+	.StartQSizeMax = 4U,
+	.DmaChStatus = &Aie2PSShimDmaChStatus,
+};
+
+/* Tile Dma Module */
+static const  XAie_DmaMod Aie2PSShimDmaMod =
+{
+	.BaseAddr = XAIE2PSGBL_NOC_MODULE_DMA_BD0_0,
+	.IdxOffset = 0x20,  	/* This is the offset between each BD */
+	.NumBds = 16U,	   	/* Number of BDs for AIE2PS Tile DMA */
+	.NumLocks = 16U,
+	.NumAddrDim = 3U,
+	.DoubleBuffering = XAIE_FEATURE_UNAVAILABLE,
+	.Compression = XAIE_FEATURE_UNAVAILABLE,
+	.Padding = XAIE_FEATURE_UNAVAILABLE,
+	.OutofOrderBdId = XAIE_FEATURE_AVAILABLE,
+	.InterleaveMode = XAIE_FEATURE_UNAVAILABLE,
+	.FifoMode = XAIE_FEATURE_UNAVAILABLE,
+	.EnTokenIssue = XAIE_FEATURE_AVAILABLE,
+	.RepeatCount = XAIE_FEATURE_AVAILABLE,
+	.TlastSuppress = XAIE_FEATURE_AVAILABLE,
+	.StartQueueBase = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_TASK_QUEUE,
+	.ChCtrlBase = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_0_CTRL,
+	.NumChannels = 2U,  /* Number of s2mm/mm2s channels */
+	.ChIdxOffset = 0x8,  /* This is the offset between each channel */
+	.ChStatusBase = XAIE2PSGBL_NOC_MODULE_DMA_S2MM_STATUS_0,
+	.ChStatusOffset = 0x8,
+	.PadValueBase = 0x0,
+	.BdProp = &Aie2PSShimDmaProp,
+	.ChProp = &Aie2PSShimDmaChProp,
+	.DmaBdInit = &_XAieMl_ShimDmaInit,
+	.SetLock = &_XAieMl_DmaSetLock,
+	.SetIntrleave = NULL,
+	.SetMultiDim = &_XAieMl_DmaSetMultiDim,
+	.SetBdIter = &_XAieMl_DmaSetBdIteration,
+	.WriteBd = &_XAieMl_ShimDmaWriteBd,
+	.PendingBd = &_XAieMl_DmaGetPendingBdCount,
+	.WaitforDone = &_XAieMl_DmaWaitForDone,
+	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
+	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
+	.UpdateBdAddr = &_XAieMl_ShimDmaUpdateBdAddr,
+};
+#endif /* XAIE_FEATURE_DMA_ENABLE */
+
 #ifdef XAIE_FEATURE_CORE_ENABLE
 	#define AIE2PSCOREMOD &Aie2PSCoreMod
 #else
@@ -1432,6 +2163,15 @@ static const  XAie_StrmMod Aie2PSMemTileStrmSw =
 	#define AIE2PSTILESTRMSW NULL
 	#define AIE2PSSHIMSTRMSW NULL
 	#define AIE2PSMEMTILESTRMSW NULL
+#endif
+#ifdef XAIE_FEATURE_DMA_ENABLE
+	#define AIE2PSTILEDMAMOD &Aie2PSTileDmaMod
+	#define AIE2PSSHIMDMAMOD &Aie2PSShimDmaMod
+	#define AIE2PSMEMTILEDMAMOD &Aie2PSMemTileDmaMod
+#else
+	#define AIE2PSTILEDMAMOD NULL
+	#define AIE2PSSHIMDMAMOD NULL
+	#define AIE2PSMEMTILEDMAMOD NULL
 #endif
 
 /*
@@ -1449,6 +2189,7 @@ XAie_TileMod Aie2PSMod[] =
 		.NumModules = 2U,
 		.CoreMod = AIE2PSCOREMOD,
 		.StrmSw  = AIE2PSTILESTRMSW,
+		.DmaMod  = AIE2PSTILEDMAMOD,
 	},
 	{
 		/*
@@ -1457,6 +2198,7 @@ XAie_TileMod Aie2PSMod[] =
 		.NumModules = 1U,
 		.CoreMod = NULL,
 		.StrmSw  = AIE2PSSHIMSTRMSW,
+		.DmaMod  = AIE2PSSHIMDMAMOD,
 	},
 	{
 		/*
@@ -1465,6 +2207,7 @@ XAie_TileMod Aie2PSMod[] =
 		.NumModules = 1U,
 		.CoreMod = NULL,
 		.StrmSw  = AIE2PSSHIMSTRMSW,
+		.DmaMod  = NULL,
 	},
 	{
 		/*
@@ -1473,6 +2216,7 @@ XAie_TileMod Aie2PSMod[] =
 		.NumModules = 1U,
 		.CoreMod = NULL,
 		.StrmSw  = AIE2PSMEMTILESTRMSW,
+		.DmaMod  = AIE2PSMEMTILEDMAMOD,
 	},
 };
 
