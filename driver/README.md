@@ -39,3 +39,13 @@ can execute the low level register IO operations for the following backends:
 HTML docs are populated in ./tmp/api/
 
 PDF doc will be available at ./tmp/latex/refman.pdf
+
+### CMake Alternative
+	cmake -S . -B build
+	cmake --build ./build --parallel
+
+### Backend for Cmake
+	-DLINUX_BACKEND=on
+	-DMETAL_BACKEND=on
+	-DSOCKET_BACKEND=on
+	-DDEBUG_BACKEND=on
