@@ -22,12 +22,15 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
-#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef __linux__
+#include <pthread.h>
 #include <unistd.h>
+#endif
 
 #ifdef __AIESIM__ /* AIE simulator */
 

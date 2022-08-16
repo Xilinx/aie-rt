@@ -21,7 +21,9 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#ifdef __linux__
 #include <unistd.h>
+#endif
 
 #include "xaie_core_aie.h"
 #include "xaie_events_aie.h"
