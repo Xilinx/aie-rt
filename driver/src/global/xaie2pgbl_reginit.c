@@ -40,7 +40,11 @@
 /**************************** Type Definitions *******************************/
 
 /**************************** Macro Definitions ******************************/
+#ifdef _MSC_VER
+#define XAIE2P_TILES_BITMAPSIZE	1U
+#else
 #define XAIE2P_TILES_BITMAPSIZE	0U
+#endif
 
 /************************** Variable Definitions *****************************/
 /* bitmaps to capture modules being used by the application */
