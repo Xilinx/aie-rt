@@ -65,12 +65,20 @@ typedef enum {
  * This structure is used to request the statistics of a resource type of a
  * module of a tile.
  */
+/*
+ * __attribute is not supported for windows. remove it conditionally.
+ */
+#ifdef _MSC_VER
+#define XAIE_PACK_ATTRIBUTE
+#else
+#define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
+#endif
 typedef struct {
 	XAie_LocType Loc;
 	u8 Mod;
 	u8 RscType;
 	u8 NumRscs;
-} __attribute__((packed, aligned(4))) XAie_UserRscStat;
+} XAIE_PACK_ATTRIBUTE XAie_UserRscStat;
 
 /************************** Function Prototypes  *****************************/
 #ifndef XAIE_FEATURE_RSC_ENABLE
