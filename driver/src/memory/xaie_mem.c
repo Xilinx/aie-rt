@@ -211,11 +211,13 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Aligned bytes */
-	RC = XAie_BlockWrite32(DevInst, DmAddrRoundUp,
-			(const u32 *)(CharSrc + BytePtr),
-			(RemBytes / XAIE_MEM_WORD_ALIGN_SIZE));
-	if(RC != XAIE_OK) {
-		return RC;
+	if (RemBytes >= XAIE_MEM_WORD_ALIGN_SIZE) {
+		RC = XAie_BlockWrite32(DevInst, DmAddrRoundUp,
+				(const u32 *)(CharSrc + BytePtr),
+				(RemBytes / XAIE_MEM_WORD_ALIGN_SIZE));
+		if(RC != XAIE_OK) {
+			return RC;
+		}
 	}
 	/* Remaining unaligned bytes */
 	if(RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) {
