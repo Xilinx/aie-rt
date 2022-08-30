@@ -103,7 +103,7 @@ static AieRC XAie_MetalIO_Finish(void *IOInst)
 *		a warning.
 *
 *******************************************************************************/
-void _XAie_MetalIO_MapNpi(XAie_MetalIO *IOInst)
+void _XAie_MetalIO_MapNpi(XAie_MetalIO *IOInst, u64 NpiBaseAddr)
 {
 	int Fd;
 	void *NpiAddr;
@@ -115,8 +115,14 @@ void _XAie_MetalIO_MapNpi(XAie_MetalIO *IOInst)
 		return;
 	}
 
+	if(IOInst->NpiBaseAddr) {
+		munmap(IOInst->NpiBaseAddr, IOInst->NpiMapSize);
+		IOInst->NpiBaseAddr = NULL;
+		IOInst->NpiMapSize = 0;
+	}
+
 	NpiAddr = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, Fd,
-			(off_t)XAIE_NPI_BASEADDR);
+			NpiBaseAddr);
 	if(NpiAddr == MAP_FAILED) {
 		XAIE_WARN("Failed to mmap NPI space. Continuing without NPI\n");
 		IOInst->NpiBaseAddr = NULL;
@@ -211,8 +217,9 @@ static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 	MetalIOInst->BaseAddr = (u64)Addr;
 	MetalIOInst->DevFd = Fd;
 	MetalIOInst->MapSize = Size;
+	MetalIOInst->NpiBaseAddr = NULL;
 
-	_XAie_MetalIO_MapNpi(MetalIOInst);
+	_XAie_MetalIO_MapNpi(MetalIOInst, XAIE_NPI_BASEADDR);
 
 	DevInst->IOInst = (void *)MetalIOInst;
 
@@ -577,6 +584,9 @@ static AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			return _XAie_PrivilegeTeardownPart(DevInst);
 		case XAIE_BACKEND_OP_GET_RSC_STAT:
 			return _XAie_GetRscStatCommon(DevInst, Arg);
+		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
+			_XAie_MetalIO_MapNpi(IOInst, *((u64 *)Arg));
+			return XAIE_OK;
 		default:
 			RC = XAIE_FEATURE_NOT_SUPPORTED;
 			break;

@@ -385,6 +385,12 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			return _XAie_PrivilegeTeardownPart(DevInst);
 		case XAIE_BACKEND_OP_GET_RSC_STAT:
 			return _XAie_GetRscStatCommon(DevInst, Arg);
+		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
+		{
+			XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+			DebugIOInst->NpiBaseAddr = *((u64 *)Arg);
+			break;
+		}
 		default:
 			XAIE_ERROR("Debug backend doesn't support operation"
 					" %u.\n", Op);
