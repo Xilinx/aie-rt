@@ -639,6 +639,13 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 	AieRC RC;
 	XAie_Range Cols = MData->Cols;
 
+	/* Backward compatibility to support single channel interrupts */
+	if (Cols.Num == 0) {
+		XAIE_DBG("Backtrack column range undefined. Backtracking (%d, %d).\n",
+				Cols.Start, Cols.Start + Cols.Num);
+		Cols.Num = DevInst->NumCols;
+	}
+
 	XAie_LocType L2 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
 	XAie_LocType L1 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
 
