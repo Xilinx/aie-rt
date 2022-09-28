@@ -275,10 +275,32 @@ static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
 	(void) DevInst;
 }
 
+/*****************************************************************************/
+/**
+*
+* This API initialize the data memory to zero.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, error code on failure
+*
+* @note		None
+*
+******************************************************************************/
 static inline void  _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 {
-	// TODO
-	(void) DevInst;
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
+		/* Isolate boundrary of CORE tiles */
+		for (u8 R = XAIE_AIE_TILE_ROW_START;
+			R < XAIE_NUM_ROWS; R++) {
+			u64 RegAddr;
+
+			RegAddr = _XAie_LGetTileAddr(R, C) +
+				XAIE_MEM_MOD_DMEM_START_ADDR;
+			_XAie_LPartBlockSet32(DevInst, RegAddr, 0,
+				XAIE_MEM_MOD_DMEM_SIZE);
+		}
+	}
 }
 
 #endif		/* end of protection macro */
