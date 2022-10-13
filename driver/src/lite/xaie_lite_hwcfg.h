@@ -45,9 +45,16 @@
 #define XAIE_NUM_COLS			50
 #endif
 
+#define XAIE_TILE_NUM_LOCKS     	16
+#define XAIE_SHIM_NUM_LOCKS     	16
+
+#define XAIE_TILE_DMA_NUM_CH		2U
+#define XAIE_SHIM_DMA_NUM_CH		2U
+
 #define XAIE_COL_SHIFT			23
 #define XAIE_ROW_SHIFT			18
 #define XAIE_SHIM_ROW			0
+#define XAIE_SHIM_NUM_ROWS          1
 #define XAIE_MEM_TILE_ROW_START		0
 #define XAIE_MEM_TILE_NUM_ROWS		0
 #define XAIE_AIE_TILE_ROW_START		1
@@ -72,9 +79,18 @@
 #define XAIE_NUM_COLS			38
 #endif
 
+#define XAIE_TILE_NUM_LOCKS     	16
+#define XAIE_MEM_TILE_NUM_LOCKS 	64
+#define XAIE_SHIM_NUM_LOCKS     	16
+
+#define XAIE_TILE_DMA_NUM_CH		2U
+#define XAIE_MEM_TILE_DMA_NUM_CH	6U
+#define XAIE_SHIM_DMA_NUM_CH		2U
+
 #define XAIE_COL_SHIFT			25
 #define XAIE_ROW_SHIFT			20
 #define XAIE_SHIM_ROW			0
+#define XAIE_SHIM_NUM_ROWS		1
 #define XAIE_MEM_TILE_ROW_START		1
 #define XAIE_MEM_TILE_NUM_ROWS		2
 #define XAIE_AIE_TILE_ROW_START		3
@@ -102,11 +118,21 @@
 #define XAIE_NUM_COLS			5
 #endif
 
+#define XAIE_TILE_NUM_LOCKS     	16
+#define XAIE_MEM_TILE_NUM_LOCKS 	64
+#define XAIE_SHIM_NUM_LOCKS     	16
+
+#define XAIE_TILE_DMA_NUM_CH		2U
+#define XAIE_MEM_TILE_DMA_NUM_CH	6U
+#define XAIE_SHIM_DMA_NUM_CH		2U
+
 #define XAIE_COL_SHIFT			25
 #define XAIE_ROW_SHIFT			20
 #define XAIE_SHIM_ROW			0
+#define XAIE_SHIM_NUM_ROWS		1
 #define XAIE_MEM_TILE_ROW_START		1
 #define XAIE_MEM_TILE_NUM_ROWS		1
+
 #define XAIE_AIE_TILE_ROW_START		2
 #define XAIE_AIE_TILE_NUM_ROWS		4
 
@@ -134,9 +160,19 @@
 #define XAIE_NUM_COLS			8
 #endif
 
+
+#define XAIE_TILE_NUM_LOCKS     	16
+#define XAIE_MEM_TILE_NUM_LOCKS 	64
+#define XAIE_SHIM_NUM_LOCKS     	16
+
+#define XAIE_TILE_DMA_NUM_CH		2U
+#define XAIE_MEM_TILE_DMA_NUM_CH	6U
+#define XAIE_SHIM_DMA_NUM_CH		2U
+
 #define XAIE_COL_SHIFT			25
 #define XAIE_ROW_SHIFT			20
 #define XAIE_SHIM_ROW			0
+#define XAIE_SHIM_NUM_ROWS          1
 #define XAIE_MEM_TILE_ROW_START		1
 #define XAIE_MEM_TILE_NUM_ROWS		1
 #define XAIE_AIE_TILE_ROW_START		2
