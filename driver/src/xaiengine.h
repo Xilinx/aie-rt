@@ -27,6 +27,7 @@ extern "C" {
 #include <xaiengine/xaie_util_events.h>
 #include <xaiengine/xaiegbl.h>
 #include <xaiengine/xaiegbl_defs.h>
+#include <xaiengine/xaie_lite_util.h>
 
 #ifdef __cplusplus
 }
