@@ -483,7 +483,7 @@ AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 {
 	AieRC RC;
-	u32 GroupErrorEnableMask;
+	u32 GroupErrorEnableMask, GroupEvent;;
 	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
 	XAie_LocType Loc;
 
@@ -491,6 +491,16 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
 	AieRowStart = DevInst->AieTileRowStart;
 	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+
+	/*
+	 * TBD: EVENT list have to be revisited and if possible redunat event should be removed.
+	 */
+	if(DevInst->DevProp.DevGen ==  XAIE_DEV_GEN_AIE2PS) {
+        GroupEvent = XAIE_EVENT_PL_GROUP_ERRORS;
+	} else {
+        GroupEvent = XAIE_EVENT_GROUP_ERRORS_PL;
+	}
+
 
 	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
 		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
@@ -565,11 +575,12 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 		 * Shim tile only needs to setup error notification with first
 		 * level interrupt controller.
 		 */
+
 		Loc = XAie_TileLoc(Col, DevInst->ShimRow);
 		GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
 								XAIE_PL_MOD);
 		RC = XAie_EventGroupControl(DevInst, Loc, XAIE_PL_MOD,
-					XAIE_EVENT_GROUP_ERRORS_PL,
+					GroupEvent,
 					GroupErrorEnableMask);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to configure group error in shim tile\n");
@@ -578,7 +589,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 
 		RC = XAie_IntrCtrlL1Event(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				XAIE_ERROR_BROADCAST_ID,
-				XAIE_EVENT_GROUP_ERRORS_PL);
+				GroupEvent);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
 			return RC;

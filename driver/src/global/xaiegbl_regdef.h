@@ -323,6 +323,7 @@ typedef struct {
 typedef struct {
 	XAie_RegBdFldAttr AddrLow;
 	XAie_RegBdFldAttr AddrHigh;
+	XAie_RegBdFldAttr AddrExtHigh;
 } XAie_ShimDmaBuffer;
 
 /*
