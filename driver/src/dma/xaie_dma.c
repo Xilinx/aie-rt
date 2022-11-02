@@ -2106,6 +2106,8 @@ AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 		return XAIE_INVALID_ADDRESS;
 	}
 
+	Addr = Addr >> DmaMod->BdProp->AddrAlignShift;
+
 	return DmaMod->UpdateBdAddr(DevInst, DmaMod, Loc, Addr, BdNum);
 }
 
