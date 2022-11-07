@@ -384,14 +384,7 @@ AieRC _XAieMl_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 
 	Addr = BdBaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	for(u8 i = 0U; i < XAIEML_MEMTILEDMA_NUM_BD_WORDS; i++) {
-		RC = XAie_Write32(DevInst, Addr + i * 4U, BdWord[i]);
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-	}
-
-	return XAIE_OK;
+	return XAie_BlockWrite32(DevInst, Addr, BdWord, XAIEML_MEMTILEDMA_NUM_BD_WORDS);
 }
 
 /*****************************************************************************/
@@ -414,7 +407,6 @@ AieRC _XAieMl_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 AieRC _XAieMl_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum)
 {
-	AieRC RC;
 	u64 Addr;
 	u64 BdBaseAddr;
 	u32 BdWord[XAIEML_TILEDMA_NUM_BD_WORDS];
@@ -503,14 +495,7 @@ AieRC _XAieMl_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 
 	Addr = BdBaseAddr + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	for(u8 i = 0U; i < XAIEML_TILEDMA_NUM_BD_WORDS; i++) {
-		RC = XAie_Write32(DevInst, Addr + i * 4U, BdWord[i]);
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-	}
-
-	return XAIE_OK;
+	return XAie_BlockWrite32(DevInst, Addr, BdWord, XAIEML_TILEDMA_NUM_BD_WORDS);
 }
 
 /*****************************************************************************/
