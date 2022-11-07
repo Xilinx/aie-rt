@@ -46,8 +46,11 @@
 *			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
 *			For Pl or Shim tile - XAIE_PL_MOD,
 *			For Mem tile - XAIE_MEM_MOD.
-* @param	Counter:Performance Counter
-* @param	CounterVal: Pointer to store Counter Value
+* @param	Counter:Performance Counter. If value is MaxCounterVal,
+*                       all counter values will be returned
+* @param	CounterVal: Pointer to store Counter Value.
+*                           If Counter is MaxCounterVal, CounterVal pointer is
+*                           expected to be large to store all counter values
 * @return	XAIE_OK on success
 *		XAIE_INVALID_ARGS if any argument is invalid
 *		XAIE_INVALID_TILE if tile type from Loc is invalid
@@ -58,9 +61,8 @@
 AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, u32 *CounterVal)
 {
-	u32 CounterRegOffset;
 	u64 CounterRegAddr;
-	u8 TileType;
+	u8 TileType, NumCounter;
 	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 
@@ -89,20 +91,30 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Checking for valid Counter */
-	if(Counter >= PerfMod->MaxCounterVal) {
+	if(Counter > PerfMod->MaxCounterVal) {
 		XAIE_ERROR("Invalid Counter number: %d\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
 
-	/* Get offset address based on Counter */
-	CounterRegOffset = PerfMod->PerfCounterBaseAddr +
-				((Counter)*PerfMod->PerfCounterOffsetAdd);
+        /* If Counter is MaxCounterVal, return all counter values */
+        if (Counter == PerfMod->MaxCounterVal) {
+                NumCounter = PerfMod->MaxCounterVal;
+                Counter = 0;
+        } else {
+                NumCounter = 1;
+        }
 
-	/* Compute absolute address and write to register */
-	CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		CounterRegOffset;
+        /* Compute register address without offset */
+        CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+                                                PerfMod->PerfCounterBaseAddr;
 
-	return XAie_Read32(DevInst, CounterRegAddr, CounterVal);
+        for (u8 C = 0; C < NumCounter; C++) {
+                /* Add offset address based on Counter and read */
+                RC |= XAie_Read32(DevInst,
+                        CounterRegAddr + ((Counter)*PerfMod->PerfCounterOffsetAdd),
+                        CounterVal + C);
+        }
+        return RC;
 }
 /*****************************************************************************/
 /* This API configures the control registers corresponding to the counters
