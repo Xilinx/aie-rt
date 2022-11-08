@@ -436,8 +436,11 @@ AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 	}
 
 	DmaMod = DmaDesc->DmaMod;
-	if(((Addr & DmaMod->BdProp->AddrAlignMask) != 0U) ||
-			((Addr + Len) > DmaMod->BdProp->AddrMax)) {
+	if(((Addr & DmaMod->BdProp->AddrAlignMask) != 0U) ) {
+		/* TODO : Removed the boundary check as the multi dim address
+		 * calculation is not linear. Have to add a logic to make sure
+		 * we are not accessing above the address range.
+		 */
 		XAIE_ERROR("Invalid Address\n");
 		return XAIE_INVALID_ADDRESS;
 	}
