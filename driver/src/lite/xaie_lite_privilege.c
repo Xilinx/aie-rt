@@ -497,7 +497,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 
 	RC = _XAie_LPartDataMemZeroInit(DevInst);
 	if (RC != XAIE_OK)
-		return XAIE_OK;
+		return RC;
 
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
 
