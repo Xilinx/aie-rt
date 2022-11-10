@@ -50,7 +50,7 @@ static inline u64 _XAie_LPartGetTileAddr(XAie_DevInst *DevInst,
 extern inline void _XAie_LRawWrite32(u64 RegAddr, u32 Value);
 extern inline void _XAie_LRawMaskWrite32(u64 RegAddr, u32 Mask, u32 Value);
 extern inline u32 _XAie_LRawRead32(u64 RegAddr);
-extern inline u32 _XAie_LRawPoll32(u64 RegAddr, u32 Mask, u32 Value, u32 TimeoutUs);
+extern inline int _XAie_LRawPoll32(u64 RegAddr, u32 Mask, u32 Value, u32 TimeoutUs);
 
 #elif defined(__AIEDEBUG__)
 __FORCE_INLINE__
@@ -169,7 +169,7 @@ static inline u32 _XAie_LPartRead32(XAie_DevInst *DevInst, u64 RegAddr)
 }
 
 __FORCE_INLINE__
-static inline u32 _XAie_LPartPoll32(XAie_DevInst *DevInst, u64 RegAddr,
+static inline int _XAie_LPartPoll32(XAie_DevInst *DevInst, u64 RegAddr,
 		u32 Mask, u32 Value, u32 TimeOutUs)
 {
 	return _XAie_LRawPoll32((DevInst->BaseAddr + RegAddr), Mask, Value,

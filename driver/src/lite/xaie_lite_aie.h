@@ -263,18 +263,6 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 	_XAie_LNpiSetLock(XAIE_ENABLE);
 }
 
-static inline void _XAie_LPartResetModules(XAie_DevInst *DevInst)
-{
-	/* No-op for AIE since there is no register to reset modules */
-	(void) DevInst;
-}
-
-static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
-{
-	/* No-op for AIE since there is no register to reset modules */
-	(void) DevInst;
-}
-
 /*****************************************************************************/
 /**
 *
@@ -287,7 +275,7 @@ static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
 * @note		None
 *
 ******************************************************************************/
-static inline void  _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
+static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 {
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		/* Isolate boundrary of CORE tiles */
@@ -301,6 +289,7 @@ static inline void  _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 				XAIE_MEM_MOD_DMEM_SIZE);
 		}
 	}
+	return XAIE_OK;
 }
 
 #endif		/* end of protection macro */

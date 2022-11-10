@@ -296,9 +296,26 @@ static inline AieRC _XAie_LIsShimDmaIdle(XAie_DevInst *DevInst,
 	return XAIE_OK;
 }
 
+static inline int _XAie_LMemBarrier(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	u64 RegAddr;
+	u32 Value = 0xBEEF;
+	int Ret;
+
+	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + XAIE_PL_MODULE_SPARE_REG;
+	_XAie_LPartWrite32(DevInst, RegAddr, Value);
+	Ret = _XAie_LPartPoll32(DevInst, RegAddr, 0x1, Value, 800);
+	if (Ret < 0)
+		return Ret;
+
+	_XAie_LPartWrite32(DevInst, RegAddr, 0U);
+	return 0;
+}
+
 static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 {
 	u64 RegAddr;
+	int Ret;
 
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		for (u8 R = XAIE_MEM_TILE_ROW_START;
@@ -309,7 +326,9 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK,
 				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK);
 		}
+	}
 
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		for (u8 R = XAIE_AIE_TILE_ROW_START;
 			R < XAIE_NUM_ROWS; R++) {
 			RegAddr = _XAie_LGetTileAddr(R, C) +
@@ -320,19 +339,26 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 		}
 	}
 
-	/* Poll last mem module and last mem tile mem module */
-	RegAddr = _XAie_LGetTileAddr(XAIE_NUM_ROWS - 1,
-			DevInst->NumCols - 1) +
-			XAIE_MEM_MOD_MEM_CNTR_REGOFF;
-	_XAie_LPartPoll32(DevInst, RegAddr,
-			XAIE_MEM_MOD_MEM_CNTR_ZEROISATION_MASK, 0, 800);
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
+		Ret = _XAie_LMemBarrier(DevInst, XAie_TileLoc(C, 0));
+		if (Ret < 0)
+			return XAIE_ERR;
 
-	RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1,
-			DevInst->NumCols - 1) +
-			XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
-	_XAie_LPartPoll32(DevInst, RegAddr,
-			XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
+		/* Poll last mem module and last mem tile mem module */
+		RegAddr = _XAie_LGetTileAddr(XAIE_NUM_ROWS - 1, C) +
+				XAIE_MEM_MOD_MEM_CNTR_REGOFF;
+		Ret = _XAie_LPartPoll32(DevInst, RegAddr,
+				XAIE_MEM_MOD_MEM_CNTR_ZEROISATION_MASK, 0, 800);
+		if (Ret < 0)
+			return XAIE_ERR;
 
+		RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1, C) +
+				XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
+		Ret = _XAie_LPartPoll32(DevInst, RegAddr,
+				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
+		if (Ret < 0)
+			return XAIE_ERR;
+	}
 }
 
 /*****************************************************************************/
@@ -365,96 +391,6 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 	_XAie_LNpiSetLock(XAIE_DISABLE);
 	_XAie_LNpiWriteCheck32(XAIE_NPI_PROT_REG_CNTR_REG, RegVal);
 	_XAie_LNpiSetLock(XAIE_ENABLE);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API resets all the modules for clearing the AIE context.
-*
-* @param	DevInst: Device Instance
-*
-* @return       None.
-*
-* @note		Internal API only.
-*
-******************************************************************************/
-static inline void _XAie_LPartResetModules(XAie_DevInst *DevInst)
-{
-	for(u8 C = 0; C < DevInst->NumCols; C++) {
-		u64 RegAddr;
-		u32 RegVal;
-
-		for (u8 R = XAIE_MEM_TILE_ROW_START;
-			R < XAIE_AIE_TILE_ROW_START; R++) {
-			RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_MEM_TILE_MODULE_RESET_REGOFF;
-			RegVal = XAie_SetField(1U,
-					XAIE_MEM_TILE_MEM_MODULE_RESET_LSB,
-					XAIE_MEM_TILE_MEM_MODULE_RESET_MASK);
-			_XAie_LPartWrite32(DevInst, RegAddr, RegVal);
-			_XAie_LPartWrite32(DevInst, RegAddr, 0U);
-		}
-
-		for (u8 R = XAIE_AIE_TILE_ROW_START;
-			R < XAIE_NUM_ROWS; R++) {
-			RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_AIE_TILE_MODULE_RESET_REGOFF;
-			RegVal = XAie_SetField(1U,
-					XAIE_AIE_TILE_MEM_MODULE_RESET_LSB,
-					XAIE_AIE_TILE_MEM_MODULE_RESET_MASK) |
-				XAie_SetField(1U,
-						XAIE_AIE_TILE_CORE_MODULE_RESET_LSB,
-						XAIE_AIE_TILE_CORE_MODULE_RESET_MASK);
-
-			_XAie_LPartWrite32(DevInst, RegAddr, RegVal);
-			_XAie_LPartWrite32(DevInst, RegAddr, 0U);
-		}
-
-		RegAddr = _XAie_LGetTileAddr(0, C) +
-			XAIE_SHIM_TILE_NOC_MODULE_RESET_REGOFF;
-		RegVal = XAie_SetField(1U, XAIE_SHIM_TILE_NOC_MODULE_RESET_LSB,
-				XAIE_SHIM_TILE_NOC_MODULE_RESET_MASK);
-		_XAie_LPartWrite32(DevInst, RegAddr, RegVal);
-		_XAie_LPartWrite32(DevInst, RegAddr, 0x0);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API clears all the scalar and vector registers.
-*
-* @param	DevInst: Device Instance
-*
-* @return       None.
-*
-* @note		Internal API only.
-*
-******************************************************************************/
-static inline void _XAie_LResetCoreRegisters(XAie_DevInst *DevInst)
-{
-	for (u8 C = 0U; C < DevInst->NumCols; C++) {
-		for (u8 R = XAIE_AIE_TILE_ROW_START; R < XAIE_NUM_ROWS; R++) {
-			u64 RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_AIE_TILE_CORE_AMLL0_PART1_REGOFF;
-			_XAie_LPartBlockSet32(DevInst, RegAddr, 0U,
-					XAIE_AIE_TILE_CORE_AMLL0_PART1_SIZE);
-			RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_AIE_TILE_CORE_WL0_PART1_REGOFF;
-			_XAie_LPartBlockSet32(DevInst, RegAddr, 0U,
-					XAIE_AIE_TILE_CORE_WL0_PART1_SIZE);
-			RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_AIE_TILE_CORE_R0_REGOFF;
-			for (u8 Count = 0;
-				Count < XAIE_AIE_TILE_CORE_R0_COUNT;
-				Count++) {
-				_XAie_LPartWrite32(DevInst, RegAddr + Count *
-						XAIE_AIE_TILE_CORE_R0_STEP_SIZE,
-						0U);
-			}
-		}
-	}
 }
 
 #endif		/* end of protection macro */
