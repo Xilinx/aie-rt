@@ -31,370 +31,13 @@
 #include "xaie_lite_regdef_aieml.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
-#include "xaie_lite_util.h"
 
 /************************** Constant Definitions *****************************/
+#define XAIEML_TILE_DMA_NUM_CH		2U
+#define XAIEML_MEM_TILE_DMA_NUM_CH	6U
+#define XAIEML_SHIM_DMA_NUM_CH		2U
 
 /************************** Function Prototypes  *****************************/
-/*****************************************************************************/
-/**
-*
-* This API returns the Aie Tile Core status for a particular column and row.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-* @param	Row: Row number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
-	u64 RegAddr;
-
-	/* core status addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-		+ XAIE_AIE_TILE_CORE_STATUS_REGOFF;
-
-	/* core status */
-	Status[Col].CoreTile[Row].CoreStatus =
-		(_XAie_LPartRead32(DevInst, RegAddr)
-		 & XAIE_AIE_TILE_CORE_STATUS_MASK);
-
-	/* core program counter addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-		+ XAIE_AIE_TILE_CORE_PC_REGOFF;
-
-	/* program counter */
-	Status[Col].CoreTile[Row].ProgramCounter =
-		(_XAie_LPartRead32(DevInst, RegAddr)
-		 & XAIE_AIE_TILE_CORE_PC_MASK);
-
-	/* core stack pointer addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-		+ XAIE_AIE_TILE_CORE_SP_REGOFF;
-
-	/* stack pointer */
-	Status[Col].CoreTile[Row].StackPtr =
-		(_XAie_LPartRead32(DevInst, RegAddr)
-		 & XAIE_AIE_TILE_CORE_SP_MASK);
-
-	/* core link addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-		+ XAIE_AIE_TILE_CORE_LR_REGOFF;
-
-	/* link register */
-	Status[Col].CoreTile[Row].LinkReg =
-		(_XAie_LPartRead32(DevInst, RegAddr)
-		 & XAIE_AIE_TILE_CORE_LR_MASK);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Aie Tile DMA status for a particular column and row.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-* @param	Row: Row number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
-	u64 RegAddr;
-	/* iterate all tile dma channels */
-	for (u32 Chan = 0; Chan < XAIE_TILE_DMA_NUM_CH; Chan++) {
-
-		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-			+ Chan * XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_IDX + XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
-
-		/* read s2mm channel status */
-		Status[Col].CoreTile[Row].dma[Chan].S2MMStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_MASK);
-
-		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-			+ Chan * XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_IDX + XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
-
-		/* read mm2s channel status */
-		Status[Col].CoreTile[Row].dma[Chan].MM2SStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_MASK);
-	}
-
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Aie Lock status for a particular column and row.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-* @param    Row: Row number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LCoreLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
-	u64 RegAddr;
-
-	/* iterate all lock value registers for aie core tile*/
-	for(u32 Lock = 0; Lock < XAIE_TILE_NUM_LOCKS; Lock++) {
-
-		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-			+ Lock * XAIE_AIE_TILE_LOCK_VALUE_IDX + XAIE_AIE_TILE_LOCK_VALUE_REGOFF;
-
-		/* read lock value */
-		Status[Col].CoreTile[Row].LockValue[Lock] =
-			(u8)(_XAie_LPartRead32(DevInst, RegAddr)
-			& XAIE_AIE_TILE_LOCK_VALUE_MASK);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Mem Tile DMA status for a particular column and row.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-* @param	Row: Row number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
-	u64 RegAddr;
-
-	/* mem tile dma status */
-	for(u32 Chan = 0; Chan < XAIE_MEM_TILE_DMA_NUM_CH; Chan++) {
-
-		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
-			+ Chan * XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_IDX + XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
-
-		/* read s2mm channel status */
-		Status[Col].MemTile[Row].dma[Chan].S2MMStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_MASK);
-
-		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
-			+ Chan * XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_IDX + XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
-
-		/* read s2mm channel status */
-		Status[Col].MemTile[Row].dma[Chan].MM2SStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_MASK);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Mem Lock status for a particular column and row.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-* @param    Row: Row number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LMemLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
-	u64 RegAddr;
-
-	/* iterate all lock value registers */
-	for(u32 Lock = 0; Lock < XAIE_MEM_TILE_NUM_LOCKS; Lock++) {
-
-		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
-			+ Lock * XAIE_MEM_TILE_LOCK_VALUE_IDX + XAIE_MEM_TILE_LOCK_VALUE_REGOFF;
-
-		/* read lock value */
-		Status[Col].MemTile[Row].LockValue[Lock] =
-			(u8)(_XAie_LPartRead32(DevInst, RegAddr)
-			& XAIE_MEM_TILE_LOCK_VALUE_MASK);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API calls the Mem Tile and Core Tile sub-modules.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col) {
-
-	/* iterate all mem tile rows */
-	for(u32 Row = 0; Row < XAIE_MEM_TILE_NUM_ROWS; Row++) {
-		_XAie_LMemDMAStatus(DevInst, Status, Col, Row);
-		_XAie_LMemLockStatus(DevInst, Status, Col, Row);
-	}
-
-	/* iterate all aie tile rows */
-	for(u32 Row = 0; Row < XAIE_AIE_TILE_NUM_ROWS; Row++) {
-		_XAie_LCoreStatus(DevInst, Status, Col, Row);
-		_XAie_LCoreDMAStatus(DevInst, Status, Col, Row);
-		_XAie_LCoreLockStatus(DevInst, Status, Col, Row);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Shim Lock status for a particular column.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LShimLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col) {
-
-	u64 RegAddr;
-
-	/* iterate all lock value registers for shim tile*/
-	for(u32 Lock = 0; Lock < XAIE_SHIM_NUM_LOCKS; Lock++) {
-
-		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col)
-			+ Lock * XAIE_SHIM_TILE_LOCK_VALUE_IDX + XAIE_SHIM_TILE_LOCK_VALUE_REGOFF;
-
-		/* read lock value */
-		Status[Col].ShimTile[XAIE_SHIM_ROW].LockValue[Lock] =
-			(u8)(_XAie_LPartRead32(DevInst, RegAddr)
-			& XAIE_SHIM_TILE_LOCK_VALUE_MASK);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Shim DMA status for a particular column.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col) {
-
-	u64 RegAddr;
-
-	/* shim dma status - fixed at row XAIE_SHIM_ROW */
-	for(u32 Chan = 0; Chan < XAIE_SHIM_DMA_NUM_CH; Chan++) {
-
-		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_IDX +
-			XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
-
-		/* read s2mm channel status */
-		Status[Col].ShimTile[XAIE_SHIM_ROW].dma[Chan].S2MMStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_MASK);
-
-		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_IDX +
-			XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
-
-		/* read mm2s channel status */
-		Status[Col].ShimTile[XAIE_SHIM_ROW].dma[Chan].MM2SStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_MASK);
-	}
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the Shim Tile status for a particular column. It calls
-* further sub-apis.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-* @param	Col: Column number.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void _XAie_LShimTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
-{
-    _XAie_LShimDMAStatus(DevInst, Status, Col);
-    _XAie_LShimLockStatus(DevInst, Status, Col);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the column status for N number of colums.
-*
-* @param	DevInst: Device Instance
-* @param	Status: Pointer to user defined column status buffer.
-*
-* @return	None.
-*
-* @note		None.
-*
-******************************************************************************/
-__FORCE_INLINE__
-static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status) {
-
-	u32 StartCol = (u32)(DevInst->StartCol);
-	u32 NumCols  = (u32)(DevInst->NumCols);
-
-	/* iterate specified columns */
-	for(u32 Col = StartCol; Col < NumCols; Col++) {
-		_XAie_LShimTileStatus(DevInst, Status, Col);
-		_XAie_LTileStatus(DevInst, Status, Col);
-	}
-}
-
 /*****************************************************************************/
 /**
 *
@@ -421,7 +64,7 @@ static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
-* This API sets SHIM reset in the AI engine partition
+* This API set SHIM reset in the AI engine partition
 *
 * @param	DevInst: Device Instance
 * @param	Loc: SHIM tile location
@@ -565,7 +208,7 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 
 		/* AIE TILE DMAs */
 		for(u8 R = XAIE_AIE_TILE_ROW_START; R < XAIE_NUM_ROWS; R++) {
-			for (u32 Ch = 0; Ch < XAIE_TILE_DMA_NUM_CH; Ch++) {
+			for (u32 Ch = 0; Ch < XAIEML_TILE_DMA_NUM_CH; Ch++) {
 				/* S2MM Channel */
 				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
 					XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
@@ -586,7 +229,7 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 		/* MEM TILE DMAs */
 		for(u8 R = XAIE_MEM_TILE_ROW_START; R < XAIE_AIE_TILE_ROW_START;
 				R++) {
-			for(u32 Ch = 0; Ch < XAIE_MEM_TILE_DMA_NUM_CH; Ch++) {
+			for(u32 Ch = 0; Ch < XAIEML_MEM_TILE_DMA_NUM_CH; Ch++) {
 				/* S2MM Channel */
 				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
 					XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
@@ -626,7 +269,7 @@ static inline AieRC _XAie_LIsShimDmaIdle(XAie_DevInst *DevInst,
 	u64 RegAddr;
 	u32 RegVal;
 
-	for(u32 Ch = 0; Ch < XAIE_SHIM_DMA_NUM_CH; Ch++) {
+	for(u32 Ch = 0; Ch < XAIEML_SHIM_DMA_NUM_CH; Ch++) {
 		/* S2MM Channel */
 		RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + Ch * 4 +
 			XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
