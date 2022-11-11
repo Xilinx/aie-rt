@@ -34,8 +34,9 @@
 #include "xaie_lite_util.h"
 
 /************************** Constant Definitions *****************************/
-/************************** Function Prototypes  *****************************/
 
+/************************** Function Prototypes  *****************************/
+#if defined(XAIE_FEATURE_LITE_UTIL)
 /*****************************************************************************/
 /**
 *
@@ -313,6 +314,8 @@ static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Statu
 	_XAie_LTileStatus(DevInst, Status, Col);
 	}
 }
+
+#endif      /* end of #if defined(XAIE_FEATURE_LITE_UTIL) */
 
 /*****************************************************************************/
 /**

@@ -25,12 +25,10 @@
 #ifndef XAIE_LITE_UTIL_H
 #define XAIE_LITE_UTIL_H
 
-#if defined(XAIE_FEATURE_LITE) && defined(XAIE_FEATURE_LITE_UTIL)
-
 #include "xaiegbl_defs.h"
-#include "xaie_lite_regdef_aieml.h"
 #include "xaie_lite_hwcfg.h"
 
+#if defined(XAIE_FEATURE_LITE_UTIL)
 /************************** Macro Definitions *****************************/
 
 #define XAie_LGetColRangeBufSize(NumCols) { \
@@ -79,8 +77,8 @@ typedef struct {
 } XAie_Col_Status;
 
 /************************** Function Prototypes  *****************************/
-#endif /* XAIE_FEATURE_LITE && XAIE_FEATURE_LITE_UTIL */
+#endif /* XAIE_FEATURE_LITE_UTIL */
 
-#endif /* XAIE_LITE_UTIL_H */
+#endif /* end of protection macro */
 
 /** @} */
