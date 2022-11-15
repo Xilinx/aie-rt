@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -31,6 +32,7 @@
 #include "xaie_lite_regdef_aie.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
+#include "xaie_lite_util.h"
 
 /************************** Constant Definitions *****************************/
 /************************** Function Prototypes  *****************************/

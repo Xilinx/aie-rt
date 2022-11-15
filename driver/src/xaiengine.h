@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2019 - 2020 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -27,6 +28,7 @@ extern "C" {
 #include <xaiengine/xaie_util_events.h>
 #include <xaiengine/xaiegbl.h>
 #include <xaiengine/xaiegbl_defs.h>
+#include <xaiengine/xaie_lite_util.h>
 
 #ifdef __cplusplus
 }
