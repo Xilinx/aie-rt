@@ -548,6 +548,14 @@ typedef struct {
 
 typedef struct {
 	XAie_OpHdr OpHdr;
+	uint64_t RegOff;
+	uint32_t Value;
+	uint32_t Mask;
+	uint32_t Size;
+} XAIE_PACK_ATTRIBUTE XAie_MaskPoll32Hdr;
+
+typedef struct {
+	XAie_OpHdr OpHdr;
 	uint8_t Col;
 	uint8_t Row;
 	uint32_t RegOff;
