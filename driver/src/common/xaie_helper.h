@@ -97,6 +97,7 @@ typedef enum {
 	XAIE_IO_BLOCKWRITE,
 	XAIE_IO_BLOCKSET,
 	XAIE_IO_MASKWRITE,
+	XAIE_IO_MASKPOLL,
 } XAie_TxnOpcode;
 
 struct XAie_TxnCmd {
