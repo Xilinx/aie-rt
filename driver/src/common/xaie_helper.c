@@ -31,6 +31,7 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
+#include <limits.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,12 +40,16 @@
 
 /************************** Constant Definitions *****************************/
 #define XAIE_DEFAULT_NUM_CMDS 1024U
+#define XAIE_DEFAULT_TXN_BUFFER_SIZE (1024 * 4)
 
 #define XAIE_TXN_INSTANCE_EXPORTED	0b10U
 #define XAIE_TXN_INST_EXPORTED_MASK XAIE_TXN_INSTANCE_EXPORTED
 #define XAIE_TXN_AUTO_FLUSH_MASK XAIE_TRANSACTION_ENABLE_AUTO_FLUSH
 
 /************************** Variable Definitions *****************************/
+const u8 TransactionHeaderVersion_Major = 0;
+const u8 TransactionHeaderVersion_Minor = 1;
+
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -817,6 +822,222 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 	Inst->Node.Next = NULL;
 
 	return Inst;
+}
+
+static inline void _XAie_CreateTxnHeader(XAie_DevInst *DevInst,
+		XAie_TxnHeader *Header)
+{
+	Header->Major = TransactionHeaderVersion_Major;
+	Header->Minor = TransactionHeaderVersion_Minor;
+	Header->DevGen = DevInst->DevProp.DevGen;
+	Header->NumRows = DevInst->NumRows;
+	Header->NumCols = DevInst->NumCols;
+	Header->NumMemTileRows = DevInst->MemTileNumRows;
+	XAIE_DBG("Header version %d.%d\n", Header->Major, Header->Minor);
+	XAIE_DBG("Device Generation: %d\n", Header->DevGen);
+	XAIE_DBG("Cols, Rows, MemTile rows : (%d, %d, %d)\n", Header->NumCols,
+			Header->NumRows, Header->NumMemTileRows);
+}
+
+static inline u8 _XAie_GetRowfromRegOff(XAie_DevInst *DevInst, u64 RegOff)
+{
+	return RegOff & (~(ULONG_MAX << DevInst->DevProp.RowShift));
+}
+
+static inline u8 _XAie_GetColfromRegOff(XAie_DevInst *DevInst, u64 RegOff)
+{
+	u64 Mask = ((1 << DevInst->DevProp.ColShift) - 1) &
+			~((1 << DevInst->DevProp.RowShift) - 1);
+
+	return (RegOff & Mask) >> DevInst->DevProp.RowShift;
+}
+
+static inline void _XAie_AppendWrite32(XAie_DevInst *DevInst,
+		XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_Write32Hdr *Hdr = (XAie_Write32Hdr*)TxnPtr;
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Value = Cmd->Value;
+	Hdr->Size = sizeof(*Hdr);
+	Hdr->OpHdr.Col = _XAie_GetColfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Row = _XAie_GetRowfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Op = XAIE_IO_WRITE;
+}
+
+static inline void _XAie_AppendMaskWrite32(XAie_DevInst *DevInst,
+		XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_MaskWrite32Hdr *Hdr = (XAie_MaskWrite32Hdr*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Mask = Cmd->Mask;
+	Hdr->Value = Cmd->Value;
+	Hdr->Size = sizeof(*Hdr);
+	Hdr->OpHdr.Col = _XAie_GetColfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Row = _XAie_GetRowfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Op = XAIE_IO_MASKWRITE;
+}
+
+static inline void _XAie_AppendBlockWrite32(XAie_DevInst *DevInst,
+		XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_BlockWrite32Hdr);
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Size = sizeof(*Hdr) + Cmd->Size * sizeof(u32);
+	Hdr->OpHdr.Col = _XAie_GetColfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Row = _XAie_GetRowfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Op = XAIE_IO_BLOCKWRITE;
+
+	memcpy((void *)Payload, (void *)Cmd->DataPtr,
+			Cmd->Size * sizeof(u32));
+}
+
+static inline void _XAie_AppendBlockSet32(XAie_DevInst *DevInst,
+		XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_BlockWrite32Hdr);
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Size = sizeof(*Hdr) + Cmd->Size * sizeof(u32);
+	Hdr->OpHdr.Col = _XAie_GetColfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Row = _XAie_GetRowfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Op = XAIE_IO_BLOCKWRITE;
+
+	for (u32 i = 0U; i < Cmd->Size; i++) {
+		*((u32 *)Payload) = Cmd->Value;
+		Payload += 4;
+	}
+}
+
+static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
+{
+	u8 *Tmp;
+	Tmp =  (u8*)realloc((void*)TxnPtr, NewSize);
+	if(Tmp == NULL) {
+		XAIE_ERROR("Reallocation failed for txn buffer\n");
+		return NULL;
+	}
+
+	return Tmp;
+}
+
+/*****************************************************************************/
+/**
+*
+* This api copies an existing transaction instance and returns a copy of the
+* instance with all the commands for users to save the commands and use them
+* at a later point.
+*
+* @param	DevInst - Device instance pointer.
+* @param	NumConsumers - Number of consumers for the generated
+*		transactions (Unused for now)
+* @param	Flags - Flags (Unused for now)
+*
+* @return	Pointer to copy of transaction instance on success and NULL
+*		on error.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
+		u32 Flags)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+	XAie_TxnInst *TmpInst;
+	u8 *TxnPtr;
+	u32 BuffSize = 0U, NumOps = 0;
+	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
+	(void)NumConsumers;
+	(void)Flags;
+
+	TmpInst = _XAie_GetTxnInst(DevInst, Backend->Ops.GetTid());
+	if(TmpInst == NULL) {
+		XAIE_ERROR("Failed to get the correct transaction instance "
+				"from internal list\n");
+		return NULL;
+	}
+
+	TxnPtr = malloc(AllocatedBuffSize);
+	if(TxnPtr == NULL) {
+		XAIE_ERROR("Malloc failed\n");
+		return NULL;
+	}
+
+	_XAie_CreateTxnHeader(DevInst, (XAie_TxnHeader *)TxnPtr);
+	BuffSize += sizeof(XAie_TxnHeader);
+	TxnPtr += sizeof(XAie_TxnHeader);
+
+	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
+		NumOps++;
+		XAie_TxnCmd *Cmd = &TmpInst->CmdBuf[i];
+		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask)) {
+			if((BuffSize + sizeof(XAie_MaskWrite32Hdr)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2);
+				if(TxnPtr == NULL) return NULL;
+				AllocatedBuffSize *= 2;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendMaskWrite32(DevInst, Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_MaskWrite32Hdr);
+			BuffSize += sizeof(XAie_MaskWrite32Hdr);
+			continue;
+		}
+		if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
+			if((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
+						Cmd->Size) > AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2);
+				if(TxnPtr == NULL) return NULL;
+				AllocatedBuffSize *= 2;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendBlockWrite32(DevInst, Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_BlockWrite32Hdr) +
+				Cmd->Size * sizeof(u32);
+			BuffSize += sizeof(XAie_BlockWrite32Hdr) +
+				Cmd->Size * sizeof(u32);
+			continue;
+		}
+		if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
+			/*
+			 * Blockset gets converted to blockwrite. so check for
+			 * blockwrite size
+			 */
+			if((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
+						Cmd->Size) > AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2);
+				if(TxnPtr == NULL) return NULL;
+				AllocatedBuffSize *= 2;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendBlockSet32(DevInst, Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_BlockWrite32Hdr) +
+				Cmd->Size * sizeof(u32);
+			BuffSize += sizeof(XAie_BlockWrite32Hdr) +
+				Cmd->Size * sizeof(u32);
+			continue;
+		}
+	}
+
+	BuffSize = (BuffSize % 4) ? (BuffSize / 4 + 1) : BuffSize;
+	XAIE_DBG("Size of the transaction buffer being exported: %u bytes\n",
+			BuffSize);
+	XAIE_DBG("Num of Operations in the transaction buffer: %u\n",
+			TmpInst->NumCmds);
+
+
+	/* Adjust pointer and reallocate to the right size */
+	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, BuffSize);
+	((XAie_TxnHeader *)TxnPtr)->NumOps =  NumOps;
+	((XAie_TxnHeader *)TxnPtr)->TxnSize =  BuffSize;
+
+	return (u8 *)TxnPtr;
 }
 
 /*****************************************************************************/

@@ -501,6 +501,63 @@ typedef struct {
 	XAie_Range Cols;
 } XAie_ErrorMetaData;
 
+#ifdef _MSC_VER
+#pragma push(4)
+#endif
+
+/*
+ * __attribute is not supported for windows. remove it conditionally.
+ */
+#ifdef _MSC_VER
+#define XAIE_PACK_ATTRIBUTE
+#else
+#define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
+#endif
+
+typedef struct {
+	uint8_t Major;
+	uint8_t Minor;
+	uint8_t DevGen;
+	uint8_t NumRows;
+	uint8_t NumCols;
+	uint8_t NumMemTileRows;
+	uint32_t NumOps;
+	uint32_t TxnSize;
+} XAIE_PACK_ATTRIBUTE XAie_TxnHeader;
+
+typedef struct {
+	uint8_t Op;
+	uint8_t Col;
+	uint8_t Row;
+} XAIE_PACK_ATTRIBUTE XAie_OpHdr;
+
+typedef struct {
+	XAie_OpHdr OpHdr;
+	uint64_t RegOff;
+	uint32_t Value;
+	uint32_t Size;
+} XAIE_PACK_ATTRIBUTE XAie_Write32Hdr;
+
+typedef struct {
+	XAie_OpHdr OpHdr;
+	uint64_t RegOff;
+	uint32_t Value;
+	uint32_t Mask;
+	uint32_t Size;
+} XAIE_PACK_ATTRIBUTE XAie_MaskWrite32Hdr;
+
+typedef struct {
+	XAie_OpHdr OpHdr;
+	uint8_t Col;
+	uint8_t Row;
+	uint32_t RegOff;
+	uint32_t Size;
+} XAIE_PACK_ATTRIBUTE XAie_BlockWrite32Hdr;
+
+#ifdef _MSC_VER
+#pragma pop()
+#endif
+
 /**************************** Function prototypes ***************************/
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
@@ -524,6 +581,8 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
 AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);
 AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
+u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
+		u8 NumConsumers, u32 Flags);
 AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);

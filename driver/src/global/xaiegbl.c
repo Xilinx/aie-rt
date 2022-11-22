@@ -888,4 +888,34 @@ AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr)
 			(void *)&NpiAddr);
 }
 
+/*****************************************************************************/
+/**
+*
+* This api copies an existing transaction instance and returns a copy of the
+* instance with all the commands for users to save the commands and use them
+* at a later point.
+*
+* @param	DevInst - Device instance pointer.
+* @param	NumConsumers - Number of consumers for the generated
+*		transactions (Unused for now)
+* @param	Flags - Flags (Unused for now)
+*
+* @return	Pointer to copy of transaction instance on success and NULL
+*		on error.
+*
+* @note		None.
+*
+******************************************************************************/
+u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
+		u8 NumConsumers, u32 Flags)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return NULL;
+	}
+
+	return _XAie_TxnExportSerialized(DevInst, NumConsumers, Flags);
+}
+
 /** @} */

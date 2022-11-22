@@ -96,6 +96,7 @@ typedef enum {
 	XAIE_IO_WRITE,
 	XAIE_IO_BLOCKWRITE,
 	XAIE_IO_BLOCKSET,
+	XAIE_IO_MASKWRITE,
 } XAie_TxnOpcode;
 
 struct XAie_TxnCmd {
@@ -182,6 +183,8 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
 AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags);
 AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst);
+u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
+		u32 Flags);
 AieRC _XAie_TxnFree(XAie_TxnInst *Inst);
 void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
 u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
