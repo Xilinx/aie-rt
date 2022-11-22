@@ -190,6 +190,7 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst);
 void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
 u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
 u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
+void _XAie_FreeTxnPtr(void *Ptr);
 
 #endif		/* end of protection macro */
 /** @} */

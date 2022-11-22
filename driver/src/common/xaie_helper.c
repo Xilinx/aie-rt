@@ -1081,6 +1081,11 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	return (u8 *)TxnPtr;
 }
 
+void _XAie_FreeTxnPtr(void *Ptr)
+{
+	free(Ptr);
+}
+
 /*****************************************************************************/
 /**
 *

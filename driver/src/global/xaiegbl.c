@@ -918,4 +918,26 @@ u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 	return _XAie_TxnExportSerialized(DevInst, NumConsumers, Flags);
 }
 
+/*****************************************************************************/
+/**
+*
+* This api deallocates the memory allocated for the serialized transaction
+* buffer.
+*
+* @param	Ptr - Pointer to the transaction buffer.
+*
+* @return	None.
+*
+* @note		None.
+*
+******************************************************************************/
+void XAie_FreeSerializedTransaction(void *Ptr)
+{
+	if (Ptr == NULL) {
+		XAIE_ERROR("Invalid argument\n");
+		return;
+	}
+	_XAie_FreeTxnPtr(Ptr);
+}
+
 /** @} */
