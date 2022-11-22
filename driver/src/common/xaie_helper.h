@@ -186,6 +186,7 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst);
 u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		u32 Flags);
+AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC _XAie_TxnFree(XAie_TxnInst *Inst);
 void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
 u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);

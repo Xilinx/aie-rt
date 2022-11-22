@@ -593,6 +593,7 @@ XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
 u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
 AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
+AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
 AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);

@@ -976,4 +976,15 @@ void XAie_FreeSerializedTransaction(void *Ptr)
 	_XAie_FreeTxnPtr(Ptr);
 }
 
+AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	return _XAie_ClearTransaction(DevInst);
+}
+
 /** @} */

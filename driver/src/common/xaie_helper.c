@@ -1527,4 +1527,35 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 	return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 }
 
+AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
+{
+	AieRC RC;
+	XAie_TxnInst *Inst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	Inst = _XAie_GetTxnInst(DevInst, Backend->Ops.GetTid());
+	if(Inst == NULL) {
+		XAIE_ERROR("Failed to get the correct transaction instance "
+				"from internal list\n");
+		return XAIE_ERR;
+	}
+
+	for(u32 i = 0U; i < Inst->NumCmds; i++) {
+		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
+		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
+			free((void *)Cmd->DataPtr);
+		}
+	}
+
+	RC = _XAie_RemoveTxnInstFromList(DevInst, Backend->Ops.GetTid());
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	free(Inst->CmdBuf);
+	free(Inst);
+
+	return XAIE_OK;
+}
+
 /** @} */
