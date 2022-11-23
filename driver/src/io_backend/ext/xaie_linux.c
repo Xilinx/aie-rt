@@ -1334,6 +1334,82 @@ AieRC _XAie_LinuxIO_GetRscStat(void *IOInst, XAie_BackendRscStat *Arg)
 
 /*****************************************************************************/
 /**
+* This API initializes the AI engine partition
+*
+* @param	IOInst: IO Instance pointer.
+* @param	Opts: Initialization options.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		If Opts is NULL, then default partition initialization
+* 		options are used.
+*
+* @note		Internal only.
+*******************************************************************************/
+AieRC _XAie_LinuxIO_InitPart(void *IOInst, XAie_PartInitOpts *Opts)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *) IOInst;
+	int Ret;
+	struct aie_partition_init_args InitArgs;
+
+	if (Opts != NULL) {
+		InitArgs.init_opts = Opts->InitOpts;
+		InitArgs.num_tiles = Opts->NumUseTiles;
+		InitArgs.locs = malloc(InitArgs.num_tiles *
+				sizeof(struct aie_location));
+		if (InitArgs.locs == XAIE_NULL) {
+			XAIE_ERROR("failed to allocate memory for tiles\n");
+			return XAIE_ERR;
+		}
+		for (__u32 i = 0; i < InitArgs.num_tiles; i++) {
+			InitArgs.locs[i].col = (__u32)Opts->Locs[i].Col;
+			InitArgs.locs[i].row = (__u32)Opts->Locs[i].Row;
+		}
+	} else {
+		InitArgs.init_opts = XAIE_PART_INIT_OPT_DEFAULT;
+		InitArgs.num_tiles = 0;
+		InitArgs.locs = XAIE_NULL;
+	}
+
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_PARTITION_INIT_IOCTL,
+			&InitArgs);
+	free(InitArgs.locs);
+
+	if (Ret != 0) {
+		XAIE_ERROR("Failed to initialize partition, %d: %s\n",
+			   errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+* This API tears down the AI engine partition
+*
+* @param	IOInst: IO Instance pointer.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal only.
+*******************************************************************************/
+AieRC _XAie_LinuxIO_TeardownPart(void *IOInst)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *) IOInst;
+	int Ret;
+
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_PARTITION_TEAR_IOCTL);
+	if (Ret != 0) {
+		XAIE_ERROR("Failed to teardown partition, %d: %s\n",
+			   errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+/*****************************************************************************/
+/**
 
 * This is the function to run backend operations
 *
@@ -1363,6 +1439,10 @@ static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		return RC;
 	case XAIE_BACKEND_OP_RELEASE_TILES:
 		return _XAie_LinuxIO_ReleaseTiles(IOInst, Arg);
+	case XAIE_BACKEND_OP_PARTITION_INITIALIZE:
+		return _XAie_LinuxIO_InitPart(IOInst, (XAie_PartInitOpts *)Arg);
+	case XAIE_BACKEND_OP_PARTITION_TEARDOWN:
+		return _XAie_LinuxIO_TeardownPart(IOInst);
 	case XAIE_BACKEND_OP_REQUEST_RESOURCE:
 		return _XAie_LinuxIO_RequestRsc(IOInst, Arg);
 	case XAIE_BACKEND_OP_RELEASE_RESOURCE:
