@@ -95,6 +95,7 @@
 #define XAIE_MEM_TILE_NUM_ROWS		2
 #define XAIE_AIE_TILE_ROW_START		3
 #define XAIE_AIE_TILE_NUM_ROWS		8
+#define XAIE_NUM_NOC_INTR_OFFSET	1
 
 #else
 #include <xaie_custom_device.h>
