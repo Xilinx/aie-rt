@@ -477,10 +477,30 @@ AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst)
 *******************************************************************************/
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 {
-	_XAie_LResetCoreRegisters(DevInst);
+	AieRC RC;
+
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
-	_XAie_LPartDataMemZeroInit(DevInst);
-	_XAie_LPartResetModules(DevInst);
+
+	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
+	_XAie_PrivilegeSetPartColRst(DevInst, XAIE_ENABLE);
+	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
+	_XAie_PrivilegeSetPartColRst(DevInst, XAIE_DISABLE);
+
+	_XAie_PrivilegeRstPartShims(DevInst);
+
+	_XAie_PrivilegeSetPartBlockAxiMmNsuErr(DevInst, XAIE_ENABLE,
+			XAIE_ENABLE);
+
+	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
+
+	_XAie_LSetPartIsolationAfterRst(DevInst);
+
+	RC = _XAie_LPartDataMemZeroInit(DevInst);
+	if (RC != XAIE_OK)
+		return RC;
+
+	_XAie_PrivilegeSetL2ErrIrq(DevInst);
+
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
 
 	return XAIE_OK;
