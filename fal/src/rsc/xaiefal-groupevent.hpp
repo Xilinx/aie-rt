@@ -280,9 +280,15 @@ namespace xaiefal {
 				EIdsTotal = sizeof(DevHd->XAieGroupEventMapCore)/
 					sizeof(DevHd->XAieGroupEventMapCore[0]);
 			} else if (M == XAIE_MEM_MOD) {
-				EIds = DevHd->XAieGroupEventMapMem;
-				EIdsTotal = sizeof(DevHd->XAieGroupEventMapMem)/
-					sizeof(DevHd->XAieGroupEventMapMem[0]);
+				if ( E >= XAIE_EVENT_GROUP_0_MEM_TILE ) {
+					EIds = DevHd->XAieGroupEventMapMemTile;
+					EIdsTotal = sizeof(DevHd->XAieGroupEventMapMemTile)/
+						sizeof(DevHd->XAieGroupEventMapMemTile[0]);
+				} else {
+					EIds = DevHd->XAieGroupEventMapMem;
+					EIdsTotal = sizeof(DevHd->XAieGroupEventMapMem)/
+						sizeof(DevHd->XAieGroupEventMapMem[0]);
+				}
 			} else {
 				EIds = DevHd->XAieGroupEventMapPl;
 				EIdsTotal = sizeof(DevHd->XAieGroupEventMapPl)/

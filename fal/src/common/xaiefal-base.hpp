@@ -135,6 +135,16 @@ namespace xaiefal {
 			XAieGroupEventMapPl[4] = XAIE_EVENT_GROUP_STREAM_SWITCH_PL;
 			XAieGroupEventMapPl[5] = XAIE_EVENT_GROUP_BROADCAST_A_PL;
 			XAieGroupEventMapPl[6] = XAIE_EVENT_GROUP_USER_EVENT_PL;
+
+			XAieGroupEventMapMemTile[0] = XAIE_EVENT_GROUP_0_MEM_TILE;
+			XAieGroupEventMapMemTile[1] = XAIE_EVENT_GROUP_WATCHPOINT_MEM_TILE;
+			XAieGroupEventMapMemTile[2] = XAIE_EVENT_GROUP_DMA_ACTIVITY_MEM_TILE;
+			XAieGroupEventMapMemTile[3] = XAIE_EVENT_GROUP_LOCK_MEM_TILE;
+			XAieGroupEventMapMemTile[4] = XAIE_EVENT_GROUP_STREAM_SWITCH_MEM_TILE;
+			XAieGroupEventMapMemTile[5] = XAIE_EVENT_GROUP_MEMORY_CONFLICT_MEM_TILE;
+			XAieGroupEventMapMemTile[6] = XAIE_EVENT_GROUP_ERRORS_MEM_TILE;
+			XAieGroupEventMapMemTile[7] = XAIE_EVENT_GROUP_BROADCAST_MEM_TILE;
+			XAieGroupEventMapMemTile[8] = XAIE_EVENT_GROUP_USER_EVENT_MEM_TILE;
 		}
 		~XAieDevHandle() {
 			if (FinishOnDestruct) {
@@ -205,6 +215,7 @@ namespace xaiefal {
 		uint32_t XAieGroupEventMapCore[9];
 		uint32_t XAieGroupEventMapMem[8];
 		uint32_t XAieGroupEventMapPl[8];
+		uint32_t XAieGroupEventMapMemTile[9];
 	private:
 		XAie_DevInst *Dev;
 		bool FinishOnDestruct;
@@ -985,7 +996,9 @@ namespace xaiefal {
 
 		if (E < XAIE_EVENT_NONE_MEM) {
 			M = XAIE_CORE_MOD;
-		} else if (E < XAIE_EVENT_NONE_PL) {
+		} else if (E < XAIE_EVENT_NONE_PL ||
+				(E >= XAIE_EVENT_NONE_MEM_TILE &&
+				 E <= XAIE_EVENT_USER_EVENT_1_MEM_TILE)) {
 			M = XAIE_MEM_MOD;
 		} else {
 			M = XAIE_PL_MOD;
