@@ -3076,6 +3076,166 @@ TEST(Broadcast, BroadcastHorizontalMemTileInverse)
 
 }
 
+/* This test selects a list of mem tiles to broadcast to */
+TEST(Broadcast, BroadcastSelectMemTiles)
+{
+	AieRC RC;
+	std::vector<XAie_LocType> vL, vL1;
+	XAie_ModuleType StartM, EndM, StartM1, EndM1;
+
+	XAie_Events event;
+
+	XAie_SetupConfig(ConfigPtr, HW_GEN, XAIE_BASE_ADDR,
+			XAIE_COL_SHIFT, XAIE_ROW_SHIFT,
+			XAIE_NUM_COLS, XAIE_NUM_ROWS, XAIE_SHIM_ROW,
+			XAIE_MEM_TILE_ROW_START, XAIE_MEM_TILE_NUM_ROWS,
+			XAIE_AIE_TILE_ROW_START, XAIE_AIE_TILE_NUM_ROWS);
+
+	XAie_InstDeclare(DevInst, &ConfigPtr);
+
+	RC = XAie_CfgInitialize(&(DevInst), &ConfigPtr);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	XAieDev Aie(&DevInst, true);
+
+	/*First test Mem tiles left to right*/
+	vL.push_back(XAie_TileLoc(0,1));
+	vL.push_back(XAie_TileLoc(1,1));
+	vL.push_back(XAie_TileLoc(2,1));
+	StartM = XAIE_MEM_MOD;
+	EndM = XAIE_MEM_MOD;
+	auto BC = Aie.broadcast(vL, StartM, EndM);
+
+	RC = BC->getChannel(vL1, StartM1, EndM1);
+	CHECK_EQUAL(RC, XAIE_OK);
+	CHECK_EQUAL(StartM, StartM);
+	CHECK_EQUAL(EndM, EndM);
+	CHECK_TRUE(is_equal_vLocs(vL, vL1));
+
+	RC = BC->getEvent(XAie_TileLoc(1,1), XAIE_MEM_MOD, event);
+	CHECK_EQUAL(RC, XAIE_ERR);
+
+	RC = BC->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->start();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->stop();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->getEvent(XAie_TileLoc(1,1), XAIE_MEM_MOD, event);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->getEvent(XAie_TileLoc(1,2), XAIE_MEM_MOD, event);
+	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+
+	RC = BC->release();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	vL.clear();
+
+	/*Test MEM right to left shim*/
+	vL.push_back(XAie_TileLoc(2,1));
+	vL.push_back(XAie_TileLoc(1,1));
+	vL.push_back(XAie_TileLoc(0,1));
+
+	BC = Aie.broadcast(vL, StartM, EndM);
+
+	RC = BC->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->start();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->stop();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->release();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	vL.clear();
+
+	/*Test MEM left to right*/
+	vL.push_back(XAie_TileLoc(0,1));
+	vL.push_back(XAie_TileLoc(1,1));
+	vL.push_back(XAie_TileLoc(2,1));
+
+	StartM = XAIE_MEM_MOD;
+	EndM = XAIE_MEM_MOD;
+
+	BC = Aie.broadcast(vL, StartM, EndM);
+
+	RC = BC->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->start();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->stop();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->release();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	vL.clear();
+
+	/*Test shim to non-shim up to down*/
+	vL.push_back(XAie_TileLoc(1,3));
+	vL.push_back(XAie_TileLoc(1,2));
+	vL.push_back(XAie_TileLoc(1,1));
+	vL.push_back(XAie_TileLoc(1,0));
+
+	StartM = XAIE_CORE_MOD;
+	EndM = XAIE_PL_MOD;
+
+	BC = Aie.broadcast(vL, StartM, EndM);
+
+	RC = BC->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->start();
+
+}
+
+
+TEST(Broadcast, BroadcastAllMemTiles)
+{
+	AieRC RC;
+	std::vector<XAie_LocType> vL, vL1;
+	XAie_ModuleType StartM, EndM;
+
+	XAie_SetupConfig(ConfigPtr, HW_GEN, XAIE_BASE_ADDR,
+			XAIE_COL_SHIFT, XAIE_ROW_SHIFT,
+			XAIE_NUM_COLS, XAIE_NUM_ROWS, XAIE_SHIM_ROW,
+			XAIE_MEM_TILE_ROW_START, XAIE_MEM_TILE_NUM_ROWS,
+			XAIE_AIE_TILE_ROW_START, XAIE_AIE_TILE_NUM_ROWS);
+
+	XAie_InstDeclare(DevInst, &ConfigPtr);
+
+	RC = XAie_CfgInitialize(&(DevInst), &ConfigPtr);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	XAieDev Aie(&DevInst, true);
+
+	StartM = XAIE_MEM_MOD;
+	EndM = XAIE_MEM_MOD;
+	auto BC = Aie.broadcast(vL, StartM, EndM);
+
+	RC = BC->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->start();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->stop();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = BC->release();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+}
+
 
 #endif
 #endif
