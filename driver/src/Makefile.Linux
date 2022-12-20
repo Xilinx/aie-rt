@@ -40,6 +40,41 @@ lib$(NAME).so: lib$(NAME).so.$(VERSION)
 %.o: %.c include
 	$(CC) $(CFLAGS) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
 
+baremetal: include lib$(NAME).so
+CFLAGS_bare += -Wall -Wextra --std=c11 -D_AIEBAREMETAL__
+ifeq ($(MAKECMDGOALS) ,baremetal)
+%.o: %.c include
+	$(CC) $(CFLAGS_bare) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+endif
+
+linux: include lib$(NAME).so
+CFLAGS_linux += -Wall -Wextra --std=c11 -D__AIELINUX__
+ifeq ($(MAKECMDGOALS),linux)
+%.o: %.c include
+	$(CC) $(CFLAGS_linux) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+endif
+
+simulation: include lib$(NAME).so
+CFLAGS_simulation += -Wall -Wextra --std=c11 -D__AIESIM__
+ifeq ($(MAKECMDGOALS),simulation)
+%.o: %.c include
+	$(CC) $(CFLAGS_simulation) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+endif
+
+cdo: include lib$(NAME).so
+CFLAGS_cdo += -Wall -Wextra --std=c11 -D__AIECDO__
+ifeq ($(MAKECMDGOALS) ,cdo)
+%.o: %.c include
+	$(CC) $(CFLAGS_cdo) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+endif
+
+libmetal: include lib$(NAME).so
+CFLAGS_libmetal += -Wall -Wextra --std=c11 -D__AIEMETAL__
+ifeq ($(MAKECMDGOALS), libmetal)
+%.o: %.c include
+	$(CC) $(CFLAGS_libmetal) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+endif
+
 doc-generate:
 	mkdir -p $(DOCS_DIR)
 	doxygen $(DOXYGEN_CONFIG_FILE)
