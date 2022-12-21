@@ -123,7 +123,7 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 
 		/* read s2mm channel status */
 		Status[Col].CoreTile[Row].dma[Chan].S2MMStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_MASK);
+			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
 		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
@@ -131,7 +131,7 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 
 		/* read mm2s channel status */
 		Status[Col].CoreTile[Row].dma[Chan].MM2SStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_MASK);
+			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_MM2S_CHANNEL_VALID_BITS_MASK);
 	}
 
 }
@@ -152,11 +152,11 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LCoreLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+static inline void _XAie_LCoreLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
 {
 	u64 RegAddr;
 
-	/* iterate all lock value registers for aie core tile*/
+	/* iterate all lock value registers */
 	for(u32 Lock = 0; Lock < XAIE_TILE_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
@@ -167,6 +167,39 @@ static inline void _XAie_LCoreLockStatus(XAie_DevInst *DevInst, XAie_Col_Status 
 		Status[Col].CoreTile[Row].LockValue[Lock] =
 			(u8)(_XAie_LPartRead32(DevInst, RegAddr)
 			& XAIE_AIE_TILE_LOCK_VALUE_MASK);
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the Core Tile Event Status for a particular column and row.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Col: Column number.
+* @param    Row: Row number.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+__FORCE_INLINE__
+static inline void _XAie_LCoreEventStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
+	u64 RegAddr;
+
+	/* iterate all event status registers */
+	for(u32 EventReg = 0; EventReg < XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS; EventReg++) {
+
+		/* event status address */
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+			+ EventReg * XAIE_AIE_TILE_EVENT_STATUS_IDX + XAIE_AIE_TILE_EVENT_STATUS_REGOFF;
+
+		/* read event status register and store in output buffer */
+		Status[Col].CoreTile[Row].EventStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_EVENT_STATUS_MASK);
 	}
 }
 
@@ -199,7 +232,7 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 
 		/* read s2mm channel status */
 		Status[Col].MemTile[Row].dma[Chan].S2MMStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_MASK);
+			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
 		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
@@ -207,7 +240,7 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 
 		/* read s2mm channel status */
 		Status[Col].MemTile[Row].dma[Chan].MM2SStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_MASK);
+			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_MM2S_CHANNEL_VALID_BITS_MASK);
 	}
 }
 
@@ -227,7 +260,7 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LMemLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+static inline void _XAie_LMemLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
 {
 	u64 RegAddr;
 
@@ -242,6 +275,39 @@ static inline void _XAie_LMemLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 		Status[Col].MemTile[Row].LockValue[Lock] =
 			(u8)(_XAie_LPartRead32(DevInst, RegAddr)
 			& XAIE_MEM_TILE_LOCK_VALUE_MASK);
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the Mem Event status for a particular column and row.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Col: Column number.
+* @param    Row: Row number.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+__FORCE_INLINE__
+static inline void _XAie_LMemEventStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
+	u64 RegAddr;
+
+	/* iterate all Event Status registers */
+	for(u32 EventReg = 0; EventReg < XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS; EventReg++)
+	{
+		/* Event Status address */
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+			+ EventReg * XAIE_MEM_TILE_EVENT_STATUS_IDX + XAIE_MEM_TILE_EVENT_STATUS_REGOFF;
+
+		/* read Event Status register */
+		Status[Col].MemTile[Row].EventStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_EVENT_STATUS_MASK);
 	}
 }
 
@@ -265,14 +331,16 @@ static inline void _XAie_LTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 	/* iterate all mem tile rows */
 	for(u32 Row = 0; Row < XAIE_MEM_TILE_NUM_ROWS; Row++) {
 		_XAie_LMemDMAStatus(DevInst, Status, Col, Row);
-		_XAie_LMemLockStatus(DevInst, Status, Col, Row);
+		_XAie_LMemLockValue(DevInst, Status, Col, Row);
+		_XAie_LMemEventStatus(DevInst, Status, Col, Row);
 	}
 
 	/* iterate all aie tile rows */
 	for(u32 Row = 0; Row < XAIE_AIE_TILE_NUM_ROWS; Row++) {
 		_XAie_LCoreStatus(DevInst, Status, Col, Row);
 		_XAie_LCoreDMAStatus(DevInst, Status, Col, Row);
-		_XAie_LCoreLockStatus(DevInst, Status, Col, Row);
+		_XAie_LCoreLockValue(DevInst, Status, Col, Row);
+		_XAie_LCoreEventStatus(DevInst, Status, Col, Row);
 	}
 }
 
@@ -291,7 +359,7 @@ static inline void _XAie_LTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LShimLockStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
+static inline void _XAie_LShimLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
 {
 	u64 RegAddr;
 
@@ -337,7 +405,7 @@ static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 
 		/* read s2mm channel status */
 		Status[Col].ShimTile[XAIE_SHIM_ROW].dma[Chan].S2MMStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_MASK);
+			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
 		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_IDX +
@@ -345,9 +413,42 @@ static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 
 		/* read mm2s channel status */
 		Status[Col].ShimTile[XAIE_SHIM_ROW].dma[Chan].MM2SStatus =
-			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_MASK);
+			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_MM2S_CHANNEL_VALID_BITS_MASK);
 	}
 }
+
+/*****************************************************************************/
+/**
+*
+* This API returns the Shim Event status for a particular column.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Col: Column number.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+__FORCE_INLINE__
+static inline void _XAie_LShimEventStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
+{
+	u64 RegAddr;
+
+	/* iterate all event status registers for shim tile */
+	for (u32 EventReg = 0; EventReg < XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS; EventReg++) {
+
+		/* event status register address */
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col)
+			+ EventReg * XAIE_SHIM_TILE_EVENT_STATUS_IDX + XAIE_SHIM_TILE_EVENT_STATUS_REGOFF;
+
+		/* read event status value */
+		Status[Col].ShimTile[XAIE_SHIM_ROW].EventStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_TILE_EVENT_STATUS_MASK);
+	}
+}
+
 
 /*****************************************************************************/
 /**
@@ -368,7 +469,8 @@ __FORCE_INLINE__
 static inline void _XAie_LShimTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
 {
     _XAie_LShimDMAStatus(DevInst, Status, Col);
-    _XAie_LShimLockStatus(DevInst, Status, Col);
+    _XAie_LShimLockValue(DevInst, Status, Col);
+    _XAie_LShimEventStatus(DevInst, Status, Col);
 }
 
 /*****************************************************************************/

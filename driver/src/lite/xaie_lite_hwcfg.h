@@ -15,9 +15,11 @@
 * <pre>
 * MODIFICATION HISTORY:
 *
-* Ver   Who     Date     Changes
-* ----- ------  -------- -----------------------------------------------------
-* 1.0  Nishad  06/23/2022  Initial creation
+* Ver   Who       Date        Changes
+* ----- --------  --------    ------------------------------------------------
+* 1.0  Nishad     06/23/2022  Initial creation
+* 1.1  avasi      11/16/2022  Additions for Status Dump of Core Tile, Mem Tile
+*                             and Shim Tile registers.
 * </pre>
 *
 ******************************************************************************/
@@ -58,9 +60,12 @@
 #define XAIE_SHIM_NUM_ROWS          1
 #define XAIE_MEM_TILE_ROW_START		0
 #define XAIE_MEM_TILE_NUM_ROWS		0
-#define XAIE_AIE_TILE_ROW_START		1
-#define XAIE_AIE_TILE_NUM_ROWS		8
+#define XAIE_AIE_TILE_ROW_START     1
+#define XAIE_AIE_TILE_NUM_ROWS      8
 #define XAIE_NUM_NOC_INTR_OFFSET	1
+
+#define XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS 4
+#define XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS 4
 
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 
@@ -94,8 +99,13 @@
 #define XAIE_SHIM_NUM_ROWS		1
 #define XAIE_MEM_TILE_ROW_START		1
 #define XAIE_MEM_TILE_NUM_ROWS		2
-#define XAIE_AIE_TILE_ROW_START		3
-#define XAIE_AIE_TILE_NUM_ROWS		8
+#define XAIE_AIE_TILE_ROW_START     3
+#define XAIE_AIE_TILE_NUM_ROWS      8
+
+#define XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS    4
+#define XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS     6
+#define XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS    4
+
 
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
 
@@ -134,8 +144,12 @@
 #define XAIE_MEM_TILE_ROW_START		1
 #define XAIE_MEM_TILE_NUM_ROWS		1
 
-#define XAIE_AIE_TILE_ROW_START		2
-#define XAIE_AIE_TILE_NUM_ROWS		4
+#define XAIE_AIE_TILE_ROW_START     2
+#define XAIE_AIE_TILE_NUM_ROWS      4
+
+#define XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS    4
+#define XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS     6
+#define XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS    4
 
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P
 
@@ -176,8 +190,12 @@
 #define XAIE_SHIM_NUM_ROWS          1
 #define XAIE_MEM_TILE_ROW_START		1
 #define XAIE_MEM_TILE_NUM_ROWS		1
-#define XAIE_AIE_TILE_ROW_START		2
-#define XAIE_AIE_TILE_NUM_ROWS		4
+#define XAIE_AIE_TILE_ROW_START     2
+#define XAIE_AIE_TILE_NUM_ROWS      4
+
+#define XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS    4
+#define XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS     6
+#define XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS    4
 
 #else
 #include <xaie_custom_device.h>

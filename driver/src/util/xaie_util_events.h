@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.  *
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -31,7 +32,6 @@
 
 /**************************** Function Prototypes *******************************/
 const char* XAie_EventGetString(XAie_Events Event);
-
 #endif  /* XAIE_FEATURE_UTIL_ENABLE */
 
 #endif	/* end of protection macro */
