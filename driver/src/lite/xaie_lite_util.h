@@ -15,9 +15,11 @@
 * <pre>
 * MODIFICATION HISTORY:
 *
-* Ver   Who     Date     Changes
-* ----- ------  -------- -----------------------------------------------------
-* 1.0  dsteger  7/10/2022  Initial creation
+* Ver   Who       Date        Changes
+* ----- --------  --------    ------------------------------------------------
+* 1.0  dsteger    07/10/2022  Initial creation
+* 1.1  avasi	  11/16/2022  Additions for Status Dump of Core Tile, Mem Tile
+*                             and Shim Tile registers.
 * </pre>
 *
 ******************************************************************************/
@@ -30,6 +32,9 @@
 
 #if defined(XAIE_FEATURE_LITE_UTIL)
 /************************** Macro Definitions *****************************/
+// To update these version numbers based on the changes made.
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 1
 
 #define XAie_LGetColRangeBufSize(NumCols) { \
 		sizeof(XAie_Col_Status) * NumCols \
@@ -46,17 +51,19 @@ typedef struct {
 /* Data structure to capture the core tile status */
 typedef struct {
 	XAie_DmaStatus dma[XAIE_TILE_DMA_NUM_CH];
-	u8  LockValue[XAIE_TILE_NUM_LOCKS];
+	u32	EventStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
 	u32 CoreStatus;
 	u32 ProgramCounter;
 	u32 StackPtr;
 	u32 LinkReg;
+	u8  LockValue[XAIE_TILE_NUM_LOCKS];
 } XAie_Core_Tile_Status;
 
 /* Data structure to capture the mem tile status */
 #if (XAIE_DEV_SINGLE_GEN != XAIE_DEV_GEN_AIE)
 typedef struct {
 	XAie_DmaStatus dma[XAIE_MEM_TILE_DMA_NUM_CH];
+	u32 EventStatus[XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS];
 	u8 LockValue[XAIE_MEM_TILE_NUM_LOCKS];
 } XAie_Mem_Tile_Status;
 #endif
@@ -64,6 +71,7 @@ typedef struct {
 /* Data structure to capture the shim tile status */
 typedef struct {
 	XAie_DmaStatus dma[XAIE_SHIM_DMA_NUM_CH];
+	u32 EventStatus[XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS];
 	u8 LockValue[XAIE_SHIM_NUM_LOCKS];
 } XAie_Shim_Tile_Status;
 
