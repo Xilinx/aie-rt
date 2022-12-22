@@ -450,7 +450,6 @@ typedef struct {
 
 typedef struct {
 	XAie_RegFldAttr Status;
-	XAie_RegFldAttr ChannelRunning;
 	XAie_RegFldAttr StalledLockRel;
 	XAie_RegFldAttr StalledLockAcq;
 	XAie_RegFldAttr StalledStreamStarve;
