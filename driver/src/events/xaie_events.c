@@ -592,6 +592,151 @@ AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This internal API configures the dma channel event selection register. MM2S
+* or S2MM channels can be programmed at the given selection index. Events
+* corresponding to the DMA channel can be monitored at the given selection ID
+* through event status registers.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	SelectId: Selection index at which given dma event are captured
+* @param	DmaDir: DMA channel direction.
+* 			for MM2S - DMA_MM2S
+* 			for S2MM - DMA_S2MM
+* @param	ChannelNum: DMA channel number.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_EventSelectDmaChannelConfig(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 SelectId, XAie_DmaDirection DmaDir,
+		u8 ChannelNum)
+{
+	u64 RegAddr;
+	u32 FldVal, ChannelIdLsb, ChannelDirLsb, ChannelIdMask;
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+	const XAie_DmaMod *DmaMod;
+
+	if(DmaDir >= DMA_MAX) {
+		XAIE_ERROR("Invalid dma direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+
+	if(SelectId >= EvntMod->NumDmaChannelSelectIds) {
+		XAIE_ERROR("Invalid selection ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(ChannelNum >= DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid channel number\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Calculate 32-bit value to write and register address */
+	ChannelDirLsb = EvntMod->DmaChannelMM2SOff * (u32)DmaDir;
+	ChannelIdLsb = (EvntMod->DmaChannelIdOff * SelectId) + ChannelDirLsb;
+	ChannelIdMask = EvntMod->DmaChannelIdMask << ChannelIdLsb;
+
+	FldVal = XAie_SetField(ChannelNum, ChannelIdLsb, ChannelIdMask);
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			EvntMod->BaseDmaChannelSelectRegOff;
+
+	return XAie_MaskWrite32(DevInst, RegAddr, ChannelIdMask, FldVal);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API configures the dma channel event selection register. MM2S or S2MM
+* channels can be programmed at the given selection index. Events corresponding
+* to the DMA channel can be monitored at the given selection ID through event
+* status registers.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	SelectId: Selection index at which given dma event are captured
+* @param	DmaDir: DMA channel direction.
+* 			for MM2S - DMA_MM2S
+* 			for S2MM - DMA_S2MM
+* @param	ChannelNum: DMA channel number.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventSelectDmaChannel(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 SelectId, XAie_DmaDirection DmaDir, u8 ChannelNum)
+{
+	u8 TileType;
+
+	/* Check for proper DevInst and TileType */
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Register only in memtiles */
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
+		XAIE_ERROR("Tile is not memory tile\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	return _XAie_EventSelectDmaChannelConfig(DevInst, Loc, SelectId,
+			DmaDir, ChannelNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API resets individual dma event selection ID.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	SelectId: Selection index at which given dma channel
+*		events are captured
+* @param	DmaDir: Direction of Dma channel
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventSelectDmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 SelectId, XAie_DmaDirection DmaDir)
+{
+	u8 TileType;
+
+	/* Check for proper DevInst and TileType */
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Register only in memtiles */
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
+		XAIE_ERROR("Tile is not memory tile\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	return _XAie_EventSelectDmaChannelConfig(DevInst, Loc, SelectId,
+			DmaDir, 0U);
+}
+
+/*****************************************************************************/
+/**
+*
 * This API maps an event to the broadcast ID in the given module. To reset, set
 * the value of Event param to XAIE_EVENT_NONE.
 *

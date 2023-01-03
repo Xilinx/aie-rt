@@ -687,6 +687,11 @@ typedef struct XAie_EvntMod {
 	u8 PortIdOff;
 	u32 PortMstrSlvMask;
 	u8 PortMstrSlvOff;
+	u32 BaseDmaChannelSelectRegOff;
+	u8 NumDmaChannelSelectIds;
+	u8 DmaChannelIdOff;
+	u8 DmaChannelIdMask;
+	u8 DmaChannelMM2SOff;
 	u32 BaseBroadcastRegOff;
 	u8 NumBroadcastIds;
 	u32 BaseBroadcastSwBlockRegOff;

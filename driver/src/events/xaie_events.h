@@ -728,6 +728,10 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum);
 AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 SelectId);
+AieRC XAie_EventSelectDmaChannel(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 SelectId, XAie_DmaDirection DmaDir, u8 ChannelNum);
+AieRC XAie_EventSelectDmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 SelectId, XAie_DmaDirection DmaDir);
 AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events *Event);
 AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
