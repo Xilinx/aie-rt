@@ -75,6 +75,8 @@ static inline u8 _XAie_LGetShimTTypefromLoc(XAie_DevInst *DevInst,
 *
 * @param	DevInst: Device Instance.
 * @param	Index: Set bit position in L2 status.
+* 		For IPU, Col < 2, Index 0 to 3 is valid.
+* 		For Col >= 2, Index 0 to 1 is valid.
 * @param	L2Col: Location of L2 column.
 * @param	L1Col: Mapped value of L1 column.
 * @param	Switch: Broadcast switch.
@@ -94,7 +96,7 @@ static inline void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
 		*Switch = Index % 2;
 	} else {
 	        *L1Col = L2Col;
-	        *Switch= Index;
+	        *Switch= Index % 2;
 	}
 }
 
