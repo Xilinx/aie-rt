@@ -587,6 +587,63 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 	return XAIE_OK;
 }
 
+/* l1 bruteforce backtrack for IPU.
+ * This is a temporary fix for IPU.
+ */
+AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
+		XAie_ErrorMetaData *MData)
+{
+	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
+			XAIE_INVALID_ARGS,
+			XAIE_ERROR_MSG("Error interrupt backtracking failed, invalid partition instance\n"));
+
+	XAIE_ERROR_RETURN(MData->Payload == NULL || MData->ArraySize == 0U,
+			XAIE_INVALID_ARGS,
+			XAIE_ERROR_MSG("Invalid error payload buffer or size\n"));
+
+	XAIE_ERROR_RETURN(MData->Cols.Num == 0U || (MData->Cols.Start +
+			  MData->Cols.Num) > XAIE_NUM_COLS, XAIE_INVALID_ARGS,
+			  XAIE_ERROR_MSG("Invalid range of columns\n"));
+
+	AieRC RC;
+	XAie_Range Cols = MData->Cols;
+	int col;
+
+	/* Backward compatibility to support single channel interrupts */
+	if (Cols.Num == 0) {
+		XAIE_DBG("Backtrack column range undefined. Backtracking (%d, %d).\n",
+				Cols.Start, Cols.Start + Cols.Num);
+		Cols.Num = DevInst->NumCols;
+	}
+
+	/* Reset the total error count from previous backtrack. */
+	MData->ErrorCount = 0U;
+	for (col = 0; col < Cols.Num; col++) {
+		XAie_LocType loc;
+
+		loc.Row = 0;
+		loc.Col = col;
+		/* SWITCH A */
+		RC = _XAie_LBacktrackIntrCtrlL1(DevInst, MData, loc, 0);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			_XAie_LIntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+			return RC;
+		}
+		/* SWITCH B */
+		RC = _XAie_LBacktrackIntrCtrlL1(DevInst, MData, loc, 1);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			_XAie_LIntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+			return RC;
+		}
+		_XAie_LIntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+
+	}
+
+	/* Invalidate next info upon successful backtrack. */
+	MData->IsNextInfoValid = 0;
+	return XAIE_OK;
+}
+
 /*****************************************************************************/
 /**
 *
@@ -621,9 +678,13 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 *		  XAie_ErrorMetadataOverrideBuffer() helper macro.
 *
 ******************************************************************************/
+
 AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData)
 {
+#ifdef __AIEIPU__
+	return XAie_BacktrackErrorInterruptsIPU(DevInst, MData);
+#endif
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 			XAIE_INVALID_ARGS,
 			XAIE_ERROR_MSG("Error interrupt backtracking failed, invalid partition instance\n"));
