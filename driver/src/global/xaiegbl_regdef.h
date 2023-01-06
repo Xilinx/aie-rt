@@ -75,6 +75,25 @@ typedef struct {
 } XAie_RegBdFldAttr;
 
 /**
+ * This typedef contains the attributes for the uC module Core control register.
+*/
+typedef struct {
+	u32 RegOff;			/**< Register offset */
+	XAie_RegFldAttr CtrlWakeup;	/**< Wakeup field attributes */
+	XAie_RegFldAttr CtrlSleep;	/**< Sleep field attributes */
+} XAie_RegUcCoreCtrl;
+
+/**
+ * This typedef contains the attributes for the uC module Core status register.
+ */
+typedef struct {
+	u32 RegOff;			/**< Register offset */
+	u32 Mask;			/**< Core status register Mask */
+	XAie_RegFldAttr Intr;		/**< Interrupt value field attributes */
+	XAie_RegFldAttr Sleep;		/**< Sleep value field attributes */
+} XAie_RegUcCoreSts;
+
+/**
  * This typedef contains the attributes for the Core control register.
  */
 typedef struct {
@@ -250,6 +269,28 @@ typedef struct XAie_CoreMod {
 	AieRC (*GetCoreStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			u32 *CoreStatus, const struct XAie_CoreMod *CoreMod);
 } XAie_CoreMod;
+
+/*
+ * The typedef contains the attributes of uC Modules
+ */
+typedef struct XAie_UcMod {
+	u8 IsCheckerBoard;
+	u32 ProgMemAddr;
+	u32 ProgMemSize;
+	u32 ProgMemHostOffset;
+	u32 PrivDataMemAddr;
+	u32 PrivDataMemSize;
+	u32 DataMemAddr;
+	u32 DataMemSize;
+	const XAie_RegUcCoreCtrl *CoreCtrl;
+	const XAie_RegUcCoreSts *CoreSts;
+	AieRC (*Wakeup)(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const struct XAie_UcMod *UcMod);
+	AieRC (*Sleep)(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const struct XAie_UcMod *UcMod);
+	AieRC (*GetCoreStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 *CoreStatus, const struct XAie_UcMod *UcMod);
+} XAie_UcMod;
 
 /*
  * The typedef captures the Buffer descriptor validity properties
@@ -833,6 +874,7 @@ struct XAie_TileMod {
 	const XAie_L2IntrMod *L2IntrMod;
 	const XAie_TileCtrlMod *TileCtrlMod;
 	const XAie_MemCtrlMod *MemCtrlMod;
+	const XAie_UcMod *UcMod;
 };
 
 

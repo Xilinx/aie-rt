@@ -35,7 +35,6 @@
 #include "xaie_helper.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
-#include "xaiegbl_defs.h"
 
 /************************** Constant Definitions *****************************/
 #define XAIE_LOAD_ELF_TXT	(1U << 0U)
@@ -63,6 +62,9 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const char* ElfPtr, u8 Sections);
 
 #endif /* XAIE_FEATURE_ELF_ENABLE */
+
+void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr);
+void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr);
 
 #endif		/* end of protection macro */
 /** @} */

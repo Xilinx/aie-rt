@@ -36,6 +36,7 @@
 #include "xaie_ss_aieml.h"
 #include "xaie2psgbl_params.h"
 #include "xaiegbl_regdef.h"
+#include "xaie_uc.h"
 
 /************************** Constant Definitions *****************************/
 
@@ -199,6 +200,45 @@ static const  XAie_CoreMod Aie2PSCoreMod =
 	.GetCoreStatus = &_XAieMl_CoreGetStatus
 };
 #endif /* XAIE_FEATURE_CORE_ENABLE */
+
+#ifdef XAIE_FEATURE_UC_ENABLE
+/*
+ * Global instance for uC module Core_Control register.
+ */
+static const  XAie_RegUcCoreCtrl Aie2PSUcCoreCtrlReg =
+{
+	XAIE2PSGBL_UC_MODULE_CORE_CONTROL,
+	{XAIE2PSGBL_UC_MODULE_CORE_CONTROL_WAKEUP_LSB, XAIE2PSGBL_UC_MODULE_CORE_CONTROL_WAKEUP_MASK},
+	{XAIE2PSGBL_UC_MODULE_CORE_CONTROL_GO_TO_SLEEP_LSB, XAIE2PSGBL_UC_MODULE_CORE_CONTROL_GO_TO_SLEEP_MASK}
+};
+
+static const  XAie_RegUcCoreSts Aie2PSUcCoreStsReg =
+{
+	.RegOff = XAIE2PSGBL_UC_MODULE_CORE_STATUS,
+	.Mask = XAIE2PSGBL_UC_MODULE_CORE_STATUS_MASK,
+	.Intr = {XAIE2PSGBL_UC_MODULE_CORE_STATUS_INTERRUPT_LSB,
+		XAIE2PSGBL_UC_MODULE_CORE_STATUS_INTERRUPT_MASK},
+	.Sleep = {XAIE2PSGBL_UC_MODULE_CORE_STATUS_SLEEP_LSB,
+		XAIE2PSGBL_UC_MODULE_CORE_STATUS_SLEEP_MASK}
+};
+
+static const XAie_UcMod Aie2PSUcMod =
+{
+	.IsCheckerBoard = 0U,
+	.ProgMemAddr = 0x0,
+	.ProgMemSize = 32 * 1024,
+	.ProgMemHostOffset = XAIE2PSGBL_UC_MODULE_CORE_PROGRAM_MEMORY,
+	.PrivDataMemAddr = XAIE2PSGBL_UC_MODULE_CORE_PRIVATE_DATA_MEMORY,
+	.PrivDataMemSize = 16 * 1024,
+	.DataMemAddr = XAIE2PSGBL_UC_MODULE_MODULE_DATA_MEMORY,
+	.DataMemSize = 32 * 1024,
+	.CoreCtrl = &Aie2PSUcCoreCtrlReg,
+	.CoreSts = &Aie2PSUcCoreStsReg,
+	.Wakeup = &_XAie_UcCoreWakeup,
+	.Sleep = &_XAie_UcCoreSleep,
+	.GetCoreStatus = &_XAie_UcCoreGetStatus
+};
+#endif /* XAIE_FEATURE_UC_ENABLE */
 
 #ifdef XAIE_FEATURE_SS_ENABLE
 /*
@@ -4548,6 +4588,11 @@ static const XAie_MemCtrlMod Aie2PSMemTileMemCtrlMod =
 #else
 	#define AIE2PSCOREMOD NULL
 #endif
+#ifdef XAIE_FEATURE_UC_ENABLE
+	#define AIE2PSUCMOD &Aie2PSUcMod
+#else
+	#define AIE2PSUCMOD NULL
+#endif
 #ifdef XAIE_FEATURE_SS_ENABLE
 	#define AIE2PSTILESTRMSW &Aie2PSTileStrmSw
 	#define AIE2PSSHIMSTRMSW &Aie2PSShimTileStrmSw
@@ -4678,6 +4723,7 @@ XAie_TileMod Aie2PSMod[] =
 		.L2IntrMod = NULL,
 		.TileCtrlMod = AIEMLCORETILECTRLMOD,
 		.MemCtrlMod = AIEMLTILEMEMCTRLMOD,
+		.UcMod = NULL,
 	},
 	{
 		/*
@@ -4698,6 +4744,7 @@ XAie_TileMod Aie2PSMod[] =
 		.L2IntrMod = AIEMLNOCL2INTRMOD,
 		.TileCtrlMod = AIEMLSHIMTILECTRLMOD,
 		.MemCtrlMod = NULL,
+		.UcMod = AIE2PSUCMOD,
 	},
 	{
 		/*
@@ -4718,6 +4765,7 @@ XAie_TileMod Aie2PSMod[] =
 		.L2IntrMod = NULL,
 		.TileCtrlMod = AIEMLSHIMTILECTRLMOD,
 		.MemCtrlMod = NULL,
+		.UcMod = NULL,
 	},
 	{
 		/*
@@ -4738,6 +4786,7 @@ XAie_TileMod Aie2PSMod[] =
 		.L2IntrMod = NULL,
 		.TileCtrlMod = AIEMLMEMTILECTRLMOD,
 		.MemCtrlMod = AIEMLMEMTILEMEMCTRLMOD,
+		.UcMod = NULL,
 	},
 };
 

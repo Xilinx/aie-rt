@@ -56,7 +56,7 @@
 * @note		Internal API only.
 *
 *******************************************************************************/
-static void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr)
+void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr)
 {
 	XAIE_DBG("**** ELF HEADER ****\n");
 	XAIE_DBG("e_type\t\t: 0x%08x\n", Ehdr->e_type);
@@ -88,7 +88,7 @@ static void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr)
 * @note		Internal API only.
 *
 *******************************************************************************/
-static void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr)
+void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr)
 {
 	XAIE_DBG("**** PROGRAM HEADER ****\n");
 	XAIE_DBG("p_type\t\t: 0x%08x\n", Phdr->p_type);
