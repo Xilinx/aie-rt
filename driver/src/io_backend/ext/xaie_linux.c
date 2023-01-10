@@ -868,7 +868,7 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 
 	LinuxMemInst = (XAie_LinuxMem *)malloc(sizeof(*LinuxMemInst));
 	if(LinuxMemInst == NULL) {
-		XAIE_ERROR("Memory attachmeent failed, Memory allocation failed\n");
+		XAIE_ERROR("Memory attachment failed, Memory allocation failed\n");
 		return XAIE_ERR;
 	}
 
@@ -1252,6 +1252,32 @@ static AieRC _XAie_LinuxIO_FreeRsc(void *IOInst, XAie_BackendTilesRsc *Args)
 
 /*****************************************************************************/
 /**
+* The API clears partition context.
+*
+*
+* @param	IOInst: IO instance pointer
+*
+* @return	XAIE_OK on success
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxIO_PartClearContext(XAie_LinuxIO *IOInst)
+{
+	int Ret;
+
+	Ret = ioctl(IOInst->PartitionFd, AIE_PARTITION_CLR_CONTEXT_IOCTL);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to clear partition context, %d: %s\n",
+			errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
 * The API requests statically allocated resource.
 *
 *
@@ -1453,6 +1479,8 @@ static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		return _XAie_LinuxIO_RequestAllocatedRsc(IOInst, Arg);
 	case XAIE_BACKEND_OP_GET_RSC_STAT:
 		return _XAie_LinuxIO_GetRscStat(IOInst, Arg);
+	case XAIE_BACKEND_OP_PARTITION_CLEAR_CONTEXT:
+		return _XAie_LinuxIO_PartClearContext((XAie_LinuxIO *)IOInst);
 	default:
 		XAIE_ERROR("Linux backend does not support operation %d\n", Op);
 		return XAIE_FEATURE_NOT_SUPPORTED;

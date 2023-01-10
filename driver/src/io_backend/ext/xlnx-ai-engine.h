@@ -451,6 +451,22 @@ struct aie_rsc_user_stat_array {
  */
 #define AIE_PARTITION_TEAR_IOCTL	_IO(AIE_IOCTL_BASE, 0x4)
 
+/**
+ * DOC: AIE_PARTITION_CLR_CONTEXT_IOCTL - clear context of AI engine partition
+ *
+ * This ioctl is used to clear context of a partition.  This operation does the
+ * following steps to clear context of AI engine partition:
+ * - gate all columns
+ * - reset AI engine partition columns
+ * - ungate all columns
+ * - reset shim tiles
+ * - setup axi mm to raise events
+ * - setup partition isolation
+ * - zeroize memory
+ * - setup L2 intrupt
+ */
+#define AIE_PARTITION_CLR_CONTEXT_IOCTL _IO(AIE_IOCTL_BASE, 0x5)
+
 #define AIE_REG_IOCTL			_IOWR(AIE_IOCTL_BASE, 0x8, \
 					      struct aie_reg_args)
 /**
