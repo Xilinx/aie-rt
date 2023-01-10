@@ -277,6 +277,38 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 
 	return XAIE_OK;
 }
+
+/*****************************************************************************/
+/**
+*
+* The API clears partition context
+*
+* @param        DevInst - Global AIE device instance pointer.
+*
+* @return       XAIE_OK on success and error code on failure.
+*
+* @note         None.
+*
+******************************************************************************/
+AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_PARTITION_CLEAR_CONTEXT,
+			NULL);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Failed to clear context of partition\n");
+		return RC;
+	}
+
+	return XAIE_OK;
+}
 #endif /* !XAIE_FEATURE_LITE && XAIE_FEATURE_PRIVILEGED_ENABLE */
 
 /*****************************************************************************/
