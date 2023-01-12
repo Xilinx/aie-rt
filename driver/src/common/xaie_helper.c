@@ -501,6 +501,20 @@ static AieRC _XAie_RemoveTxnInstFromList(XAie_DevInst *DevInst, u64 Tid)
 	return XAIE_OK;
 }
 
+int BuffHexDump(char* buff,size_t size) {
+	XAIE_DBG("Buff Info %p %d\n",buff,size);
+	for (int i = 0; i < size; ++i) {
+		printf("0x%x ",buff[i]&0xff);
+	}
+	printf("\n");
+}
+
+static int TxnCmdDump(XAie_TxnCmd* cmd) {
+	XAIE_DBG("TxnCmdDump Called for %d and size %d\n",cmd->Opcode,cmd->Size);
+	BuffHexDump((cmd->DataPtr),cmd->Size);
+	return 0;
+}
+
 /*****************************************************************************/
 /**
 * This API rellaocates the command buffer associated with the given transaction
@@ -566,6 +580,7 @@ AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags)
 	Inst->NumCmds = 0U;
 	Inst->MaxCmds = XAIE_DEFAULT_NUM_CMDS;
 	Inst->Tid = Backend->Ops.GetTid();
+	Inst->NextCustomOp = XAIE_IO_CUSTOM_OP_BEGIN;
 
 	XAIE_DBG("Transaction buffer allocated with id: %ld\n", Inst->Tid);
 	Inst->Flags = Flags;
@@ -600,6 +615,12 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 {
 	AieRC RC;
 	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+		// TBD hooking point for  custom op handler
+		XAIE_WARN("Custom OP Transaction %d handler hook point\n",Cmd->Opcode);
+		return XAIE_OK;
+	}
 
 	switch(Cmd->Opcode)
 	{
@@ -939,6 +960,20 @@ static inline void _XAie_AppendBlockSet32(XAie_DevInst *DevInst,
 	}
 }
 
+static inline void _XAie_AppendCustomOp(XAie_DevInst *DevInst,
+		XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr);
+	XAie_BlockWrite32Hdr *Hdr = (XAie_CustomOpHdr*)TxnPtr;
+
+	Hdr->Size = sizeof(*Hdr) + Cmd->Size * sizeof(u8);
+	Hdr->OpHdr.Op = Cmd->Opcode;
+
+	for (u32 i = 0U; i < Cmd->Size; ++i, ++Payload) {
+		*(Payload) = *((u8*)Cmd->DataPtr + i);
+	}
+}
+
 static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
 {
 	u8 *Tmp;
@@ -996,6 +1031,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	_XAie_CreateTxnHeader(DevInst, (XAie_TxnHeader *)TxnPtr);
 	BuffSize += sizeof(XAie_TxnHeader);
 	TxnPtr += sizeof(XAie_TxnHeader);
+	XAIE_DBG("number of cmd %d\n", TmpInst->NumCmds);
 
 	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
 		NumOps++;
@@ -1064,9 +1100,30 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				Cmd->Size * sizeof(u32);
 			continue;
 		}
+		if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+			TxnCmdDump(Cmd);
+			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
+
+			if((BuffSize + sizeof(XAie_CustomOpHdr) +
+						Cmd->Size) > AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2);
+				if(TxnPtr == NULL) return NULL;
+				AllocatedBuffSize *= 2;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendCustomOp(DevInst, Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_CustomOpHdr) +
+				Cmd->Size * sizeof(u8);
+			BuffSize += sizeof(XAie_CustomOpHdr) +
+				Cmd->Size * sizeof(u8);
+			continue;
+		}
 	}
 
 	BuffSize = (BuffSize % 4) ? (BuffSize / 4 + 1) : BuffSize;
+	XAIE_DBG("Size of the Txn Hdr being exported: %u bytes\n",
+			sizeof(XAie_TxnHeader));
 	XAIE_DBG("Size of the transaction buffer being exported: %u bytes\n",
 			BuffSize);
 	XAIE_DBG("Num of Operations in the transaction buffer: %u\n",
@@ -1108,7 +1165,7 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst)
 
 	for(u32 i = 0; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE) &&
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
 				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			free((void *)(uintptr_t)Cmd->DataPtr);
 		}
@@ -1146,7 +1203,8 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
-			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE) &&
+			//TBD handle custom OP as well
+			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
 					((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 				free((void *)(uintptr_t)Cmd->DataPtr);
 			}
@@ -1543,7 +1601,8 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 	for(u32 i = 0U; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
+		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+			XAIE_DBG("free DataPtr %p\n", Cmd->DataPtr);
 			free((void *)Cmd->DataPtr);
 		}
 	}
@@ -1558,5 +1617,109 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 	return XAIE_OK;
 }
+
+/*****************************************************************************/
+/**
+*
+* This API request a custom operation code that can be added to the transaction buffer.
+*
+* @param    DevInst - Global AIE device instance pointer.
+*
+* @return   Enum of the custom operation number.
+*
+* @note     This function may be called before or after the XAie_StartTransaction();
+*
+******************************************************************************/
+
+int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst) {
+
+	XAie_TxnInst *Inst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	Inst = _XAie_GetTxnInst(DevInst, Backend->Ops.GetTid());
+	if(Inst == NULL) {
+		XAIE_ERROR("Failed to get the correct transaction instance "
+				"from internal list\n");
+		return XAIE_ERR;
+	}
+	if(Inst->NextCustomOp < XAIE_IO_CUSTOM_OP_MAX) {
+		XAIE_DBG("New Custom OP allocated %d\n", Inst->NextCustomOp);
+	} else {
+		XAIE_DBG("Custom OP Max reached %d, allocation fail\n", Inst->NextCustomOp);
+		return -1;
+	}
+
+	return (Inst->NextCustomOp)++;
+}
+
+
+
+/*****************************************************************************/
+/**
+*
+* This API registers a custom operation that can be added to the transaction buffer.
+*
+* @param    DevInst - Global AIE device instance pointer.
+* @param    OpNum - OpNum returned by the AIE driver when the custom op was registered.
+* @param    Args - Args required by the custom Op.
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size) {
+
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL) {
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_DBG("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
+			return XAIE_ERR;
+		}
+
+		if ( TxnInst->NextCustomOp < OpNumber || XAIE_IO_CUSTOM_OP_BEGIN > OpNumber || XAIE_IO_CUSTOM_OP_MAX < OpNumber) {
+			XAIE_DBG("Invalid Op Code %d\n",OpNumber);
+			return XAIE_ERR;
+		}
+
+		/* check memory allocation before increase Cmd vector */
+		char* tmpBuff = malloc(size);
+		if(!tmpBuff) {
+			XAIE_DBG("Fail to malloc %d size memory for DataPtr\n", size);
+			return XAIE_ERR;
+		}
+
+		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+			RC = _XAie_ReallocCmdBuf(TxnInst);
+			if (RC != XAIE_OK) {
+				 return RC;
+			}
+
+		}
+
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = OpNumber;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Size = size;
+
+		memcpy(tmpBuff, Args, size);
+		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = tmpBuff;
+
+		TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
+
 
 /** @} */

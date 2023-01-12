@@ -148,6 +148,7 @@ typedef struct {
 	u32 Flags;
 	u32 NumCmds;
 	u32 MaxCmds;
+	u8  NextCustomOp;
 	XAie_TxnCmd *CmdBuf;
 	XAie_List Node;
 } XAie_TxnInst;
@@ -561,6 +562,11 @@ typedef struct {
 	uint32_t RegOff;
 	uint32_t Size;
 } XAIE_PACK_ATTRIBUTE XAie_BlockWrite32Hdr;
+
+typedef struct {
+	XAie_OpHdr OpHdr;
+	uint32_t Size;
+} XAIE_PACK_ATTRIBUTE XAie_CustomOpHdr;
 
 #ifdef _MSC_VER
 #pragma pop()
