@@ -31,8 +31,10 @@
 ******************************************************************************/
 #ifndef XAIEHELPER_H
 #define XAIEHELPER_H
+#define XAIE_DEBUG
 
 /***************************** Include Files *********************************/
+#include <limits.h>
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
 
@@ -98,6 +100,8 @@ typedef enum {
 	XAIE_IO_BLOCKSET,
 	XAIE_IO_MASKWRITE,
 	XAIE_IO_MASKPOLL,
+	XAIE_IO_CUSTOM_OP_BEGIN = 1<<7,
+	XAIE_IO_CUSTOM_OP_MAX = UCHAR_MAX,
 } XAie_TxnOpcode;
 
 struct XAie_TxnCmd {
@@ -180,6 +184,10 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size);
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr);
+//typedef u8 XAie_OpNum;
+int BuffHexDump(char* buff,size_t size);
+int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
+AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
 AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags);
 AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
