@@ -94,6 +94,22 @@ static void _XAie_PrivilegeSetPartColClkBuf(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
+*  This API disables clock for all tiles in the given device instance.
+*
+* @param        DevInst: Device Instance
+*
+* @return       XAIE_OK
++******************************************************************************/
+AieRC XAie_GateColumnClk(XAie_DevInst *DevInst)
+{
+	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API set the tile column reset
 *
 * @param	DevInst: Device Instance

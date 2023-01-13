@@ -72,6 +72,7 @@
 /************************** Function Prototypes  *****************************/
 AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
+AieRC XAie_GateColumnClk(XAie_DevInst *DevInst);
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
