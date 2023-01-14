@@ -27,6 +27,13 @@
 #include "xaie_tilectrl.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+
+/*
+* This variable captures the generic device value. If S100/S200 device is not
+* available
+*/
+u8 XAieDevType = XAIE_DEV_GENERIC_DEVICE;
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -124,6 +131,18 @@ u8 _XAie_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		ColType = (DevInst->StartCol + Loc.Col) % 4U;
 		if((ColType == 0U) || (ColType == 1U)) {
 			return XAIEGBL_TILE_TYPE_SHIMPL;
+		}
+
+		//TBD: At present we don't know floor plan, consider it as
+		//     S100/S200
+		if(XAieDevType == XAIE_DEV_GEN_S200 ||
+				XAieDevType == XAIE_DEV_GEN_S100) {
+			if((Loc.Col == 14) || (Loc.Col == 15) || (Loc.Col == 22) ||
+					(Loc.Col == 23) || (Loc.Col == 34) ||
+					(Loc.Col == 35) || (Loc.Col == 46) ||
+					(Loc.Col == 47) || (Loc.Col == 58)) {
+				return XAIEGBL_TILE_TYPE_SHIMPL;
+			}
 		}
 
 		return XAIEGBL_TILE_TYPE_SHIMNOC;
