@@ -59,6 +59,8 @@ extern XAie_DeviceOps Aie2IpuDevOps;
 extern XAie_DeviceOps Aie2PDevOps;
 extern XAie_DeviceOps Aie2PSDevOps;
 
+extern XAieDevType;
+
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
 #define XAIE_DEV_SINGLE_MOD Aie2IpuMod
 #define XAIE_DEV_SINGLE_DEVOPS Aie2IpuDevOps
@@ -162,10 +164,13 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = AieMlMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIEML;
 		InstPtr->DevOps = &AieMlDevOps;
-	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE) {
+	} else if((ConfigPtr->AieGen == XAIE_DEV_GEN_AIE) ||
+			(ConfigPtr->AieGen == XAIE_DEV_GEN_S100) ||
+			(ConfigPtr->AieGen == XAIE_DEV_GEN_S200)) {
 		InstPtr->DevProp.DevMod = AieMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 		InstPtr->DevOps = &AieDevOps;
+		XAieDevType = ConfigPtr->AieGen;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2IPU) {
 		InstPtr->DevProp.DevMod = Aie2IpuMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;

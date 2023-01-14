@@ -43,11 +43,14 @@ typedef int32_t			s32;
 typedef uint32_t		u32;
 typedef uint64_t		u64;
 
+#define XAIE_DEV_GENERIC_DEVICE		0U
 #define XAIE_DEV_GEN_AIE		1U
 #define XAIE_DEV_GEN_AIEML		2U
 #define XAIE_DEV_GEN_AIE2IPU    3U
 #define XAIE_DEV_GEN_AIE2P		4U
 #define XAIE_DEV_GEN_AIE2PS		5U
+#define XAIE_DEV_GEN_S100		6U
+#define XAIE_DEV_GEN_S200		7U
 
 #define XAIE_COMPONENT_IS_READY		1U
 
