@@ -61,10 +61,9 @@ AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const char* ElfPtr, u8 Sections);
 
-#endif /* XAIE_FEATURE_ELF_ENABLE */
-
 void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr);
 void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr);
 
+#endif /* XAIE_FEATURE_ELF_ENABLE */
 #endif		/* end of protection macro */
 /** @} */
