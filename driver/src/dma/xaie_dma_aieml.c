@@ -38,6 +38,7 @@
 #define XAIEML_DMA_PAD_NUM_DIMS				3U
 
 #define XAIEML_DMA_STATUS_IDLE				0x0U
+#define XAIEML_DMA_STATUS_CHANNEL_NOT_RUNNING 		0x0U
 #define XAIEML_DMA_STATUS_CHNUM_OFFSET			0x4U
 
 /************************** Function Definitions *****************************/
@@ -677,7 +678,7 @@ AieRC _XAieMl_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_ERR;
 	}
 
-	Mask = DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Status.Mask |
+	Mask = DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Channel_running.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockAcq.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockRel.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledStreamStarve.Mask |
@@ -721,7 +722,7 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		DmaMod->ChStatusBase + ChNum * XAIEML_DMA_STATUS_CHNUM_OFFSET +
 		Dir * DmaMod->ChStatusOffset;
 
-	Mask = DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Status.Mask |
+	Mask = DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Channel_running.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.TaskQSize.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockAcq.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockRel.Mask |
@@ -729,8 +730,8 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledTCT.Mask;
 
 	/* This will check the stalled and start queue size bits to be zero */
-	Value = XAIEML_DMA_STATUS_IDLE <<
-		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Status.Lsb;
+	Value = XAIEML_DMA_STATUS_CHANNEL_NOT_RUNNING <<
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Channel_running.Lsb;
 
 	if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
 			XAIE_OK) {
