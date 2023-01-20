@@ -1036,6 +1036,20 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
 		NumOps++;
 		XAie_TxnCmd *Cmd = &TmpInst->CmdBuf[i];
+		if ((Cmd->Opcode == XAIE_IO_WRITE) && (!Cmd->Mask)) {
+			if((BuffSize + sizeof(XAie_Write32Hdr)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2);
+				if(TxnPtr == NULL) return NULL;
+				AllocatedBuffSize *= 2;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendWrite32(DevInst, Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_Write32Hdr);
+			BuffSize += sizeof(XAie_Write32Hdr);
+			continue;
+		}
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask)) {
 			if((BuffSize + sizeof(XAie_MaskWrite32Hdr)) >
 					AllocatedBuffSize) {
