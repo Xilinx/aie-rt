@@ -52,7 +52,7 @@ u8 _XAie2Ipu_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 		return (u8)Switch;
 	} else {
-		if (Loc.Col  == 1) {
+		if ((Loc.Col + DevInst->StartCol) == 1) {
 			/* Shim PL on the left */
 			return 2 + (u8)Switch;
 		} else {
