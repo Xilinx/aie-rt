@@ -31,7 +31,6 @@
 ******************************************************************************/
 #ifndef XAIEHELPER_H
 #define XAIEHELPER_H
-#define XAIE_DEBUG
 
 /***************************** Include Files *********************************/
 #include <limits.h>
@@ -184,7 +183,6 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size);
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr);
-//typedef u8 XAie_OpNum;
 int BuffHexDump(char* buff,size_t size);
 int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
 AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
