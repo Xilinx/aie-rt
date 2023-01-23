@@ -52,7 +52,8 @@ typedef struct {
 /* Data structure to capture the core tile status */
 typedef struct {
 	XAie_DmaStatus dma[XAIE_TILE_DMA_NUM_CH];
-	u32	EventStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
+	u32 EventCoreModStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
+	u32 EventMemModStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
 	u32 CoreStatus;
 	u32 ProgramCounter;
 	u32 StackPtr;

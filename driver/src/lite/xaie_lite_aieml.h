@@ -195,11 +195,19 @@ static inline void _XAie_LCoreEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 
 		/* event status address */
 		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-			+ EventReg * XAIE_AIE_TILE_EVENT_STATUS_IDX + XAIE_AIE_TILE_EVENT_STATUS_REGOFF;
+			+ EventReg * XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_IDX + XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_REGOFF;
 
 		/* read event status register and store in output buffer */
-		Status[Col].CoreTile[Row].EventStatus[EventReg] =
-			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_EVENT_STATUS_MASK);
+		Status[Col].CoreTile[Row].EventCoreModStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_MASK);
+
+		/* event status address */
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+			+ EventReg * XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_IDX + XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_REGOFF;
+
+		/* read event status register and store in output buffer */
+		Status[Col].CoreTile[Row].EventMemModStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_MASK);
 	}
 }
 
