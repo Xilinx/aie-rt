@@ -687,12 +687,16 @@ static u32* _XAie_GetVirtAddrFromOffset(XAie_LinuxIO *IOInst, u64 RegOff,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
-		MemOffset = _XAie_GetMemOffset(IOInst, TileType, Col, Row,
-				IOInst->MemTileMemSize);
-		VirtAddr = (u32 *)((char *)IOInst->MemTileMem.VAddr +
-				MemOffset + RegAddr);
+		u64 MemRange = IOInst->MemTileMemAddr + IOInst->MemTileMemSize;
+		if(((RegAddr + Size) < (MemRange)) &&
+				(RegAddr >= IOInst->MemTileMemAddr)) {
+			MemOffset = _XAie_GetMemOffset(IOInst, TileType, Col, Row,
+					IOInst->MemTileMemSize);
+			VirtAddr = (u32 *)((char *)IOInst->MemTileMem.VAddr +
+					MemOffset + RegAddr);
 
-		return VirtAddr;
+			return VirtAddr;
+		}
 	}
 
 	if(((RegAddr + Size) < (IOInst->ProgMemAddr + IOInst->ProgMemSize)) &&
