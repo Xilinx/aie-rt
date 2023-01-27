@@ -503,19 +503,6 @@ typedef struct {
 	XAie_Range Cols;
 } XAie_ErrorMetaData;
 
-#ifdef _MSC_VER
-#pragma push(4)
-#endif
-
-/*
- * __attribute is not supported for windows. remove it conditionally.
- */
-#ifdef _MSC_VER
-#define XAIE_PACK_ATTRIBUTE
-#else
-#define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
-#endif
-
 typedef struct {
 	uint8_t Major;
 	uint8_t Minor;
@@ -525,28 +512,20 @@ typedef struct {
 	uint8_t NumMemTileRows;
 	uint32_t NumOps;
 	uint32_t TxnSize;
-} XAIE_PACK_ATTRIBUTE XAie_TxnHeader;
+} XAie_TxnHeader;
 
 typedef struct {
 	uint8_t Op;
 	uint8_t Col;
 	uint8_t Row;
-} XAIE_PACK_ATTRIBUTE XAie_OpHdr;
+} XAie_OpHdr;
 
 typedef struct {
 	XAie_OpHdr OpHdr;
 	uint64_t RegOff;
 	uint32_t Value;
 	uint32_t Size;
-} XAIE_PACK_ATTRIBUTE XAie_Write32Hdr;
-
-typedef struct {
-	XAie_OpHdr OpHdr;
-	uint64_t RegOff;
-	uint32_t Value;
-	uint32_t Mask;
-	uint32_t Size;
-} XAIE_PACK_ATTRIBUTE XAie_MaskWrite32Hdr;
+} XAie_Write32Hdr;
 
 typedef struct {
 	XAie_OpHdr OpHdr;
@@ -554,7 +533,15 @@ typedef struct {
 	uint32_t Value;
 	uint32_t Mask;
 	uint32_t Size;
-} XAIE_PACK_ATTRIBUTE XAie_MaskPoll32Hdr;
+} XAie_MaskWrite32Hdr;
+
+typedef struct {
+	XAie_OpHdr OpHdr;
+	uint64_t RegOff;
+	uint32_t Value;
+	uint32_t Mask;
+	uint32_t Size;
+} XAie_MaskPoll32Hdr;
 
 typedef struct {
 	XAie_OpHdr OpHdr;
@@ -562,16 +549,12 @@ typedef struct {
 	uint8_t Row;
 	uint32_t RegOff;
 	uint32_t Size;
-} XAIE_PACK_ATTRIBUTE XAie_BlockWrite32Hdr;
+} XAie_BlockWrite32Hdr;
 
 typedef struct {
 	XAie_OpHdr OpHdr;
 	uint32_t Size;
-} XAIE_PACK_ATTRIBUTE XAie_CustomOpHdr;
-
-#ifdef _MSC_VER
-#pragma pop()
-#endif
+} XAie_CustomOpHdr;
 
 /**************************** Function prototypes ***************************/
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
