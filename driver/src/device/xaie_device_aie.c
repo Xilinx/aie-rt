@@ -133,14 +133,10 @@ u8 _XAie_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 			return XAIEGBL_TILE_TYPE_SHIMPL;
 		}
 
-		//TBD: At present we don't know floor plan, consider it as
-		//     S100/S200
+		//For S100/S200 column 58 is shim-PL
 		if(XAieDevType == XAIE_DEV_GEN_S200 ||
 				XAieDevType == XAIE_DEV_GEN_S100) {
-			if((Loc.Col == 14) || (Loc.Col == 15) || (Loc.Col == 22) ||
-					(Loc.Col == 23) || (Loc.Col == 34) ||
-					(Loc.Col == 35) || (Loc.Col == 46) ||
-					(Loc.Col == 47) || (Loc.Col == 58)) {
+			if((DevInst->StartCol + Loc.Col) == 58) {
 				return XAIEGBL_TILE_TYPE_SHIMPL;
 			}
 		}
