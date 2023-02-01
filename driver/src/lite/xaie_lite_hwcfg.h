@@ -159,12 +159,10 @@
 
 #ifndef XAIE_BASE_ADDR
 #define XAIE_BASE_ADDR			IPU_AIE_BASEADDR
-#define XAIE_BASE_ADDR			0
 #endif
 
 #ifndef XAIE_NPI_BASEADDR
 #define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
-#define XAIE_NPI_BASEADDR		0
 #endif
 
 #ifndef XAIE_NUM_ROWS
