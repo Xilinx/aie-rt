@@ -635,7 +635,8 @@ AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 			_XAie_LIntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
 			return RC;
 		}
-		_XAie_LIntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+		if (col)
+			_XAie_LIntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
 
 	}
 
