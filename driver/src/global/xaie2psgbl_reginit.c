@@ -26,6 +26,7 @@
 
 #include "xaie_core_aieml.h"
 #include "xaie_device_aie2ipu.h"
+#include "xaie_device_aie2ps.h"
 #include "xaie_device_aieml.h"
 #include "xaie_dma_aieml.h"
 #include "xaie_dma_aie2ps.h"
@@ -4797,7 +4798,7 @@ XAie_DeviceOps Aie2PSDevOps =
 	.TilesInUse = Aie2PSTilesInUse,
 	.MemInUse = Aie2PSMemInUse,
 	.CoreInUse = Aie2PSCoreInUse,
-	.GetTTypefromLoc = &_XAie_GetTileTypefromLoc,
+	.GetTTypefromLoc = &_XAie2PS_GetTTypefromLoc,
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
 	.SetPartColClockAfterRst = &_XAieMl_SetPartColClockAfterRst,
