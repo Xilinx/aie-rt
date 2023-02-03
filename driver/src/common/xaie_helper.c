@@ -964,7 +964,7 @@ static inline void _XAie_AppendCustomOp(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr);
-	XAie_BlockWrite32Hdr *Hdr = (XAie_CustomOpHdr*)TxnPtr;
+	XAie_CustomOpHdr *Hdr = (XAie_CustomOpHdr*)TxnPtr;
 
 	Hdr->Size = sizeof(*Hdr) + Cmd->Size * sizeof(u8);
 	Hdr->OpHdr.Op = Cmd->Opcode;
