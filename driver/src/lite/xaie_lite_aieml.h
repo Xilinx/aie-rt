@@ -829,6 +829,7 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 		if (Ret < 0)
 			return XAIE_ERR;
 	}
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
