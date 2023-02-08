@@ -724,6 +724,7 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Mask = DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.Channel_running.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.TaskQSize.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.ChannelRunning.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockAcq.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockRel.Mask |
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledStreamStarve.Mask |
