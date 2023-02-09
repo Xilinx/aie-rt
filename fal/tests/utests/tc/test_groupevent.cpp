@@ -186,7 +186,7 @@ TEST(GroupEvent, GroupEventBasicMemTile)
 
 
 	auto gEvent = GroupEventHd->getEvent();
-	CHECK_EQUAL(gEvent, XAIE_EVENT_GROUP_DMA_ACTIVITY_MEM_TILE)
+	CHECK_EQUAL(gEvent, XAIE_EVENT_GROUP_DMA_ACTIVITY_MEM_TILE);
 
 	DevInst.IsReady = 0;
 	RC = GroupEventHd->reserve();
