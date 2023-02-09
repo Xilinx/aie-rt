@@ -42,6 +42,21 @@
 *		For column from 0 to 1 is: 0 1 2 3
 *		For column from 2 to 4 is: 0 1
 *
+*		Here we do not use Loc.Col + DevInst->start for the folling
+*		reasons:
+*
+*		The cdo generated for IPU needs to be relocatable across other
+*		columns. For building the cdo, aiecompiler uses DevInst->StartCol = 1
+*		and Loc here will have Loc.Col = 0;
+*		So we essentially configure 0, 1 for all columns (when cdo is reused).
+*
+*		Todo:
+*		Call to XAie_BacktrackErrorInterrupts() needs to have correct
+*		DevInst->StartCol. Currently it has 0. The IrqId is used to
+*		determine the L1 column from L2 col, L2 mask. DevInst->StartCol
+*		Should also be used to determine L1 col, Switch. This way, we can
+*		make cdo relocatable.
+*
 *		Internal Only.
 ******************************************************************************/
 u8 _XAie2Ipu_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -52,7 +67,7 @@ u8 _XAie2Ipu_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 		return (u8)Switch;
 	} else {
-		if ((Loc.Col + DevInst->StartCol) == 1) {
+		if (Loc.Col  == 1) {
 			/* Shim PL on the left */
 			return 2 + (u8)Switch;
 		} else {
