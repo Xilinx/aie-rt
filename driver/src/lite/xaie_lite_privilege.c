@@ -71,6 +71,53 @@ static void _XAie_PrivilegeSetColClkBuf(XAie_DevInst *DevInst,
 
 /*****************************************************************************/
 /**
+* This API modifies(enable or disable) the clock control register for given shim.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+* @param        Enable: XAIE_ENABLE to enable shim clock buffer,
+*                       XAIE_DISABLE to disable.
+
+* @note         It is internal function to this file
+*
+******************************************************************************/
+static void _XAie_PrivilegeSetShimClk(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 Enable)
+{
+	u64 RegAddr;
+	u32 FldVal;
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0;
+	FldVal = XAie_SetField(Enable,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_LSB,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_MASK);
+	FldVal |= XAie_SetField(Enable,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_LSB,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_MASK);
+	FldVal |= XAie_SetField(Enable,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_LSB,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_MASK);
+
+
+
+	_XAie_LPartMaskWrite32(DevInst, RegAddr,
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_MASK, FldVal);
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1;
+	FldVal = XAie_SetField(Enable,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_CLOCK_ENABLE_LSB,
+			XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_CLOCK_ENABLE_MASK);
+
+	_XAie_LPartMaskWrite32(DevInst, RegAddr,
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_MASK, FldVal);
+
+}
+
+
+/*****************************************************************************/
+/**
 *
 * This API set the tile columns clock buffer for every column in the partition
 *
@@ -94,6 +141,44 @@ static void _XAie_PrivilegeSetPartColClkBuf(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
+*  This API modifies column clock and shim clk control registers for the requested columns.
+*  Caller may request subset of columns from a partition.
+*
+* @param        DevInst: Device Instance
+* @param        StartCol: Starting column
+* @param        NumCols: Number of columns
+* @param        Enable: Enable/Disable
+*
+* @return       XAIE_OK
+******************************************************************************/
+AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols, u8 Enable)
+{
+	u32 PartEndCol = DevInst->StartCol + DevInst->Numcols -1;
+
+	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
+	   (StartCol + NumCols > PartEndCol) ) {
+
+		XAIE_ERROR_MSG("Invalid Start Column/Numcols \n");
+		return XAIE_ERR;
+	   }
+
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
+	for(u32 C = StartCol; C < (StartCol + NumCols); C++) {
+		XAie_LocType Loc = XAie_TileLoc(C, 0);
+
+		//This modifies column clk which affects all the aie and mem tile in the column.
+		_XAie_PrivilegeSetColClkBuf(DevInst, Loc, Enable);
+		//This modifies the clk in the shim tile
+		_XAie_PrivilegeSetShimClk(DevInst, Loc, Enable);
+	}
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 *  This API disables clock for all tiles in the given device instance.
 *
 * @param        DevInst: Device Instance
@@ -102,7 +187,9 @@ static void _XAie_PrivilegeSetPartColClkBuf(XAie_DevInst *DevInst,
 +******************************************************************************/
 AieRC XAie_GateColumnClk(XAie_DevInst *DevInst)
 {
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
 
 	return XAIE_OK;
 }
