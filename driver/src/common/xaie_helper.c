@@ -1079,7 +1079,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
 			if((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
-						Cmd->Size) > AllocatedBuffSize) {
+						Cmd->Size * sizeof(u32)) >
+					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2);
 				if(TxnPtr == NULL) return NULL;
@@ -1099,7 +1100,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			 * blockwrite size
 			 */
 			if((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
-						Cmd->Size) > AllocatedBuffSize) {
+						Cmd->Size * sizeof(u32)) >
+					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2);
 				if(TxnPtr == NULL) return NULL;
