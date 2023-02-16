@@ -153,7 +153,7 @@ static void _XAie_PrivilegeSetPartColClkBuf(XAie_DevInst *DevInst,
 ******************************************************************************/
 AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols, u8 Enable)
 {
-	u32 PartEndCol = DevInst->StartCol + DevInst->Numcols -1;
+	u32 PartEndCol = DevInst->StartCol + DevInst->NumCols -1;
 
 	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
 	   (StartCol + NumCols > PartEndCol) ) {
