@@ -3688,6 +3688,7 @@ static const XAie_EvntMod Aie2PTileEvntMod[] =
 		.UserEventMap = &Aie2PTileMemModUserEventStart,
 		.PCEventMap = NULL,
 		.BroadcastEventMap = &Aie2PTileMemModBroadcastEventStart,
+		.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 	},
 	{
 		.XAie_EventNumber = Aie2PCoreModEventMapping,
@@ -3738,6 +3739,7 @@ static const XAie_EvntMod Aie2PTileEvntMod[] =
 		.UserEventMap = &Aie2PTileCoreModUserEventMap,
 		.PCEventMap = &Aie2PTileCoreModPCEventMap,
 		.BroadcastEventMap = &Aie2PTileCoreModBroadcastEventMap,
+		.ErrorHaltRegOff = XAIE2PGBL_CORE_MODULE_ERROR_HALT_EVENT,
 	}
 };
 
@@ -3806,6 +3808,7 @@ static const XAie_EvntMod Aie2PNocEvntMod =
 	.UserEventMap = &Aie2PShimTilePlModUserEventStart,
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &Aie2PShimTilePlModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 
 /*
@@ -3873,6 +3876,7 @@ static const XAie_EvntMod Aie2PPlEvntMod =
 	.UserEventMap = &Aie2PShimTilePlModUserEventStart,
 	.BroadcastEventMap = &Aie2PShimTilePlModBroadcastEventStart,
 	.PCEventMap = NULL,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 
 /*
@@ -3938,6 +3942,7 @@ static const XAie_EvntMod Aie2PMemTileEvntMod =
 	.UserEventMap = &Aie2PMemTileMemModUserEventStart,
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &Aie2PMemTileMemModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 #endif /* XAIE_FEATURE_EVENTS_ENABLE */
 

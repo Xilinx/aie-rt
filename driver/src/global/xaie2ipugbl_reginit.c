@@ -3482,6 +3482,7 @@ static const XAie_EvntMod AieMlTileEvntMod[] =
 		.UserEventMap = &AieMlTileMemModUserEventStart,
 		.PCEventMap = NULL,
 		.BroadcastEventMap = &AieMlTileMemModBroadcastEventStart,
+		.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 	},
 	{
 		.XAie_EventNumber = AieMlCoreModEventMapping,
@@ -3532,6 +3533,7 @@ static const XAie_EvntMod AieMlTileEvntMod[] =
 		.UserEventMap = &AieMlTileCoreModUserEventMap,
 		.PCEventMap = &AieMlTileCoreModPCEventMap,
 		.BroadcastEventMap = &AieMlTileCoreModBroadcastEventMap,
+		.ErrorHaltRegOff = XAIEMLGBL_CORE_MODULE_ERROR_HALT_EVENT,
 	}
 };
 
@@ -3600,6 +3602,7 @@ static const XAie_EvntMod AieMlNocEvntMod =
 	.UserEventMap = &AieMlShimTilePlModUserEventStart,
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &AieMlShimTilePlModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 
 /*
@@ -3665,6 +3668,7 @@ static const XAie_EvntMod AieMlMemTileEvntMod =
 	.UserEventMap = &AieMlMemTileMemModUserEventStart,
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &AieMlMemTileMemModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 #endif /* XAIE_FEATURE_EVENTS_ENABLE */
 

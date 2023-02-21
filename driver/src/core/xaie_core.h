@@ -125,6 +125,8 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_CoreClearDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event);
+AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_Events Event);
 AieRC XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 		XAie_LocType Loc, StrmSwPortType InDir, StrmSwPortType OutDir);

@@ -4028,6 +4028,7 @@ static const XAie_EvntMod Aie2PSTileEvntMod[] =
 		.UserEventMap = &Aie2PSTileMemModUserEventStart,
 		.PCEventMap = NULL,
 		.BroadcastEventMap = &Aie2PSTileMemModBroadcastEventStart,
+		.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 	},
 	{
 		.XAie_EventNumber = Aie2PSCoreModEventMapping,
@@ -4078,6 +4079,7 @@ static const XAie_EvntMod Aie2PSTileEvntMod[] =
 		.UserEventMap = &Aie2PSTileCoreModUserEventMap,
 		.PCEventMap = &Aie2PSTileCoreModPCEventMap,
 		.BroadcastEventMap = &Aie2PSTileCoreModBroadcastEventMap,
+		.ErrorHaltRegOff = XAIE2PSGBL_CORE_MODULE_ERROR_HALT_EVENT,
 	}
 };
 
@@ -4146,6 +4148,7 @@ static const XAie_EvntMod Aie2PSNocEvntMod =
 	.UserEventMap = &Aie2PSShimTilePlModUserEventStart,
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &Aie2PSShimTilePlModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 
 /*
@@ -4213,6 +4216,7 @@ static const XAie_EvntMod Aie2PSPlEvntMod =
 	.UserEventMap = &Aie2PSShimTilePlModUserEventStart,
 	.BroadcastEventMap = &Aie2PSShimTilePlModBroadcastEventStart,
 	.PCEventMap = NULL,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 
 /*
@@ -4278,6 +4282,7 @@ static const XAie_EvntMod Aie2PSMemTileEvntMod =
 	.UserEventMap = &Aie2PSMemTileMemModUserEventStart,
 	.PCEventMap = NULL,
 	.BroadcastEventMap = &Aie2PSMemTileMemModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 #endif /* XAIE_FEATURE_EVENTS_ENABLE */
 

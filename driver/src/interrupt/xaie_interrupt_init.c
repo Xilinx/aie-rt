@@ -601,6 +601,45 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 
 /*****************************************************************************/
 /**
+* This API calls API to Configure Error halt register with group Error0. This
+* will put core in halt state if any group error0 occurs.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		This function is used internally only.
+*
+******************************************************************************/
+static AieRC _XAie_ErrorHandlingEventHaltCore(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u8 AieRowStart, AieRowEnd;
+
+	AieRowStart = DevInst->AieTileRowStart;
+	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+
+	for(u8 Col = DevInst->StartCol; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			XAie_LocType Loc;
+			Loc = XAie_TileLoc(Col, Row);
+
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)
+				continue;
+
+			RC = XAie_CoreConfigureErrorHaltEvent(DevInst, Loc,
+					XAIE_EVENT_GROUP_ERRORS_0_CORE);
+			if(RC != XAIE_OK) {
+				return RC;
+			}
+		}
+	}
+	return XAIE_OK;
+}
+
+
+/*****************************************************************************/
+/**
 *
 * This API finds the location on next NoC tile with respect to the current
 * shim tile.
@@ -721,7 +760,8 @@ static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
 /**
 *
 * This API configures broadcast network to deliver error events as interrupts in
-* NPI. When error occurs, interrupt is raised on NPI interrupt line #5.
+* NPI. When error occurs, interrupt is raised on NPI interrupt line #5. Also it
+* configure error halt register, to put core in halt if any group error0 occurs
 *
 * @param	DevInst: Device Instance
 *
@@ -971,6 +1011,12 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 	RC =  _XAie_GroupErrorInit(DevInst);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to initialize group errors\n");
+		return RC;
+	}
+
+        RC = _XAie_ErrorHandlingEventHaltCore(DevInst);
+        if(RC != XAIE_OK) {
+                XAIE_ERROR("Failed to initialize Error Halt Event Register\n");
 		return RC;
 	}
 

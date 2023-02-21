@@ -2718,6 +2718,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.UserEventMap = &AieTileMemModUserEventStart,
 		.PCEventMap = NULL,
 		.BroadcastEventMap = &AieTileMemModBroadcastEventStart,
+		.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 	},
 	{
 		.XAie_EventNumber = AieTileCoreModEventMapping,
@@ -2768,6 +2769,7 @@ static const XAie_EvntMod AieTileEvntMod[] =
 		.UserEventMap = &AieTileCoreModUserEventMap,
 		.PCEventMap = &AieTileCoreModPCEventMap,
 		.BroadcastEventMap = &AieTileCoreModBroadcastEventMap,
+		.ErrorHaltRegOff = XAIEGBL_CORE_MODULE_ERROR_HALT_EVENT,
 	},
 };
 
@@ -2835,6 +2837,7 @@ static const XAie_EvntMod AieNocEvntMod =
 	.UserEventMap = &ShimTilePlModUserEventStart,
 	.BroadcastEventMap = &ShimTilePlModBroadcastEventStart,
 	.PCEventMap = NULL,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 
 /* Data structure to capture PL module events properties.
@@ -2900,6 +2903,7 @@ static const XAie_EvntMod AiePlEvntMod =
 	.NumUserEvents = 4U,
 	.UserEventMap = &ShimTilePlModUserEventStart,
 	.BroadcastEventMap = &ShimTilePlModBroadcastEventStart,
+	.ErrorHaltRegOff = XAIE_FEATURE_UNAVAILABLE,
 };
 #endif /* XAIE_FEATURE_EVENTS_ENABLE */
 
