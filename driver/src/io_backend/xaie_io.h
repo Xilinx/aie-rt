@@ -120,6 +120,17 @@ typedef struct XAie_BackendRscStat {
 	XAie_UserRscStat *RscStats;
 } XAie_BackendRscStat;
 
+/* Typedef to capture shimdma Bd arguments */
+typedef struct XAie_ShimDmaBdArgs {
+	XAie_MemInst *MemInst;
+	u8 NumBdWords;
+	u32 *BdWords;
+	XAie_LocType Loc;
+	u64 VAddr;
+	u32 BdNum;
+	u64 Addr;
+} XAie_ShimDmaBdArgs;
+
 /*
  * Typdef to capture all the backend IO operations
  * Init        : Backend specific initialization function. Init should attach
@@ -171,6 +182,7 @@ typedef struct XAie_BackendOps {
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
 	u64 (*GetTid)(void);
 	AieRC (*SubmitTxn)(void *IOInst, XAie_TxnInst *TxnInst);
+	void* (*GetShimDmaBdConfig)(XAie_ShimDmaBdArgs *Args);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */
@@ -178,17 +190,6 @@ struct XAie_Backend {
 	XAie_BackendType Type;
 	XAie_BackendOps Ops;
 };
-
-/* Typedef to capture shimdma Bd arguments */
-typedef struct XAie_ShimDmaBdArgs {
-	XAie_MemInst *MemInst;
-	u8 NumBdWords;
-	u32 *BdWords;
-	XAie_LocType Loc;
-	u64 VAddr;
-	u32 BdNum;
-	u64 Addr;
-} XAie_ShimDmaBdArgs;
 
 /************************** Function Prototypes  *****************************/
 AieRC XAie_IOInit(XAie_DevInst *DevInst);
