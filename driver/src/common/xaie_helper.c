@@ -1568,6 +1568,7 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 {
 	AieRC RC;
+	void *Buf;
 	u64 Tid;
 	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
@@ -1594,21 +1595,40 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else if(TxnInst->NumCmds == 0) {
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
-		} else if((Op == XAIE_BACKEND_OP_CONFIG_SHIMDMABD) &&
-				(Backend->Type != XAIE_IO_BACKEND_LINUX)) {
-			/*
-			 * NOTE: shim dma configuration can be added as register
-			 * write commands for all backends except linux kernel
-			 * backend. to enable this for linux kernel backend,
-			 * kernel has to support shim dma configuration as a new
-			 * operation in transaction ioctl.
-			 */
+		} else if(Op == XAIE_BACKEND_OP_CONFIG_SHIMDMABD) {
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
-			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
-				XAie_Write32(DevInst,
-						BdArgs->Addr + i * 4,
-						BdArgs->BdWords[i]);
+			if (Backend->Type == XAIE_IO_BACKEND_LINUX) {
+				if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+					RC = _XAie_ReallocCmdBuf(TxnInst);
+					if (RC != XAIE_OK) {
+						return RC;
+					}
+				}
+
+				Buf = Backend->Ops.GetShimDmaBdConfig(Arg);
+				if (Buf == XAIE_NULL) {
+					XAIE_ERROR("Could not get SHIM DMA structure\n");
+					return XAIE_ERR;
+				}
+
+				if (BdArgs->MemInst == XAIE_NULL) {
+					TxnInst->CmdBuf[TxnInst->NumCmds].Opcode =
+							XAIE_CONFIG_SHIMDMA_BD;
+				} else {
+					TxnInst->CmdBuf[TxnInst->NumCmds].Opcode =
+							XAIE_CONFIG_SHIMDMA_DMABUF_BD;
+				}
+
+				TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr =
+								(u64)(uintptr_t)Buf;
+				TxnInst->NumCmds++;
+			} else {
+				for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
+					XAie_Write32(DevInst,
+							BdArgs->Addr + i * 4,
+							BdArgs->BdWords[i]);
+				}
 			}
 			return XAIE_OK;
 		} else {

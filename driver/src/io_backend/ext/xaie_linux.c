@@ -988,6 +988,81 @@ static AieRC _XAie_LinuxIO_ConfigShimDmaBd(void *IOInst,
 /*****************************************************************************/
 /**
 *
+* This is function to get configuration of shim dma to add into transaction buffer
+*
+* @param	Args: Shim dma arguments pointer.
+*
+* @return	Structure pointer on success, NULL on failure.
+*
+*******************************************************************************/
+static void* XAie_LinuxIO_GetShimDmaBdConfig(XAie_ShimDmaBdArgs *Args)
+{
+	if (Args->MemInst == XAIE_NULL) {
+		struct aie_dma_bd_args *ShimArgs =
+		(struct aie_dma_bd_args *)malloc(sizeof(struct aie_dma_bd_args));
+
+		if(ShimArgs == XAIE_NULL) {
+			XAIE_ERROR("Memory allocation for SHIM DMA Config failed\n");
+			return XAIE_NULL;
+		}
+
+		u32 *BdWords = (u32 *)malloc(sizeof(u32) * Args->NumBdWords);
+		if(BdWords == XAIE_NULL) {
+			XAIE_ERROR("Memory allocation failed\n");
+			free(ShimArgs);
+			return XAIE_NULL;
+		}
+
+		BdWords = memcpy((void *)BdWords, (void *)Args->BdWords,
+					sizeof(u32) * Args->NumBdWords);
+		ShimArgs->bd = (u32 *)BdWords;
+		ShimArgs->data_va = Args->VAddr;
+		ShimArgs->loc.row = Args->Loc.Row;
+		ShimArgs->loc.col = Args->Loc.Col;
+		ShimArgs->bd_id = Args->BdNum;
+
+		return (void *)ShimArgs;
+	} else {
+		XAie_LinuxMem *LinuxMemInst =
+			(XAie_LinuxMem *)Args->MemInst->BackendHandle;
+
+		if (LinuxMemInst == XAIE_NULL) {
+			XAIE_ERROR("Failed to get shim dma bd, "
+						"invalid bd MemInst.\n");
+			return XAIE_NULL;
+		}
+
+		struct aie_dmabuf_bd_args *ShimArgs =
+	                (struct aie_dmabuf_bd_args *)malloc(
+				sizeof(struct aie_dmabuf_bd_args));
+		if(ShimArgs == XAIE_NULL) {
+			XAIE_ERROR("Memory allocation for SHIM "
+					"DMA Config failed\n");
+			return XAIE_NULL;
+		}
+
+		u32 *BdWords = (u32 *)malloc(sizeof(u32) * Args->NumBdWords);
+		if(BdWords == XAIE_NULL) {
+			XAIE_ERROR("Memory allocation failed\n");
+			free(ShimArgs);
+			return XAIE_NULL;
+		}
+
+		BdWords = memcpy((void *)BdWords, (void *)Args->BdWords,
+					sizeof(u32) * Args->NumBdWords);
+		ShimArgs->bd = (u32 *)BdWords;
+		ShimArgs->loc.row = Args->Loc.Row;
+		ShimArgs->loc.col = Args->Loc.Col;
+		ShimArgs->bd_id = Args->BdNum;
+		ShimArgs->buf_fd = LinuxMemInst->BufferFd;
+
+		return (void *)ShimArgs;
+	}
+}
+
+/*****************************************************************************/
+/**
+*
 * This is function to request AI engine tiles
 *
 * @param	IOInst: IO instance pointer
@@ -1649,6 +1724,11 @@ static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)
 	return XAIE_ERR;
 }
 
+static void* XAie_LinuxIO_GetShimDmaBdConfig(XAie_ShimDmaBdArgs *Args)
+{
+	(void)Args;
+	return XAIE_NULL;
+}
 #endif /* __AIELINUX__ */
 
 static AieRC XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
@@ -1714,6 +1794,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.MemDetach = XAie_LinuxMemDetach,
 	.Ops.GetTid = XAie_LinuxGetTid,
 	.Ops.SubmitTxn = XAie_LinuxSubmitTxn,
+	.Ops.GetShimDmaBdConfig = XAie_LinuxIO_GetShimDmaBdConfig
 };
 
 /** @} */
