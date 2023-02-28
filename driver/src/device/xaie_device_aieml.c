@@ -313,15 +313,19 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u32 ColClockStatus;
 
+		/*
+		 * Shim rows are enabled by default, skip shim row
+		 */
 		if (Args->Locs[i].Row == 0) {
 			continue;
 		}
 
 		/*
 		 * Check if column clock buffer is already enabled and continue
+		 * Get bitmap position from first row after shim
 		 */
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
-				Args->Locs[i]);
+				XAie_TileLoc(Args->Locs[i].Col, 1));
 		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
 			continue;
 		}
@@ -334,8 +338,12 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 			return RC;
 		}
 
+		/*
+		 * Set bitmap for entire column, row 1 to last row.
+		 * Shim row is already set, so use NumRows-1
+		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, DevInst->NumRows);
+				ColClockStatus, DevInst->NumRows - 1);
 	}
 
 	return XAIE_OK;
