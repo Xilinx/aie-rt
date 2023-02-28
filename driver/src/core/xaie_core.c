@@ -786,6 +786,55 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 /*****************************************************************************/
 /*
+ *
+ * This API writes to the Error Halt Event register to halt the core
+ * bit.
+ *
+ * @param        DevInst: Device Instance
+ * @param        Loc: Location of the AIE tile.
+ * @param        Event: Event to halt the aie core
+ * @return       XAIE_OK on success, Error code on failure.
+ *
+ * @note         None.
+ *
+ ******************************************************************************/
+AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_Events Event)
+{
+	u64 RegAddr;
+	const XAie_EvntMod *EvntMod;
+	u8 HwEvent, TileType;
+	AieRC RC;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
+
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		EvntMod->ErrorHaltRegOff;
+
+	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, XAIE_CORE_MOD,
+			Event, &HwEvent);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Invalid event ID\n");
+		return RC;
+	}
+
+	return XAie_Write32(DevInst, RegAddr, HwEvent);
+}
+
+/*****************************************************************************/
+/*
 *
 * This API configures the enable events register with disable event. This
 * configuration will be used to check if the core has triggered the disable

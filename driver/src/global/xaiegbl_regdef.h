@@ -714,6 +714,7 @@ typedef struct XAie_EvntMod {
 	const XAie_EventMap *UserEventMap;
 	const XAie_EventMap *PCEventMap;
 	const XAie_EventMap *BroadcastEventMap;
+	u32 ErrorHaltRegOff;
 } XAie_EvntMod;
 
 /* This typedef contains attributes of timer module */

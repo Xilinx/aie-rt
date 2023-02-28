@@ -29,6 +29,7 @@
 
 /***************************** Include Files *********************************/
 #include "xaie_events.h"
+#include "xaie_core.h"
 
 /**************************** Type Definitions *******************************/
 #define XAIE_ERROR_BROADCAST_ID			0x0U
