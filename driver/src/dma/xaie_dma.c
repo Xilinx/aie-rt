@@ -571,6 +571,43 @@ AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc, XAie_DmaFifoCounter Counter)
 /*****************************************************************************/
 /**
 *
+* This API returns the number of buffer descriptors per tile.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of tile
+* @param	NumBds: Integer to write number of bds too
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_DmaGetNumBds(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds)
+{
+	const XAie_DmaMod *DmaMod;
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	*NumBds = DmaMod->NumBds;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API setups the Enable Bd, Next Bd and UseNxtBd fields in the DMA
 * Descriptor.
 *
@@ -782,6 +819,52 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	}
 
 	return DmaMod->WriteBd(DevInst, DmaDesc, Loc, BdNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API reads the data from the buffer descriptor registers to fill the
+* dma descriptor structure.
+*
+* @param	DevInst: Device Instance
+* @param	DmaDesc: Dma Descriptor to be filled.
+* @param	Loc: Location of AIE Tile
+* @param	BdNum: Hardware BD number to be written to.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+		XAie_LocType Loc, u8 BdNum)
+{
+	const XAie_DmaMod *DmaMod;
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) || (DmaDesc == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		return XAIE_INVALID_BD_NUM;
+	}
+
+	memset((void *)DmaDesc, 0U, sizeof(XAie_DmaDesc));
+	DmaDesc->DmaMod = DmaMod;
+
+	return DmaMod->ReadBd(DevInst, DmaDesc, Loc, BdNum);
 }
 
 /*****************************************************************************/

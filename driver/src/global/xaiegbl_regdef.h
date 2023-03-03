@@ -523,6 +523,8 @@ struct XAie_DmaMod {
 			u8 IterCurr);
 	AieRC (*WriteBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
 			XAie_LocType Loc, u8 BdNum);
+	AieRC (*ReadBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
+			XAie_LocType Loc, u8 BdNum);
 	AieRC (*PendingBd)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
 			XAie_DmaDirection Dir, u8 *PendingBd);
