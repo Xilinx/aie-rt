@@ -756,10 +756,6 @@ AieRC XAie_TraceEventList(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	/*
-	 * FIXME: Optimize the implementation to reduce the number of axi-mm
-	 * transactions required to configure the event slots.
-	 */
 	for(u8 i = 0U; i < NumEvents; i++) {
 		RC = XAie_TraceEvent(DevInst, Loc, Module, Events[i],
 				SlotId[i]);

@@ -340,10 +340,6 @@ namespace xaiefal {
 		std::vector<XAie_LocType> vLocs; /**< tiles on the channel */
 		std::vector<XAie_UserRsc> vRscs; /**< broadcast channel allocated resources */
 	private:
-		/**
-		 * TODO: Following function will not be required.
-		 * Bitmap will be moved to device driver
-		 */
 		static AieRC setRscs(std::shared_ptr<XAieDevHandle> Dev,
 				const std::vector<XAie_LocType> &vL,
 				XAie_ModuleType startM, XAie_ModuleType endM,

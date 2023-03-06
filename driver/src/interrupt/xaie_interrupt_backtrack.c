@@ -538,12 +538,6 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE)
 			return RC;
 
-		/*
-		 * TODO: In SystemC model, incoming broadcast status bit
-		 *	 reported is off by a bit position. For switch A, skip
-		 *	 backtracking above array tiles when this bug is fixed.
-		 */
-
 		_XAie_LEventClearStatus(DevInst, Loc, XAIE_MEM_MOD,
 					 XAIE_MEM_TILE_EVENT_BROADCAST0);
 	}

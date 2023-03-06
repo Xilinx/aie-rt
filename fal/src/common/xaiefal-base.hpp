@@ -211,7 +211,6 @@ namespace xaiefal {
 			}
 		}
 
-		// TODO: Configure group event should be moved to c driver
 		uint32_t XAieGroupEventMapCore[9];
 		uint32_t XAieGroupEventMapMem[8];
 		uint32_t XAieGroupEventMapPl[8];

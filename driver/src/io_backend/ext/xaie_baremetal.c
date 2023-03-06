@@ -306,10 +306,6 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	MemInst->DevAddr = (u64)MemInst->VAddr;
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
-	/*
-	 * TODO: Cache is not handled at the moment for baremetal. The allocated
-	 * memory is always cached.
-	 */
 
 	return MemInst;
 }

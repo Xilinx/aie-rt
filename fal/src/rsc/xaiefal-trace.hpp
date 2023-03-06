@@ -258,7 +258,6 @@ namespace xaiefal {
 		 * @return supported max trace events
 		 */
 		uint32_t getMaxTraceEvents() const {
-			// TODO: It is better to get from C driver.
 			return 8;
 		}
 		/**

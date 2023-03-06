@@ -56,7 +56,6 @@ static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
 	(void) Loc.Col;
 	(void) Loc.Row;
 
-	/* TODO: Implement lite API to scan AIE array and update bitmap */
 	return XAIE_ENABLE;
 }
 

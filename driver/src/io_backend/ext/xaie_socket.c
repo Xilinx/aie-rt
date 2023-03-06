@@ -158,10 +158,6 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	/*
-	 * TODO: get address from env variable instead of hardcoding it to
-	 * localhost.
-	 */
 	ret = getaddrinfo("localhost", PortNum, &hints, &slist);
 	if(ret != 0) {
 		XAIE_ERROR("get addr info failed. ec %s\n", gai_strerror(ret));

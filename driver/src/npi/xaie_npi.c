@@ -88,7 +88,6 @@ static AieRC _XAie_NpiSetLock(XAie_DevInst *DevInst, u8 Lock)
 	Req = _XAie_SetBackendNpiWrReq(NpiMod->PcsrLockOff, LockVal);
 	XAie_RunOp(DevInst, XAIE_BACKEND_OP_NPIWR32, &Req);
 
-	/* TODO: Use proper mask to verify if bit is set correctly */
 	MPReq = _XAie_SetBackendNpiMaskPollReq(NpiMod->PcsrLockOff, 0U,
 			0U, XAIE_NPI_TIMEOUT_US);
 
@@ -139,7 +138,6 @@ static AieRC _XAie_NpiWritePcsr(XAie_DevInst *DevInst, u32 RegVal, u32 Mask)
 	Req = _XAie_SetBackendNpiWrReq(NpiMod->PcsrMaskOff, 0);
 	XAie_RunOp(DevInst, XAIE_BACKEND_OP_NPIWR32, &Req);
 
-	/* TODO: Use proper mask to verify if bit is set correctly */
 	MPReq = _XAie_SetBackendNpiMaskPollReq(NpiMod->PcsrCntrOff, 0U,
 			0U, XAIE_NPI_TIMEOUT_US);
 
@@ -224,7 +222,6 @@ AieRC _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	/* TODO: Use proper mask to verify if bit is set correctly */
 	MPReq = _XAie_SetBackendNpiMaskPollReq(NpiMod->ProtRegOff, 0U,
 			0U, XAIE_NPI_TIMEOUT_US);
 

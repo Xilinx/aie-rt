@@ -88,10 +88,6 @@ u32 _XAie_GetTotalNumRscs(XAie_DevInst *DevInst, u8 TileType,
 	u8 NumMods;
 	u32 NumRscs = 0U;
 
-	/*
-	 * TODO: Replace the below case statement with a data structure that
-	 * can be indexed using tile type and resource type.
-	 */
 	NumMods = DevInst->DevProp.DevMod[TileType].NumModules;
 	switch(RscType) {
 	case XAIE_PERFCNT_RSC:

@@ -555,7 +555,6 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args)
 {
 	AieRC RC;
-	/* TODO: Configure previlege registers only for non-AIE devices. */
 	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
 		RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
 		if(RC != XAIE_OK) {
