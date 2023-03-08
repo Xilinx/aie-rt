@@ -67,7 +67,9 @@ extern XAieDevType;
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 #define XAIE_DEV_SINGLE_MOD AieMlMod
 #define XAIE_DEV_SINGLE_DEVOPS AieMlDevOps
-#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P
+#elif ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) ||       \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0) || \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0))
 #define XAIE_DEV_SINGLE_MOD Aie2PMod
 #define XAIE_DEV_SINGLE_DEVOPS Aie2PDevOps
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2PS
@@ -178,6 +180,14 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P) {
 		InstPtr->DevProp.DevMod = Aie2PMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P;
+		InstPtr->DevOps = &Aie2PDevOps;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P_STRIX_A0){
+		InstPtr->DevProp.DevMod = Aie2PMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P_STRIX_A0;
+		InstPtr->DevOps = &Aie2PDevOps;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P_STRIX_B0){
+		InstPtr->DevProp.DevMod = Aie2PMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P_STRIX_B0;
 		InstPtr->DevOps = &Aie2PDevOps;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2PS) {
 		InstPtr->DevProp.DevMod = Aie2PSMod;

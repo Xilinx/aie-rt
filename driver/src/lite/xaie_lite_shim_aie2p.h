@@ -99,10 +99,16 @@ static inline void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
 static inline XAie_Range _XAie_MapIrqIdToCols(u8 IrqId)
 {
 	XAie_Range _MapIrqIdToCols[] = {
+#if XAIE_DEV_SINGLEGEN == XAIE_DEV_GEN_AIE2P_STRIX_B0
 		{.Start = 0, .Num = 2},
 		{.Start = 2, .Num = 2},
 		{.Start = 4, .Num = 2},
 		{.Start = 6, .Num = 2},
+#else
+		{.Start = 0, .Num = 2},
+		{.Start = 2, .Num = 1},
+		{.Start = 3, .Num = 1},
+#endif
 	};
 
 	return _MapIrqIdToCols[IrqId];
