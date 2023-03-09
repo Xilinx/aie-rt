@@ -105,7 +105,8 @@ static inline XAie_Range _XAie_MapIrqIdToCols(u8 IrqId)
 		{.Start = 4, .Num = 2},
 		{.Start = 6, .Num = 2},
 #else
-		{.Start = 0, .Num = 2},
+		{.Start = 0, .Num = 1},
+		{.Start = 1, .Num = 1},
 		{.Start = 2, .Num = 1},
 		{.Start = 3, .Num = 1},
 #endif
