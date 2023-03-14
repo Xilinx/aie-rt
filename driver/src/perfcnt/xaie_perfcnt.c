@@ -116,6 +116,73 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
         }
         return RC;
 }
+
+/*****************************************************************************/
+/* This API returns the given performance counter offset for the given tile
+ * and counter.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @param	Module: Module of tile.
+*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			For Pl or Shim tile - XAIE_PL_MOD,
+*			For Mem tile - XAIE_MEM_MOD.
+* @param	Counter: Performance Counter.
+* @param	Offset: Pointer to store Offset Value.
+* @return	XAIE_OK on success
+*		XAIE_INVALID_ARGS if any argument is invalid
+*		XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 Counter, u64 *Offset)
+{
+	u64 CounterBaseAddr;
+	u8 TileType;
+	AieRC RC;
+	const XAie_PerfMod *PerfMod;
+
+	if((DevInst == XAIE_NULL) || (Offset == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance or Offset\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	/* check for module and tiletype combination */
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Module == XAIE_PL_MOD) {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[0U];
+	} else {
+		PerfMod = &DevInst->DevProp.DevMod[TileType].PerfMod[Module];
+	}
+
+	/* Checking for valid Counter */
+	if(Counter > PerfMod->MaxCounterVal) {
+		XAIE_ERROR("Invalid Counter number: %d\n", Counter);
+		return XAIE_INVALID_ARGS;
+	}
+
+
+	/* Compute perf counter offest address */
+	CounterBaseAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+						PerfMod->PerfCounterBaseAddr;
+	*Offset = CounterBaseAddr + (Counter * PerfMod->PerfCounterOffsetAdd);
+
+	return RC;
+}
+
 /*****************************************************************************/
 /* This API configures the control registers corresponding to the counters
 *  with the start and stop event for the given tile.
