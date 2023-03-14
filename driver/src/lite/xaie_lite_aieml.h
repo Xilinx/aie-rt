@@ -58,7 +58,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 	u64 RegAddr;
 
 	/* core status addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_STATUS_REGOFF;
 
 	/* core status */
@@ -67,7 +67,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 		 & XAIE_AIE_TILE_CORE_STATUS_MASK);
 
 	/* core program counter addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_PC_REGOFF;
 
 	/* program counter */
@@ -76,7 +76,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 		 & XAIE_AIE_TILE_CORE_PC_MASK);
 
 	/* core stack pointer addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_SP_REGOFF;
 
 	/* stack pointer */
@@ -85,7 +85,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 		 & XAIE_AIE_TILE_CORE_SP_MASK);
 
 	/* core link addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_LR_REGOFF;
 
 	/* link register */
@@ -118,7 +118,7 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 	for (u32 Chan = 0; Chan < XAIE_TILE_DMA_NUM_CH; Chan++) {
 
 		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_IDX + XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -126,7 +126,7 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_IDX + XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 
 		/* read mm2s channel status */
@@ -160,7 +160,7 @@ static inline void _XAie_LCoreLockValue(XAie_DevInst *DevInst, XAie_Col_Status *
 	for(u32 Lock = 0; Lock < XAIE_TILE_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Lock * XAIE_AIE_TILE_LOCK_VALUE_IDX + XAIE_AIE_TILE_LOCK_VALUE_REGOFF;
 
 		/* read lock value */
@@ -194,7 +194,7 @@ static inline void _XAie_LCoreEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 	for(u32 EventReg = 0; EventReg < XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS; EventReg++) {
 
 		/* event status address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ EventReg * XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_IDX + XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_REGOFF;
 
 		/* read event status register and store in output buffer */
@@ -202,7 +202,7 @@ static inline void _XAie_LCoreEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_MASK);
 
 		/* event status address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ EventReg * XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_IDX + XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_REGOFF;
 
 		/* read event status register and store in output buffer */
@@ -235,7 +235,7 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 	for(u32 Chan = 0; Chan < XAIE_MEM_TILE_DMA_NUM_CH; Chan++) {
 
 		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_IDX + XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -243,7 +243,7 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_IDX + XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -276,7 +276,7 @@ static inline void _XAie_LMemLockValue(XAie_DevInst *DevInst, XAie_Col_Status *S
 	for(u32 Lock = 0; Lock < XAIE_MEM_TILE_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Lock * XAIE_MEM_TILE_LOCK_VALUE_IDX + XAIE_MEM_TILE_LOCK_VALUE_REGOFF;
 
 		/* read lock value */
@@ -310,7 +310,7 @@ static inline void _XAie_LMemEventStatus(XAie_DevInst *DevInst, XAie_Col_Status 
 	for(u32 EventReg = 0; EventReg < XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS; EventReg++)
 	{
 		/* Event Status address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ EventReg * XAIE_MEM_TILE_EVENT_STATUS_IDX + XAIE_MEM_TILE_EVENT_STATUS_REGOFF;
 
 		/* read Event Status register */
@@ -375,7 +375,7 @@ static inline void _XAie_LShimLockValue(XAie_DevInst *DevInst, XAie_Col_Status *
 	for(u32 Lock = 0; Lock < XAIE_SHIM_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col)
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col + DevInst->StartCol)
 			+ Lock * XAIE_SHIM_TILE_LOCK_VALUE_IDX + XAIE_SHIM_TILE_LOCK_VALUE_REGOFF;
 
 		/* read lock value */
@@ -406,9 +406,7 @@ static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 
 	/* shim dma status - fixed at row XAIE_SHIM_ROW */
 	for(u32 Chan = 0; Chan < XAIE_SHIM_DMA_NUM_CH; Chan++) {
-
-		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_IDX +
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col + DevInst->StartCol) + Chan * XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_IDX +
 			XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -416,7 +414,7 @@ static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_IDX +
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col + DevInst->StartCol) + Chan * XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_IDX +
 			XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 
 		/* read mm2s channel status */
@@ -448,7 +446,7 @@ static inline void _XAie_LShimEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 	for (u32 EventReg = 0; EventReg < XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS; EventReg++) {
 
 		/* event status register address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col)
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col+DevInst->StartCol)
 			+ EventReg * XAIE_SHIM_TILE_EVENT_STATUS_IDX + XAIE_SHIM_TILE_EVENT_STATUS_REGOFF;
 
 		/* read event status value */
@@ -501,7 +499,7 @@ static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Statu
 	u32 NumCols  = (u32)(DevInst->NumCols);
 
 	/* iterate specified columns */
-	for(u32 Col = StartCol; Col < NumCols; Col++) {
+	for(u32 Col = 0; Col < NumCols; Col++) {
 		_XAie_LShimTileStatus(DevInst, Status, Col);
 		_XAie_LTileStatus(DevInst, Status, Col);
 	}

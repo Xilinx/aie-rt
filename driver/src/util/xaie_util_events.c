@@ -30,7 +30,6 @@
 
 /**************************** Variable Definitions *******************************/
 /* Event string lookup table indexed by event number */
-
 static const char* XAie_EventStrings[] = {
 	/* All core module events of aie tile */
 	[XAIE_EVENT_NONE_CORE]	"NONE_CORE",
