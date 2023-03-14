@@ -33,6 +33,8 @@
 /************************** Function Prototypes  *****************************/
 AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, u32 *CounterVal);
+AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 Counter, u64 *Offset);
 AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, XAie_Events StartEvent,
 		XAie_Events StopEvent);
