@@ -376,14 +376,15 @@ static void _XAie_PrivilegeSetL2IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 static void _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 {
-	XAie_LocType Loc = XAie_LPartGetNextNocTile(DevInst,
-			XAie_TileLoc(0, 0));
+	XAie_LocType Rloc = {0, 0};
 
-	for(; Loc.Col < DevInst->NumCols;
-		Loc = XAie_LPartGetNextNocTile(DevInst, Loc)) {
+	for (;Rloc.Col < DevInst->NumCols; Rloc.Col++) {
+		u8 TileType = _XAie_LGetShimTTypefromLoc(DevInst, Rloc);
 
-		_XAie_PrivilegeSetL2IrqId(DevInst, Loc,
-				_XAie_MapColToIrqId(DevInst, Loc));
+		if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC)
+			continue;
+		_XAie_PrivilegeSetL2IrqId(DevInst, Rloc,
+				_XAie_MapColToIrqId(DevInst, Rloc));
 	}
 }
 
