@@ -486,14 +486,13 @@ static AieRC XAie_LinuxIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value
 	MinTimeOutUs = 200;
 	Count = ((u64)TimeOutUs + MinTimeOutUs - 1) / MinTimeOutUs;
 
-	while (Count > 0U) {
+	for(u32 i = 0; i <= Count; i++) {
 		XAie_LinuxIO_Read32(IOInst, RegOff, &RegVal);
 		if((RegVal & Mask) == Value) {
 			Ret = XAIE_OK;
 			break;
 		}
 		usleep(MinTimeOutUs);
-		Count--;
 	}
 
 	/* Check for the break from timed-out loop */
