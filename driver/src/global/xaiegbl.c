@@ -59,7 +59,7 @@ extern XAie_DeviceOps Aie2IpuDevOps;
 extern XAie_DeviceOps Aie2PDevOps;
 extern XAie_DeviceOps Aie2PSDevOps;
 
-extern XAieDevType;
+extern u8 XAieDevType;
 
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
 #define XAIE_DEV_SINGLE_MOD Aie2IpuMod
