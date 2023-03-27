@@ -501,9 +501,9 @@ static AieRC _XAie_RemoveTxnInstFromList(XAie_DevInst *DevInst, u64 Tid)
 	return XAIE_OK;
 }
 
-int BuffHexDump(char* buff,size_t size) {
+void BuffHexDump(char* buff,u32 size) {
 	XAIE_DBG("Buff Info %p %d\n",buff,size);
-	for (int i = 0; i < size; ++i) {
+	for (u32 i = 0; i < size; ++i) {
 		printf("0x%x ",buff[i]&0xff);
 	}
 	printf("\n");
@@ -511,7 +511,7 @@ int BuffHexDump(char* buff,size_t size) {
 
 static int TxnCmdDump(XAie_TxnCmd* cmd) {
 	XAIE_DBG("TxnCmdDump Called for %d and size %d\n",cmd->Opcode,cmd->Size);
-	BuffHexDump((cmd->DataPtr),cmd->Size);
+	BuffHexDump((char *)(cmd->DataPtr),cmd->Size);
 	return 0;
 }
 
@@ -960,8 +960,7 @@ static inline void _XAie_AppendBlockSet32(XAie_DevInst *DevInst,
 	}
 }
 
-static inline void _XAie_AppendCustomOp(XAie_DevInst *DevInst,
-		XAie_TxnCmd *Cmd, u8 *TxnPtr)
+static inline void _XAie_AppendCustomOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr);
 	XAie_CustomOpHdr *Hdr = (XAie_CustomOpHdr*)TxnPtr;
@@ -1128,7 +1127,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				AllocatedBuffSize *= 2;
 				TxnPtr += BuffSize;
 			}
-			_XAie_AppendCustomOp(DevInst, Cmd, TxnPtr);
+			_XAie_AppendCustomOp(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_CustomOpHdr) +
 				Cmd->Size * sizeof(u8);
 			BuffSize += sizeof(XAie_CustomOpHdr) +
@@ -1764,7 +1763,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		TxnInst->CmdBuf[TxnInst->NumCmds].Size = size;
 
 		memcpy(tmpBuff, Args, size);
-		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = tmpBuff;
+		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)tmpBuff;
 
 		TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
 
