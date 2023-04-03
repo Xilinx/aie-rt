@@ -39,7 +39,7 @@
 /*****************************************************************************/
 /**
 *
-* This API checks if an AI engine tile is in use.
+* This API checks if an AI engine array tile is in use.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Tile location.
@@ -49,14 +49,17 @@
 * @note		Internal only.
 *
 ******************************************************************************/
-static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
+static inline u8 _XAie_LPmIsArrayTileRequested(XAie_DevInst *DevInst,
 		XAie_LocType Loc)
 {
-	(void) DevInst;
-	(void) Loc.Col;
-	(void) Loc.Row;
+	u32 TileBit;
+	TileBit = Loc.Col * (DevInst->NumRows - 1) + Loc.Row - 1;
 
-	return XAIE_ENABLE;
+	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit)) {
+		return XAIE_ENABLE;
+	}
+
+	return XAIE_DISABLE;
 }
 
 /*****************************************************************************/

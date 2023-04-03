@@ -27,6 +27,7 @@
 
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
+#include "xaie_helper.h"
 
 #define XAie_LDeclareDevInst(DevInst, _BaseAddr, _StartCol, _NumCols) \
 	XAie_DevInst DevInst = { \
@@ -122,6 +123,34 @@ static inline XAie_LocType XAie_LPartGetNextNocTile(XAie_DevInst *DevInst,
 
 	UPDT_NEXT_NOC_TILE_LOC(lLoc);
 	return lLoc;
+}
+
+/**
+*
+* This API checks if an AI engine tile is in use.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Tile location.
+*
+* @return	XAIE_ENABLE if a tile is in use, otherwise XAIE_DISABLE.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
+		XAie_LocType Loc)
+{
+	u8 TileType;
+	TileType = _XAie_LGetTTypefromLoc(DevInst, Loc);
+
+	if (TileType == XAIEGBL_TILE_TYPE_MAX) {
+		return XAIE_DISABLE;
+	}
+	if (TileType == XAIEGBL_TILE_TYPE_SHIMNOC || TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		return XAIE_ENABLE;
+	}
+
+	return _XAie_LPmIsArrayTileRequested(DevInst, Loc);
 }
 
 #endif /* XAIE_FEATURE_LITE */
