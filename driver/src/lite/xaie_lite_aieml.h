@@ -509,7 +509,7 @@ static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Statu
 /*****************************************************************************/
 /**
 *
-* This API checks if an AI engine tile is in use.
+* This API checks if an AI engine array tile is in use.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Tile location.
@@ -519,7 +519,7 @@ static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Statu
 * @note		Internal only.
 *
 ******************************************************************************/
-static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
+static inline u8 _XAie_LPmIsArrayTileRequested(XAie_DevInst *DevInst,
 			XAie_LocType Loc)
 {
 	(void) DevInst;
