@@ -39,7 +39,7 @@
 /*****************************************************************************/
 /**
 *
-* This API checks if an AI engine tile is in use.
+* This API checks if an AI engine array tile is in use.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Tile location.
@@ -49,15 +49,17 @@
 * @note		Internal only.
 *
 ******************************************************************************/
-static inline u8 _XAie_LPmIsTileRequested(XAie_DevInst *DevInst,
+static inline u8 _XAie_LPmIsArrayTileRequested(XAie_DevInst *DevInst,
 		XAie_LocType Loc)
 {
-	(void) DevInst;
-	(void) Loc.Col;
-	(void) Loc.Row;
+	u32 TileBit;
+	TileBit = Loc.Col * (DevInst->NumRows - 1) + Loc.Row - 1;
 
-	/* TODO: Implement lite API to scan AIE array and update bitmap */
-	return XAIE_ENABLE;
+	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit)) {
+		 return XAIE_ENABLE;
+	}
+
+	return XAIE_DISABLE;
 }
 
 /*****************************************************************************/
@@ -134,7 +136,7 @@ static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst)
 *
 * @param	DevInst: Device Instance
 *
-* @return       XAIE_OK on success, error code on failure
+* @return	XAIE_OK on success, error code on failure
 *
 * @note		Internal API only.
 *
@@ -167,7 +169,7 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 *
 * @param	DevInst: Device Instance
 *
-* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+* @return	XAIE_OK if all channels are idle, XAIE_ERR otherwise.
 *
 * @note		Internal API only.
 *
@@ -210,7 +212,7 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 * @param	DevInst: Device Instance
 * @param	Loc: ShimDma location
 *
-* @return       XAIE_OK if all channels are idle, XAIE_ERR otherwise.
+* @return	XAIE_OK if all channels are idle, XAIE_ERR otherwise.
 *
 * @note		Internal API only. Checks for AIE Tile DMAs and Mem Tile DMAs
 *
@@ -258,7 +260,7 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 
 	(void)DevInst;
 	RegVal = XAie_SetField(Enable, XAIE_NPI_PROT_REG_CNTR_EN_LSB,
-			       XAIE_NPI_PROT_REG_CNTR_EN_MSK);
+				XAIE_NPI_PROT_REG_CNTR_EN_MSK);
 
 	_XAie_LNpiSetLock(XAIE_DISABLE);
 	_XAie_LNpiWriteCheck32(XAIE_NPI_PROT_REG_CNTR_REG, RegVal);
