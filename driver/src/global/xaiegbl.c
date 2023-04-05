@@ -53,7 +53,7 @@ extern XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_DeviceOps AieDevOps;
 extern XAie_DeviceOps AieMlDevOps;
 
-extern XAieDevType;
+extern u8 XAieDevType;
 
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 #define XAIE_DEV_SINGLE_MOD AieMlMod
