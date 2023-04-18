@@ -29,7 +29,7 @@
 #ifdef __AIEIPU__
 #define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
 #else
-#define XAIE_NPI_BASEADDR		0xF70A0000
+#define XAIE_NPI_BASEADDR		0xF70A0000U
 #endif
 #endif
 

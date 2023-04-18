@@ -85,7 +85,7 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 	/* Get the slave port pointer from stream module */
 	PortPtr = &StrmMod->SlvConfig[PortType];
 
-	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
+	if((PortPtr->NumPorts == 0U) || (PortNum >= PortPtr->NumPorts)) {
 		XAIE_ERROR("Invalid Slave Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
@@ -135,7 +135,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 
 	PortPtr = &StrmMod->MstrConfig[PortType];
 
-	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
+	if((PortPtr->NumPorts == 0U) || (PortNum >= PortPtr->NumPorts)) {
 		XAIE_ERROR("Invalid Stream Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}

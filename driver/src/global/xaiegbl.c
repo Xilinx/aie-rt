@@ -200,7 +200,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		return XAIE_INVALID_DEVICE;
 	}
 
-	if(InstPtr->NumCols == 0) {
+	if(InstPtr->NumCols == 0U) {
 		InstPtr->BaseAddr = ConfigPtr->BaseAddr;
 		InstPtr->StartCol = 0;
 		InstPtr->NumCols = ConfigPtr->NumCols;
@@ -636,7 +636,7 @@ u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
-		return 0U;
+		return 1U;
 	}
 
 	return MemInst->DevAddr;

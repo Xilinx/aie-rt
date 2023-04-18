@@ -78,7 +78,7 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	/* TimeOut passed by the user is per Core */
-	if(TimeOut == 0) {
+	if(TimeOut == 0U) {
 		/* Set timeout to default value */
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}
@@ -301,7 +301,7 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 
 	/* TimeOut passed by the user is per Core */
-	if(TimeOut == 0) {
+	if(TimeOut == 0U) {
 		/* Set timeout to default value */
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}

@@ -279,9 +279,9 @@ AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst)
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u8 Dir = 0;
 
-		if(C == 0) {
+		if(C == 0U) {
 			Dir = XAIE_ISOLATE_WEST_MASK;
-		} else if(C == (u8)(DevInst->NumCols - 1)) {
+		} else if(C == (u8)(DevInst->NumCols - 1U)) {
 			Dir = XAIE_ISOLATE_EAST_MASK;
 		} else {
 			/* No isolation for tiles by default for AIE */
@@ -376,7 +376,7 @@ static void _XAie_PmGateTiles(XAie_DevInst *DevInst, XAie_LocType Loc)
 		XAie_LocType TileLoc;
 
 		TileLoc.Col = Loc.Col;
-		TileLoc.Row = R - 1;
+		TileLoc.Row = R - 1U;
 		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, TileLoc);
 		ClockMod = DevInst->DevProp.DevMod[TileType].ClockMod;
 		RegAddr = _XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col) +
@@ -454,7 +454,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u8 flag = 0;
 
-		if (Args->Locs[i].Row == 0) {
+		if (Args->Locs[i].Row == 0U) {
 			continue;
 		}
 
@@ -490,7 +490,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 			}
 		}
 
-		if(flag == 0) {
+		if(flag == 0U) {
 			XAie_LocType TileLoc;
 			TileLoc.Col = Args->Locs[i].Col;
 			TileLoc.Row = 0U;
@@ -506,7 +506,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 * Assuming the row starts from 0.
 		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				SetTileStatus - Args->Locs[i].Row + 1,
+				SetTileStatus - Args->Locs[i].Row + 1U,
 				Args->Locs[i].Row);
 	}
 
