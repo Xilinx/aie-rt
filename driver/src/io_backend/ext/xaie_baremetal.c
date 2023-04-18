@@ -200,7 +200,7 @@ static AieRC XAie_BaremetalIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 	 * on some profiling, and it may vary between platforms.
 	 */
 	MinTimeOutUs = 200;
-	Count = ((u64)TimeOutUs + MinTimeOutUs - 1) / MinTimeOutUs;
+	Count = (TimeOutUs + MinTimeOutUs - 1U) / MinTimeOutUs;
 
 	while (Count > 0U) {
 		XAie_BaremetalIO_Read32(IOInst, RegOff, &RegVal);
@@ -348,7 +348,8 @@ static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 *******************************************************************************/
 static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
-	Xil_DCacheInvalidateRange((u64)MemInst->VAddr, MemInst->Size);
+	Xil_DCacheInvalidateRange((uintptr_t)MemInst->VAddr,
+			(uintptr_t)MemInst->Size);
 
 	return XAIE_OK;
 }
@@ -367,7 +368,8 @@ static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 *******************************************************************************/
 static AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 {
-	Xil_DCacheFlushRange((u64)MemInst->VAddr, MemInst->Size);
+	Xil_DCacheFlushRange((uintptr_t)MemInst->VAddr,
+			(uintptr_t)MemInst->Size);
 
 	return XAIE_OK;
 }

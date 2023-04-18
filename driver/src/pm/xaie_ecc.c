@@ -60,7 +60,7 @@ static AieRC _XAie_EccPerfCntConfig(XAie_DevInst *DevInst, XAie_LocType Loc)
 	AieRC RC;
 
 	/* Reserve perf counter 0 of Core Module for ECC */
-	XAie_UserRsc ReturnRsc = {Loc, XAIE_CORE_MOD, XAIE_PERFCNT_RSC,
+	XAie_UserRsc ReturnRsc = {Loc, (u32)XAIE_CORE_MOD, (u32)XAIE_PERFCNT_RSC,
 		XAIE_ECC_PERFCOUNTER_ID};
 	RC = XAie_RequestAllocatedPerfcnt(DevInst, 1U, &ReturnRsc);
 	if(RC != XAIE_OK) {
@@ -181,7 +181,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	/* Block broadcast of event in all direction from Mem module */
 	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_MEM_MOD,
 		XAIE_EVENT_SWITCH_A, XAIE_BROADCAST_CHANNEL_6,
-		XAIE_EVENT_BROADCAST_ALL);
+		(u8)XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to block broadcast from mem module\n");
 		return RC;
@@ -351,7 +351,7 @@ static AieRC _XAie_EccPerfCntConfigMemTile(XAie_DevInst *DevInst,
 	/* Set reset perf counter control reg with perf cnt 0 as reset event */
 	RC = XAie_PerfCounterResetControlSet(DevInst, Loc, XAIE_MEM_MOD,
 		XAIE_ECC_PERFCOUNTER_ID, XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
-		XAIE_ECC_PERFCOUNTER_ID);
+		(XAie_Events)XAIE_ECC_PERFCOUNTER_ID);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
 				" with reset event\n");

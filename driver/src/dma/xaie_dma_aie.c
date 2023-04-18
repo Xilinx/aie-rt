@@ -154,17 +154,17 @@ AieRC _XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel,
 AieRC _XAie_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
 {
 	DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Offset =
-		Tensor->Dim[0].AieDimDesc.Offset;
+		(u16)Tensor->Dim[0].AieDimDesc.Offset;
 	DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Wrap =
-		Tensor->Dim[0].AieDimDesc.Wrap - 1U;
+		(u8)Tensor->Dim[0].AieDimDesc.Wrap - 1U;
 	DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Incr =
-		Tensor->Dim[0].AieDimDesc.Incr - 1U;
+		(u8)Tensor->Dim[0].AieDimDesc.Incr - 1U;
 	DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Offset =
-		Tensor->Dim[1].AieDimDesc.Offset;
+		(u16)Tensor->Dim[1].AieDimDesc.Offset;
 	DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Wrap =
-		Tensor->Dim[1].AieDimDesc.Wrap - 1U;
+		(u8)Tensor->Dim[1].AieDimDesc.Wrap - 1U;
 	DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Incr =
-		Tensor->Dim[1].AieDimDesc.Incr - 1U;
+		(u8)Tensor->Dim[1].AieDimDesc.Incr - 1U;
 
 	return XAIE_OK;
 }

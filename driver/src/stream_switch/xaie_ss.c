@@ -146,7 +146,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 	}
 
 	/* Extract the drop header field */
-	DropHdr = XAie_GetField(Config, StrmMod->DrpHdr.Lsb,
+	DropHdr = (u8)XAie_GetField(Config, StrmMod->DrpHdr.Lsb,
 			StrmMod->DrpHdr.Mask);
 
 	/* Frame 32-bit reg value */
@@ -509,7 +509,7 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 
 	/* Compute the register value and register address for the master port*/
 	RC = _StrmConfigMstr(StrmMod, Master, MstrPortNum, Enable, PktEn,
-			Config, &RegVal, &RegOff);
+			(u8)Config, &RegVal, &RegOff);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Master config error\n");
 		return RC;
