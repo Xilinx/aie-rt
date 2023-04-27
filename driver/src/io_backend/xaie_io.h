@@ -193,6 +193,8 @@ typedef struct XAie_BackendOps {
 	u64 (*GetTid)(void);
 	AieRC (*SubmitTxn)(void *IOInst, XAie_TxnInst *TxnInst);
 	void* (*GetShimDmaBdConfig)(XAie_ShimDmaBdArgs *Args);
+	u64 (*GetAttr)(void *IOInst, XAie_BackendAttrType Type);
+	AieRC (*SetAttr)(void *IOInst, XAie_BackendAttrType Type, u64 AttrVal);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */

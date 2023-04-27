@@ -47,6 +47,9 @@
 typedef struct {
 	u64 BaseAddr;
 	u64 NpiBaseAddr;
+	XAie_DevInst *DevInst;
+	const XAie_CoreMod *OrigCoreMod;
+	XAie_CoreMod CoreModOverride;
 } XAie_SimIO;
 
 /************************** Function Definitions *****************************/
@@ -67,6 +70,8 @@ typedef struct {
 *******************************************************************************/
 static AieRC XAie_SimIO_Finish(void *IOInst)
 {
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	SimIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = SimIOInst->OrigCoreMod;
 	free(IOInst);
 	return XAIE_OK;
 }
@@ -95,8 +100,11 @@ static AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
+	IOInst->OrigCoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	IOInst->CoreModOverride = *IOInst->OrigCoreMod;
+	DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = &IOInst->CoreModOverride;
+	IOInst->DevInst = DevInst;
 	DevInst->IOInst = IOInst;
-
 	return XAIE_OK;
 }
 
@@ -609,6 +617,27 @@ static AieRC XAie_SimMemDetach(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
+static u64 XAie_SimIOGetAttr(void *IOInst, XAie_BackendAttrType Attr) {
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	switch (Attr) {
+		case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
+			return SimIOInst->CoreModOverride.ProgMemSize;
+		default:
+			return 0L;
+	}
+}
+
+AieRC XAie_SimIOSetAttr(void *IOInst, XAie_BackendAttrType Attr, u64 AttrVal) {
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	switch (Attr) {
+		case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
+			SimIOInst->CoreModOverride.ProgMemSize = (u32) AttrVal;
+			return XAIE_OK;
+		default:
+			return XAIE_ERR;
+	}
+}
+
 const XAie_Backend SimBackend =
 {
 	.Type = XAIE_IO_BACKEND_SIM,
@@ -630,6 +659,8 @@ const XAie_Backend SimBackend =
 	.Ops.MemDetach = XAie_SimMemDetach,
 	.Ops.GetTid = XAie_SimIOGetTid,
 	.Ops.SubmitTxn = NULL,
+	.Ops.GetAttr = XAie_SimIOGetAttr,
+	.Ops.SetAttr = XAie_SimIOSetAttr,
 };
 
 /** @} */

@@ -1034,4 +1034,24 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 	return _XAie_ClearTransaction(DevInst);
 }
 
+/*****************************************************************************/
+/**
+* This function configure the attribute for the backend.
+*
+* @param	DevInst - Device instance pointer.
+* @param	AttrType - Backend attribute type.
+* @param	AttrVal - Backend attribute value.
+*
+* @return	XAIE_OK on success and error code on failure
+*
+******************************************************************************/
+AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
+		XAie_BackendAttrType AttrType, u64 AttrVal)
+{
+	if(!DevInst || !DevInst->Backend->Ops.SetAttr) {
+		return XAIE_INVALID_ARGS;
+	}
+	return DevInst->Backend->Ops.SetAttr(DevInst->IOInst, AttrType, AttrVal);
+}
+
 /** @} */

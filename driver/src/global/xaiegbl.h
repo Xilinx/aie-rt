@@ -556,6 +556,13 @@ typedef struct {
 	uint32_t Size;
 } XAie_CustomOpHdr;
 
+/*
+ * Typedef for enum of AIE backend attribute type
+ */
+typedef enum {
+	XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE,
+} XAie_BackendAttrType;
+
 /**************************** Function prototypes ***************************/
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
@@ -587,6 +594,8 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
 AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
+AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
+		XAie_BackendAttrType AttrType, u64 AttrVal);
 /*****************************************************************************/
 /*
 *
