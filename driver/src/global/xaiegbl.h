@@ -668,6 +668,8 @@ AieRC XAie_EnquirePartitions(XAie_DevInst *DevInst);
 int XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId);
 AieRC XAie_DestroyPartitionList(XAie_DevInst *DevInst);
 AieRC XAie_GetPartitionFdList(XAie_DevInst *DevInst);
+AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
+		XAie_BackendAttrType AttrType, u64 AttrVal);
 /*****************************************************************************/
 /*
 *

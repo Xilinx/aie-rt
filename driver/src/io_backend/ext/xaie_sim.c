@@ -1010,6 +1010,27 @@ static AieRC XAie_SimMemDetach(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
+static u64 XAie_SimIOGetAttr(void *IOInst, XAie_BackendAttrType Attr) {
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	switch (Attr) {
+		case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
+			return SimIOInst->CoreModOverride.ProgMemSize;
+		default:
+			return 0L;
+	}
+}
+
+AieRC XAie_SimIOSetAttr(void *IOInst, XAie_BackendAttrType Attr, u64 AttrVal) {
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	switch (Attr) {
+		case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
+			SimIOInst->CoreModOverride.ProgMemSize = (u32) AttrVal;
+			return XAIE_OK;
+		default:
+			return XAIE_ERR;
+	}
+}
+
 const XAie_Backend SimBackend =
 {
 	.Type = XAIE_IO_BACKEND_SIM,

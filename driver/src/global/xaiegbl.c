@@ -1190,6 +1190,26 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 /*****************************************************************************/
 /**
+* This function configures the attribute for the backend.
+*
+* @param	DevInst: Device instance pointer.
+* @param	AttrType: Backend attribute type.
+* @param	AttrVal: Backend attribute value.
+*
+* @return	XAIE_OK on success and error code on failure
+*
+******************************************************************************/
+AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
+		XAie_BackendAttrType AttrType, u64 AttrVal)
+{
+	if((DevInst == XAIE_NULL) || (DevInst->Backend->Ops.SetAttr == XAIE_NULL)) {
+		return XAIE_INVALID_ARGS;
+	}
+	return DevInst->Backend->Ops.SetAttr(DevInst->IOInst, AttrType, AttrVal);
+}
+
+/*****************************************************************************/
+/**
 * This function captures kernel utilization of the core tiles mentioned in the
 * columns in range in PerfInst.
 *
