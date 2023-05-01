@@ -78,15 +78,20 @@ namespace xaiefal {
 					" resource not reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
+				uint8_t TileType = _XAie_GetTileTypefromLoc(AieHd->dev(), L);
 				for (int i = 0; i < (int)vLocs.size(); i++) {
 					if (L.Col == vLocs[i].Col && L.Row == vLocs[i].Row) {
 						RC = XAIE_OK;
-						if (L.Row == 0) {
-							E = XAIE_EVENT_BROADCAST_A_0_PL;
-						} else if (M == XAIE_MEM_MOD) {
-							E = XAIE_EVENT_BROADCAST_0_MEM;
+						if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+							if (M = XAIE_MEM_MOD) {
+								E = XAIE_EVENT_BROADCAST_0_MEM;
+							} else {
+								E = XAIE_EVENT_BROADCAST_0_CORE;
+							}
+						} else if (TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+							E = XAIE_EVENT_BROADCAST_0_MEM_TILE;
 						} else {
-							E = XAIE_EVENT_BROADCAST_0_CORE;
+							E = XAIE_EVENT_BROADCAST_A_0_PL;
 						}
 						E = static_cast<XAie_Events>((static_cast<uint32_t>(E) + vRscs[0].RscId));
 						break;
