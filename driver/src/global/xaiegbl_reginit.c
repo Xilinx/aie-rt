@@ -3342,6 +3342,7 @@ XAie_DeviceOps AieDevOps =
 	.SetPartIsolationAfterRst = &_XAie_SetPartIsolationAfterRst,
 	.PartMemZeroInit = &_XAie_PartMemZeroInit,
 	.RequestTiles = &_XAie_RequestTiles,
+	.SetColumnClk = &_XAie_SetColumnClk,
 #else
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = NULL,

@@ -575,6 +575,26 @@ typedef struct {
 } XAie_ShimClkBufCntr;
 
 /*
+ * The typedef contains the attributes of Module_Clock_Control_0 configuration
+ */
+typedef struct {
+	u32 RegOff;
+	u32 RstEnable;			/* Reset value of enable bit */
+	XAie_RegFldAttr StrmSwClkEnable;
+	XAie_RegFldAttr PlIntClkEnable;
+	XAie_RegFldAttr CteClkEnable;
+} XAie_ShimModClkCntr0;
+
+/*
+ * The typedef contains the attributes of Module_Clock_Control_1 configuration
+ */
+typedef struct {
+	u32 RegOff;
+	u32 RstEnable;			/* Reset value of enable bit */
+	XAie_RegFldAttr NocModClkEnable;
+} XAie_ShimModClkCntr1;
+
+/*
  * The typedef contains attributes of PL interface module
  */
 typedef struct {
@@ -600,6 +620,8 @@ typedef struct {
 	XAie_RegFldAttr ColRst; /* Tile column reset configuration */
 	const XAie_ShimRstMod *ShimTileRst; /* SHIM tile reset enable configuration */
 	const XAie_ShimNocAxiMMConfig *ShimNocAxiMM; /* SHIM NOC AXI MM configuration */
+	const XAie_ShimModClkCntr0 *ModClkCntr0; /* Module_Clock_Control_0  configuration */
+	const XAie_ShimModClkCntr1 *ModClkCntr1; /* Module_Clock_Control_1  configuration */
 } XAie_PlIfMod;
 
 /*
@@ -850,6 +872,8 @@ struct XAie_DeviceOps {
 	AieRC (*PartMemZeroInit)(XAie_DevInst *DevInst);
 	AieRC (*RequestTiles)(XAie_DevInst *DevInst,
 			XAie_BackendTilesArray *Args);
+	AieRC (*SetColumnClk)(XAie_DevInst *DevInst,
+			XAie_BackendColumnReq *Args);
 };
 
 #endif

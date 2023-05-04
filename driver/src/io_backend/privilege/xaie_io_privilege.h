@@ -32,7 +32,8 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
 AieRC _XAie_PrivilegeTeardownPart(XAie_DevInst *DevInst);
 AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args);
-
+AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
+		XAie_BackendColumnReq *Args);
 #endif /* XAIE_IO_PRIVILEGE_H */
 
 /** @} */

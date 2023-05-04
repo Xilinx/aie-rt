@@ -31,6 +31,7 @@ AieRC _XAie_SetPartColClockAfterRst(XAie_DevInst *DevInst, u8 Enable);
 AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst);
 AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst);
 AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args);
+AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args);
 
 #endif /* XAIE_DEVICE_AIE */
 /** @} */
