@@ -1159,6 +1159,42 @@ static AieRC _XAie_LinuxIO_ReleaseTiles(void *IOInst,
 
 /*****************************************************************************/
 /**
+*
+* This is function enables/disables column clock control register to request AI engine tiles
+*
+* @param	IOInst: IO instance pointer
+* @param	Args: Tiles array argument
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxIO_SetColumnClock(void *IOInst,
+		XAie_BackendColumnReq *Args)
+{
+	struct aie_column_args ColumnReq;
+	int Ret;
+
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+
+	ColumnReq.start_col = Args->StartCol;
+	ColumnReq.num_cols = Args->NumCols;
+	ColumnReq.enable = Args->Enable;
+
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_SET_COLUMN_CLOCK_IOCTL,
+			&ColumnReq);
+	if(Ret != 0) {
+		XAIE_ERROR("Failed to request tiles, %d: %s\n",
+			errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
 * The API grants broadcast resource based on availibility and marks that
 * resource status in relevant bitmap.
 *
@@ -1559,6 +1595,8 @@ static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		return _XAie_LinuxIO_GetRscStat(IOInst, Arg);
 	case XAIE_BACKEND_OP_PARTITION_CLEAR_CONTEXT:
 		return _XAie_LinuxIO_PartClearContext((XAie_LinuxIO *)IOInst);
+	case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
+		return _XAie_LinuxIO_SetColumnClock(IOInst, Arg);
 	default:
 		XAIE_ERROR("Linux backend does not support operation %d\n", Op);
 		return XAIE_FEATURE_NOT_SUPPORTED;

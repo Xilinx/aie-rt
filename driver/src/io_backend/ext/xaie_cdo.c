@@ -384,6 +384,9 @@ static AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			CdoIOInst->NpiBaseAddr = *((u64 *)Arg);
 			break;
 		}
+		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
+			return _XAie_PrivilegeSetColumnClk(DevInst,
+					(XAie_BackendColumnReq *)Arg);
 		default:
 			XAIE_ERROR("CDO backend doesn't support operation"
 					" %u.\n", Op);

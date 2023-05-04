@@ -391,6 +391,9 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			DebugIOInst->NpiBaseAddr = *((u64 *)Arg);
 			break;
 		}
+		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
+			return _XAie_PrivilegeSetColumnClk(DevInst,
+					(XAie_BackendColumnReq *)Arg);
 		default:
 			XAIE_ERROR("Debug backend doesn't support operation"
 					" %u.\n", Op);

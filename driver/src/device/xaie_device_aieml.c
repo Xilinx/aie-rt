@@ -25,7 +25,7 @@
 #include "xaie_helper.h"
 #include "xaie_clock.h"
 #include "xaie_tilectrl.h"
-
+#include "xaiemlgbl_params.h"
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 /***************************** Macro Definitions *****************************/
 /* set timeout to 1000us. */
@@ -349,5 +349,132 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+* This API enable/disable the module clock control
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+* @param        Enable: XAIE_ENABLE to enable shim clock buffer,
+*                       XAIE_DISABLE to disable.
+*
+* @return       XAIE_OK for success, and error code for failure.
+*
+* @note         It is not required to check the DevInst and the Loc tile type
+*               as the caller function should provide the correct value.
+*               It is internal function to this file
+*
+******************************************************************************/
+static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 Enable)
+{
+	u8 TileType;
+	u32 FldVal;
+	u64 RegAddr;
+	AieRC RC;
+	XAie_LocType ShimLoc = XAie_TileLoc(Loc.Col, 0U);
+	const XAie_PlIfMod *PlIfMod;
+	const XAie_ShimModClkCntr0 *ModClkCntr0;
+	const XAie_ShimModClkCntr1 *ModClkCntr1;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, ShimLoc);
+	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
+	ModClkCntr0 = PlIfMod->ModClkCntr0;
+	ModClkCntr1 = PlIfMod->ModClkCntr1;
+
+	RegAddr = ModClkCntr0->RegOff +
+			_XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	FldVal = XAie_SetField(Enable, ModClkCntr0->StrmSwClkEnable.Lsb,
+			ModClkCntr0->StrmSwClkEnable.Mask);
+	FldVal |= XAie_SetField(Enable, ModClkCntr0->PlIntClkEnable.Lsb,
+			ModClkCntr0->PlIntClkEnable.Mask);
+	FldVal |= XAie_SetField(Enable, ModClkCntr0->CteClkEnable.Lsb,
+			ModClkCntr0->CteClkEnable.Mask);
+
+	RC = XAie_MaskWrite32(DevInst, RegAddr, XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_MASK,
+			FldVal);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to enable module clock control 0\n");
+		return RC;
+	}
+
+	RegAddr = ModClkCntr1->RegOff +
+			_XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	FldVal = XAie_SetField(Enable, ModClkCntr1->NocModClkEnable.Lsb,
+			ModClkCntr1->NocModClkEnable.Mask);
+
+	RC = XAie_MaskWrite32(DevInst, RegAddr, XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_MASK,
+			FldVal);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to enable module clock control 1\n");
+		return RC;
+	}
+
+	return XAIE_OK;
+
+}
+
+/*****************************************************************************/
+/**
+* This API enables column clock and module clock control register for the
+* requested tiles passed as argument to this API.
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Args: Backend column args
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
+{
+	AieRC RC;
+	u32 ColClockStatus;
+
+	u32 StartBit, EndBit;
+	u32 PartEndCol = DevInst->StartCol + DevInst->NumCols - 1;
+
+	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
+	   ((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
+		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		return XAIE_ERR;
+	}
+
+	/*Enable the clock control register for shims*/
+	for(u32 C = Args->StartCol; C < (Args->StartCol + Args->NumCols); C++) {
+		XAie_LocType TileLoc = XAie_TileLoc(C, 1);
+
+		RC = _XAieMl_PmSetColumnClockBuffer(DevInst, TileLoc,
+				Args->Enable);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable clock for column: %d\n",
+					TileLoc.Col);
+			return RC;
+		}
+
+		RC = _XAieMl_PmSetShimClk(DevInst, TileLoc, Args->Enable);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to set module clock control.\n");
+			return RC;
+		}
+	}
+
+	StartBit = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol, 0));
+	EndBit = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol + Args->NumCols, 0));
+
+	if(Args->Enable) {
+		/*
+		 * Set bitmap from start column to Start+Number of columns
+		 */
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+					StartBit, EndBit);
+	} else {
+		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				StartBit, EndBit);
+	}
+
+	return XAIE_OK;
+}
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 /** @} */

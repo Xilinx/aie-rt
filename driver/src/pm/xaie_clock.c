@@ -125,5 +125,47 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 	return XAIE_DISABLE;
 }
 
+/*****************************************************************************/
+/**
+* This API enables column clock and module clock control register for requested
+* tiles passed as argument to this API.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE tile
+* @param	NumTiles: Number of tiles requested for use.
+*
+* @return	XAIE_OK on success.
+*
+* @note 	This API enables the clock on runtime
+*
+*******************************************************************************/
+AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols,
+		u8 Enable)
+{
+	XAie_BackendColumnReq  ColumnReq;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	u32 PartEndCol = DevInst->StartCol + DevInst->NumCols - 1;
+
+	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
+	   ((StartCol + NumCols - 1) > PartEndCol) ) {
+
+		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	ColumnReq.StartCol = StartCol;
+	ColumnReq.NumCols = NumCols;
+	ColumnReq.Enable = Enable;
+
+	return XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_COLUMN_CLOCK,
+			(void *)&ColumnReq);
+}
+
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 /** @} */
