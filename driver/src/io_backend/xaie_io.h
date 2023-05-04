@@ -54,6 +54,7 @@ typedef enum {
 	XAIE_BACKEND_OP_PARTITION_CLEAR_CONTEXT,
 	XAIE_BACKEND_OP_GET_RSC_STAT,
 	XAIE_BACKEND_OP_UPDATE_NPI_ADDR,
+	XAIE_BACKEND_OP_SET_COLUMN_CLOCK,
 } XAie_BackendOpCode;
 
 /*
@@ -81,6 +82,15 @@ typedef struct XAie_BackendTilesArray {
 	XAie_LocType *Locs;
 	u32 NumTiles;
 } XAie_BackendTilesArray;
+
+/*
+ * Typedef for structure for columns
+ */
+typedef struct XAie_BackendColumnReq {
+	u32 StartCol;
+	u32 NumCols;
+	u8 Enable;
+} XAie_BackendColumnReq;
 
 /*
  * Typedef for structure for tiles resource

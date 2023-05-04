@@ -2252,6 +2252,28 @@ static const XAie_ShimClkBufCntr AieMlShimClkBufCntr =
 	.ClkBufEnable = {0, 0x1}
 };
 
+/* Register to set Module_Clock_Control_0 */
+static const XAie_ShimModClkCntr0 AieMlShimModClkCntr0 =
+{
+	.RegOff = XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0,
+	.RstEnable = XAIE_DISABLE,
+	.StrmSwClkEnable = {XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_LSB,
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_MASK},
+	.PlIntClkEnable = {XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_LSB,
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_MASK},
+	.CteClkEnable = {XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_LSB,
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_MASK}
+};
+
+/* Register to set Module_Clock_Control_1 */
+static const XAie_ShimModClkCntr1 AieMlShimModClkCntr1 =
+{
+	.RegOff = XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1,
+	.RstEnable = XAIE_DISABLE,
+	.NocModClkEnable = {XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_CLOCK_ENABLE_LSB,
+		XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_CLOCK_ENABLE_MASK}
+};
+
 static const XAie_ShimRstMod AieMlShimTileRst =
 {
 	.RegOff = 0,
@@ -2348,9 +2370,13 @@ static const  XAie_PlIfMod AieMlPlIfMod =
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.ClkBufCntr = &AieMlShimClkBufCntr,
 	.ShimTileRst = &AieMlShimTileRst,
+	.ModClkCntr0 = &AieMlShimModClkCntr0,
+	.ModClkCntr1 = &AieMlShimModClkCntr1,
 #else
 	.ClkBufCntr = NULL,
 	.ShimTileRst = NULL,
+	.ModClkCntr0 = NULL,
+	.ModClkCntr1 = NULL,
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 	.ShimNocAxiMM = NULL,
 };
@@ -2381,10 +2407,14 @@ static const  XAie_PlIfMod AieMlShimTilePlIfMod =
 	.ClkBufCntr = &AieMlShimClkBufCntr,
 	.ShimTileRst = &AieMlShimTileRst,
 	.ShimNocAxiMM = &AieMlShimNocAxiMMConfig,
+	.ModClkCntr0 = &AieMlShimModClkCntr0,
+	.ModClkCntr1 = &AieMlShimModClkCntr1,
 #else
 	.ClkBufCntr = NULL,
 	.ShimTileRst = NULL,
 	.ShimNocAxiMM = NULL,
+	.ModClkCntr0 = NULL,
+	.ModClkCntr1 = NULL,
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 };
 #endif /* XAIE_FEATURE_PL_ENABLE */
@@ -4499,12 +4529,14 @@ XAie_DeviceOps AieMlDevOps =
 	.SetPartIsolationAfterRst = &_XAieMl_SetPartIsolationAfterRst,
 	.PartMemZeroInit = &_XAieMl_PartMemZeroInit,
 	.RequestTiles = &_XAieMl_RequestTiles,
+	.SetColumnClk = &_XAieMl_SetColumnClk,
 #else
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = NULL,
 	.SetPartIsolationAfterRst = NULL,
 	.PartMemZeroInit = NULL,
 	.RequestTiles = NULL,
+	.SetColumnClk = NULL,
 #endif
 };
 

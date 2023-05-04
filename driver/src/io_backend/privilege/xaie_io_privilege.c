@@ -576,6 +576,44 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 	return RC;
 }
 
+/*****************************************************************************/
+/**
+* This API enables column clock and module clock control register for requested
+* tiles passed as argument to this API.
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Args: Backend tile args
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
+		XAie_BackendColumnReq *Args)
+{
+	AieRC RC;
+	/* TODO: Configure previlege registers only for non-AIE devices. */
+	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
+		RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to initialize partition, enable"
+					" protected registers failed.\n");
+			 return RC;
+		}
+	}
+
+	RC = DevInst->DevOps->SetColumnClk(DevInst, Args);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Set Column Clock failed\n");
+	}
+
+	if (DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
+		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+	}
+
+	return RC;
+}
 #else /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
@@ -592,6 +630,15 @@ AieRC _XAie_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 
 AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args)
+{
+	(void)DevInst;
+	(void)Args;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
+
+AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
+		XAie_BackendColumnReq *Args)
 {
 	(void)DevInst;
 	(void)Args;

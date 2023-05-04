@@ -587,6 +587,9 @@ static AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
 			_XAie_MetalIO_MapNpi(IOInst, *((u64 *)Arg));
 			return XAIE_OK;
+		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
+			return _XAie_PrivilegeSetColumnClk(DevInst,
+					(XAie_BackendColumnReq *)Arg);
 		default:
 			RC = XAIE_FEATURE_NOT_SUPPORTED;
 			break;

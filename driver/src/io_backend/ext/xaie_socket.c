@@ -576,6 +576,9 @@ static AieRC XAie_SocketIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
 			XAIE_WARN("NPI address cannot be updated for socket backend. Ignoring request.\n");
 			return XAIE_OK;
+		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
+			return _XAie_PrivilegeSetColumnClk(DevInst,
+					(XAie_BackendColumnReq *)Arg);
 		default:
 			XAIE_ERROR("Socket backend does not support operation "
 					"%d\n", Op);

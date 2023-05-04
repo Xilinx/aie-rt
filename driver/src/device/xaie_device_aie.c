@@ -514,5 +514,63 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+* This API enable/disable column clock control register for the requested tiles
+* passed as argument to this API.
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Args: Backend column args
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
+{
+	AieRC RC;
+	u8 flag;
+	u32 StartBit, EndBit;
+
+	u32 PartEndCol = DevInst->StartCol + DevInst->NumCols - 1;
+
+	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
+			((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
+		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		return XAIE_ERR;
+	}
+
+	/*Enable the clock control register for shims*/
+	for(u32 C = Args->StartCol; C < (Args->StartCol + Args->NumCols); C++) {
+
+		XAie_LocType TileLoc = XAie_TileLoc(C, 0);
+
+		RC = _XAie_PmSetColumnClockBuffer(DevInst, TileLoc,
+				Args->Enable);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable clock for column: %d\n",
+					TileLoc.Col);
+			return RC;
+		}
+	}
+
+	StartBit = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol, 0));
+	EndBit = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol + Args->NumCols, 0));
+
+	if(Args->Enable) {
+		/*
+		 * Set bitmap from start column to Start+Number of columns
+		 */
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+				StartBit, EndBit);
+	} else {
+		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				StartBit, EndBit);
+	}
+
+	return XAIE_OK;
+
+}
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 /** @} */
