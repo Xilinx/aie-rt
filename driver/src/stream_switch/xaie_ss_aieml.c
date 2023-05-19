@@ -180,7 +180,9 @@ AieRC _XAieMl_ShimTile_StrmSwCheckPortValidity(StrmSwPortType Slave,
 
 	switch(Slave) {
 	case TRACE:
-		if(Master == FIFO || Master == SOUTH) {
+		if(Master == FIFO || Master == SOUTH ||
+			(Master == WEST && MstrPortNum == 0U) ||
+			(Master == EAST && MstrPortNum == 0U)) {
 			break;
 		}
 		RC = XAIE_ERR_STREAM_PORT;
