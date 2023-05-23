@@ -46,6 +46,7 @@
 #define XAIE_TXN_INST_EXPORTED_MASK XAIE_TXN_INSTANCE_EXPORTED
 #define XAIE_TXN_AUTO_FLUSH_MASK XAIE_TRANSACTION_ENABLE_AUTO_FLUSH
 
+#define TX_DUMP_ENABLE 0
 /************************** Variable Definitions *****************************/
 const u8 TransactionHeaderVersion_Major = 0;
 const u8 TransactionHeaderVersion_Minor = 1;
@@ -1116,7 +1117,9 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
-			TxnCmdDump(Cmd);
+			if (TX_DUMP_ENABLE)
+				TxnCmdDump(Cmd);
+
 			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
 
 			if((BuffSize + sizeof(XAie_CustomOpHdr) +
@@ -1765,7 +1768,8 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		memcpy(tmpBuff, Args, size);
 		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)tmpBuff;
 
-		TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		if (TX_DUMP_ENABLE)
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
 
 		TxnInst->NumCmds++;
 
