@@ -1,6 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
-* Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.
+* Copyright (C) 2023, Advanced Micro Devices, Inc. All Rights Reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -29,7 +28,11 @@
 #include "xaie_lite_hwcfg.h"
 #include "xaie_lite_io.h"
 #include "xaie_lite_npi.h"
+#if (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P)
+#include "xaie_lite_regdef_aie2p.h"
+#else
 #include "xaie_lite_regdef_aieml.h"
+#endif
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 #include "xaie_lite_util.h"
