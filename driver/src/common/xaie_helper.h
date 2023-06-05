@@ -215,7 +215,7 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 void BuffHexDump(char* buff,u32 size);
 int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
 AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
-AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u8 Arg_Offset, u8 Num_BDs);
+AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u32 Arg_Offset, u8 Num_BDs);
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
 u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
 u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);

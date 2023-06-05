@@ -99,6 +99,7 @@ typedef enum {
 	XAIE_IO_BACKEND_DEBUG, /* IO debug backend */
 	XAIE_IO_BACKEND_LINUX, /* Linux kernel backend */
 	XAIE_IO_BACKEND_SOCKET, /* Socket backend */
+	XAIE_IO_BACKEND_CONTROLCODE,
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 
@@ -663,13 +664,24 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
 AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
+AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
+                XAie_BackendAttrType AttrType, u64 AttrVal);
+AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 PageSize);
+void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
+AieRC XAie_WaitTaskCompleteToken(XAie_DevInst *DevInst,
+                        uint16_t Column, uint16_t Row, uint32_t Channel, uint8_t NumTokens);
+AieRC XAie_StartNewJob(XAie_DevInst *DevInst);
+AieRC XAie_EndPage(XAie_DevInst *DevInst);
+AieRC XAie_EndJob(XAie_DevInst *DevInst);
+AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp);
+AieRC XAie_ControlCodeAddAnnotation(XAie_DevInst *DevInst,
+                        u32 Id, const char *Name, const char *Description);
+AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad);
 AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
 AieRC XAie_EnquirePartitions(XAie_DevInst *DevInst);
 int XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId);
 AieRC XAie_DestroyPartitionList(XAie_DevInst *DevInst);
 AieRC XAie_GetPartitionFdList(XAie_DevInst *DevInst);
-AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
-		XAie_BackendAttrType AttrType, u64 AttrVal);
 /*****************************************************************************/
 /*
 *

@@ -80,6 +80,13 @@ ifeq ($(MAKECMDGOALS), libmetal)
 	$(CC) $(CFLAGS_libmetal) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
+controlcode: include lib$(NAME).so
+CFLAGS_controlcode += -Wall -Wextra --std=c11 -D__AIECONTROLCODE__
+ifeq ($(MAKECMDGOALS) ,controlcode)
+%.o: %.c include
+	$(CC) $(CFLAGS_controlcode) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
+endif
+
 doc-generate:
 	mkdir -p $(DOCS_DIR)
 	doxygen $(DOXYGEN_CONFIG_FILE)

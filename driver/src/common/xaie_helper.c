@@ -1825,7 +1825,7 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 	return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 }
 
-AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u8 Arg_Offset, u8 Num_BDs)
+AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u32 Arg_Offset, u8 Num_BDs)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
 	return Backend->Ops.AddressPatching((void *)DevInst->IOInst, Arg_Offset, Num_BDs);
