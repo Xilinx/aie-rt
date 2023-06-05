@@ -93,6 +93,7 @@ typedef enum {
 	XAIE_IO_BACKEND_LINUX, /* Linux kernel backend */
 	XAIE_IO_BACKEND_IPU, /* IPU Backend */
 	XAIE_IO_BACKEND_SOCKET, /* Socket backend */
+	XAIE_IO_BACKEND_CONTROLCODE,
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 
@@ -596,6 +597,8 @@ AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
 AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
 AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
 		XAie_BackendAttrType AttrType, u64 AttrVal);
+AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize);
+void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
 /*****************************************************************************/
 /*
 *
