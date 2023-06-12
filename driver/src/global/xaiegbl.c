@@ -221,7 +221,9 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
 	InstPtr->TxnList.Next = NULL;
 
-	if (InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU)
+	if ((InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0))
 		InstPtr->EccStatus = XAIE_DISABLE;
 	else
 		InstPtr->EccStatus = XAIE_ENABLE;
@@ -777,7 +779,9 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) {
+	if ((DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
+		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
+		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0)) {
 		XAIE_ERROR("ECC feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
