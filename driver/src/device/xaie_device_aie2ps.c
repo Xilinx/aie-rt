@@ -48,12 +48,7 @@ u8 _XAie2PS_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	if(Loc.Row == 0U) {
-		if(Loc.Col == 0U) {
-			return XAIEGBL_TILE_TYPE_SHIMPL;
-		}
-
 		return XAIEGBL_TILE_TYPE_SHIMNOC;
-
 	} else if(Loc.Row >= DevInst->MemTileRowStart &&
 			(Loc.Row < (DevInst->MemTileRowStart +
 				     DevInst->MemTileNumRows))) {
