@@ -1320,6 +1320,88 @@ AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This API configures the edge detection event register in the given module.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	SelectId: Selection index of edge event to configure
+* @param	Event: Event to detect edges of
+* @param	Trigger: Configuration of how edge event will be triggered
+* 			for trigger on rising edge: XAIE_EDGE_EVENT_RISING
+* 			for trigger on falling edge: XAIE_EDGE_EVENT_FALLING
+* 			or OR of both
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SelectId, XAie_Events Event,
+		u8 Trigger)
+{
+	AieRC RC;
+	u8 TileType;
+	u64 RegAddr;
+	u32 FldVal, HwEvent;
+	const XAie_EvntMod *EvntMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid tile type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	if (RC != XAIE_OK) {
+		return XAIE_INVALID_ARGS;
+	}
+
+	if (Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid Event id\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if (SelectId >= EvntMod->NumEdgeSelectIds) {
+		XAIE_ERROR("Invalid select id\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, Event, &HwEvent);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+
+	FldVal = (XAie_SetField(HwEvent, EvntMod->EdgeDetectEvent.Lsb,
+			EvntMod->EdgeDetectEvent.Mask) |
+		XAie_SetField(Trigger, EvntMod->EdgeDetectTrigger.Lsb,
+			EvntMod->EdgeDetectTrigger.Mask)) <<
+		(SelectId * EvntMod->EdgeEventSelectIdOff);
+	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			EvntMod->EdgeEventRegOff;
+
+	return XAie_Write32(DevInst, RegAddr, FldVal);
+}
+
+/*****************************************************************************/
+/**
+*
 * This API enables, disables or resets the program counter event in the given
 * module.
 *

@@ -717,6 +717,11 @@ typedef struct XAie_EvntMod {
 	u8 DmaChannelIdOff;
 	u8 DmaChannelIdMask;
 	u8 DmaChannelMM2SOff;
+	u32 EdgeEventRegOff;
+	XAie_RegFldAttr EdgeDetectEvent;
+	XAie_RegFldAttr EdgeDetectTrigger;
+	u32 EdgeEventSelectIdOff;
+	u8 NumEdgeSelectIds;
 	u32 BaseBroadcastRegOff;
 	u8 NumBroadcastIds;
 	u32 BaseBroadcastSwBlockRegOff;

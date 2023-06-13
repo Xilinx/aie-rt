@@ -713,6 +713,12 @@ typedef enum {
 	XAIE_EVENT_BROADCAST_ALL   = 0b1111U,
 } XAie_BroadcastDir;
 
+/* Enum to capture edge event config */
+typedef enum {
+	XAIE_EDGE_EVENT_RISING  = 0b0001U,
+	XAIE_EDGE_EVENT_FALLING = 0b0010U,
+} XAie_EdgeEventTrig;
+
 /************************** Function Prototypes  *****************************/
 AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event);
@@ -751,6 +757,9 @@ AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events GroupEvent, u32 GroupBitMap);
 AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events GroupEvent);
+AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 SelectId, XAie_Events Event,
+		u8 Trigger);
 AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId, u16 PCAddr);
 AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
