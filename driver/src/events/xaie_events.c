@@ -1345,9 +1345,9 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 Trigger)
 {
 	AieRC RC;
-	u8 TileType;
+	u32 FldVal;
 	u64 RegAddr;
-	u32 FldVal, HwEvent;
+	u8 TileType, HwEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((DevInst == XAIE_NULL) ||
