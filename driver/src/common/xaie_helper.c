@@ -1702,7 +1702,7 @@ int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst) {
 	if(Inst->NextCustomOp < XAIE_IO_CUSTOM_OP_MAX) {
 		XAIE_DBG("New Custom OP allocated %d\n", Inst->NextCustomOp);
 	} else {
-		XAIE_DBG("Custom OP Max reached %d, allocation fail\n", Inst->NextCustomOp);
+		XAIE_ERROR("Custom OP Max reached %d, allocation fail\n", Inst->NextCustomOp);
 		return -1;
 	}
 
@@ -1736,21 +1736,21 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		Tid = Backend->Ops.GetTid();
 		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
 		if(TxnInst == NULL) {
-			XAIE_DBG("Could not find transaction instance "
+			XAIE_ERROR("Could not find transaction instance "
 					"associated with thread. Polling "
 					"from register\n");
 			return XAIE_ERR;
 		}
 
 		if ( TxnInst->NextCustomOp < OpNumber || XAIE_IO_CUSTOM_OP_BEGIN > OpNumber || XAIE_IO_CUSTOM_OP_MAX < OpNumber) {
-			XAIE_DBG("Invalid Op Code %d\n",OpNumber);
+			XAIE_ERROR("Invalid Op Code %d\n",OpNumber);
 			return XAIE_ERR;
 		}
 
 		/* check memory allocation before increase Cmd vector */
 		char* tmpBuff = malloc(size);
 		if(!tmpBuff) {
-			XAIE_DBG("Fail to malloc %d size memory for DataPtr\n", size);
+			XAIE_ERROR("Fail to malloc %d size memory for DataPtr\n", size);
 			return XAIE_ERR;
 		}
 
