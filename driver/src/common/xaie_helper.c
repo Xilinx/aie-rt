@@ -1286,7 +1286,7 @@ AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data)
 		}
 
 		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
-				(TxnInst->NumCmds > 0U)) {
+			(TxnInst->NumCmds > 0U)) {
 			/* Flush command buffer */
 			XAIE_DBG("Auto flushing contents of the transaction "
 					"buffer.\n");
@@ -1295,8 +1295,8 @@ AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data)
 				XAIE_ERROR("Failed to flush cmd buffer\n");
 				return RC;
 			}
-
 			TxnInst->NumCmds = 0;
+
 			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
 		} else if(TxnInst->NumCmds == 0U) {
 			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
@@ -1365,21 +1365,20 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 					Value, TimeOutUs);
 		}
 
-		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
-				(TxnInst->NumCmds > 0U)) {
-			/* Flush command buffer */
-			XAIE_DBG("Auto flushing contents of the transaction "
-					"buffer.\n");
-			RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to flush cmd buffer\n");
-				return RC;
+		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK)) {
+
+			if (TxnInst->NumCmds > 0U) {
+				/* Flush command buffer */
+				XAIE_DBG("Auto flushing contents of the transaction "
+						"buffer.\n");
+				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
+				if(RC != XAIE_OK) {
+					XAIE_ERROR("Failed to flush cmd buffer\n");
+					return RC;
+				}
+				TxnInst->NumCmds = 0;
 			}
 
-			TxnInst->NumCmds = 0;
-			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
-					Value, TimeOutUs);
-		} else if(TxnInst->NumCmds == 0U) {
 			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
 					Value, TimeOutUs);
 		} else {
@@ -1540,21 +1539,19 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 					Command, CmdWd0, CmdWd1, CmdStr);
 		}
 
-		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
-				(TxnInst->NumCmds > 0U)) {
-			/* Flush command buffer */
-			XAIE_DBG("Auto flushing contents of the transaction "
-					"buffer.\n");
-			RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to flush cmd buffer\n");
-				return RC;
-			}
+		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK)) {
 
-			TxnInst->NumCmds = 0;
-			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-					Command, CmdWd0, CmdWd1, CmdStr);
-		} else if(TxnInst->NumCmds == 0U) {
+			if (TxnInst->NumCmds > 0U) {
+				/* Flush command buffer */
+				XAIE_DBG("Auto flushing contents of the transaction "
+						"buffer.\n");
+				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
+				if(RC != XAIE_OK) {
+					XAIE_ERROR("Failed to flush cmd buffer\n");
+					return RC;
+				}
+				TxnInst->NumCmds = 0;
+			}
 			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
 					Command, CmdWd0, CmdWd1, CmdStr);
 		} else {
@@ -1584,20 +1581,7 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		}
 
-		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
-				(TxnInst->NumCmds > 0U)) {
-			/* Flush command buffer */
-			RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to flush cmd buffer\n");
-				return RC;
-			}
-
-			TxnInst->NumCmds = 0;
-			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
-		} else if(TxnInst->NumCmds == 0U) {
-			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
-		} else if(Op == XAIE_BACKEND_OP_CONFIG_SHIMDMABD) {
+		if (Op == XAIE_BACKEND_OP_CONFIG_SHIMDMABD) {
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
 			if (Backend->Type == XAIE_IO_BACKEND_LINUX) {
@@ -1633,6 +1617,20 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 				}
 			}
 			return XAIE_OK;
+		}
+
+		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
+			(TxnInst->NumCmds > 0U)) {
+				/* Flush command buffer */
+				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
+				if(RC != XAIE_OK) {
+					XAIE_ERROR("Failed to flush cmd buffer\n");
+					return RC;
+				}
+			TxnInst->NumCmds = 0;
+			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
+		} else if(TxnInst->NumCmds == 0U) {
+			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else {
 			XAIE_ERROR("Run Op operation is not supported "
 					"when auto flush is disabled\n");
