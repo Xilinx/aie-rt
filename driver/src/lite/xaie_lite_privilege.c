@@ -392,10 +392,10 @@ static void _XAie_DisableTlast(XAie_DevInst *DevInst)
 	u64 RegAddr;
 	u32 Mask;
 
-	MemTileStart = DevInst->MemTileRowStart;
-	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
-	AieRowStart = DevInst->AieTileRowStart;
-	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+	MemTileStart = XAIE_MEM_TILE_ROW_START;
+	MemTileEnd = XAIE_MEM_TILE_ROW_START + XAIE_MEM_TILE_NUM_ROWS;
+	AieRowStart = XAIE_AIE_TILE_ROW_START;
+	AieRowEnd = XAIE_AIE_TILE_ROW_START + XAIE_AIE_TILE_NUM_ROWS;
 
 	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
 		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
