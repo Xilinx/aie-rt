@@ -564,6 +564,27 @@ typedef enum {
 	XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE,
 } XAie_BackendAttrType;
 
+/*
+ * This typedef contains members necessary to store the tile location and
+ * %kernel utilization captured
+ */
+typedef struct {
+	XAie_LocType Loc;
+	uint8_t PerfCnt[2];
+	float KernelUtil;
+} XAie_Occupancy;
+
+/*
+ * This typedef contains attributes necessary to capture kernel utilization in
+ * core tiles.
+ */
+typedef struct {
+	XAie_Range *Range;
+	uint32_t TimeInterval_ms;
+	XAie_Occupancy *Util;
+	uint32_t UtilSize;
+} XAie_PerfInst;
+
 /**************************** Function prototypes ***************************/
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
@@ -599,6 +620,7 @@ AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
 		XAie_BackendAttrType AttrType, u64 AttrVal);
 AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize);
 void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
+AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
 /*****************************************************************************/
 /*
 *
