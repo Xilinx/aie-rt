@@ -88,6 +88,63 @@ typedef struct XAie_LinuxMem {
 
 /************************** Function Definitions *****************************/
 #ifdef __AIELINUX__
+/*****************************************************************************/
+/**
+*
+* This function returns the register address of individual tiles for a given
+* offset that includes row and columns offsets.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to read from.
+*
+* @return	Register address.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static inline u64 _XAie_GetRegAddr(XAie_LinuxIO *IOInst, u64 RegOff)
+{
+	return RegOff & (~(ULONG_MAX << IOInst->RowShift));
+}
+
+/*****************************************************************************/
+/**
+*
+* This function returns the row number for a given register offset.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to read from.
+*
+* @return	Column number.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static inline u8 _XAie_GetRowNum(XAie_LinuxIO *IOInst, u64 RegOff)
+{
+	u64 Mask = ((1 << IOInst->ColShift) - 1) &
+			~((1 << IOInst->RowShift) - 1);
+
+	return (RegOff & Mask) >> IOInst->RowShift;
+}
+
+/*****************************************************************************/
+/**
+*
+* This function returns the column number for a given register offset.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to read from.
+*
+* @return	Column number.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static inline u8 _XAie_GetColNum(XAie_LinuxIO *IOInst, u64 RegOff)
+{
+	return RegOff >> IOInst->ColShift;
+}
 
 /*****************************************************************************/
 /**
@@ -312,6 +369,8 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	AieRC RC;
 	XAie_LinuxIO *IOInst;
 	int Fd;
+	u32 NumTiles;
+	u32 SetTileStatus;
 
 	IOInst = (XAie_LinuxIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -346,6 +405,12 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		free(IOInst);
 		return XAIE_ERR;
 	}
+
+	XAie_LocType TileLoc = XAie_TileLoc(0, 1);
+	NumTiles = (DevInst->NumRows - 1U) * (DevInst->NumCols);
+	SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
+	_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
+				NumTiles);
 
 	DevInst->IOInst = (void *)IOInst;
 	IOInst->DevInst = DevInst;
@@ -409,6 +474,23 @@ static AieRC XAie_LinuxIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 {
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	u32 ColClockStatus;
+	XAie_DevInst *DevInst = LinuxIOInst->DevInst;
+	u8 Row = _XAie_GetRowNum(LinuxIOInst, RegOff);
+	u8 Col = _XAie_GetColNum(LinuxIOInst, RegOff);
+	XAie_LocType Loc = {Row, Col};
+
+	/*
+	 * Check bitmap position of the requested tile, If it is
+	 * gated tile return XAIE_INVALID_TILE,
+	 */
+	if(Row != 0U) {
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,Loc);
+		if(!CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+			XAIE_ERROR("Tile(%d,%d) is gated \n",Col,Row);
+			return XAIE_INVALID_TILE;
+		}
+	}
 
 	*Data = *((u32 *)(LinuxIOInst->RegMap.VAddr + RegOff));
 
@@ -501,64 +583,6 @@ static AieRC XAie_LinuxIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value
 	}
 
 	return XAIE_ERR;
-}
-
-/*****************************************************************************/
-/**
-*
-* This function returns the register address of individual tiles for a given
-* offset that includes row and columns offsets.
-*
-* @param	IOInst: IO instance pointer
-* @param	RegOff: Register offset to read from.
-*
-* @return	Register address.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static inline u64 _XAie_GetRegAddr(XAie_LinuxIO *IOInst, u64 RegOff)
-{
-	return RegOff & (~(ULONG_MAX << IOInst->RowShift));
-}
-
-/*****************************************************************************/
-/**
-*
-* This function returns the row number for a given register offset.
-*
-* @param	IOInst: IO instance pointer
-* @param	RegOff: Register offset to read from.
-*
-* @return	Column number.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static inline u8 _XAie_GetRowNum(XAie_LinuxIO *IOInst, u64 RegOff)
-{
-	u64 Mask = ((1 << IOInst->ColShift) - 1) &
-			~((1 << IOInst->RowShift) - 1);
-
-	return (RegOff & Mask) >> IOInst->RowShift;
-}
-
-/*****************************************************************************/
-/**
-*
-* This function returns the column number for a given register offset.
-*
-* @param	IOInst: IO instance pointer
-* @param	RegOff: Register offset to read from.
-*
-* @return	Column number.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static inline u8 _XAie_GetColNum(XAie_LinuxIO *IOInst, u64 RegOff)
-{
-	return RegOff >> IOInst->ColShift;
 }
 
 /*****************************************************************************/
@@ -674,6 +698,7 @@ static u32* _XAie_GetVirtAddrFromOffset(XAie_LinuxIO *IOInst, u64 RegOff,
 		u32 Size)
 {
 	u32 *VirtAddr = NULL;
+	u32 ColClockStatus;
 	u64 MemOffset;
 	XAie_DevInst *DevInst = IOInst->DevInst;
 	u64 RegAddr = _XAie_GetRegAddr(IOInst, RegOff);
@@ -681,6 +706,18 @@ static u32* _XAie_GetVirtAddrFromOffset(XAie_LinuxIO *IOInst, u64 RegOff,
 	u8 Col = _XAie_GetColNum(IOInst, RegOff);
 	XAie_LocType Loc = {Row, Col};
 	u8 TileType;
+
+	/*
+	 * Check bitmap position of the requested tile, If it is
+	 * gated tile return XAIE_INVALID_TILE,
+	 */
+	if(Row != 0U) {
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,Loc);
+		if(!CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+			XAIE_ERROR("Tile(%d,%d) is gated \n",Col,Row);
+			return XAIE_INVALID_TILE;
+		}
+	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
@@ -739,9 +776,12 @@ static AieRC XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff,
 
 	/* Handle PM and DM sections */
 	VirtAddr =  _XAie_GetVirtAddrFromOffset(Inst, RegOff, Size);
-	if(VirtAddr != NULL) {
+	if(VirtAddr != NULL && VirtAddr != XAIE_INVALID_TILE) {
 		_XAie_CopyDataToMem(VirtAddr, Data, Size);
 		return XAIE_OK;
+	}else if(VirtAddr == XAIE_INVALID_TILE) {
+		XAIE_ERROR("Tile is gated \n");
+		return XAIE_ERR;
 	}
 
 	/* Handle other registers */
@@ -777,11 +817,14 @@ static AieRC XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 
 	/* Handle PM and DM sections */
 	VirtAddr =  _XAie_GetVirtAddrFromOffset(Inst, RegOff, Size);
-	if(VirtAddr != NULL) {
+	if(VirtAddr != NULL && VirtAddr != XAIE_INVALID_TILE) {
 		for(u32 i = 0; i < Size; i++) {
 			*VirtAddr++ = Data;
 		}
 		return XAIE_OK;
+	}else if(VirtAddr == XAIE_INVALID_TILE) {
+		XAIE_ERROR("Tile is gated \n");
+		return XAIE_ERR;
 	}
 
 	/* Handle other registers */
