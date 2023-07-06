@@ -163,5 +163,38 @@ AieRC _XAieMl_LockSetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 	return XAie_Write32(DevInst, RegAddr, RegVal);
 }
 
+/*****************************************************************************/
+/**
+*
+* This API is used to get Lock Status Value.
+*
+* @param	DevInst: Device Instance
+* @param	LockMod: Internal lock module data structure.
+* @param	Loc: Location of AIE Tile
+* @param	Lock: Lock data structure with LockId and LockValue.
+* @param	LockVal: Lock Value.
+*
+* @return	XAIE_OK if Lock Release, else error code.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+AieRC _XAieMl_LockGetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
+		XAie_LocType Loc, XAie_Lock Lock, u32 *LockVal)
+{
+	u64 RegAddr;
+	AieRC RC;
+
+	RegAddr = Lock.LockId * LockMod->LockSetValOff +
+		LockMod->LockSetValBase +
+		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	RC = XAie_Read32(DevInst, RegAddr, LockVal);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+
+	return XAIE_OK;
+}
 #endif /* XAIE_FEATURE_LOCK_ENABLE */
 /** @} */

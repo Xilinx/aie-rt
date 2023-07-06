@@ -420,6 +420,7 @@ static const  XAie_DmaMod AieMlMemTileDmaMod =
 	.BdChValidity = &_XAieMl_MemTileDmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 
 static const  XAie_DmaBdEnProp AieMlTileDmaBdEnProp =
@@ -653,6 +654,7 @@ static const  XAie_DmaMod AieMlTileDmaMod =
 	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 
 static const  XAie_DmaBdEnProp AieMlShimDmaBdEnProp =
@@ -901,6 +903,7 @@ static const  XAie_DmaMod AieMlShimDmaMod =
 	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_ShimDmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
@@ -2264,6 +2267,8 @@ static const  XAie_CoreMod AieMlCoreMod =
 	.DataMemShift = 16,
 	.EccEvntRegOff = XAIEMLGBL_CORE_MODULE_ECC_SCRUBBING_EVENT,
 	.CorePCOff = XAIEMLGBL_CORE_MODULE_CORE_PC,
+	.CoreSPOff = XAIEMLGBL_CORE_MODULE_CORE_SP,
+	.CoreLROff = XAIEMLGBL_CORE_MODULE_CORE_LR,
 	.CoreCtrl = &AieMlCoreCtrlReg,
 	.CoreDebugStatus = &AieMlCoreDebugStatus,
 	.CoreSts = &AieMlCoreStsReg,
@@ -2355,6 +2360,7 @@ static const  XAie_LockMod AieMlTileLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 
 static const XAie_RegFldAttr AieMlShimNocLockInit =
@@ -2379,6 +2385,7 @@ static const  XAie_LockMod AieMlShimNocLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 
 static const XAie_RegFldAttr AieMlMemTileLockInit =

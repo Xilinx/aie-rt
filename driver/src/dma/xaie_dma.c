@@ -1331,6 +1331,54 @@ AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This API is used to Get the Channel Status Value.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param        Status - Value of Channel Status Register
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u32 *Status)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAIE_ERROR("Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	return DmaMod->GetChannelStatus(DevInst, Loc, DmaMod, ChNum,
+			Dir, Status);
+}
+/*****************************************************************************/
+/**
+*
 * This API is used to wait on Shim DMA channel to be completed.
 *
 * @param	DevInst: Device Instance

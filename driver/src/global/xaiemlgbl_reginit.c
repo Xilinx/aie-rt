@@ -359,6 +359,8 @@ static const XAie_DmaChStatus AieMlMemTileDmaChStatus =
 	.AieMlDmaChStatus.Status.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STATUS_MASK,
 	.AieMlDmaChStatus.TaskQSize.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_LSB,
 	.AieMlDmaChStatus.TaskQSize.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_MASK,
+	.AieMlDmaChStatus.TaskQOverFlow.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_OVERFLOW_LSB,
+	.AieMlDmaChStatus.TaskQOverFlow.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_OVERFLOW_MASK,
 	.AieMlDmaChStatus.ChannelRunning.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_CHANNEL_RUNNING_LSB,
 	.AieMlDmaChStatus.ChannelRunning.Mask = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_CHANNEL_RUNNING_MASK,
 	.AieMlDmaChStatus.StalledLockAcq.Lsb = XAIEMLGBL_MEM_TILE_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_LSB,
@@ -448,6 +450,7 @@ static const  XAie_DmaMod AieMlMemTileDmaMod =
 	.BdChValidity = &_XAieMl_MemTileDmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 
 static const  XAie_DmaBdEnProp AieMlTileDmaBdEnProp =
@@ -589,6 +592,8 @@ static const XAie_DmaChStatus AieMlTileDmaChStatus =
 	.AieMlDmaChStatus.Status.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STATUS_MASK,
 	.AieMlDmaChStatus.TaskQSize.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_LSB,
 	.AieMlDmaChStatus.TaskQSize.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_MASK,
+	.AieMlDmaChStatus.TaskQOverFlow.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_OVERFLOW_LSB,
+	.AieMlDmaChStatus.TaskQOverFlow.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_OVERFLOW_MASK,
 	.AieMlDmaChStatus.ChannelRunning.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_CHANNEL_RUNNING_LSB,
 	.AieMlDmaChStatus.ChannelRunning.Mask = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_CHANNEL_RUNNING_MASK,
 	.AieMlDmaChStatus.StalledLockAcq.Lsb = XAIEMLGBL_MEMORY_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_LSB,
@@ -681,6 +686,7 @@ static const  XAie_DmaMod AieMlTileDmaMod =
 	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 
 static const  XAie_DmaBdEnProp AieMlShimDmaBdEnProp =
@@ -837,6 +843,8 @@ static const XAie_DmaChStatus AieMlShimDmaChStatus =
 	.AieMlDmaChStatus.Status.Mask = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STATUS_MASK,
 	.AieMlDmaChStatus.TaskQSize.Lsb = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_LSB,
 	.AieMlDmaChStatus.TaskQSize.Mask = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_SIZE_MASK,
+	.AieMlDmaChStatus.TaskQOverFlow.Lsb = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_OVERFLOW_LSB,
+	.AieMlDmaChStatus.TaskQOverFlow.Mask = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_TASK_QUEUE_OVERFLOW_MASK,
 	.AieMlDmaChStatus.ChannelRunning.Lsb = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_CHANNEL_RUNNING_LSB,
 	.AieMlDmaChStatus.ChannelRunning.Mask = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_CHANNEL_RUNNING_MASK,
 	.AieMlDmaChStatus.StalledLockAcq.Lsb = XAIEMLGBL_NOC_MODULE_DMA_S2MM_STATUS_0_STALLED_LOCK_ACQ_LSB,
@@ -928,6 +936,7 @@ static const  XAie_DmaMod AieMlShimDmaMod =
 	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_ShimDmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
@@ -2444,6 +2453,7 @@ static const  XAie_LockMod AieMlTileLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 
 static const XAie_RegFldAttr AieMlShimNocLockInit =
@@ -2468,6 +2478,7 @@ static const  XAie_LockMod AieMlShimNocLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 
 static const XAie_RegFldAttr AieMlMemTileLockInit =
@@ -2492,6 +2503,7 @@ static const  XAie_LockMod AieMlMemTileLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 #endif /* XAIE_FEATURE_LOCK_ENABLE */
 
@@ -3705,6 +3717,7 @@ static const XAie_EvntMod AieMlTileEvntMod[] =
 {
 	{
 		.XAie_EventNumber = AieMlMemModEventMapping,
+		.NumEventReg = 4U,
 		.EventMin = (u32)XAIE_EVENT_NONE_MEM,
 		.EventMax = (u32)XAIE_EVENT_DMA_TASK_TOKEN_STALL_MEM,
 		.ComboEventBase = (u32)XAIE_EVENT_COMBO_EVENT_0_MEM,
@@ -3761,6 +3774,7 @@ static const XAie_EvntMod AieMlTileEvntMod[] =
 	},
 	{
 		.XAie_EventNumber = AieMlCoreModEventMapping,
+		.NumEventReg = 4U,
 		.EventMin = (u32)XAIE_EVENT_NONE_CORE,
 		.EventMax = (u32)XAIE_EVENT_PROCESSOR_BUS_ERROR_CORE,
 		.ComboEventBase = (u32)XAIE_EVENT_COMBO_EVENT_0_CORE,
@@ -3835,6 +3849,7 @@ static const XAie_EvntMod AieMlTileEvntMod[] =
 static const XAie_EvntMod AieMlNocEvntMod =
 {
 	.XAie_EventNumber = AieMlNocModEventMapping,
+	.NumEventReg = 4U,
 	.EventMin = (u32)XAIE_EVENT_NONE_PL,
 	.EventMax = (u32)XAIE_EVENT_DMA_TASK_TOKEN_STALL_PL,
 	.ComboEventBase = (u32)XAIE_EVENT_COMBO_EVENT_0_PL,
@@ -3908,6 +3923,7 @@ static const XAie_EvntMod AieMlNocEvntMod =
 static const XAie_EvntMod AieMlPlEvntMod =
 {
 	.XAie_EventNumber = AieMlPlModEventMapping,
+	.NumEventReg = 4U,
 	.EventMin = (u32)XAIE_EVENT_NONE_PL,
 	.EventMax = (u32)XAIE_EVENT_DMA_TASK_TOKEN_STALL_PL,
 	.ComboEventBase = (u32)XAIE_EVENT_COMBO_EVENT_0_PL,
@@ -3979,6 +3995,7 @@ static const XAie_EvntMod AieMlPlEvntMod =
 static const XAie_EvntMod AieMlMemTileEvntMod =
 {
 	.XAie_EventNumber = AieMlMemTileModEventMapping,
+	.NumEventReg = 6U,
 	.EventMin = (u32)XAIE_EVENT_NONE_MEM_TILE,
 	.EventMax = (u32)XAIE_EVENT_USER_EVENT_1_MEM_TILE,
 	.ComboEventBase = (u32)XAIE_EVENT_COMBO_EVENT_0_MEM_TILE,

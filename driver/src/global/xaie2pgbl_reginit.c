@@ -184,6 +184,8 @@ static const  XAie_CoreMod Aie2PCoreMod =
 	.DataMemShift = 16,
 	.EccEvntRegOff = XAIE2PGBL_CORE_MODULE_ECC_SCRUBBING_EVENT,
 	.CorePCOff = XAIE2PGBL_CORE_MODULE_CORE_PC,
+	.CoreSPOff = XAIE2PGBL_CORE_MODULE_CORE_SP,
+	.CoreLROff = XAIE2PGBL_CORE_MODULE_CORE_LR,
 	.CoreCtrl = &Aie2PCoreCtrlReg,
 	.CoreDebugStatus = &Aie2PCoreDebugStatus,
 	.CoreSts = &Aie2PCoreStsReg,
@@ -1683,6 +1685,7 @@ static const  XAie_DmaMod Aie2PMemTileDmaMod =
 	.BdChValidity = &_XAieMl_MemTileDmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 
 static const  XAie_DmaBdEnProp Aie2PTileDmaBdEnProp =
@@ -1917,6 +1920,7 @@ static const  XAie_DmaMod Aie2PTileDmaMod =
 	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 
 static const  XAie_DmaBdEnProp Aie2PShimDmaBdEnProp =
@@ -2165,6 +2169,7 @@ static const  XAie_DmaMod Aie2PShimDmaMod =
 	.BdChValidity = &_XAieMl_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_ShimDmaUpdateBdAddr,
+	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
@@ -2384,6 +2389,7 @@ static const  XAie_LockMod Aie2PTileLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 
 static const XAie_RegFldAttr Aie2PShimNocLockInit =
@@ -2408,6 +2414,7 @@ static const  XAie_LockMod Aie2PShimNocLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 
 static const XAie_RegFldAttr Aie2PMemTileLockInit =
@@ -2432,6 +2439,7 @@ static const  XAie_LockMod Aie2PMemTileLockMod =
 	.Acquire = &_XAieMl_LockAcquire,
 	.Release = &_XAieMl_LockRelease,
 	.SetValue = &_XAieMl_LockSetValue,
+	.GetValue = &_XAieMl_LockGetValue,
 };
 #endif /* XAIE_FEATURE_LOCK_ENABLE */
 

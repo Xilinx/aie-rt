@@ -185,5 +185,47 @@ AieRC XAie_LockSetValue(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock)
 	return LockMod->SetValue(DevInst, LockMod, Loc, Lock);
 }
 
+/*****************************************************************************/
+/**
+*
+* This API is used to get Lock Value
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Lock: Lock data structure with LockId and LockValue.
+* @param	LockValue: Lock Value
+*
+* @return	XAIE_OK on success, error code otherwise.
+*
+* @note 	None.
+*
+******************************************************************************/
+AieRC XAie_LockGetValue(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
+		u32 *LockValue)
+{
+	u8  TileType;
+	const XAie_LockMod *LockMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
+
+	if(Lock.LockId > LockMod->NumLocks) {
+		XAIE_ERROR("Invalid Lock Id\n");
+		return XAIE_INVALID_LOCK_ID;
+	}
+
+	return LockMod->GetValue(DevInst, LockMod, Loc, Lock, LockValue);
+}
 #endif /* XAIE_FEATURE_LOCK_ENABLE */
 /** @} */
