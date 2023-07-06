@@ -16,6 +16,7 @@
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_npi.h"
+#include "xaie_io_internal.h"
 #include "xaiegbl.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE

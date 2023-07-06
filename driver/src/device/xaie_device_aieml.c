@@ -24,6 +24,7 @@
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_clock.h"
+#include "xaie_reset_aie.h"
 #include "xaie_tilectrl.h"
 #include "xaiemlgbl_params.h"
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE

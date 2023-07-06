@@ -23,6 +23,7 @@
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_clock.h"
+#include "xaie_reset_aie.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 

@@ -29,10 +29,8 @@
 /************************** Enum *********************************************/
 
 /************************** Function Prototypes  *****************************/
-AieRC _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable);
 AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		u32 NumTiles);
-u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol,
 		u32 NumCols, u8 Enable);
 #endif		/* end of protection macro */

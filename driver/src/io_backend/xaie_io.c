@@ -28,6 +28,7 @@
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_io.h"
+#include "xaie_io_internal.h"
 
 /************************** Constant Definitions *****************************/
 #if defined (__AIELINUX__)

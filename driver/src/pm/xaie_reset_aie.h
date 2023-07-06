@@ -20,6 +20,8 @@
 
 /************************** Function Prototypes  *****************************/
 AieRC _XAie_RstShims(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols);
+AieRC _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable);
+u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc);
 
 #endif /* XAIE_RESET_AIE_H */
 /** @} */
