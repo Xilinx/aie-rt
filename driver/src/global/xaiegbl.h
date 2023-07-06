@@ -555,6 +555,28 @@ typedef struct {
 	uint32_t Size;
 } XAie_CustomOpHdr;
 
+/*
+ * This typedef contains members necessary to store the tile location and
+ * %kernel utilization captured
+ */
+typedef struct {
+	XAie_LocType Loc;
+	uint8_t PerfCnt[2];
+	float KernelUtil;
+} XAie_Occupancy;
+
+/*
+ * This typedef contains attributes necessary to capture kernel utilization in
+ * core tiles.
+ */
+typedef struct {
+	XAie_Range *Range;
+	uint32_t TimeInterval_ms;
+	XAie_Occupancy *Util;
+	uint32_t UtilSize;
+} XAie_PerfInst;
+
+
 /**************************** Function prototypes ***************************/
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
@@ -586,6 +608,7 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
 AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
+AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
 /*****************************************************************************/
 /*
 *

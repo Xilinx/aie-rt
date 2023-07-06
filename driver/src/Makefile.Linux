@@ -10,7 +10,6 @@ CC ?= gcc
 CP = cp
 LIBSOURCES = $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)
 CFLAGS += -Wall -Wextra --std=c11
-
 DOCS_DIR = ../tmp
 DOXYGEN_CONFIG_FILE = ../docs/aie_driver_docs_config.dox
 
@@ -53,7 +52,7 @@ ifeq ($(MAKECMDGOALS) ,baremetal)
 endif
 
 linux: include lib$(NAME).so
-CFLAGS_linux += -Wall -Wextra --std=c11 -D__AIELINUX__
+CFLAGS_linux += -Wall -Wextra --std=c11 -D__AIELINUX__ -D_POSIX_C_SOURCE=200809
 ifeq ($(MAKECMDGOALS),linux)
 %.o: %.c include
 	$(CC) $(CFLAGS_linux) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@

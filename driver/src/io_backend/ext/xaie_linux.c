@@ -36,6 +36,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "xlnx-ai-engine.h"
 
@@ -48,6 +49,11 @@
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_128BIT_ALIGN_MASK 0xFF
+
+/***************************** Global Variable *******************************/
+static struct aie_perfinst_args *Perfinst = NULL;
+static XAie_PerfInst *UserInst = NULL;
+static void *IOInstLinux = NULL;
 
 /****************************** Type Definitions *****************************/
 #ifdef __AIELINUX__
@@ -1236,6 +1242,151 @@ static AieRC _XAie_LinuxIO_SetColumnClock(void *IOInst,
 
 /*****************************************************************************/
 /**
+* The API is a signal callback to calculate the core tile utilization and store
+* in a floating point variable.
+*
+* @param	IOInst: IO instance pointer
+* @param	PerfInst: Performance instance.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+void _XAie_LinuxIO_UtilCalculation(int SignalNum, struct siginfo_t *SignalInfo,
+		void *Arg) {
+
+	XAie_LinuxIO *LinuxIO = (XAie_LinuxIO *)IOInstLinux;
+	int Ret;
+
+	/*
+	 * Stores the size of the Util array in bytes.
+	 */
+	UserInst->UtilSize = Perfinst->util_size * sizeof(XAie_Occupancy);
+	for(__u32 i = 0U; i < Perfinst->util_size; i++) {
+		UserInst->Util[i].Loc.Row = Perfinst->util[i].loc.row;
+		UserInst->Util[i].Loc.Col = Perfinst->util[i].loc.col;
+		UserInst->Util[i].KernelUtil = (float)
+			((float) Perfinst->util[i].active_cycle /
+			 (float) Perfinst->util[i].total_cycle) * 100U;
+		struct aie_rsc Rsc = {0};
+		Rsc.loc.row = Perfinst->util[i].loc.row;
+		Rsc.loc.col = Perfinst->util[i].loc.col;
+		Rsc.mod = XAIE_CORE_MOD;
+		Rsc.type = XAIE_PERFCNT_RSC;
+		for(int index = 0U; index < 2; index++) {
+			Rsc.id = Perfinst->util[i].perfcnt[index];
+			Ret = ioctl(LinuxIO->PartitionFd,
+					AIE_RSC_RELEASE_IOCTL, &Rsc);
+			if(Ret != 0U) {
+				XAIE_WARN("Failed to release resource %u\n",
+						Rsc.type);
+			}
+
+		}
+
+	}
+}
+
+/*****************************************************************************/
+/**
+* The API captures core tile utilization over a user-defined period.
+*
+* @param	IOInst: IO instance pointer
+* @param	PerfInst: Performance instance.
+*
+* @return	XAIE_OK on success, error otherwise.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst)
+{
+	int Ret;
+	static struct aie_perfinst_args PerformanceInst;
+	struct sigaction SignalAction;
+	XAie_UserRsc Rscs[2];
+
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *) IOInst;
+
+	Perfinst = &PerformanceInst;
+	UserInst = PerfInst;
+	IOInstLinux = (void *)LinuxIOInst;
+
+	PerformanceInst.range.start.col = PerfInst->Range->Start;
+	PerformanceInst.range.size.col = PerfInst->Range->Start + PerfInst->Range->Num;
+	PerformanceInst.range.start.row = LinuxIOInst->DevInst->AieTileRowStart;
+	PerformanceInst.range.size.row = LinuxIOInst->DevInst->AieTileNumRows;
+	PerformanceInst.time_interval_ms = PerfInst->TimeInterval_ms;
+	PerformanceInst.util = (struct aie_occupancy*)malloc(
+			sizeof(struct aie_occupancy)*PerfInst->UtilSize);
+
+	/*
+	 * Registering signal callback to calculate utilization as floating
+	 * point cannot be calculated in linux kernel driver.
+	 */
+	sigemptyset(&SignalAction.sa_mask);
+	SignalAction.sa_flags = (SA_SIGINFO | SA_RESTART);
+	SignalAction.sa_sigaction = &_XAie_LinuxIO_UtilCalculation;
+	sigaction (SIGPERFUTIL, &SignalAction, NULL);
+
+
+	/*
+	 * util_size is passed as zero for scanning the partition for enabled
+	 * tiles.
+	 */
+	PerformanceInst.util_size = 0U;
+
+	/*
+	 * Populates all the tiles enabled and in use.
+	 */
+	PerformanceInst.util_size = ioctl(LinuxIOInst->PartitionFd,
+			AIE_PERFORMANCE_UTILIZATION_IOCTL, &PerformanceInst);
+	if(PerformanceInst.util_size <= 0U) {
+		XAIE_ERROR("Failed to scan the partition for enabled core tiles, %d: %s\n",
+				errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
+	/*
+	 * Reserves the performance counters for the tiles mentioned in
+	 * struct aie_occupancy.
+	 */
+	for(__u32 i = 0U; i < PerformanceInst.util_size; i++) {
+		struct aie_rsc_req_rsp RscReq = {0};
+		RscReq.req.loc = PerformanceInst.util[i].loc;
+		RscReq.req.mod = XAIE_CORE_MOD;
+		RscReq.req.type = XAIE_PERFCNT_RSC;
+		RscReq.req.num_rscs = 2;
+		RscReq.rscs = &Rscs;
+		Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_REQ_IOCTL, &RscReq);
+		if(Ret != 0U) {
+			XAIE_WARN("Failed to request resource %u\n",
+						RscReq.req.type);
+			return XAIE_ERR;
+		}
+
+		for(__u32 index = 0U; index < RscReq.req.num_rscs; index++) {
+			PerformanceInst.util[i].perfcnt[index] = Rscs[index].RscId;
+		}
+	}
+
+	/*
+	 * Calculates the kernel utilization.
+	 */
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_PERFORMANCE_UTILIZATION_IOCTL,
+			&PerformanceInst);
+	if(Ret != 0U) {
+		XAIE_ERROR("Failed to capture performance utilization, %d: %s\n",
+				errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
 * The API grants broadcast resource based on availibility and marks that
 * resource status in relevant bitmap.
 *
@@ -1638,6 +1789,8 @@ static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		return _XAie_LinuxIO_PartClearContext((XAie_LinuxIO *)IOInst);
 	case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
 		return _XAie_LinuxIO_SetColumnClock(IOInst, Arg);
+	case XAIE_BACKEND_OP_PERFORMANCE_UTILIZATION:
+		return _XAie_LinuxIO_PerfUtilization(IOInst, Arg);
 	default:
 		XAIE_ERROR("Linux backend does not support operation %d\n", Op);
 		return XAIE_FEATURE_NOT_SUPPORTED;

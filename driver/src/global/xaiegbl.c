@@ -989,4 +989,83 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 	return _XAie_ClearTransaction(DevInst);
 }
 
+/*****************************************************************************/
+/**
+* This function captures kernel utilization of the core tiles mentioned in the
+* columns in range in PerfInst.
+*
+* @param	DevInst - Device instance pointer.
+* @param	PerfInst - Performance instance pointer.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+* @note		If Range in PerfInst is NULL, all the columns in the partition
+*		will be scaned to gather all the core tiles in the partition.
+*
+******************************************************************************/
+AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst) {
+
+	AieRC RC = XAIE_OK;
+	XAie_Range PartRange;
+	u32 Size, NumTiles;
+
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(PerfInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(PerfInst->Range == XAIE_NULL) {
+		PartRange.Start = DevInst->StartCol;
+		PartRange.Num = DevInst->NumCols;
+		XAIE_DBG("Start Col: %d\tnum: %d\n", PartRange.Start, PartRange.Num);
+		PerfInst->Range = &PartRange;
+	} else if (PerfInst->Range->Num <= 0U ||
+			PerfInst->Range->Num > DevInst->NumCols) {
+		XAIE_ERROR("Invalid range!\n");
+		return XAIE_INVALID_ARGS;
+	} else if(PerfInst->Range->Start < 0U ||
+			PerfInst->Range->Start >= DevInst->NumCols) {
+		XAIE_ERROR("Invalid range!\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	Size = sizeof(XAie_Occupancy);
+	NumTiles = (DevInst->NumCols) * DevInst->AieTileNumRows;
+	if((PerfInst->UtilSize)	< (NumTiles * Size)) {
+		XAIE_ERROR("Insufficient Buffer Size!\n");
+		return XAIE_INSUFFICIENT_BUFFER_SIZE;
+	}
+
+	/*
+	 * PerfInst->UtilSize will contain the number of elements hereforth.
+	 */
+	PerfInst->UtilSize /= sizeof(XAie_Occupancy);
+
+	/*
+	 * By default kernel utilization is captured over a time interval of
+	 * 1 ms.
+	 */
+	if(PerfInst->TimeInterval_ms == 0U) {
+		XAIE_WARN("Capturing for 1ms as minimum time interval is 1ms!\n");
+		PerfInst->TimeInterval_ms = 1U;
+	} else if(PerfInst->TimeInterval_ms > 3000U) {
+		XAIE_WARN("Capturing for 3000ms as maximum time interval is 3000ms!\n");
+		PerfInst->TimeInterval_ms = 3000U;
+	}
+
+	RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_PERFORMANCE_UTILIZATION,
+			(void *)PerfInst);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to capture kernel utilization.\n");
+		return RC;
+	}
+
+	return XAIE_OK;
+}
 /** @} */
