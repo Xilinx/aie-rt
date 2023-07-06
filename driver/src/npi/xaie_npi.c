@@ -14,6 +14,7 @@
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_feature_config.h"
+#include "xaie_io_internal.h"
 #include "xaie_helper.h"
 #include "xaie_npi.h"
 #include "xaiegbl.h"

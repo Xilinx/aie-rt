@@ -27,6 +27,7 @@
 #if defined(XAIE_FEATURE_PRIVILEGED_ENABLE) && defined(XAIE_FEATURE_LITE)
 
 #include "xaie_lite.h"
+#include "xaie_lite_internal.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 

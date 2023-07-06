@@ -31,6 +31,7 @@
 
 #include "xaie_clock.h"
 #include "xaie_feature_config.h"
+#include "xaie_reset_aie.h"
 #include "xaie_helper.h"
 #include "xaie_interrupt.h"
 #include "xaie_npi.h"

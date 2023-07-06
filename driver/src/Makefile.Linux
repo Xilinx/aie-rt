@@ -15,8 +15,10 @@ DOCS_DIR = ../tmp
 DOXYGEN_CONFIG_FILE = ../docs/aie_driver_docs_config.dox
 
 OUTS = $(LIBSOURCES:.c=.o)
-INCLUDEFILES = ./*/*.h ./*/*/*.h
+INCLUDEFILES = ./*/xaie_clock.h ./*/xaie_reset.h ./*/xaie_core.h ./*/xaie_dma.h ./*/xaie_elfloader.h ./*/xaie_events.h ./*/xaie_interrupt.h ./*/xaie_lite.h ./*/xaie_lite_util.h ./*/xaie_locks.h ./*/xaie_mem.h ./*/xaie_perfcnt.h ./*/xaie_plif.h ./*/xaie_rsc.h ./*/xaie_ss.h ./*/xaie_timer.h ./*/xaie_trace.h ./*/xaie_util_events.h ./*/xaiegbl.h ./*/xaiegbl_defs.h ./*/xaiegbl_regdef.h ./*/xaie_io.h ./*/xaie_feature_config.h ./*/xaie_helper.h ./*/xaie_lite_hwcfg.h ./*/xaiegbl_params.h
+INTERNALFILES = ./*/*.h ./*/*/*.h
 INCLUDEDIR = ../include
+INTERNALDIR = ../internal
 NAME := xaiengine
 MAJOR = 3
 MINOR = 4
@@ -26,8 +28,11 @@ all: include lib$(NAME).so
 
 include:
 	mkdir $(INCLUDEDIR)/xaiengine -p
+	mkdir $(INTERNALDIR)/xaiengine -p
 	$(CP) xaiengine.h $(INCLUDEDIR)
 	$(CP) $(INCLUDEFILES) $(INCLUDEDIR)/xaiengine
+	$(CP) xaiengine.h $(INTERNALDIR)
+	$(CP) $(INTERNALFILES) $(INTERNALDIR)/xaiengine
 
 lib$(NAME).so.$(VERSION): $(OUTS)
 	$(CC) $(LDFLAGS) $^ -shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
@@ -38,41 +43,41 @@ lib$(NAME).so: lib$(NAME).so.$(VERSION)
 	ln -s lib$(NAME).so.$(MAJOR) lib$(NAME).so
 
 %.o: %.c include
-	$(CC) $(CFLAGS) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 
 baremetal: include lib$(NAME).so
 CFLAGS_bare += -Wall -Wextra --std=c11 -D_AIEBAREMETAL__
 ifeq ($(MAKECMDGOALS) ,baremetal)
 %.o: %.c include
-	$(CC) $(CFLAGS_bare) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS_bare) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
 linux: include lib$(NAME).so
 CFLAGS_linux += -Wall -Wextra --std=c11 -D__AIELINUX__
 ifeq ($(MAKECMDGOALS),linux)
 %.o: %.c include
-	$(CC) $(CFLAGS_linux) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS_linux) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
 simulation: include lib$(NAME).so
 CFLAGS_simulation += -Wall -Wextra --std=c11 -D__AIESIM__
 ifeq ($(MAKECMDGOALS),simulation)
 %.o: %.c include
-	$(CC) $(CFLAGS_simulation) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS_simulation) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
 cdo: include lib$(NAME).so
 CFLAGS_cdo += -Wall -Wextra --std=c11 -D__AIECDO__
 ifeq ($(MAKECMDGOALS) ,cdo)
 %.o: %.c include
-	$(CC) $(CFLAGS_cdo) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS_cdo) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
 libmetal: include lib$(NAME).so
 CFLAGS_libmetal += -Wall -Wextra --std=c11 -D__AIEMETAL__
 ifeq ($(MAKECMDGOALS), libmetal)
 %.o: %.c include
-	$(CC) $(CFLAGS_libmetal) -I$(INCLUDEDIR) -I$(INCLUDEDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS_libmetal) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
 doc-generate:
@@ -86,3 +91,4 @@ doc-clean:
 clean:
 	rm -rf $(OUTS) *.so *.so.*
 	rm -rf $(INCLUDEDIR)
+	rm -rf $(INTERNALDIR)
