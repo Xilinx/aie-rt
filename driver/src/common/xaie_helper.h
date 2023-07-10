@@ -41,8 +41,8 @@
 #include "xaie_locks.h"
 
 /***************************** Macro Definitions *****************************/
-#define CheckBit(bitmap, pos)   ((bitmap)[(pos) / (sizeof((bitmap)[0]) * 8U)] & \
-				 (1U << (pos) % (sizeof((bitmap)[0]) * 8U)))
+#define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
+				(u32)(1U << (u64)(pos) % (sizeof((bitmap)[0]) * 8U)))
 
 #define XAIE_ERROR(...)							      \
 	do {								      \
@@ -105,7 +105,7 @@ typedef enum {
 	XAIE_IO_MASKPOLL,
 	XAIE_CONFIG_SHIMDMA_BD,
 	XAIE_CONFIG_SHIMDMA_DMABUF_BD,
-	XAIE_IO_CUSTOM_OP_BEGIN = 1<<7,
+	XAIE_IO_CUSTOM_OP_BEGIN = 1U<<7U,
 	XAIE_IO_CUSTOM_OP_MAX = UCHAR_MAX,
 } XAie_TxnOpcode;
 
@@ -192,10 +192,11 @@ static inline u32 first_set_bit(u64 Value)
 {
 	u32 Index = 1;
 
-	if (Value == 0U)
+	if (Value == 0U) {
 		return 0;
+	}
 
-	while (!(Value & 1U)) {
+	while ((Value & 1U) == 0U) {
 		Value >>= 1;
 		Index++;
 	}

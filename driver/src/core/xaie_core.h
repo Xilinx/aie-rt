@@ -80,7 +80,7 @@
 ******************************************************************************/
 static inline u32 XAie_CheckDebugHaltStatus(u32 DebugStatus, u32 DebugEventMask)
 {
-	return (DebugStatus & DebugEventMask) ? 1U : 0U;
+	return ((DebugStatus & DebugEventMask) != 0U) ? 1U : 0U;
 }
 
 /*****************************************************************************/
@@ -98,7 +98,7 @@ static inline u32 XAie_CheckDebugHaltStatus(u32 DebugStatus, u32 DebugEventMask)
 ******************************************************************************/
 static inline u32 XAie_CheckCoreStatus(u32 CoreStatus, u32 CoreStatMask)
 {
-	return (CoreStatus & CoreStatMask) ? 1U : 0U;
+	return ((CoreStatus & CoreStatMask) != 0U) ? 1U : 0U;
 }
 
 AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc);

@@ -91,9 +91,9 @@ static AieRC _XAie_IntrCtrlL1Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset +
-					Switch * L1IntrMod->SwOff;
+					(u8)Switch * L1IntrMod->SwOff;
 
-	return XAie_Write32(DevInst, RegAddr, XAIE_ENABLE << IntrId);
+	return XAie_Write32(DevInst, RegAddr,(u32)(XAIE_ENABLE << IntrId));
 }
 
 /*****************************************************************************/
@@ -185,7 +185,7 @@ AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	RegOffset = L1IntrMod->BaseIrqRegOff + Switch * L1IntrMod->SwOff;
+	RegOffset = L1IntrMod->BaseIrqRegOff +(u32)((u8)Switch * L1IntrMod->SwOff);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_Write32(DevInst, RegAddr, BroadcastId);
@@ -215,10 +215,12 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 RegAddr;
 	u32 RegOffset, EventMask, FldVal;
+	u32 EventVal;
 	u8 TileType, EventLsb, MappedEvent;
 	const XAie_L1IntrMod *L1IntrMod;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
@@ -239,19 +241,19 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	Event -= EvntMod->EventMin;
-	MappedEvent = EvntMod->XAie_EventNumber[Event];
+	EventVal -= EvntMod->EventMin;
+	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	RegOffset = L1IntrMod->BaseIrqEventRegOff + Switch * L1IntrMod->SwOff;
+	RegOffset = L1IntrMod->BaseIrqEventRegOff + (u32)((u8)Switch * L1IntrMod->SwOff);
 	EventLsb = IrqEventId * L1IntrMod->IrqEventOff;
 	EventMask = L1IntrMod->BaseIrqEventMask << EventLsb;
 	FldVal = XAie_SetField(MappedEvent, EventLsb, EventMask);
@@ -306,13 +308,13 @@ AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(ChannelBitMap >= (XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
+	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
 		XAIE_ERROR("Invalid channel bitmap\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	RegOffset = L1IntrMod->BaseBroadcastBlockRegOff +
-						Switch * L1IntrMod->SwOff;
+						(u32)((u8)Switch * L1IntrMod->SwOff);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_Write32(DevInst, RegAddr, ChannelBitMap);
@@ -366,13 +368,13 @@ AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(ChannelBitMap >= (XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
+	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
 		XAIE_ERROR("Invalid channel bitmap\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	RegOffset = L1IntrMod->BaseBroadcastUnblockRegOff +
-						Switch * L1IntrMod->SwOff;
+						(u32)((u8)Switch * L1IntrMod->SwOff);
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_Write32(DevInst, RegAddr, ChannelBitMap);
@@ -415,7 +417,7 @@ static AieRC _XAie_IntrCtrlL2Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	L2IntrMod = DevInst->DevProp.DevMod[TileType].L2IntrMod;
 
-	if(ChannelBitMap >= (XAIE_ENABLE << L2IntrMod->NumBroadcastIds)) {
+	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L2IntrMod->NumBroadcastIds)) {
 		XAIE_ERROR("Invalid interrupt bitmap\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -499,9 +501,9 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 	 * TBD: EVENT list have to be revisited and if possible redunat event should be removed.
 	 */
 	if(DevInst->DevProp.DevGen ==  XAIE_DEV_GEN_AIE2PS) {
-        GroupEvent = XAIE_EVENT_PL_GROUP_ERRORS;
+        GroupEvent = (u32)XAIE_EVENT_PL_GROUP_ERRORS;
 	} else {
-        GroupEvent = XAIE_EVENT_GROUP_ERRORS_PL;
+        GroupEvent = (u32)XAIE_EVENT_GROUP_ERRORS_PL;
 	}
 
 
@@ -585,7 +587,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 		GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
 								XAIE_PL_MOD);
 		RC = XAie_EventGroupControl(DevInst, Loc, XAIE_PL_MOD,
-					GroupEvent,
+					(XAie_Events)GroupEvent,
 					GroupErrorEnableMask);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to configure group error in shim tile\n");
@@ -594,7 +596,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 
 		RC = XAie_IntrCtrlL1Event(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				XAIE_ERROR_BROADCAST_ID,
-				GroupEvent);
+				(XAie_Events)GroupEvent);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
 			return RC;
@@ -732,7 +734,7 @@ static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
 	}
 
 	for(u32 i = 0; i < ShimUserRscNum; i++) {
-		ShimRscsBc[i].Loc = XAie_TileLoc(i, 0);
+		ShimRscsBc[i].Loc = (XAie_LocType)XAie_TileLoc((u8)i, 0);
 		ShimRscsBc[i].Mod = (u32)XAIE_PL_MOD;
 		ShimRscsBc[i].RscType = (u32)XAIE_BCAST_CHANNEL_RSC;
 	}
@@ -808,9 +810,9 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 
 	for(Loc.Col = 0; Loc.Col < DevInst->NumCols; Loc.Col++) {
 		/* Setup error broadcasts to SOUTH from memory and core module */
-		BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
-				  XAIE_EVENT_BROADCAST_EAST |
-				  XAIE_EVENT_BROADCAST_WEST;
+		BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
+				  (u8)XAIE_EVENT_BROADCAST_EAST |
+				  (u8)XAIE_EVENT_BROADCAST_WEST;
 		BroadcastDirSwB = BroadcastDirSwA;
 
 		for(Loc.Row = AieRowStart; Loc.Row < AieRowEnd; Loc.Row++) {
@@ -950,10 +952,10 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 		if(TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
 			XAie_LocType NextLoc;
 
-			BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
-					  XAIE_EVENT_BROADCAST_SOUTH |
-					  XAIE_EVENT_BROADCAST_WEST;
-			BroadcastDirSwB = (u32)XAIE_EVENT_BROADCAST_ALL;
+			BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
+					  (u8)XAIE_EVENT_BROADCAST_SOUTH |
+					  (u8)XAIE_EVENT_BROADCAST_WEST;
+			BroadcastDirSwB = (u8)XAIE_EVENT_BROADCAST_ALL;
 
 			/*
 			 * Create bitmask to block broadcast from previous
@@ -986,14 +988,14 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 
 			RC = _XAie_FindNextNoCTile(DevInst, Loc, &NextLoc);
 			if (RC != XAIE_OK) {
-				BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
-						  XAIE_EVENT_BROADCAST_SOUTH |
-						  XAIE_EVENT_BROADCAST_EAST;
+				BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
+						  (u8)XAIE_EVENT_BROADCAST_SOUTH |
+						  (u8)XAIE_EVENT_BROADCAST_EAST;
 				BroadcastDirSwB = BroadcastDirSwA;
 			} else {
-				BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
-						  XAIE_EVENT_BROADCAST_SOUTH |
-						  XAIE_EVENT_BROADCAST_WEST;
+				BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
+						  (u8)XAIE_EVENT_BROADCAST_SOUTH |
+						  (u8)XAIE_EVENT_BROADCAST_WEST;
 				BroadcastDirSwB = BroadcastDirSwA;
 			}
 

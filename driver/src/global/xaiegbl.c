@@ -111,7 +111,7 @@ extern u8 XAieDevType;
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols)
 {
-	if (DevInst == XAIE_NULL || DevInst->IsReady) {
+	if (DevInst == XAIE_NULL || (DevInst->IsReady != 0U)) {
 		XAIE_ERROR("Invalid Device instance to set part config.\n");
 		return XAIE_INVALID_DEVICE;
 	}
@@ -173,7 +173,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = AieMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 		InstPtr->DevOps = &AieDevOps;
-		XAieDevType = ConfigPtr->AieGen;
+		XAieDevType = (u8)ConfigPtr->AieGen;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2IPU) {
 		InstPtr->DevProp.DevMod = Aie2IpuMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;
@@ -224,10 +224,12 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 
 	if ((InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
 		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
-		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0))
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0)) {
 		InstPtr->EccStatus = XAIE_DISABLE;
-	else
+
+	} else {
 		InstPtr->EccStatus = XAIE_ENABLE;
+	}
 
 	RC = _XAie_RscMgrInit(InstPtr);
 	if(RC != XAIE_OK) {

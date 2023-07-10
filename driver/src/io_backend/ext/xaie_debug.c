@@ -209,7 +209,7 @@ static AieRC XAie_DebugIO_BlockWrite32(void *IOInst, u64 RegOff,
 		const u32 *Data, u32 Size)
 {
 	for(u32 i = 0U; i < Size; i ++) {
-		XAie_DebugIO_Write32(IOInst, RegOff + i * 4U, *Data);
+		XAie_DebugIO_Write32(IOInst, RegOff + (u64)(i * 4U), *Data);
 		Data++;
 	}
 
@@ -236,7 +236,7 @@ static AieRC XAie_DebugIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 		u32 Size)
 {
 	for(u32 i = 0U; i < Size; i++)
-		XAie_DebugIO_Write32(IOInst, RegOff+ i * 4U, Data);
+		XAie_DebugIO_Write32(IOInst, RegOff+ (u64)(i * 4U), Data);
 
 	return XAIE_OK;
 }
@@ -347,7 +347,7 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_ASSERT_SHIMRST:
 		{
-			u8 RstEnable = (u8)((uintptr_t)Arg & 0xFF);
+			u8 RstEnable = (u8)((uintptr_t)Arg & 0xFFU);
 
 			_XAie_NpiSetShimReset(DevInst, RstEnable);
 			break;
@@ -362,7 +362,7 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			XAie_ShimDmaBdArgs *BdArgs = (XAie_ShimDmaBdArgs *)Arg;
 			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
 				XAie_DebugIO_Write32(IOInst,
-						BdArgs->Addr + i * 4,
+						BdArgs->Addr + (u64)(i * 4U),
 						BdArgs->BdWords[i]);
 			}
 			break;

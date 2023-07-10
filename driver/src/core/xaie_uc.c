@@ -64,7 +64,7 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * CardDir can have values of 4, 5, 6 or 7 for valid data memory
 	 * addresses..
 	 */
-	CardDir = Addr / UcMod->PrivDataMemSize;
+	CardDir = (u8)(Addr / UcMod->PrivDataMemSize);
 
 	RowParity = Loc.Row % 2U;
 	/*
@@ -159,7 +159,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ELF;
 	}
 
-	Addr = UcMod->ProgMemHostOffset + Phdr->p_paddr +
+	Addr = (u64)(UcMod->ProgMemHostOffset + Phdr->p_paddr) +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/*
@@ -255,7 +255,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		BytesToWrite = SectionSize - OverFlowBytes;
-		Addr = (SectionAddr & AddrMask);
+		Addr = (u64)(SectionAddr & AddrMask);
 
 		/* Turn ECC On if EccStatus flag is set. */
 		if(DevInst->EccStatus) {
@@ -269,7 +269,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			}
 		}
 
-		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, Addr,
+		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, (u32)Addr,
 				(const void*)Buffer, BytesToWrite);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Write to data memory failed\n");
@@ -341,7 +341,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc, const
 		Phdr = (Elf32_Phdr*) (ElfMem + sizeof(*Ehdr) +
 				phnum * sizeof(*Phdr));
 		_XAie_PrintProgSectHdr(Phdr);
-		if(Phdr->p_type == PT_LOAD) {
+		if(Phdr->p_type == (u32)PT_LOAD) {
 			SectionPtr = ElfMem + Phdr->p_offset;
 			RC = _XAie_WriteProgramSection(DevInst, Loc, SectionPtr, Phdr);
 			if(RC != XAIE_OK) {
@@ -453,14 +453,14 @@ AieRC XAie_LoadUc(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr)
 
 	/* Get the file size of the elf */
 	Ret = fseek(Fd, 0L, SEEK_END);
-	if(Ret != 0U) {
+	if(Ret != 0) {
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 			errno, strerror(errno));
 		fclose(Fd);
 		return XAIE_INVALID_ELF;
 	}
 
-	ElfSz = ftell(Fd);
+	ElfSz = (u64)ftell(Fd);
 	rewind(Fd);
 	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
 
@@ -472,8 +472,8 @@ AieRC XAie_LoadUc(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr)
 		return XAIE_ERR;
 	}
 
-	Ret = fread((void*)ElfMem, ElfSz, 1U, Fd);
-	if(Ret == 0U) {
+	Ret = (int)fread((void*)ElfMem, ElfSz, 1U, Fd);
+	if(Ret == 0) {
 		fclose(Fd);
 		free(ElfMem);
 		XAIE_ERROR("Failed to read Elf into memory\n");
@@ -508,7 +508,7 @@ AieRC _XAie_UcCoreWakeup(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 
 	Mask = UcMod->CoreCtrl->CtrlWakeup.Mask;
-	Value = 1U << UcMod->CoreCtrl->CtrlWakeup.Lsb;
+	Value = (u32)(1U << UcMod->CoreCtrl->CtrlWakeup.Lsb);
 	RegAddr = UcMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -535,7 +535,7 @@ AieRC _XAie_UcCoreSleep(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 
 	Mask = UcMod->CoreCtrl->CtrlSleep.Mask;
-	Value = 1U << UcMod->CoreCtrl->CtrlSleep.Lsb;
+	Value = (u32)(1U << UcMod->CoreCtrl->CtrlSleep.Lsb);
 	RegAddr = UcMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 

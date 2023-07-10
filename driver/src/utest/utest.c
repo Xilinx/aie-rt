@@ -70,17 +70,17 @@ int main() {
     if( -1 != Op1) {
 
         dpu_op_1 dpu_op1;
-        dpu_op1.ifm[0] = 0xDEADBEEF;
-        dpu_op1.ofm[0] = 0xBEEFDEAD;
-        dpu_op1.flags = 1 << 5;
+        dpu_op1.ifm[0] = 0xDEADBEEFU;
+        dpu_op1.ofm[0] = 0xBEEFDEADU;
+        dpu_op1.flags = 1U << 5U;
 
          /*test hexdump with the same function*/
         printf("UNIT TEST LOG BEGIN>>>");
-        BuffHexDump(&dpu_op1,sizeof(dpu_op_1));
+        BuffHexDump(&dpu_op1,(u32)sizeof(dpu_op_1));
         printf("\n<<<UNIT TEST LOG END");
 
         /* test case for run custom op */
-        XAie_AddCustomTxnOp(&DevInst, Op1, &dpu_op1, sizeof(dpu_op_1));
+        XAie_AddCustomTxnOp(&DevInst, (u8)Op1, &dpu_op1, sizeof(dpu_op_1));
 
     }
 
@@ -91,11 +91,11 @@ int main() {
 
         /*test hexdump with the same function*/
         printf("UNIT TEST LOG BEGIN>>>");
-        BuffHexDump(&dpu_op2,sizeof(dpu_op_2));
+        BuffHexDump(&dpu_op2,(u32)sizeof(dpu_op_2));
         printf("\n<<<UNIT TEST LOG END");
 
         /* test case for run custom op */
-        XAie_AddCustomTxnOp(&DevInst, Op2, &dpu_op2, sizeof(dpu_op_2));
+        XAie_AddCustomTxnOp(&DevInst, (u8)Op2, &dpu_op2, sizeof(dpu_op_2));
 
         /* test case for invalid op code */
         XAie_AddCustomTxnOp(&DevInst, 254, &dpu_op2, sizeof(dpu_op_2));

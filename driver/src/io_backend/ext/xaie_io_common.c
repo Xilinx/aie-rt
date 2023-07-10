@@ -55,8 +55,8 @@ static AieRC _XAie_FindAvailableRsc(u32 *Bitmap, u32 StaticBitmapOffset,
 		u32 StartBit, u32 MaxRscVal, u32 *Index)
 {
 	for(u32 i = StartBit; i < StartBit + MaxRscVal; i++) {
-		if(!((CheckBit(Bitmap, i)) |
-				CheckBit(Bitmap, (i + StaticBitmapOffset)))) {
+		if(((CheckBit(Bitmap, i)) |
+						CheckBit(Bitmap, (i + StaticBitmapOffset))) == 0U) {
 			*Index = i - StartBit;
 			return XAIE_OK;
 		}
@@ -89,12 +89,12 @@ static AieRC _XAie_FindAvailableRscContig(u32 *Bitmap, u32 SBmOff,
 	for(u32 i = StartBit; i < StartBit + MaxRscVal; i += NumContigRscs) {
 		u32 j;
 
-		if(!((CheckBit(Bitmap, i)) |
-				CheckBit(Bitmap, (i + SBmOff)))) {
+		if(((CheckBit(Bitmap, i)) |
+						CheckBit(Bitmap, (i + SBmOff))) == 0U) {
 			*Index = i - StartBit;
 			for(j = i + 1U; j < i + NumContigRscs; j++) {
-				if (CheckBit(Bitmap, j) ||
-						CheckBit(Bitmap, (j + SBmOff))) {
+				if ((CheckBit(Bitmap, j) != 0U) ||
+										(CheckBit(Bitmap, (j + SBmOff)) != 0U)) {
 					break;
 				}
 			}
@@ -327,7 +327,7 @@ AieRC _XAie_RequestSpecificBroadcastChannel(XAie_DevInst *DevInst,
 
 	ChannelStatus = _XAie_GetCommonChannelStatus(DevInst, Args->UserRscNum,
 			                        Args->Rscs, XAIE_DISABLE);
-	if(ChannelStatus & (1U << Args->RscId)) {
+	if(ChannelStatus & (u32)(1U << Args->RscId)) {
 		 XAIE_ERROR("Broadcast Channel:%d busy\n", Args->RscId);
 		 return XAIE_ERR;
 	}
@@ -500,7 +500,7 @@ AieRC _XAie_RequestAllocatedRscCommon(XAie_DevInst *DevInst,
 	}
 
 	/* Check if rsc is not allocated in runtime */
-	if(!(CheckBit(Args->Bitmap, Args->StartBit))) {
+	if(CheckBit(Args->Bitmap, Args->StartBit) == 0U) {
 		/* Mark the resource granted in the runtime bitmap */
 		_XAie_SetBitInBitmap(Args->Bitmap, Args->StartBit, 1U);
 		return XAIE_OK;
@@ -532,8 +532,8 @@ static u32 _XAie_GetAvailRscsFromBitmap(u32 *Bitmap,
 	u32 Count = 0;
 
 	for(u32 i = StartBit; i < StartBit + MaxRscVal; i++) {
-		if(!((CheckBit(Bitmap, i)) |
-			CheckBit(Bitmap, (i + StaticBitmapOffset)))) {
+		if(((CheckBit(Bitmap, i)) |
+					CheckBit(Bitmap, (i + StaticBitmapOffset))) == 0U) {
 			Count++;
 		}
 	}
@@ -638,7 +638,7 @@ void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 	if (Args->Locs == NULL) {
 		u32 StartBit, NumTiles;
 
-		NumTiles = DevInst->NumCols * (DevInst->NumRows - 1U);
+		NumTiles = (u32)(DevInst->NumCols * (DevInst->NumRows - 1U));
 		/* Loc is NULL, it suggests all tiles are requested */
 		StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
 					XAie_TileLoc(0, 1));
