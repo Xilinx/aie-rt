@@ -1316,7 +1316,9 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 {
 	int Ret;
 	static struct aie_perfinst_args PerformanceInst;
+#ifdef _POSIX_C_SOURCE
 	struct sigaction SignalAction;
+#endif
 	XAie_UserRsc Rscs[2];
 
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *) IOInst;
@@ -1333,6 +1335,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 	PerformanceInst.util = (struct aie_occupancy*)malloc(
 			sizeof(struct aie_occupancy)*PerfInst->UtilSize);
 
+#ifdef _POSIX_C_SOURCE
 	/*
 	 * Registering signal callback to calculate utilization as floating
 	 * point cannot be calculated in linux kernel driver.
@@ -1341,7 +1344,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 	SignalAction.sa_flags = (SA_SIGINFO | SA_RESTART);
 	SignalAction.sa_sigaction = &_XAie_LinuxIO_UtilCalculation;
 	sigaction (SIGPERFUTIL, &SignalAction, NULL);
-
+#endif
 
 	/*
 	 * util_size is passed as zero for scanning the partition for enabled
