@@ -227,6 +227,7 @@ typedef enum{
 	NORTH,
 	EAST,
 	TRACE,
+	UCTRLR,
 	SS_PORT_TYPE_MAX
 } StrmSwPortType;
 

@@ -34,6 +34,7 @@
 #include "xaie_events_aie2ps.h"
 #include "xaie_locks_aieml.h"
 #include "xaie_reset_aieml.h"
+#include "xaie_ss_aie2ps.h"
 #include "xaie_ss_aieml.h"
 #include "xaie2psgbl_params.h"
 #include "xaiegbl_regdef.h"
@@ -373,6 +374,10 @@ static const  XAie_StrmPort Aie2PShimStrmMstr[SS_PORT_TYPE_MAX] =
 	{	/* Trace */
 		.NumPorts = 0,
 		.PortBaseAddr = 0
+	},
+	{	/* UCTRLR */
+		.NumPorts = 1,
+		.PortBaseAddr = XAIE2PSGBL_PL_MODULE_STREAM_SWITCH_MASTER_CONFIG_UCONTROLLER,
 	}
 };
 
@@ -1401,7 +1406,7 @@ static const  XAie_StrmMod Aie2PSTileStrmSw =
 	.MasterPortMap = Aie2PSTileStrmSwMasterPortMap,
 	.SlavePortMap = Aie2PSTileStrmSwSlavePortMap,
 	.DetMerge = &Aie2PSAieTileStrmSwDetMerge,
-	.PortVerify = _XAieMl_AieTile_StrmSwCheckPortValidity,
+	.PortVerify = _XAie2PS_AieTile_StrmSwCheckPortValidity,
 };
 
 /*
@@ -1435,7 +1440,7 @@ static const  XAie_StrmMod Aie2PSShimTileStrmSw =
 	.MasterPortMap = Aie2PShimStrmSwMasterPortMap,
 	.SlavePortMap = Aie2PShimStrmSwSlavePortMap,
 	.DetMerge = &Aie2PShimTileStrmSwDetMerge,
-	.PortVerify = _XAieMl_ShimTile_StrmSwCheckPortValidity,
+	.PortVerify = _XAie2PS_ShimTile_StrmSwCheckPortValidity,
 };
 
 /*
@@ -1469,7 +1474,7 @@ static const  XAie_StrmMod Aie2PSMemTileStrmSw =
 	.MasterPortMap = Aie2PSMemTileStrmSwMasterPortMap,
 	.SlavePortMap = Aie2PSMemTileStrmSwSlavePortMap,
 	.DetMerge = &Aie2PSMemTileStrmSwDetMerge,
-	.PortVerify = _XAieMl_MemTile_StrmSwCheckPortValidity,
+	.PortVerify = _XAie2PS_MemTile_StrmSwCheckPortValidity,
 };
 #endif /* XAIE_FEATURE_SS_ENABLE */
 
