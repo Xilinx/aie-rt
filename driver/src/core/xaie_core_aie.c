@@ -182,7 +182,7 @@ AieRC _XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 			CoreMod->CoreEvent->DisableEventOccurred.Lsb,
 			CoreMod->CoreEvent->DisableEventOccurred.Mask);
 
-	*DoneBit = EventReg == 1U;
+	*DoneBit = (EventReg == 1U) ? 1 : 0;
 	return XAIE_OK;
 }
 

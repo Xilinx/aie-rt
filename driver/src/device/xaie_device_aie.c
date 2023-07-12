@@ -88,7 +88,7 @@ static AieRC _XAie_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 *******************************************************************************/
 AieRC _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable)
 {
-	for(u32 C = 0; C < DevInst->NumCols; C++) {
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc;
 		AieRC RC;
 
@@ -213,7 +213,7 @@ static AieRC _XAie_SetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC _XAie_SetPartColShimReset(XAie_DevInst *DevInst, u8 Enable)
 {
-	for(u32 C = 0; C < DevInst->NumCols; C++) {
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 		AieRC RC;
 
@@ -333,7 +333,7 @@ AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst)
 			RegAddr = CoreMod->ProgMemHostOffset +
 				_XAie_GetTileAddr(DevInst, R, C);
 			RC = XAie_BlockSet32(DevInst, RegAddr, 0,
-					CoreMod->ProgMemSize / sizeof(u32));
+					(u32)(CoreMod->ProgMemSize / sizeof(u32)));
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Failed to zeroize partition.\n");
 				return RC;
@@ -343,7 +343,7 @@ AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst)
 			RegAddr = MemMod->MemAddr +
 				_XAie_GetTileAddr(DevInst, R, C);
 			RC = XAie_BlockSet32(DevInst, RegAddr, 0,
-					MemMod->Size / sizeof(u32));
+					(u32)(MemMod->Size / sizeof(u32)));
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Failed to zeroize partition.\n");
 				return RC;
@@ -370,7 +370,7 @@ AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst)
 *******************************************************************************/
 static void _XAie_PmGateTiles(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
-	for (u8 R = DevInst->NumRows - 1; R > Loc.Row; R--) {
+	for (u8 R = DevInst->NumRows - 1U; R > Loc.Row; R--) {
 		u8 TileType;
 		u64 RegAddr;
 		const XAie_ClockMod *ClockMod;
@@ -442,7 +442,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		u32 NumTiles;
 
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
-		NumTiles = (DevInst->NumRows - 1) * (DevInst->NumCols);
+		NumTiles = (DevInst->NumRows - 1U) * (DevInst->NumCols);
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
@@ -463,7 +463,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				Args->Locs[i]);
 
-		for(u32 row = DevInst->NumRows - 1U; row > 0U; row--) {
+		for(u8 row = DevInst->NumRows - 1U; row > 0U; row--) {
 			u32 CheckTileStatus;
 			/*
 			 * Check for the upper most tile in use in the column

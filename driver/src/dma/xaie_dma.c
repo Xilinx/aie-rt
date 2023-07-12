@@ -85,7 +85,7 @@ AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 
-	memset((void *)DmaDesc, 0U, sizeof(XAie_DmaDesc));
+	memset((void *)DmaDesc, 0, sizeof(XAie_DmaDesc));
 
 	DmaMod->DmaBdInit(DmaDesc);
 	DmaDesc->TileType = TileType;
@@ -563,7 +563,7 @@ AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc, XAie_DmaFifoCounter Counter)
 		return XAIE_INVALID_ARGS;
 	}
 
-	DmaDesc->FifoMode = Counter;
+	DmaDesc->FifoMode = (u8)Counter;
 
 	return XAIE_OK;
 }
@@ -1757,7 +1757,7 @@ AieRC XAie_DmaChannelDescInit(XAie_DevInst *DevInst,
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 
-	memset((void *)DmaChannelDesc, 0U, sizeof(XAie_DmaChannelDesc));
+	memset((void *)DmaChannelDesc, 0, sizeof(XAie_DmaChannelDesc));
 
 	DmaChannelDesc->TileType = TileType;
 	DmaChannelDesc->IsReady = XAIE_COMPONENT_IS_READY;
@@ -1922,7 +1922,7 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	DmaChannelDesc->FoTMode = FoTMode;
+	DmaChannelDesc->FoTMode = (u8)FoTMode;
 
 	return XAIE_OK;
 }

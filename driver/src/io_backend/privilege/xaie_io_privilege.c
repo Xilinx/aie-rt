@@ -101,7 +101,7 @@ static AieRC _XAie_PrivilegeSetPartColReset(XAie_DevInst *DevInst,
 {
 	AieRC RC = XAIE_OK;
 
-	for(u32 C = 0; C < DevInst->NumCols; C++) {
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0U);
 
 		RC = _XAie_PrivilegeSetColReset(DevInst, Loc, RstEnable);
@@ -216,7 +216,7 @@ AieRC _XAie_PrivilegeSetPartBlockAxiMmNsuErr(XAie_DevInst *DevInst,
 {
 	AieRC RC = XAIE_OK;
 
-	for(u32 C = 0; C < DevInst->NumCols; C++) {
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0U);
 		u8 TileType;
 

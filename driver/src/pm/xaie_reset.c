@@ -78,7 +78,7 @@ static void  _XAie_RstSetColumnReset(XAie_DevInst *DevInst,
 ******************************************************************************/
 static void  _XAie_RstSetAllColumnsReset(XAie_DevInst *DevInst, u8 RstEnable)
 {
-	for (u32 C = 0; C < DevInst->NumCols; C++) {
+	for (u8 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 
 		_XAie_RstSetColumnReset(DevInst, Loc, RstEnable);
@@ -154,7 +154,7 @@ static void  _XAie_RstSetBlockAllShimsNocAxiMmNsuErr(XAie_DevInst *DevInst,
 	ProtRegReq.Enable = XAIE_ENABLE;
 	XAie_RunOp(DevInst, XAIE_BACKEND_OP_SET_PROTREG, (void *)&ProtRegReq);
 
-	for (u32 C = 0; C < DevInst->NumCols; C++) {
+	for (u8 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 		u8 TileType;
 
@@ -320,8 +320,8 @@ AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	for(u32 C = 0; C < DevInst->NumCols; C++) {
-		for(u32 R = 0; R < DevInst->NumRows; R++) {
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
+		for(u8 R = 0; R < DevInst->NumRows; R++) {
 			XAie_LocType Loc = XAie_TileLoc(C, R);
 			u8 TileType;
 

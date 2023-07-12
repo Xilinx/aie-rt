@@ -1119,7 +1119,7 @@ AieRC _XAieMl_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TaskQSize++;
 	}
 
-	*PendingBd = TaskQSize;
+	*PendingBd = (u8)TaskQSize;
 
 	return XAIE_OK;
 }

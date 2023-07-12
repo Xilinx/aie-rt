@@ -311,8 +311,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter,
 		XAie_Events ResetEvent)
 {
-	u32 ResetRegOffset, ResetFldMask;
-	u64 ResetRegAddr, ResetFldVal;
+	u32 ResetRegOffset, ResetFldVal, ResetFldMask;
+	u64 ResetRegAddr;
 	u8 TileType, IntResetEvent;
 	AieRC RC;
 	const XAie_PerfMod *PerfMod;
@@ -628,7 +628,7 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * remove redundant checks.
 	 */
 	return XAie_PerfCounterResetControlSet(DevInst, Loc, Module, Counter,
-			ResetEvent);
+			(XAie_Events)ResetEvent);
 }
 
 /*****************************************************************************/
@@ -654,7 +654,7 @@ AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
-	u32 StartStopEvent;
+	XAie_Events StartStopEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -682,7 +682,7 @@ AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Since first event of all modules is NONE event, using it to reset */
-	StartStopEvent = EvntMod->EventMin;
+	StartStopEvent = (XAie_Events)EvntMod->EventMin;
 
 	/*
 	 * Currently calling the external api, later it can be factorized to
@@ -772,7 +772,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get start and stop event individually and store in event pointer */
 	RegEvent = StartStopEvent & PerfMod->Start.Mask;
-	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, RegEvent,
+	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, (u8)RegEvent,
 			StartEvent);
 	if (RC != XAIE_OK) {
 		return RC;
@@ -780,7 +780,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegEvent = (StartStopEvent & PerfMod->Stop.Mask) >>
 			PerfMod->StartStopShift / 2U;
-	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, RegEvent,
+	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, (u8)RegEvent,
 			StopEvent);
 	if (RC != XAIE_OK) {
 		return RC;
@@ -798,7 +798,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Get reset event for given counter and store in the event pointer */
 	RegEvent = RegEvent >> Counter * PerfMod->ResetShift;
 	RegEvent &= PerfMod->Reset.Mask;
-	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, RegEvent,
+	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, (u8)RegEvent,
 			ResetEvent);
 	if (RC != XAIE_OK) {
 		return RC;
@@ -828,6 +828,7 @@ AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
+	const XAie_EvntMod *EventMod;
 
 	if((DevInst == XAIE_NULL) || (Event == NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -847,10 +848,12 @@ AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[Module].PerfCntEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[0U].PerfCntEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	}
+
+	*Event = (XAie_Events)EventMod->PerfCntEventBase;
 
 	return RC;
 }

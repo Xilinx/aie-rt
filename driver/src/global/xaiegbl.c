@@ -596,7 +596,7 @@ u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
-		return XAIE_ERR;
+		return 0U;
 	}
 
 	return MemInst->DevAddr;
@@ -739,7 +739,7 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 
 	/* Reserve broadcast channel for ECC */
 	/* Reserved for error broadcast channel */
-	for(u32 i = 0; i < XAIEGBL_TILE_TYPE_MAX; i++) {
+	for(u8 i = 0; i < XAIEGBL_TILE_TYPE_MAX; i++) {
 		if(i == XAIEGBL_TILE_TYPE_SHIMNOC ||
 			i == XAIEGBL_TILE_TYPE_SHIMPL) {
 			UserRscNum += DevInst->NumCols;

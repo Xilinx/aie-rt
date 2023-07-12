@@ -136,7 +136,7 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * CardDir can have values of 4, 5, 6 or 7 for valid data memory
 	 * addresses..
 	 */
-	CardDir = Addr / CoreMod->DataMemSize;
+	CardDir = (u8)(Addr / CoreMod->DataMemSize);
 
 	RowParity = Loc.Row % 2U;
 	/*
@@ -341,7 +341,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			}
 		}
 
-		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, Addr,
+		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, (u32)Addr,
 				(const void*)Buffer, BytesToWrite);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Write to data memory failed\n");
@@ -611,7 +611,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ELF;
 	}
 
-	ElfSz = ftell(Fd);
+	ElfSz = (u64)ftell(Fd);
 	rewind(Fd);
 	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
 
@@ -623,7 +623,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_ERR;
 	}
 
-	Ret = fread((void*)ElfMem, ElfSz, 1U, Fd);
+	Ret = (int)fread((void*)ElfMem, ElfSz, 1U, Fd);
 	if(Ret == 0U) {
 		fclose(Fd);
 		free(ElfMem);

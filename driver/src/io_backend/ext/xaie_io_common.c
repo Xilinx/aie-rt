@@ -223,7 +223,7 @@ AieRC _XAie_RequestRscContig(u32 *Bitmaps, u32 StartBit,
 static u32 _XAie_GetChannelStatusPerMod(u32 *Bitmap, u32 StaticBitmapOffset,
 		u32 StartBit, u8 StaticAllocCheckFlag)
 {
-	u32 Size = sizeof(Bitmap[0]) * 8U;
+	u32 Size = (u32)sizeof(Bitmap[0]) * 8U;
 	u32 ChannelStatus = (XAIE_BROADCAST_CHANNEL_MASK &
 			(Bitmap[StartBit / Size] >> (StartBit % Size)));
 
@@ -266,7 +266,7 @@ static u32 _XAie_GetCommonChannelStatus(XAie_DevInst *DevInst, u32 *UserRscNum,
 		Bitmap = DevInst->RscMapping[TileType].
 				Bitmaps[XAIE_BCAST_CHANNEL_RSC];
 		_XAie_RscMgr_GetBitmapOffsets(DevInst, XAIE_BCAST_CHANNEL_RSC,
-				Rscs[i].Loc, Rscs[i].Mod, &Offsets);
+				Rscs[i].Loc, (XAie_ModuleType)Rscs[i].Mod, &Offsets);
 		ChannelStatus |= _XAie_GetChannelStatusPerMod(Bitmap,
 				Offsets.StaticBitmapOffset, Offsets.StartBit,
 				StaticAllocCheckFlag);
@@ -606,10 +606,10 @@ AieRC _XAie_GetRscStatCommon(XAie_DevInst *DevInst, XAie_BackendRscStat *Arg)
 		Bitmap = DevInst->RscMapping[TileType].
 			Bitmaps[RscStats[i].RscType];
 		if (Arg->RscStatType == XAIE_BACKEND_RSC_STAT_STATIC) {
-			RscStats[i].NumRscs = _XAie_GetStaticRscsFromBitmap(
+			RscStats[i].NumRscs = (u8)_XAie_GetStaticRscsFromBitmap(
 					Bitmap, &Offsets);
 		} else {
-			RscStats[i].NumRscs = _XAie_GetAvailRscsFromBitmap(
+			RscStats[i].NumRscs = (u8)_XAie_GetAvailRscsFromBitmap(
 					Bitmap, &Offsets);
 		}
 	}
@@ -637,7 +637,7 @@ void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 	if (Args->Locs == NULL) {
 		u32 StartBit, NumTiles;
 
-		NumTiles = DevInst->NumCols * (DevInst->NumRows - 1);
+		NumTiles = DevInst->NumCols * (DevInst->NumRows - 1U);
 		/* Loc is NULL, it suggests all tiles are requested */
 		StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
 					XAie_TileLoc(0, 1));

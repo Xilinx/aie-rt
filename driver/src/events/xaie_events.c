@@ -194,8 +194,8 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegOffset = EvntMod->ComboInputRegOff;
-	Event1Lsb = (ComboId * 2U) * EvntMod->ComboEventOff;
-	Event2Lsb = (ComboId * 2U + 1) * EvntMod->ComboEventOff;
+	Event1Lsb = ((u8)ComboId * 2U) * EvntMod->ComboEventOff;
+	Event2Lsb = ((u8)ComboId * 2U + 1) * EvntMod->ComboEventOff;
 	Event1Mask = EvntMod->ComboEventMask << Event1Lsb;
 	Event2Mask = EvntMod->ComboEventMask << Event2Lsb;
 	FldVal = XAie_SetField(MappedEvent1, Event1Lsb, Event1Mask) |
@@ -277,6 +277,7 @@ AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
+	const XAie_EvntMod *EventMod;
 
 	if((DevInst == XAIE_NULL) || (Event == NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -296,11 +297,12 @@ AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[Module].ComboEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[0U].ComboEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
 	}
 
+	*Event = (XAie_Events)EventMod->ComboEventBase;
 	return RC;
 }
 
@@ -559,6 +561,7 @@ AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
+	const XAie_EvntMod *EventMod;
 
 	if((DevInst == XAIE_NULL) || (Event == NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -581,10 +584,12 @@ AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		if (Module == XAIE_MEM_MOD) {
 			return XAIE_INVALID_ARGS;
 		}
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[Module].PortIdleEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[0U].PortIdleEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	}
+
+	*Event = (XAie_Events)EventMod->PortIdleEventBase;
 
 	return RC;
 }
@@ -1274,7 +1279,7 @@ AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	return _XAie_EventGroupConfig(DevInst, Loc, Module, GroupEvent,
-			GroupBitMap, XAIE_RESETDISABLE);
+			GroupBitMap, (u8)XAIE_RESETDISABLE);
 
 }
 
@@ -1314,7 +1319,7 @@ AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	return _XAie_EventGroupConfig(DevInst, Loc, Module, GroupEvent, 0U,
-			XAIE_RESETENABLE);
+			(u8)XAIE_RESETENABLE);
 }
 
 /*****************************************************************************/
@@ -1681,7 +1686,7 @@ AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	for(u32 i = EvntMod->EventMin; i <= EvntMod->EventMax; i++) {
 		if(EvntMod->XAie_EventNumber[i - EvntMod->EventMin] == HwEvent) {
-			*EnumEvent = i;
+			*EnumEvent = (XAie_Events)i;
 			return XAIE_OK;
 		}
 	}
@@ -1780,6 +1785,7 @@ AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
+	const XAie_EvntMod *EventMod;
 
 	if((DevInst == XAIE_NULL) || (Event == NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -1799,10 +1805,12 @@ AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[Module].UserEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
-		*Event = DevInst->DevProp.DevMod[TileType].EvntMod[0U].UserEventBase;
+		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	}
+
+	*Event = (XAie_Events)EventMod->UserEventBase;
 
 	return RC;
 }

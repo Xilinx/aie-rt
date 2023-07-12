@@ -48,7 +48,7 @@
 u8 _XAie_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch)
 {
-	u8 IrqId = (((Loc.Col % 4) % 3) * 2) + (u8)Switch;
+	u8 IrqId = (((Loc.Col % 4U) % 3U) * 2U) + (u8)Switch;
 
 	if (Loc.Col + 3 > DevInst->NumCols) {
 		IrqId += 2;

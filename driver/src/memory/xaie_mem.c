@@ -157,7 +157,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	u32 BytePtr = 0;
 	u32 Mask = 0, TempWord = 0;
 	u32 RemBytes = Size;
-	u8 FirstWriteOffset = Addr & XAIE_MEM_WORD_ALIGN_MASK;
+	u8 FirstWriteOffset = (u8)(Addr & XAIE_MEM_WORD_ALIGN_MASK);
 	u8 TileType;
 	unsigned char *CharSrc = (unsigned char *)Src;
 	const XAie_MemMod *MemMod;

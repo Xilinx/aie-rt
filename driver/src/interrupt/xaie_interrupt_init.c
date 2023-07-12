@@ -675,7 +675,7 @@ static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
 	AieRC RC;
 
 	/* Reserved for error broadcast channel */
-	for(u32 i = 0; i < XAIEGBL_TILE_TYPE_MAX; i++) {
+	for(u8 i = 0; i < XAIEGBL_TILE_TYPE_MAX; i++) {
 		if(i == XAIEGBL_TILE_TYPE_SHIMNOC ||
 			i == XAIEGBL_TILE_TYPE_SHIMPL) {
 			UserRscNum += DevInst->NumCols;
@@ -715,10 +715,10 @@ static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
 		return XAIE_ERR;
 	}
 
-	for(u32 i = 0; i < ShimUserRscNum; i++) {
+	for(u8 i = 0; i < ShimUserRscNum; i++) {
 		ShimRscsBc[i].Loc = XAie_TileLoc(i, 0);
-		ShimRscsBc[i].Mod = XAIE_PL_MOD;
-		ShimRscsBc[i].RscType = XAIE_BCAST_CHANNEL_RSC;
+		ShimRscsBc[i].Mod = (u32)XAIE_PL_MOD;
+		ShimRscsBc[i].RscType = (u32)XAIE_BCAST_CHANNEL_RSC;
 	}
 
 	L1IntrMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMPL].L1IntrMod;
@@ -935,7 +935,7 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 			BroadcastDirSwA = XAIE_EVENT_BROADCAST_NORTH |
 					  XAIE_EVENT_BROADCAST_SOUTH |
 					  XAIE_EVENT_BROADCAST_WEST;
-			BroadcastDirSwB = XAIE_EVENT_BROADCAST_ALL;
+			BroadcastDirSwB = (u32)XAIE_EVENT_BROADCAST_ALL;
 
 			/*
 			 * Create bitmask to block broadcast from previous

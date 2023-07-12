@@ -118,7 +118,7 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIE_ENABLE;
 	}
 
-	TileBit = Loc.Col * (DevInst->NumRows - 1) + Loc.Row - 1;
+	TileBit = Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U;
 	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit)) {
 		return XAIE_ENABLE;
 	}
