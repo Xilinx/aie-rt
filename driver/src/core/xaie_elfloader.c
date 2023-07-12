@@ -231,7 +231,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ELF;
 	}
 
-	Addr = CoreMod->ProgMemHostOffset + Phdr->p_paddr +
+	Addr = (u64)(CoreMod->ProgMemHostOffset + Phdr->p_paddr) +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/*
@@ -327,7 +327,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		BytesToWrite = SectionSize - OverFlowBytes;
-		Addr = (SectionAddr & AddrMask);
+		Addr = (u64)(SectionAddr & AddrMask);
 
 		/* Turn ECC On if EccStatus flag is set. */
 		if(DevInst->EccStatus) {
@@ -399,8 +399,8 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 	}
 
-	if(((Sections & XAIE_LOAD_ELF_BSS) && (Phdr->p_filesz == 0U)) ||
-			((Sections & XAIE_LOAD_ELF_DATA) && (Phdr->p_filesz != 0U))) {
+	if((((Sections & XAIE_LOAD_ELF_BSS) != 0U) && (Phdr->p_filesz == 0U)) ||
+			(((Sections & XAIE_LOAD_ELF_DATA) != 0U) && (Phdr->p_filesz != 0U))) {
 		return _XAie_LoadDataMemSection(DevInst, Loc, ProgSec, Phdr);
 	} else  {
 		XAIE_WARN("Mismatch in program header to data memory loadable section. Skipping this program section.\n");
@@ -429,7 +429,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Phdr = (Elf32_Phdr*) (ElfMem + sizeof(*Ehdr) +
 				phnum * sizeof(*Phdr));
 		_XAie_PrintProgSectHdr(Phdr);
-		if(Phdr->p_type == PT_LOAD) {
+		if(Phdr->p_type == (u32)PT_LOAD) {
 			SectionPtr = ElfMem + Phdr->p_offset;
 			RC = _XAie_WriteProgramSection(DevInst, Loc, SectionPtr,
 					Phdr, Sections);

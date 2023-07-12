@@ -70,7 +70,7 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 	u32 RegOff;
 
 	RegOff = LockMod->BaseAddr + (Lock.LockId * LockMod->LockIdOff) +
-		((Lock.LockVal & XAIEML_LOCK_VALUE_MASK) <<
+		(((u8)Lock.LockVal & XAIEML_LOCK_VALUE_MASK) <<
 		 XAIEML_LOCK_VALUE_SHIFT);
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
@@ -116,7 +116,7 @@ AieRC _XAieMl_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 	u32 RegOff;
 
 	RegOff = LockMod->BaseAddr + (Lock.LockId * LockMod->LockIdOff) +
-		(LockMod->RelAcqOff) + ((Lock.LockVal &
+		(LockMod->RelAcqOff) + (((u8)Lock.LockVal &
 					XAIEML_LOCK_VALUE_MASK) <<
 				XAIEML_LOCK_VALUE_SHIFT);
 
@@ -153,8 +153,8 @@ AieRC _XAieMl_LockSetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 	u64 RegAddr;
 	u32 RegVal;
 
-	RegAddr = LockMod->LockSetValBase +
-		LockMod->LockSetValOff * Lock.LockId +
+	RegAddr = (u64)(LockMod->LockSetValBase +
+		LockMod->LockSetValOff * Lock.LockId) +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	RegVal = XAie_SetField(Lock.LockVal, LockMod->LockInit->Lsb,

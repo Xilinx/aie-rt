@@ -93,8 +93,8 @@ static AieRC _XAie_EccPerfCntConfig(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	/* Set start stop perf counter control with true event */
 	RC = XAie_PerfCounterControlSet(DevInst, Loc, XAIE_CORE_MOD,
-		XAIE_ECC_PERFCOUNTER_ID, XAIE_EVENT_TRUE_CORE,
-		XAIE_EVENT_TRUE_CORE);
+		XAIE_ECC_PERFCOUNTER_ID, (XAie_Events)XAIE_EVENT_TRUE_CORE,
+		(XAie_Events)XAIE_EVENT_TRUE_CORE);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
 				" with start stop event\n");
@@ -157,7 +157,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	 * memory. Configure ECC scrubbing event register for mem module
 	 * with broadcast 6 event.
 	 */
-	RegVal = EvntMod->XAie_EventNumber[XAIE_EVENT_BROADCAST_6_MEM -
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_BROADCAST_6_MEM -
 			EvntMod->EventMin];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
@@ -169,8 +169,8 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	 * Module east broadcast event interface is internally connected to
 	 * memory module west broadcast event interface.
 	 */
-	Dir = XAIE_EVENT_BROADCAST_SOUTH | XAIE_EVENT_BROADCAST_WEST |
-		XAIE_EVENT_BROADCAST_NORTH;
+	Dir = (u8)XAIE_EVENT_BROADCAST_SOUTH | (u8)XAIE_EVENT_BROADCAST_WEST |
+		(u8)XAIE_EVENT_BROADCAST_NORTH;
 	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_CORE_MOD,
 		XAIE_EVENT_SWITCH_A, XAIE_BROADCAST_CHANNEL_6, Dir);
 	if(RC != XAIE_OK) {
@@ -259,7 +259,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			CoreMod->EccEvntRegOff;
-	RegVal = EvntMod->XAie_EventNumber[XAIE_EVENT_PERF_CNT_0_CORE -
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT_0_CORE -
 			EvntMod->EventMin];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
@@ -350,8 +350,8 @@ static AieRC _XAie_EccPerfCntConfigMemTile(XAie_DevInst *DevInst,
 
 	/* Set reset perf counter control reg with perf cnt 0 as reset event */
 	RC = XAie_PerfCounterResetControlSet(DevInst, Loc, XAIE_MEM_MOD,
-		XAIE_ECC_PERFCOUNTER_ID, XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
-		(XAie_Events)XAIE_ECC_PERFCOUNTER_ID);
+		XAIE_ECC_PERFCOUNTER_ID, (XAie_Events)((u32)XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
+		XAIE_ECC_PERFCOUNTER_ID));
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
 				" with reset event\n");
@@ -408,7 +408,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			MemMod->EccEvntRegOff;
-	RegVal = EvntMod->XAie_EventNumber[XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
 			XAIE_ECC_PERFCOUNTER_ID - EvntMod->EventMin];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {

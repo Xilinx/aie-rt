@@ -59,7 +59,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(NumTiles > (DevInst->NumRows * DevInst->NumCols)) {
+	if(NumTiles > (u32)(DevInst->NumRows * DevInst->NumCols)) {
 		XAIE_ERROR("Invalid NumTiles\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -118,7 +118,7 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIE_ENABLE;
 	}
 
-	TileBit = Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U;
+	TileBit = (u32)(Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U);
 	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit)) {
 		return XAIE_ENABLE;
 	}

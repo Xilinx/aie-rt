@@ -30,7 +30,7 @@
 #ifdef XAIE_FEATURE_LOCK_ENABLE
 
 /************************** Constant Definitions *****************************/
-#define XAIE_LOCK_WITH_VALUE_OFF	0x20
+#define XAIE_LOCK_WITH_VALUE_OFF	0x20U
 #define XAIE_LOCK_RESULT_SUCCESS	1U
 #define XAIE_LOCK_RESULT_LSB		0x0
 #define XAIE_LOCK_RESULT_MASK		0x1
@@ -74,7 +74,7 @@ AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 	} else {
 		RegOff = LockMod->BaseAddr + (Lock.LockId * LockMod->LockIdOff) +
 			LockMod->RelAcqOff + XAIE_LOCK_WITH_VALUE_OFF +
-			(Lock.LockVal * LockMod->LockValOff);
+			((u8)Lock.LockVal * LockMod->LockValOff);
 	}
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
@@ -127,7 +127,7 @@ AieRC _XAie_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		RegOff = LockMod->BaseAddr +
 			(Lock.LockId * LockMod->LockIdOff) +
 			XAIE_LOCK_WITH_VALUE_OFF +
-			(Lock.LockVal * LockMod->LockValOff);
+			((u8)Lock.LockVal * LockMod->LockValOff);
 	}
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;

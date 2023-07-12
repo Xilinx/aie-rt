@@ -82,7 +82,7 @@ static void _XAie_RstSetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 *		 * Unset reset bit for every SHIM
 *
 ******************************************************************************/
-AieRC _XAie_RstShims(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols)
+AieRC _XAie_RstShims(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols)
 {
 	for (u8 C = StartCol; C < (StartCol + NumCols); C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);

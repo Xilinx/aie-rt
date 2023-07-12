@@ -136,7 +136,7 @@ u8 _XAie_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		//For S100/S200 column 58 is shim-PL
 		if(XAieDevType == XAIE_DEV_GEN_S200 ||
 				XAieDevType == XAIE_DEV_GEN_S100) {
-			if((DevInst->StartCol + Loc.Col) == 58) {
+			if((DevInst->StartCol + Loc.Col) == 58U) {
 				return XAIEGBL_TILE_TYPE_SHIMPL;
 			}
 		}
@@ -418,7 +418,7 @@ static void _XAie_PmUngateTiles(XAie_DevInst *DevInst, XAie_LocType FromLoc,
 				ClockMod->ClockRegOff;
 		XAie_MaskWrite32(DevInst, RegAddr,
 				ClockMod->NextTileClockCntrl.Mask,
-				1U << ClockMod->NextTileClockCntrl.Lsb);
+				(u32)(1U << ClockMod->NextTileClockCntrl.Lsb));
 	}
 }
 
@@ -442,7 +442,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		u32 NumTiles;
 
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
-		NumTiles = (DevInst->NumRows - 1U) * (DevInst->NumCols);
+		NumTiles =(u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,

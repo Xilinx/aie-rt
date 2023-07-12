@@ -134,7 +134,7 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
-	Value = 0U << CoreMod->CoreCtrl->CtrlEn.Lsb;
+	Value = (u32)(0U << CoreMod->CoreCtrl->CtrlEn.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -214,7 +214,7 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
-	Value = 1U << CoreMod->CoreCtrl->CtrlRst.Lsb;
+	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlRst.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -258,7 +258,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
-	Value = 0U << CoreMod->CoreCtrl->CtrlRst.Lsb;
+	Value = (u32)(0U << CoreMod->CoreCtrl->CtrlRst.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -340,7 +340,7 @@ AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreSts->En.Mask;
-	Value = 0U << CoreMod->CoreSts->En.Lsb;
+	Value = (u32)(0U << CoreMod->CoreSts->En.Lsb);
 	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value);
 }
 
@@ -614,7 +614,7 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events SingleStepEvent, XAie_Events ResumeCoreEvent)
 {
 	u8 TileType, MEvent1, MEvent0, MSStepEvent, MResumeCoreEvent;
-	u32 RegVal;
+	u32 RegVal, Event0Val, Event1Val, SingleStepEventVal, ResumeCoreEventVal;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	const XAie_EvntMod *EvntMod;
@@ -631,29 +631,33 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
+	Event0Val = (u32)Event0;
+	Event1Val = (u32)Event1;
+	SingleStepEventVal = (u32)SingleStepEvent;
+	ResumeCoreEventVal = (u32)ResumeCoreEvent;
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
-	if((Event0 < EvntMod->EventMin || Event0 > EvntMod->EventMax) ||
-			(Event1 < EvntMod->EventMin ||
-			 Event1 > EvntMod->EventMax) ||
-			(SingleStepEvent < EvntMod->EventMin ||
-			 SingleStepEvent > EvntMod->EventMax) ||
-			(ResumeCoreEvent < EvntMod->EventMin ||
-			 ResumeCoreEvent > EvntMod->EventMax)) {
+	if((Event0Val < EvntMod->EventMin || Event0Val > EvntMod->EventMax) ||
+				(Event1Val < EvntMod->EventMin ||
+				 Event1Val > EvntMod->EventMax) ||
+				(SingleStepEventVal < EvntMod->EventMin ||
+				 SingleStepEventVal > EvntMod->EventMax) ||
+				(ResumeCoreEventVal < EvntMod->EventMin ||
+				 ResumeCoreEventVal > EvntMod->EventMax)) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	Event0 -= EvntMod->EventMin;
-	Event1 -= EvntMod->EventMin;
-	SingleStepEvent -= EvntMod->EventMin;
-	ResumeCoreEvent -= EvntMod->EventMin;
+	Event0Val -= EvntMod->EventMin;
+	Event1Val -= EvntMod->EventMin;
+	SingleStepEventVal -= EvntMod->EventMin;
+	ResumeCoreEventVal -= EvntMod->EventMin;
 
-	MEvent0 = EvntMod->XAie_EventNumber[Event0];
-	MEvent1 = EvntMod->XAie_EventNumber[Event1];
-	MSStepEvent = EvntMod->XAie_EventNumber[SingleStepEvent];
-	MResumeCoreEvent = EvntMod->XAie_EventNumber[ResumeCoreEvent];
+	MEvent0 = EvntMod->XAie_EventNumber[Event0Val];
+	MEvent1 = EvntMod->XAie_EventNumber[Event1Val];
+	MSStepEvent = EvntMod->XAie_EventNumber[SingleStepEventVal];
+	MResumeCoreEvent = EvntMod->XAie_EventNumber[ResumeCoreEventVal];
 
 	if((MEvent0 == XAIE_EVENT_INVALID) ||
 			(MEvent1 == XAIE_EVENT_INVALID) ||
@@ -741,11 +745,12 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event)
 {
 	u8 TileType, MappedEvent;
-	u32 Mask, Value;
+	u32 Mask, Value, EventVal;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
@@ -761,13 +766,13 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
-	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	Event -= EvntMod->EventMin;
-	MappedEvent = EvntMod->XAie_EventNumber[Event];
+	EventVal -= EvntMod->EventMin;
+	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
@@ -779,7 +784,7 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Mask = CoreMod->CoreEvent->EnableEvent.Mask |
 		CoreMod->CoreEvent->DisableEventOccurred.Mask |
 		CoreMod->CoreEvent->EnableEventOccurred.Mask;
-	Value = MappedEvent << CoreMod->CoreEvent->EnableEvent.Lsb;
+	Value = (u32)(MappedEvent << CoreMod->CoreEvent->EnableEvent.Lsb);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
@@ -974,10 +979,10 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 	 *  * For input , 0 == NORTH, 1 == WEST
 	 *  * For output, 0 == SOUTH, 1 == EAST
 	 */
-	RegVal = XAie_SetField((InDir - SOUTH) % 2U,
+	RegVal = XAie_SetField(((u8)InDir - (u8)SOUTH) % 2U,
 			AccumCtrl->CascadeInput.Lsb,
 			AccumCtrl->CascadeInput.Mask) |
-		XAie_SetField((OutDir - SOUTH) % 2U,
+		XAie_SetField(((u8)OutDir - (u8)SOUTH) % 2U,
 			AccumCtrl->CascadeOutput.Lsb,
 			AccumCtrl->CascadeOutput.Mask);
 

@@ -77,7 +77,7 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
-	RegAddr = MemMod->MemAddr + Addr +
+	RegAddr = (u64)(MemMod->MemAddr + Addr) +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Write32(DevInst, RegAddr, Data);
@@ -125,7 +125,7 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
-	RegAddr = MemMod->MemAddr + Addr +
+	RegAddr = (u64)(MemMod->MemAddr + Addr) +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Read32(DevInst, RegAddr, Data);
@@ -185,11 +185,11 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
-	DmAddrRoundDown =  MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr) +
+	DmAddrRoundDown =  (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
 				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
-	DmAddrRoundUp = MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr) +
+	DmAddrRoundUp = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
 				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Unaligned start bytes */
@@ -199,10 +199,10 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		 * write at unaligned offset
 		 */
 		for(u32 UnalignedByte = FirstWriteOffset;
-			UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE && RemBytes;
+			UnalignedByte < (u8)((XAIE_MEM_WORD_ALIGN_SIZE != 0U) && (RemBytes != 0U));
 			UnalignedByte++, RemBytes--) {
-			TempWord |= CharSrc[BytePtr++] << (UnalignedByte * 8U);
-			Mask |= 0xFFU << (UnalignedByte * 8U);
+			TempWord |= (u32)(CharSrc[BytePtr++] << (UnalignedByte * 8U));
+			Mask |= (u32)(0xFFU << (UnalignedByte * 8U));
 		}
 		RC = XAie_MaskWrite32(DevInst, DmAddrRoundDown, Mask, TempWord);
 		if(RC != XAIE_OK) {
@@ -221,8 +221,8 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 	/* Remaining unaligned bytes */
 	if(RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) {
-		DmAddrRoundDown = DmAddrRoundUp + XAIE_MEM_WORD_ALIGN_SIZE *
-					(RemBytes / XAIE_MEM_WORD_ALIGN_SIZE);
+		DmAddrRoundDown = DmAddrRoundUp + (u64)(XAIE_MEM_WORD_ALIGN_SIZE *
+					(RemBytes / XAIE_MEM_WORD_ALIGN_SIZE));
 		BytePtr += XAIE_MEM_WORD_ALIGN_SIZE *
 				(RemBytes / XAIE_MEM_WORD_ALIGN_SIZE);
 		TempWord = 0;
@@ -230,8 +230,8 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		for (u32 UnalignedByte = 0;
 			 UnalignedByte < RemBytes % XAIE_MEM_WORD_ALIGN_SIZE;
 			 UnalignedByte++) {
-			TempWord |= CharSrc[BytePtr++] << (UnalignedByte * 8U);
-			Mask |= 0xFFU << (UnalignedByte * 8U);
+			TempWord |= (u32)(CharSrc[BytePtr++] << (UnalignedByte * 8U));
+			Mask |= (u32)(0xFFU << (UnalignedByte * 8U));
 		}
 		RC = XAie_MaskWrite32(DevInst, DmAddrRoundDown, Mask, TempWord);
 		if(RC != XAIE_OK) {
@@ -296,11 +296,11 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
-	DmAddrRoundDown = MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr) +
+	DmAddrRoundDown = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
 			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
-	DmAddrRoundUp = MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr) +
+	DmAddrRoundUp = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
 				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* First unaligned byte read into destination block */
@@ -311,7 +311,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		}
 
 		for(u32 UnalignedByte = FirstReadOffset;
-			UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE && RemBytes;
+			UnalignedByte < (u8)((XAIE_MEM_WORD_ALIGN_SIZE != 0U) && (RemBytes != 0U));
 			UnalignedByte++, RemBytes--) {
 			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8U) &
 									0xFFU);

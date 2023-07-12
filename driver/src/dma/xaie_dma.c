@@ -861,7 +861,7 @@ AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		return XAIE_INVALID_BD_NUM;
 	}
 
-	memset((void *)DmaDesc, 0U, sizeof(XAie_DmaDesc));
+	memset((void *)DmaDesc, 0, sizeof(XAie_DmaDesc));
 	DmaDesc->DmaMod = DmaMod;
 
 	return DmaMod->ReadBd(DevInst, DmaDesc, Loc, BdNum);
@@ -922,7 +922,7 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	Val = XAie_SetField(Reset, DmaMod->ChProp->Reset.Lsb,
 			DmaMod->ChProp->Reset.Mask);
@@ -1046,7 +1046,7 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	return XAie_MaskWrite32(DevInst, Addr, DmaMod->ChProp->PauseStream.Mask,
 			Value);
@@ -1108,7 +1108,7 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 			DmaMod->ChProp->PauseMem.Mask);
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	return XAie_MaskWrite32(DevInst, Addr, DmaMod->ChProp->PauseMem.Mask,
 			Value);
@@ -1175,9 +1175,9 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	return XAie_Write32(DevInst, Addr + (DmaMod->ChProp->StartBd.Idx * 4U),
+	return XAie_Write32(DevInst, Addr + (u64)(DmaMod->ChProp->StartBd.Idx * 4U),
 			BdNum);
 }
 
@@ -1229,10 +1229,10 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	return XAie_MaskWrite32(DevInst,
-			Addr + (DmaMod->ChProp->Enable.Idx * 4U),
+			Addr + (u64)(DmaMod->ChProp->Enable.Idx * 4U),
 			DmaMod->ChProp->Enable.Mask, Enable);
 }
 
@@ -1609,7 +1609,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->StartQueueBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	Val = XAie_SetField(StartBd, DmaMod->ChProp->StartBd.Lsb,
 			DmaMod->ChProp->StartBd.Mask) |
@@ -1917,7 +1917,7 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
-	if(FoTMode > DmaMod->ChProp->MaxFoTMode) {
+	if((u8)FoTMode > DmaMod->ChProp->MaxFoTMode) {
 		XAIE_ERROR("Invalid FoTMode: %d\n", FoTMode);
 		return XAIE_INVALID_ARGS;
 	}
@@ -1988,7 +1988,7 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
 	Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, (DmaMod->ChProp->EnOutofOrder.Lsb),
 			(DmaMod->ChProp->EnOutofOrder.Mask)) |

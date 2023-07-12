@@ -301,7 +301,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		u32 NumTiles;
 
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
-		NumTiles = (DevInst->NumRows - 1U) * (DevInst->NumCols);
+		NumTiles = (u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
@@ -344,7 +344,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 * Shim row is already set, so use NumRows-1
 		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, DevInst->NumRows - 1);
+				ColClockStatus, (u32)(DevInst->NumRows - 1U));
 	}
 
 	return XAIE_OK;
