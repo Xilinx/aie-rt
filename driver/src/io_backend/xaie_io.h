@@ -30,7 +30,7 @@
 #include "xaiegbl.h"
 
 /***************************** Macro Definitions *****************************/
-#define XAIE_RSC_MGR_CONTIG_FLAG	0x1
+#define XAIE_RSC_MGR_CONTIG_FLAG	0x1U
 /****************************** Type Definitions *****************************/
 
 /*

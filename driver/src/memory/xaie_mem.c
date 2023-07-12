@@ -201,8 +201,8 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		for(u32 UnalignedByte = FirstWriteOffset;
 			UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE && RemBytes;
 			UnalignedByte++, RemBytes--) {
-			TempWord |= CharSrc[BytePtr++] << (UnalignedByte * 8);
-			Mask |= 0xFFU << (UnalignedByte * 8);
+			TempWord |= CharSrc[BytePtr++] << (UnalignedByte * 8U);
+			Mask |= 0xFFU << (UnalignedByte * 8U);
 		}
 		RC = XAie_MaskWrite32(DevInst, DmAddrRoundDown, Mask, TempWord);
 		if(RC != XAIE_OK) {
@@ -230,8 +230,8 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		for (u32 UnalignedByte = 0;
 			 UnalignedByte < RemBytes % XAIE_MEM_WORD_ALIGN_SIZE;
 			 UnalignedByte++) {
-			TempWord |= CharSrc[BytePtr++] << (UnalignedByte * 8);
-			Mask |= 0xFFU << (UnalignedByte * 8);
+			TempWord |= CharSrc[BytePtr++] << (UnalignedByte * 8U);
+			Mask |= 0xFFU << (UnalignedByte * 8U);
 		}
 		RC = XAie_MaskWrite32(DevInst, DmAddrRoundDown, Mask, TempWord);
 		if(RC != XAIE_OK) {
@@ -313,14 +313,14 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		for(u32 UnalignedByte = FirstReadOffset;
 			UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE && RemBytes;
 			UnalignedByte++, RemBytes--) {
-			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8) &
-									0xFF);
+			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8U) &
+									0xFFU);
 		}
 	}
 
 	/* Aligned bytes */
-	for(u32 AlignedWord = 0; AlignedWord < RemBytes / 4;
-		AlignedWord++, BytePtr += 4, DmAddrRoundUp += 4) {
+	for(u32 AlignedWord = 0; AlignedWord < RemBytes / 4U;
+		AlignedWord++, BytePtr += 4U, DmAddrRoundUp += 4U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundUp,
 				(u32 *)(CharDst + BytePtr));
 		if(RC != XAIE_OK) {
@@ -338,7 +338,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		for(u32 UnalignedByte = 0;
 			UnalignedByte < RemBytes % XAIE_MEM_WORD_ALIGN_SIZE;
 			UnalignedByte++) {
-			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8) &
+			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8U) &
 									0xFFU);
 		}
 	}

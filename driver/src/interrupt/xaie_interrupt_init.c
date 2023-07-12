@@ -84,10 +84,11 @@ static AieRC _XAie_IntrCtrlL1Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Enable == XAIE_ENABLE)
+	if(Enable == XAIE_ENABLE) {
 		RegOffset = L1IntrMod->BaseEnableRegOff;
-	else
+	} else {
 		RegOffset = L1IntrMod->BaseDisableRegOff;
+	}
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset +
 					Switch * L1IntrMod->SwOff;
@@ -419,10 +420,11 @@ static AieRC _XAie_IntrCtrlL2Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Enable == XAIE_ENABLE)
+	if(Enable == XAIE_ENABLE) {
 		RegOffset = L2IntrMod->EnableRegOff;
-	else
+	} else {
 		RegOffset = L2IntrMod->DisableRegOff;
+	}
 
 	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -497,8 +499,9 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
 			Loc = XAie_TileLoc(Col, Row);
 
-			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
 				continue;
+			}
 
 			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst,
 							Loc, XAIE_MEM_MOD);
@@ -540,8 +543,9 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
 			Loc = XAie_TileLoc(Col, MemRow);
 
-			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
 				continue;
+			}
 
 			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst,
 							Loc, XAIE_MEM_MOD);
@@ -715,7 +719,7 @@ static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
 		return XAIE_ERR;
 	}
 
-	for(u8 i = 0; i < ShimUserRscNum; i++) {
+	for(u32 i = 0; i < ShimUserRscNum; i++) {
 		ShimRscsBc[i].Loc = XAie_TileLoc(i, 0);
 		ShimRscsBc[i].Mod = (u32)XAIE_PL_MOD;
 		ShimRscsBc[i].RscType = (u32)XAIE_BCAST_CHANNEL_RSC;
@@ -798,8 +802,9 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 		BroadcastDirSwB = BroadcastDirSwA;
 
 		for(Loc.Row = AieRowStart; Loc.Row < AieRowEnd; Loc.Row++) {
-			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
 				continue;
+			}
 
 			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
 				   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
@@ -820,8 +825,9 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 
 		/* Setup error broadcasts to SOUTH from mem tile */
 		for(Loc.Row = MemTileStart; Loc.Row < MemTileEnd; Loc.Row++) {
-			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
 				continue;
+			}
 
 			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
 				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,

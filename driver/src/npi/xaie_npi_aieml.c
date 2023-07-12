@@ -84,7 +84,7 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 	u32 CFirst, CLast, NumCols;
 
 	if ((Req->StartCol + Req->NumCols) > DevInst->NumCols ||
-	    (Req->StartCol != 0  && Req->NumCols == 0)) {
+	    (Req->StartCol != 0U  && Req->NumCols == 0U)) {
 		XAIE_ERROR("Invalid columns (%u, %u) for protected regs.\n",
 				Req->StartCol, Req->NumCols);
 		return XAIE_INVALID_ARGS;
@@ -94,7 +94,7 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 			       _XAieMlNpiMod.ProtRegEnable.Mask);
 
 	NumCols = Req->NumCols;
-	if (NumCols == 0) {
+	if (NumCols == 0U) {
 		/* It is for the whole partition instance */
 		NumCols = DevInst->NumCols;
 		CFirst = 0;
@@ -102,7 +102,7 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 		CFirst = Req->StartCol;
 	}
 
-	CLast = CFirst + NumCols - 1;
+	CLast = CFirst + NumCols - 1U;
 
 	*RegVal |= XAie_SetField(CFirst, _XAieMlNpiMod.ProtRegFirstCol.Lsb,
 				_XAieMlNpiMod.ProtRegFirstCol.Mask);

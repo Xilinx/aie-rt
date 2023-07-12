@@ -51,7 +51,7 @@ u8 _XAieMl_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		if (((Loc.Col / 4) * 4 + 2) < DevInst->NumCols) {
+		if (((Loc.Col / 4U) * 4U + 2U) < DevInst->NumCols) {
 			/* There is SHIM NOC on the right */
 			return (Loc.Col % 4U) * 2U + (u8)Switch;
 		} else {
@@ -62,7 +62,7 @@ u8 _XAieMl_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 			return (Loc.Col % 4U) * 2U + (u8)Switch + 2U;
 		}
 	} else {
-		if ((Loc.Col % 4) == 2) {
+		if ((Loc.Col % 4U) == 2U) {
 			/* SHIM NoC on the left */
 			return 4U + (u8)Switch;
 		} else {

@@ -604,7 +604,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get the file size of the elf */
 	Ret = fseek(Fd, 0L, SEEK_END);
-	if(Ret != 0U) {
+	if(Ret != 0) {
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 			errno, strerror(errno));
 		fclose(Fd);
@@ -624,7 +624,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	Ret = (int)fread((void*)ElfMem, ElfSz, 1U, Fd);
-	if(Ret == 0U) {
+	if(Ret == 0) {
 		fclose(Fd);
 		free(ElfMem);
 		XAIE_ERROR("Failed to read Elf into memory\n");

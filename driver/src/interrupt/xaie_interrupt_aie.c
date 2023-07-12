@@ -50,8 +50,8 @@ u8 _XAie_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u8 IrqId = (((Loc.Col % 4U) % 3U) * 2U) + (u8)Switch;
 
-	if (Loc.Col + 3 > DevInst->NumCols) {
-		IrqId += 2;
+	if (Loc.Col + 3U > DevInst->NumCols) {
+		IrqId += 2U;
 	}
 
 	return IrqId;

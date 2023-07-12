@@ -274,7 +274,7 @@ static void _XAie_ClearDataMem(XAie_DevInst *DevInst, XAie_LocType Loc)
 	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
 	RegAddr = MemMod->MemAddr +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	XAie_BlockSet32(DevInst, RegAddr, 0, MemMod->Size / 4);
+	XAie_BlockSet32(DevInst, RegAddr, 0, MemMod->Size / 4U);
 }
 
 /*****************************************************************************/
@@ -296,7 +296,7 @@ static void _XAie_ClearProgMem(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	RegAddr = CoreMod->ProgMemHostOffset +
 		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	XAie_BlockSet32(DevInst, RegAddr, 0, CoreMod->ProgMemSize / 4);
+	XAie_BlockSet32(DevInst, RegAddr, 0, CoreMod->ProgMemSize / 4U);
 }
 
 /*****************************************************************************/

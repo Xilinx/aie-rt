@@ -253,13 +253,13 @@ AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
 	PortPtr = &StrmMod->SlvConfig[Slave];
 
 	/* Return error if the Slave Port Type is not valid */
-	if((PortPtr->NumPorts == 0) || (PortNum >= PortPtr->NumPorts)) {
+	if((PortPtr->NumPorts == 0U) || (PortNum >= PortPtr->NumPorts)) {
 		XAIE_ERROR("Invalid Slave Port\n");
 		return XAIE_ERR_STREAM_PORT;
 	}
 
 	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
-	*SlaveIdx = (u8)((RegAddr - BaseAddr) / 4);
+	*SlaveIdx = (u8)((RegAddr - BaseAddr) / 4U);
 
 	return XAIE_OK;
 }
@@ -298,7 +298,7 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 	}
 
 	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
-	*MasterIdx = (u8)((RegAddr - BaseAddr) / 4);
+	*MasterIdx = (u8)((RegAddr - BaseAddr) / 4U);
 
 	return XAIE_OK;
 }
@@ -1287,7 +1287,7 @@ AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data)
 		}
 
 		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) &&
-				(TxnInst->NumCmds > 0)) {
+				(TxnInst->NumCmds > 0U)) {
 			/* Flush command buffer */
 			XAIE_DBG("Auto flushing contents of the transaction "
 					"buffer.\n");
@@ -1299,7 +1299,7 @@ AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data)
 
 			TxnInst->NumCmds = 0;
 			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
-		} else if(TxnInst->NumCmds == 0) {
+		} else if(TxnInst->NumCmds == 0U) {
 			return Backend->Ops.Read32((void*)(DevInst->IOInst), RegOff, Data);
 		} else {
 			XAIE_ERROR("Read operation is not supported "
@@ -1426,7 +1426,7 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 			/* Flush command buffer */
 			XAIE_DBG("Auto flushing contents of the transaction "
 					"buffer.\n");
-			if(TxnInst->NumCmds > 0) {
+			if(TxnInst->NumCmds > 0U) {
 				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
 				if (RC != XAIE_OK) {
 					XAIE_ERROR("Failed to flush cmd buffer\n");
@@ -1488,7 +1488,7 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 			/* Flush command buffer */
 			XAIE_DBG("Auto flushing contents of the transaction "
 					"buffer.\n");
-			if(TxnInst->NumCmds > 0) {
+			if(TxnInst->NumCmds > 0U) {
 				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
 				if(RC != XAIE_OK) {
 					XAIE_ERROR("Failed to flush cmd buffer\n");
@@ -1613,7 +1613,7 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 			} else {
 				for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
 					XAie_Write32(DevInst,
-							BdArgs->Addr + i * 4,
+							BdArgs->Addr + i * 4U,
 							BdArgs->BdWords[i]);
 				}
 			}

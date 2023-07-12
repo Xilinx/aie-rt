@@ -265,8 +265,9 @@ static AieRC XAie_BaremetalIO_BlockWrite32(void *IOInst, u64 RegOff,
 static AieRC XAie_BaremetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 		u32 Size)
 {
-	for(u32 i = 0U; i < Size; i++)
+	for(u32 i = 0U; i < Size; i++) {
 		XAie_BaremetalIO_Write32(IOInst, RegOff+ i * 4U, Data);
+	}
 
 	return XAIE_OK;
 }
@@ -455,7 +456,7 @@ static AieRC _XAie_BaremetalIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 	 * on some profiling, and it may vary between platforms.
 	 */
 	MinTimeOutUs = 200;
-	Count = ((u64)TimeOutUs + MinTimeOutUs - 1) / MinTimeOutUs;
+	Count = ((u64)TimeOutUs + MinTimeOutUs - 1U) / MinTimeOutUs;
 
 	while (Count > 0U) {
 		_XAie_BaremetalIO_NpiRead32(IOInst, RegOff, &RegVal);
@@ -517,7 +518,7 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 				(XAie_ShimDmaBdArgs *)Arg;
 			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
 				XAie_BaremetalIO_Write32(IOInst,
-						BdArgs->Addr + i * 4,
+						BdArgs->Addr + i * 4U,
 						BdArgs->BdWords[i]);
 			}
 			break;

@@ -31,7 +31,7 @@
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_MEM_WORD_ALIGN_SHIFT	2U
-#define XAIE_MEM_WORD_ALIGN_MASK	((1U << XAIE_MEM_WORD_ALIGN_SHIFT) - 1)
+#define XAIE_MEM_WORD_ALIGN_MASK	((1U << XAIE_MEM_WORD_ALIGN_SHIFT) - 1U)
 #define XAIE_MEM_WORD_ALIGN_SIZE	(1U << XAIE_MEM_WORD_ALIGN_SHIFT)
 #define XAIE_MEM_WORD_ROUND_UP(Addr)	(((Addr) + XAIE_MEM_WORD_ALIGN_MASK) & \
 						~XAIE_MEM_WORD_ALIGN_MASK)

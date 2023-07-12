@@ -64,7 +64,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if (NumTiles != 0 && Loc == NULL) {
+	if (NumTiles != 0U && Loc == NULL) {
 		XAIE_ERROR("NumTiles is not 0, but Location array is empty.\n");
 		return XAIE_INVALID_ARGS;
 	}

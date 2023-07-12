@@ -130,8 +130,8 @@ struct XAie_TxnCmd {
 ******************************************************************************/
 static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
 {
-	return (((u64)R & 0xFF) << DevInst->DevProp.RowShift) |
-		(((u64)C & 0xFF) << DevInst->DevProp.ColShift);
+	return (((u64)R & 0xFFU) << DevInst->DevProp.RowShift) |
+		(((u64)C & 0xFFU) << DevInst->DevProp.ColShift);
 }
 
 /*****************************************************************************/
@@ -150,10 +150,10 @@ static inline u32 first_set_bit(u64 Value)
 {
 	u32 Index = 1;
 
-	if (Value == 0)
+	if (Value == 0U)
 		return 0;
 
-	while (!(Value & 1)) {
+	while (!(Value & 1U)) {
 		Value >>= 1;
 		Index++;
 	}

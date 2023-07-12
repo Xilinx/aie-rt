@@ -92,7 +92,7 @@ static AieRC _XAie_FindAvailableRscContig(u32 *Bitmap, u32 SBmOff,
 		if(!((CheckBit(Bitmap, i)) |
 				CheckBit(Bitmap, (i + SBmOff)))) {
 			*Index = i - StartBit;
-			for(j = i + 1; j < i + NumContigRscs; j++) {
+			for(j = i + 1U; j < i + NumContigRscs; j++) {
 				if (CheckBit(Bitmap, j) ||
 						CheckBit(Bitmap, (j + SBmOff))) {
 					break;
@@ -102,7 +102,7 @@ static AieRC _XAie_FindAvailableRscContig(u32 *Bitmap, u32 SBmOff,
 			if(j == (i + NumContigRscs)) {
 				if ((RscType == XAIE_PC_EVENTS_RSC ||
 					  RscType == XAIE_COMBO_EVENTS_RSC) &&
-					  *Index % 2 == 0) {
+					  *Index % 2U == 0U) {
 					return XAIE_OK;
 				}
 			}
@@ -495,8 +495,9 @@ AieRC _XAie_FreeRscCommon(XAie_BackendTilesRsc *Args)
 AieRC _XAie_RequestAllocatedRscCommon(XAie_DevInst *DevInst,
 		XAie_BackendTilesRsc *Args)
 {
-	if(Args->RscType == XAIE_BCAST_CHANNEL_RSC)
+	if(Args->RscType == XAIE_BCAST_CHANNEL_RSC) {
 		return _XAie_RequestSpecificBroadcastChannel(DevInst, Args);
+	}
 
 	/* Check if rsc is not allocated in runtime */
 	if(!(CheckBit(Args->Bitmap, Args->StartBit))) {
@@ -596,7 +597,7 @@ AieRC _XAie_GetRscStatCommon(XAie_DevInst *DevInst, XAie_BackendRscStat *Arg)
 				(XAie_RscType)(RscStats[i].RscType),
 				RscStats[i].Loc,
 				(XAie_ModuleType)(RscStats[i].Mod), &Offsets);
-		if (Offsets.MaxRscVal == 0) {
+		if (Offsets.MaxRscVal == 0U) {
 			XAIE_ERROR("Get Rsc Stat failed, (%u, %u), Mod %u, RscTyps %u is invalid.\n",
 				RscStats[i].Loc.Col, RscStats[i].Loc.Row,
 				RscStats[i].Mod, RscStats[i].RscType);
@@ -647,7 +648,7 @@ void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 		for(u32 i = 0; i < Args->NumTiles; i++) {
 			u32 Bit;
 
-			if(Args->Locs[i].Row == 0) {
+			if(Args->Locs[i].Row == 0U) {
 				continue;
 			}
 

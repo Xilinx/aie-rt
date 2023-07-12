@@ -156,9 +156,9 @@ AieRC _XAieMl_SetPartIsolationAfterRst(XAie_DevInst *DevInst)
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u8 Dir = 0;
 
-		if(C == 0) {
+		if(C == 0U) {
 			Dir = XAIE_ISOLATE_WEST_MASK;
-		} else if(C == (u8)(DevInst->NumCols - 1)) {
+		} else if(C == (u8)(DevInst->NumCols - 1U)) {
 			Dir = XAIE_ISOLATE_EAST_MASK;
 		}
 
@@ -220,9 +220,9 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 					return RC;
 				}
 
-				if((C == DevInst->NumCols - 1) &&
-						(R == DevInst->NumRows - 1) &&
-						(M == NumMods - 1)) {
+				if((C == DevInst->NumCols - 1U) &&
+						(R == DevInst->NumRows - 1U) &&
+						(M == NumMods - 1U)) {
 					RegAddr = MCtrlMod[M].MemCtrlRegOff +
 						_XAie_GetTileAddr(DevInst,
 								Loc.Row,
@@ -317,7 +317,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		/*
 		 * Shim rows are enabled by default, skip shim row
 		 */
-		if (Args->Locs[i].Row == 0) {
+		if (Args->Locs[i].Row == 0U) {
 			continue;
 		}
 

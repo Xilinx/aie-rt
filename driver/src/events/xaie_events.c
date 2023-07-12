@@ -35,7 +35,7 @@
 #ifdef XAIE_FEATURE_EVENTS_ENABLE
 
 /***************************** Macro Definitions *****************************/
-#define XAIE_EVENT_PC_RESET		0xFFFF
+#define XAIE_EVENT_PC_RESET		0xFFFFU
 
 /************************** Constant Definitions *****************************/
 /************************** Function Definitions *****************************/
@@ -195,7 +195,7 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = EvntMod->ComboInputRegOff;
 	Event1Lsb = ((u8)ComboId * 2U) * EvntMod->ComboEventOff;
-	Event2Lsb = ((u8)ComboId * 2U + 1) * EvntMod->ComboEventOff;
+	Event2Lsb = ((u8)ComboId * 2U + 1U) * EvntMod->ComboEventOff;
 	Event1Mask = EvntMod->ComboEventMask << Event1Lsb;
 	Event2Mask = EvntMod->ComboEventMask << Event2Lsb;
 	FldVal = XAie_SetField(MappedEvent1, Event1Lsb, Event1Mask) |
@@ -972,7 +972,7 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
+	for(u8 DirShift = 0U; DirShift < 4U; DirShift++) {
 		if (!(Dir & 1U << DirShift)) {
 			continue;
 		}
@@ -1062,7 +1062,7 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
+	for(u8 DirShift = 0U; DirShift < 4U; DirShift++) {
 		if (!(Dir & 1U << DirShift)) {
 			continue;
 		}
@@ -1152,9 +1152,10 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	for(u8 DirShift = 0; DirShift < 4; DirShift++) {
-		if(!(Dir & 1U << DirShift))
+	for(u8 DirShift = 0U; DirShift < 4U; DirShift++) {
+		if (!(Dir & 1U << DirShift)) {
 			continue;
+		}
 
 		RegOffset = EvntMod->BaseBroadcastSwUnblockRegOff +
 			    DirShift * EvntMod->BroadcastSwUnblockOff +

@@ -48,7 +48,7 @@
 #define XAIE_DMA_CHCTRL_NUM_WORDS			2U
 #define XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US		1000000U
 
-#define XAIE_DMA_PAD_WORDS_MAX				0x3F /* 6 bits */
+#define XAIE_DMA_PAD_WORDS_MAX				0x3FU /* 6 bits */
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -1613,7 +1613,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 
 	Val = XAie_SetField(StartBd, DmaMod->ChProp->StartBd.Lsb,
 			DmaMod->ChProp->StartBd.Mask) |
-		XAie_SetField((DmaQueueDesc->RepeatCount - 1),
+		XAie_SetField((DmaQueueDesc->RepeatCount - 1U),
 			DmaMod->ChProp->RptCount.Lsb,
 			DmaMod->ChProp->RptCount.Mask) |
 		XAie_SetField(DmaQueueDesc->EnTokenIssue,

@@ -369,7 +369,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		return RC;
 	}
 
-	if((OptFlags & XAIE_PART_INIT_OPT_COLUMN_RST) != 0) {
+	if((OptFlags & XAIE_PART_INIT_OPT_COLUMN_RST) != 0U) {
 		/* Gate all tiles before resetting columns to quiet traffic*/
 		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 		if(RC != XAIE_OK) {
@@ -398,7 +398,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	}
 
-	if((OptFlags & XAIE_PART_INIT_OPT_SHIM_RST) != 0) {
+	if((OptFlags & XAIE_PART_INIT_OPT_SHIM_RST) != 0U) {
 		RC = _XAie_PrivilegeRstPartShims(DevInst);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
@@ -406,7 +406,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		}
 	}
 
-	if((OptFlags & XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR) != 0) {
+	if((OptFlags & XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR) != 0U) {
 		RC = _XAie_PrivilegeSetPartBlockAxiMmNsuErr(DevInst,
 			XAIE_ENABLE, XAIE_ENABLE);
 		if(RC != XAIE_OK) {
@@ -421,14 +421,14 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		return RC;
 	}
 
-	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0) {
+	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0U) {
 		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 		}
 	}
 
-	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0) {
+	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0U) {
 		RC = DevInst->DevOps->PartMemZeroInit(DevInst);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);

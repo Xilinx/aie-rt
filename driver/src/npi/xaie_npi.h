@@ -22,7 +22,7 @@
 /************************** Constant Definitions *****************************/
 
 #ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		0xF70A0000
+#define XAIE_NPI_BASEADDR		0xF70A0000U
 #endif
 
 #define XAIE_NPI_TIMEOUT_US		0x00000005U
