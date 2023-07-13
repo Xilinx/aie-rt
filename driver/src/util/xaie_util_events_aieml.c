@@ -57,6 +57,7 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 
 	const XAie_EvntMod *EvntMod;
 	const char** XAie_EvntStrings = NULL, *XAie_EvntStringsPtr = NULL;
+	CommaNeeded = 0U;
 
 	if((TType == XAIEGBL_TILE_TYPE_SHIMNOC) ||
 			(TType == XAIEGBL_TILE_TYPE_SHIMPL)) {
