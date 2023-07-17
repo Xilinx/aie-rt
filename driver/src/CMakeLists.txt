@@ -1,3 +1,8 @@
+###############################################################################
+# Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.
+# SPDX-License-Identifier: MIT
+###############################################################################
+
 cmake_minimum_required(VERSION 3.1)
 project(xaiengine LANGUAGES C VERSION 3.4)
 
