@@ -46,11 +46,11 @@
 typedef struct {
 	u32 S2MMStatus;
 	u32 MM2SStatus;
-} XAie_DmaStatus;
+} XAie_DmaChStatus;
 
 /* Data structure to capture the core tile status */
 typedef struct {
-	XAie_DmaStatus dma[XAIE_TILE_DMA_NUM_CH];
+	XAie_DmaChStatus dma[XAIE_TILE_DMA_NUM_CH];
 	u32 EventCoreModStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
 	u32 EventMemModStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
 	u32 CoreStatus;
@@ -63,7 +63,7 @@ typedef struct {
 /* Data structure to capture the mem tile status */
 #if (XAIE_DEV_SINGLE_GEN != XAIE_DEV_GEN_AIE)
 typedef struct {
-	XAie_DmaStatus dma[XAIE_MEM_TILE_DMA_NUM_CH];
+	XAie_DmaChStatus dma[XAIE_MEM_TILE_DMA_NUM_CH];
 	u32 EventStatus[XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS];
 	u8 LockValue[XAIE_MEM_TILE_NUM_LOCKS];
 } XAie_Mem_Tile_Status;
@@ -71,7 +71,7 @@ typedef struct {
 
 /* Data structure to capture the shim tile status */
 typedef struct {
-	XAie_DmaStatus dma[XAIE_SHIM_DMA_NUM_CH];
+	XAie_DmaChStatus dma[XAIE_SHIM_DMA_NUM_CH];
 	u32 EventStatus[XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS];
 	u8 LockValue[XAIE_SHIM_NUM_LOCKS];
 } XAie_Shim_Tile_Status;

@@ -28,7 +28,9 @@
 #include "xaie_lite_hwcfg.h"
 #include "xaie_lite_io.h"
 #include "xaie_lite_npi.h"
-#if (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P)
+#if ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) || \
+	(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0) || \
+	(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0))
 #include "xaie_lite_regdef_aie2p.h"
 #else
 #include "xaie_lite_regdef_aieml.h"
