@@ -2128,9 +2128,6 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 			RC |= _XAie_DmaStatusDump(DevInst, Status, Loc);
 			RC |= _XAie_LockValueStatusDump(DevInst, Status, Loc);
 			RC |= _XAie_EventStatusDump(DevInst, Status, Loc);
-			if (RC != XAIE_OK) {
-				return RC;
-			}
 		}
 	}
 	return RC;
