@@ -1143,6 +1143,18 @@ static AieRC _XAie_LinuxIO_RequestTiles(void *IOInst,
 		}
 	}
 
+	/* Clear the TilesInuse bitmap to reflect the current status */
+	for(u32 C = 0; C < LinuxIOInst->NumCols; C++) {
+		XAie_LocType Loc;
+		u32 ColClockStatus;
+
+		Loc = XAie_TileLoc(C, 1);
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst, Loc);
+
+		_XAie_ClrBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse,
+				ColClockStatus, LinuxIOInst->DevInst->NumRows - 1);
+	}
+
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_REQUEST_TILES_IOCTL,
 			&TilesArray);
 	free(TilesArray.locs);
@@ -1701,6 +1713,18 @@ AieRC _XAie_LinuxIO_InitPart(void *IOInst, XAie_PartInitOpts *Opts)
 		InitArgs.init_opts = XAIE_PART_INIT_OPT_DEFAULT;
 		InitArgs.num_tiles = 0;
 		InitArgs.locs = XAIE_NULL;
+	}
+
+	/* Clear the TilesInuse bitmap to reflect the current status */
+	for(u32 C = 0; C < LinuxIOInst->DevInst->NumCols; C++) {
+		XAie_LocType Loc;
+		u32 ColClockStatus;
+
+		Loc = XAie_TileLoc(C, 1);
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst, Loc);
+
+		_XAie_ClrBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse,
+				ColClockStatus, LinuxIOInst->DevInst->NumRows - 1);
 	}
 
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_PARTITION_INIT_IOCTL,
