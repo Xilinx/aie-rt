@@ -23,7 +23,6 @@
 #ifndef XAIECORE_AIE_H
 #define XAIECORE_AIE_H
 /***************************** Include Files *********************************/
-#include <elf.h>
 #include <stdlib.h>
 #include <string.h>
 #include "xaie_helper.h"
@@ -38,8 +37,6 @@ AieRC _XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *DoneBit, const struct XAie_CoreMod *CoreMod);
 AieRC _XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *CoreStatus, const struct XAie_CoreMod *CoreMod);
-void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr);
-void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr);
 
 #endif /* XAIECORE_AIE_H */
 /** @} */
