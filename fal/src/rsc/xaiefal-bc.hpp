@@ -83,7 +83,7 @@ namespace xaiefal {
 					if (L.Col == vLocs[i].Col && L.Row == vLocs[i].Row) {
 						RC = XAIE_OK;
 						if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
-							if (M = XAIE_MEM_MOD) {
+							if (M == XAIE_MEM_MOD) {
 								E = XAIE_EVENT_BROADCAST_0_MEM;
 							} else {
 								E = XAIE_EVENT_BROADCAST_0_CORE;
