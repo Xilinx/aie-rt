@@ -481,6 +481,7 @@ static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 {
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
 	u32 ColClockStatus;
+	u64 OffsetAddr = 0U, MemSize = 0U;
 	XAie_DevInst *DevInst = LinuxIOInst->DevInst;
 	u8 Row = _XAie_GetRowNum(LinuxIOInst, RegOff);
 	u8 Col = _XAie_GetColNum(LinuxIOInst, RegOff);
@@ -496,6 +497,28 @@ static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 			XAIE_ERROR("Tile(%d,%d) is gated \n",Col,Row);
 			return XAIE_INVALID_TILE;
 		}
+	}
+
+	u8 TileType = _XAie_GetTileTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+		OffsetAddr = LinuxIOInst->DataMemAddr + _XAie_GetTileAddr(DevInst, Row, Col);
+		MemSize = OffsetAddr + LinuxIOInst->DataMemSize;
+	} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+		OffsetAddr = LinuxIOInst->MemTileMemAddr + _XAie_GetTileAddr(DevInst, Row, Col);
+		MemSize = OffsetAddr + LinuxIOInst->MemTileMemSize;
+	}
+
+	if(RegOff >= OffsetAddr && RegOff <=  MemSize) {
+		if((RegOff+sizeof(u32)) > MemSize) {
+			XAIE_ERROR(" Reading register failed for offset 0x%lx",
+					RegOff);
+			return XAIE_ERR;
+		}
+	} else if(RegOff < OffsetAddr && ((RegOff+sizeof(u32)) >= OffsetAddr
+				&& (RegOff+sizeof(u32)) <=  MemSize)) {
+		XAIE_ERROR(" Reading register failed for offset 0x%lx",
+					RegOff);
+		return XAIE_ERR;
 	}
 
 	*Data = *((u32 *)(LinuxIOInst->RegMap.VAddr + RegOff));
@@ -779,6 +802,7 @@ static AieRC XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff,
 {
 	XAie_LinuxIO *Inst = (XAie_LinuxIO *)IOInst;
 	u32 *VirtAddr;
+	AieRC RC;
 
 	/* Handle PM and DM sections */
 	VirtAddr =  _XAie_GetVirtAddrFromOffset(Inst, RegOff, Size);
@@ -789,10 +813,13 @@ static AieRC XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff,
 		XAIE_ERROR("Tile is gated \n");
 		return XAIE_ERR;
 	}
-
 	/* Handle other registers */
 	for(u32 i = 0; i < Size; i++) {
-		XAie_LinuxIO_Write32(IOInst, RegOff + i * 4U, *Data);
+		RC = XAie_LinuxIO_Write32(IOInst, RegOff + i * 4U, *Data);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Block Write Failed!\n");
+			return RC;
+		}
 		Data++;
 	}
 
