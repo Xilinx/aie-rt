@@ -1145,6 +1145,8 @@ static const XAie_CoreMod AieCoreMod =
 	.DataMemShift = 15U,
 	.EccEvntRegOff = 0x00032110,
 	.CorePCOff = XAIEGBL_CORE_COREPC,
+	.CoreSPOff = XAIEGBL_CORE_CORESP,
+	.CoreLROff = XAIEGBL_CORE_CORELR,
 	.CoreCtrl = &AieCoreCtrlReg,
 	.CoreDebugStatus = &AieCoreDebugStatus,
 	.CoreSts = &AieCoreStsReg,
@@ -1251,6 +1253,7 @@ static const XAie_LockMod AieTileLockMod =
 	.Acquire = &(_XAie_LockAcquire),
 	.Release = &(_XAie_LockRelease),
 	.SetValue = &_XAie_LockSetValue,
+	.GetValue = &(_XAie_LockGetValue),
 };
 
 /* Lock Module for SHIM NOC Tiles  */
@@ -1266,6 +1269,7 @@ static const XAie_LockMod AieShimNocLockMod =
 	.Acquire = &(_XAie_LockAcquire),
 	.Release = &(_XAie_LockRelease),
 	.SetValue = &_XAie_LockSetValue,
+	.GetValue = &(_XAie_LockGetValue),
 };
 #endif /* XAIE_FEATURE_LOCK_ENABLE */
 
@@ -1507,6 +1511,7 @@ static const XAie_DmaMod AieTileDmaMod =
 	.BdChValidity = &_XAie_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAie_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAie_DmaUpdateBdAddr,
+	.GetChannelStatus = &_XAie_DmaGetChannelStatus,
 };
 
 /* shim dma structures */
@@ -1710,6 +1715,7 @@ static const XAie_DmaMod AieShimDmaMod =
 	.BdChValidity = &_XAie_DmaCheckBdChValidity,
 	.UpdateBdLen = &_XAie_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAie_ShimDmaUpdateBdAddr,
+	.GetChannelStatus = &_XAie_DmaGetChannelStatus,
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 

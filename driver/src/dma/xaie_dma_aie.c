@@ -857,6 +857,47 @@ AieRC _XAie_DmaCheckBdChValidity(u8 BdNum, u8 ChNum)
 
 /*****************************************************************************/
 /**
+ *
+ * This API is used to get Channel Status register value
+ *
+ * @param	DevInst: Device Instance
+ * @param	Loc: Location of AIE Tile
+ * @param	DmaMod: Dma module pointer
+ * @param	ChNum: Channel number of the DMA.
+ * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+ * @param	Status - Channel Status Register value
+ *
+ * @return	XAIE_OK on success, Error code on failure.
+ *
+ * @note	Internal only. For AIE Tiles only.
+ *
+ ******************************************************************************/
+AieRC _XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
+		u32 *Status)
+{
+	u64 Addr;
+	u32 Mask;
+	AieRC RC;
+
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->ChStatusBase + Dir * DmaMod->ChStatusOffset;
+
+	Mask = DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Mask |
+		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.StartQSize.Mask |
+		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Stalled.Mask;
+
+	RC = XAie_Read32(DevInst, Addr, Status);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+
+	*Status = (*Status & Mask);
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
 *
 * This API updates the length of the buffer descriptor in the tile dma module.
 *

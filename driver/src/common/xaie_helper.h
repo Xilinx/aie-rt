@@ -36,6 +36,9 @@
 #include <limits.h>
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
+#include "xaie_core.h"
+#include "xaie_dma.h"
+#include "xaie_locks.h"
 
 /***************************** Macro Definitions *****************************/
 #define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
@@ -92,6 +95,7 @@
 #else
 #define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
 #endif
+
 /**************************** Type Definitions *******************************/
 typedef enum {
 	XAIE_IO_WRITE,
@@ -113,6 +117,44 @@ struct XAie_TxnCmd {
 	u64 DataPtr;
 	u32 Size;
 };
+
+/* Data structure to capture the dma status */
+typedef struct {
+        u32 S2MMStatus;
+        u32 MM2SStatus;
+} XAie_DmaStatus;
+
+/* Data structure to capture the core tile status */
+typedef struct {
+        XAie_DmaStatus *Dma;
+        u32 *EventCoreModStatus;
+        u32 *EventMemModStatus;
+        u32 CoreStatus;
+        u32 ProgramCounter;
+        u32 StackPtr;
+        u32 LinkReg;
+        u8  *LockValue;
+} XAie_CoreTileStatus;
+/* Data structure to capture the mem tile status */
+typedef struct {
+        XAie_DmaStatus *Dma;
+        u32 *EventStatus;
+        u8 *LockValue;
+} XAie_MemTileStatus;
+
+/* Data structure to capture the shim tile status */
+typedef struct {
+        XAie_DmaStatus *Dma;
+        u32 *EventStatus;
+        u8 *LockValue;
+} XAie_ShimTileStatus;
+
+/* Data structure to capture column status */
+typedef struct {
+        XAie_CoreTileStatus *CoreTile;
+        XAie_MemTileStatus *MemTile;
+        XAie_ShimTileStatus *ShimTile;
+} XAie_ColStatus;
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -201,6 +243,6 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
 u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
 u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 void _XAie_FreeTxnPtr(void *Ptr);
-
+AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
 #endif		/* end of protection macro */
 /** @} */

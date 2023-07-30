@@ -37,6 +37,8 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut);
 AieRC _XAieMl_LockSetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		XAie_LocType Loc, XAie_Lock Lock);
+AieRC _XAieMl_LockGetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
+		XAie_LocType Loc, XAie_Lock Lock, u32 *LockVal);
 
 #endif
 /** @} */

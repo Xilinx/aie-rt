@@ -1790,5 +1790,346 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 	return XAIE_ERR;
 }
 
+/*****************************************************************************/
+/**
+*
+* This API returns the Aie Tile Core status for a particular column and row.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Loc: Location of AIE tile
+*
+* @return	XAIE_OK for success and error code otherwise.
+*
+* @note	Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_CoreStatusDump(XAie_DevInst *DevInst,
+		XAie_ColStatus *Status, XAie_LocType Loc)
+{
+	u32 RegVal;
+	AieRC RC;
+	u8 TileType, TileStart, Index;
+
+	TileStart = DevInst->AieTileRowStart;
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	/* core status */
+	RC = XAie_CoreGetStatus(DevInst, Loc, &RegVal);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+	Index = Loc.Row - TileStart;
+	Status[Loc.Col].CoreTile[Index].CoreStatus = RegVal;
+
+	/* program counter */
+	RC = XAie_CoreGetPCValue(DevInst, Loc, &RegVal);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+	Status[Loc.Col].CoreTile[Index].ProgramCounter = RegVal;
+
+	/* stack pointer */
+	RC = XAie_CoreGetSPValue(DevInst, Loc, &RegVal);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+	Status[Loc.Col].CoreTile[Index].StackPtr = RegVal;
+
+	/* link register */
+	RC = XAie_CoreGetLRValue(DevInst, Loc, &RegVal);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+	Status[Loc.Col].CoreTile[Index].LinkReg = RegVal;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the All Tile DMA Channel status for a particular column
+* and row.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Loc: Location of AIE tile
+*
+* @return	XAIE_OK for success and error code otherwise.
+*
+* @note	Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_DmaStatusDump(XAie_DevInst *DevInst,
+		XAie_ColStatus *Status, XAie_LocType Loc)
+{
+	u32 RegVal;
+	u8 TileType, AieTileStart, MemTileStart;
+	u8 Index;
+	AieRC RC;
+
+	const XAie_DmaMod *DmaMod;
+	XAie_CoreTileStatus *CoreTile;
+	XAie_ShimTileStatus *ShimTile;
+	XAie_MemTileStatus *MemTile;
+
+	AieTileStart = DevInst->AieTileRowStart;
+	MemTileStart = DevInst->MemTileRowStart;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if((TileType >= XAIEGBL_TILE_TYPE_MAX) ||
+			(TileType == XAIEGBL_TILE_TYPE_SHIMPL)) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	CoreTile = Status[Loc.Col].CoreTile;
+	MemTile = Status[Loc.Col].MemTile;
+	ShimTile = Status[Loc.Col].ShimTile;
+
+	/* iterate all tile dma channels */
+	for (u8 Chan = 0; Chan < DmaMod->NumChannels; Chan++) {
+
+		/* read s2mm channel status */
+		RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan,
+				DMA_S2MM, &RegVal);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+
+		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+			Index = Loc.Row - AieTileStart;
+			CoreTile[Index].Dma[Chan].S2MMStatus = RegVal;
+		} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+			Index = Loc.Row - MemTileStart;
+			MemTile[Index].Dma[Chan].S2MMStatus = RegVal;
+		} else {
+			ShimTile[Loc.Row].Dma[Chan].S2MMStatus = RegVal;
+		}
+
+		/* read mm2s channel status */
+		RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan,
+				DMA_MM2S, &RegVal);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+
+		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+			Index = Loc.Row - AieTileStart;
+			CoreTile[Index].Dma[Chan].MM2SStatus = RegVal;
+		} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+			Index = Loc.Row - MemTileStart;
+			MemTile[Index].Dma[Chan].MM2SStatus = RegVal;
+		} else {
+			ShimTile[Loc.Row].Dma[Chan].MM2SStatus = RegVal;
+		}
+	}
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the Aie Lock status for a particular column and row.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Loc: Location of AIE tile
+*
+* @return	XAIE_OK for success and error code otherwise.
+*
+* @note	Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
+		XAie_ColStatus *Status, XAie_LocType Loc)
+{
+	u32 RegVal;
+	u8 TileType, AieTileStart, MemTileStart;
+	u8 Index;
+	AieRC RC;
+	XAie_Lock Lock;
+
+	const XAie_LockMod *LockMod;
+	XAie_CoreTileStatus *CoreTile;
+	XAie_ShimTileStatus *ShimTile;
+	XAie_MemTileStatus *MemTile;
+
+	AieTileStart = DevInst->AieTileRowStart;
+	MemTileStart = DevInst->MemTileRowStart;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if((TileType >= XAIEGBL_TILE_TYPE_MAX) ||
+			(TileType == XAIEGBL_TILE_TYPE_SHIMPL)) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
+	CoreTile = Status[Loc.Col].CoreTile;
+	MemTile = Status[Loc.Col].MemTile;
+	ShimTile = Status[Loc.Col].ShimTile;
+
+	/* iterate all lock value registers */
+	for(u32 LockCnt = 0; LockCnt < LockMod->NumLocks; LockCnt++) {
+
+		/* read lock value */
+		Lock.LockId = LockCnt;
+		RC = XAie_LockGetValue(DevInst, Loc, Lock, &RegVal);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+
+		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+			Index = Loc.Row - AieTileStart;
+			CoreTile[Index].LockValue[LockCnt] = RegVal;
+		} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+			Index = Loc.Row - MemTileStart;
+			MemTile[Index].LockValue[LockCnt] = RegVal;
+		} else {
+			ShimTile[Loc.Row].LockValue[LockCnt] = RegVal;
+		}
+	}
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the Tile Event Status for a particular column and row.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+* @param	Loc: Location of AIE tile
+*
+* @return	XAIE_OK for success and error code otherwise.
+*
+* @note	Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
+		XAie_ColStatus *Status, XAie_LocType Loc)
+{
+	u32 RegVal;
+	AieRC RC;
+	u8 TileType, AieTileStart, MemTileStart;
+	u8 Index;
+	u8 NumEventReg;
+
+	const XAie_EvntMod *EvntCoreMod, *EvntMod;
+	XAie_CoreTileStatus *CoreTile;
+	XAie_ShimTileStatus *ShimTile;
+	XAie_MemTileStatus *MemTile;
+	XAie_TileMod *DevMod;
+
+	AieTileStart = DevInst->AieTileRowStart;
+	MemTileStart = DevInst->MemTileRowStart;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType >= XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	CoreTile = Status[Loc.Col].CoreTile;
+	MemTile = Status[Loc.Col].MemTile;
+	ShimTile = Status[Loc.Col].ShimTile;
+	DevMod = DevInst->DevProp.DevMod;
+
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+		EvntCoreMod = &DevMod[TileType].EvntMod[XAIE_CORE_MOD];
+		Index = Loc.Row - AieTileStart;
+		/* iterate all event status registers */
+		NumEventReg = EvntCoreMod->NumEventReg;
+		for(u32 EventReg = 0; EventReg < NumEventReg; EventReg++) {
+			/* read event status register and store in output
+			 * buffer */
+			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_CORE_MOD,
+					EventReg, &RegVal);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+
+			CoreTile[Index].EventCoreModStatus[EventReg] = RegVal;
+
+			/* read event status register and store in output
+			 * buffer */
+			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_MEM_MOD,
+					EventReg, &RegVal);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+			CoreTile[Index].EventMemModStatus[EventReg] = RegVal;
+		}
+	} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
+		EvntMod = &DevMod[TileType].EvntMod[XAIE_MEM_MOD];
+		Index = Loc.Row - MemTileStart;
+		NumEventReg = EvntMod->NumEventReg;
+		for(u32 EventReg = 0; EventReg < NumEventReg; EventReg++) {
+			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_MEM_MOD,
+					EventReg, &RegVal);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+			MemTile[Index].EventStatus[EventReg] = RegVal;
+		}
+	} else {
+		EvntMod = &DevMod[TileType].EvntMod[0U];
+		NumEventReg = EvntMod->NumEventReg;
+		for(u32 EventReg = 0; EventReg < NumEventReg; EventReg++) {
+			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_PL_MOD,
+					EventReg, &RegVal);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+			ShimTile[Loc.Row].EventStatus[EventReg] = RegVal;
+		}
+	}
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the column status for N number of colums.
+*
+* @param	DevInst: Device Instance
+* @param	Status: Pointer to user defined column status buffer.
+*
+* @return	XAIE_OK for success and error code otherwise.
+*
+* @note	None.
+*
+******************************************************************************/
+AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
+{
+	AieRC RC;
+	u32 StartCol = (u32)(DevInst->StartCol);
+	u32 NumCols  = (u32)(DevInst->NumCols);
+	u32 NumRows  = (u32) (DevInst->NumRows);
+	XAie_LocType Loc;
+
+	if(Status == NULL)
+		return XAIE_ERR;
+
+	/* iterate specified columns */
+	for(u32 Col = StartCol; Col < NumCols; Col++) {
+		for(u32 Row = 0; Row < NumRows; Row++) {
+			Loc.Row = Row;
+			Loc.Col = Col;
+			RC |= _XAie_CoreStatusDump(DevInst,Status, Loc);
+			RC |= _XAie_DmaStatusDump(DevInst, Status, Loc);
+			RC |= _XAie_LockValueStatusDump(DevInst, Status, Loc);
+			RC |= _XAie_EventStatusDump(DevInst, Status, Loc);
+		}
+	}
+	return RC;
+}
 
 /** @} */

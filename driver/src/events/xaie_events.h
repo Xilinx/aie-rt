@@ -774,4 +774,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Events, u8 *Status);
 AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 	XAie_ModuleType Module, XAie_Events *Event);
+AieRC XAie_EventRegStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u8 EventRegNo, u32 *Status);
+
 #endif		/* end of protection macro */
