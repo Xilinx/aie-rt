@@ -232,6 +232,8 @@ typedef struct XAie_CoreMod {
 	u32 DataMemShift;
 	u32 EccEvntRegOff;
 	u32 CorePCOff;
+	u32 CoreSPOff;
+	u32 CoreLROff;
 	const XAie_RegCoreDebugStatus *CoreDebugStatus;
 	const XAie_RegCoreSts *CoreSts;
 	const XAie_RegCoreCtrl *CoreCtrl;
@@ -454,6 +456,7 @@ typedef struct {
 	XAie_RegFldAttr StalledLockAcq;
 	XAie_RegFldAttr StalledStreamStarve;
 	XAie_RegFldAttr TaskQSize;
+	XAie_RegFldAttr TaskQOverFlow;
 	XAie_RegFldAttr StalledTCT;
 } XAie_AieMlDmaChStatus;
 
@@ -536,6 +539,9 @@ struct XAie_DmaMod {
 			XAie_LocType Loc, u32 Len, u8 BdNum);
 	AieRC (*UpdateBdAddr)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 			XAie_LocType Loc, u64 Addr, u8 BdNum);
+	AieRC (*GetChannelStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
+			const XAie_DmaMod *DmaMod, u8 ChNum,
+			XAie_DmaDirection Dir, u32 *Status);
 };
 
 /*
@@ -657,6 +663,9 @@ struct XAie_LockMod {
 	AieRC (*SetValue)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
 			XAie_Lock Lock);
+	AieRC (*GetValue)(XAie_DevInst *DevInst,
+			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
+			XAie_Lock Lock, u32 *LockValue);
 };
 
 /* This typedef contains attributes of Performace Counter module */
@@ -691,6 +700,7 @@ typedef struct {
 /* This typedef contains attributes of Events module */
 typedef struct XAie_EvntMod {
 	const u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
+	u8  NumEventReg;
 	u32 EventMin;		/* number corresponding to evt 0 in the enum */
 	u32 EventMax;		/* number corresponding to last evt in enum */
 	u32 ComboEventBase;

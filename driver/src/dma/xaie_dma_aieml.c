@@ -1126,6 +1126,52 @@ AieRC _XAieMl_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 /*****************************************************************************/
 /**
+ *
+ * This API is used to get Channel Status register value
+ *
+ * @param	DevInst: Device Instance
+ * @param	Loc: Location of AIE Tile
+ * @param	DmaMod: Dma module pointer
+ * @param	ChNum: Channel number of the DMA.
+ * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+ * @param	Status - Channel Status Register value
+ *
+ * @return	XAIE_OK on success, Error code on failure.
+ *
+ * @note	Internal only. For AIE Tiles only.
+ *
+******************************************************************************/
+AieRC _XAieMl_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
+		u32 *Status)
+{
+	u64 Addr;
+	u32 Mask;
+	AieRC RC;
+
+	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->ChStatusBase + ChNum * XAIEML_DMA_STATUS_CHNUM_OFFSET +
+		Dir * DmaMod->ChStatusOffset;
+
+	Mask = DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.TaskQSize.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.TaskQOverFlow.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.ChannelRunning.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockAcq.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledLockRel.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledStreamStarve.Mask |
+		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledTCT.Mask;
+
+	RC = XAie_Read32(DevInst, Addr, Status);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+
+	*Status = (*Status & Mask);
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
 *
 * This API is used to wait on Shim DMA channel to be completed.
 *
