@@ -29,6 +29,7 @@
 
 #include "xaie_lite.h"
 #include "xaie_lite_io.h"
+#include "xaie_lite_internal.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 
