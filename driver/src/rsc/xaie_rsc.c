@@ -1219,6 +1219,7 @@ AieRC XAie_SaveAllocatedRscsToFile(XAie_DevInst *DevInst, const char *File)
 						free(DevInst->RscMapping);
 						XAIE_ERROR("Memory allocation for resource manager bitmaps failed, %d: %s\n",
 							errno, strerror(errno));
+						fclose(F);
 						return XAIE_ERR;
 					}
 				}
