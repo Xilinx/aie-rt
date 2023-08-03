@@ -1757,6 +1757,32 @@ AieRC _XAie_LinuxIO_InitPart(void *IOInst, XAie_PartInitOpts *Opts)
 				ColClockStatus, LinuxIOInst->DevInst->NumRows - 1);
 	}
 
+	if (InitArgs.locs == NULL) {
+		u32 StartBit, NumTiles;
+
+		NumTiles = (u32)(LinuxIOInst->DevInst->NumCols * (LinuxIOInst->DevInst->NumRows - 1U));
+		/* Loc is NULL, it suggests all tiles are requested */
+		StartBit = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst,
+				XAie_TileLoc(0, 1));
+		_XAie_SetBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse, StartBit,NumTiles);
+	} else {
+		for(u32 i = 0; i < InitArgs.num_tiles; i++) {
+			u32 Bit;
+
+			if(InitArgs.locs[i].row == 0U) {
+				continue;
+			}
+
+			/*
+			 * If a tile is ungated, the rows below it are
+			 * ungated.
+			 */
+			Bit = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst,
+					XAie_TileLoc(InitArgs.locs[i].col, 1));
+			_XAie_SetBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse,Bit, InitArgs.locs[i].row);
+		}
+	}
+
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_PARTITION_INIT_IOCTL,
 			&InitArgs);
 	free(InitArgs.locs);
