@@ -296,5 +296,21 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+ *
+ * Disable TLAST is not supported on AIE
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+}
+
 #endif		/* end of protection macro */
 /** @} */

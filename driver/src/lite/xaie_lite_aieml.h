@@ -867,5 +867,73 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 	_XAie_LNpiSetLock(XAIE_ENABLE);
 }
 
+#if ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE) || \
+     (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML) || \
+     (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU))
+
+/*****************************************************************************/
+/**
+ *
+ * Disable TLAST is not supported on AIEML
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+}
+#else
+/*****************************************************************************/
+/**
+ *
+ * This API Disable TLAST Error Enable Field in Module Clock Control register.
+ * By disabling this bit, control packet can be processed without the need
+ * for TLAST to be present after each packet.
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static void _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
+	u64 RegAddr;
+	u32 Mask;
+
+	MemTileStart = XAIE_MEM_TILE_ROW_START;
+	MemTileEnd = XAIE_MEM_TILE_ROW_START + XAIE_MEM_TILE_NUM_ROWS;
+	AieRowStart = XAIE_AIE_TILE_ROW_START;
+	AieRowEnd = XAIE_AIE_TILE_ROW_START + XAIE_AIE_TILE_NUM_ROWS;
+
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			RegAddr = XAIE_AIE_TILE_CLOCK_CONTROL_REGOFF + _XAie_LGetTileAddr(Row, Col);
+			Mask = XAIE_AIE_TILE_CLOCK_CONTROL_STREAM_SWITCH_MASK;
+			_XAie_LPartMaskWrite32(DevInst, RegAddr, Mask, XAIE_DISABLE);
+		}
+		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
+			RegAddr = XAIE_MEM_TILE_CLOCK_CONTROL_REGOFF + _XAie_LGetTileAddr(MemRow, Col);
+			Mask = XAIE_MEM_TILE_CLOCK_CONTROL_STREAM_SWITCH_MASK;
+			_XAie_LPartMaskWrite32(DevInst, RegAddr, Mask, XAIE_DISABLE);
+		}
+		/*
+		 * Shim tile Clock Control TLAST Error disabled
+		 */
+		RegAddr = XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_REGOFF + _XAie_LGetTileAddr(0, Col);
+		Mask = XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_STREAM_SWITCH_MASK;
+		_XAie_LPartMaskWrite32(DevInst, RegAddr, Mask, XAIE_DISABLE);
+
+	}
+}
+#endif /* GEN == AIE || AIEML || AIE2IPU */
+
 #endif		/* end of protection macro */
 /** @} */
