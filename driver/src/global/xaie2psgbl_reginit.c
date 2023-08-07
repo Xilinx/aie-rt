@@ -422,6 +422,10 @@ static const  XAie_StrmPort Aie2PShimStrmSlv[SS_PORT_TYPE_MAX] =
 	{	/* Trace */
 		.NumPorts = 2,
 		.PortBaseAddr = XAIE2PSGBL_PL_MODULE_STREAM_SWITCH_SLAVE_CONFIG_TRACE
+	},
+	{	/* UCTRLR */
+		.NumPorts = 1,
+		.PortBaseAddr = XAIE2PSGBL_PL_MODULE_STREAM_SWITCH_SLAVE_CONFIG_UCONTROLLER,
 	}
 };
 
