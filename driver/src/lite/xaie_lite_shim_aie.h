@@ -159,5 +159,24 @@ static inline u8 _XAie_MapColToIrqId(XAie_DevInst *DevInst, XAie_LocType Loc)
 	return IrqId;
 }
 
+#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
+/*****************************************************************************/
+/**
+* This API modifies(enable or disable) the clock control register for given shim.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+* @param        Enable: XAIE_ENABLE to enable shim clock buffer,
+*                       XAIE_DISABLE to disable.
+
+* @note         It is internal function to this file
+*
+******************************************************************************/
+static inline void _XAie_PrivilegeSetShimClk(XAie_DevInst *DevInst,
+					     XAie_LocType Loc, u8 Enable)
+{
+}
+#endif /* XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE */
+
 #endif		/* end of protection macro */
 /** @} */
