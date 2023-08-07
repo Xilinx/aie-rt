@@ -45,7 +45,7 @@ lib$(NAME).so: lib$(NAME).so.$(VERSION)
 	$(CC) $(CFLAGS) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 
 baremetal: include lib$(NAME).so
-CFLAGS_bare += -Wall -Wextra --std=c11 -D_AIEBAREMETAL__
+CFLAGS_bare += -Wall -Wextra --std=c11 -D__AIEBAREMETAL__
 ifeq ($(MAKECMDGOALS) ,baremetal)
 %.o: %.c include
 	$(CC) $(CFLAGS_bare) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
