@@ -1392,9 +1392,6 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			TxnInst->NumCmds = 0;
 			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
 					Value, TimeOutUs);
-		} else if(TxnInst->NumCmds == 0U) {
-			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
-					Value, TimeOutUs);
 		} else {
 			if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
 				RC = _XAie_ReallocCmdBuf(TxnInst);
