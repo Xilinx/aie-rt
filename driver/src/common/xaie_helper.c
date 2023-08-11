@@ -1953,7 +1953,7 @@ static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
 	u8 TileType, AieTileStart, MemTileStart;
 	u8 Index;
 	AieRC RC;
-	XAie_Lock Lock;
+	XAie_Lock Lock = {0,0};
 
 	const XAie_LockMod *LockMod;
 	XAie_CoreTileStatus *CoreTile;
@@ -2107,7 +2107,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 ******************************************************************************/
 AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 {
-	AieRC RC;
+	AieRC RC = XAIE_ERR;
 	u32 StartCol = (u32)(DevInst->StartCol);
 	u32 NumCols  = (u32)(DevInst->NumCols);
 	u32 NumRows  = (u32) (DevInst->NumRows);
