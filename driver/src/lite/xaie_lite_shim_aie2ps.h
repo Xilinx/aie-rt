@@ -120,5 +120,60 @@ static inline u8 _XAie_MapColToIrqId(XAie_DevInst *DevInst, XAie_LocType Loc)
 	return AbsCol / (XAIE_NUM_COLS / XAIE_MAX_NUM_NOC_INTR);
 }
 
+/*****************************************************************************/
+/**
+* This API modifies(enable or disable) the clock control register for given shim.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+* @param        Enable: XAIE_ENABLE to enable shim clock buffer,
+*                       XAIE_DISABLE to disable.
+
+* @note         It is internal function to this file
+*
+******************************************************************************/
+static inline void _XAie_PrivilegeSetShimClk(XAie_DevInst *DevInst,
+					     XAie_LocType Loc, u8 Enable)
+{
+	u64 RegAddr;
+	u32 FldVal;
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+		XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_REGOFF;
+
+	FldVal = XAie_SetField(Enable,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_LSB,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_MASK);
+	/* TODO: UCONTROLLER here?
+	FldVal |= XAie_SetField(Enable,
+			XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_UCONTROLLER_CLOCK_ENABLE_LSB,
+			XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_UCONTROLLER_CLOCK_ENABLE_MASK);
+	*/
+	FldVal |= XAie_SetField(Enable,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_LSB,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_MASK);
+	FldVal |= XAie_SetField(Enable,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_LSB,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_MASK);
+
+	_XAie_LPartMaskWrite32(DevInst, RegAddr,
+		XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_MASK, FldVal);
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+		XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_1_REGOFF;
+
+	FldVal = XAie_SetField(Enable,
+			XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_1_CLOCK_ENABLE_LSB,
+			XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_1_CLOCK_ENABLE_MASK);
+
+	FldVal |= XAie_SetField(Enable,
+			XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_0_CLOCK_ENABLE_LSB,
+			XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_0_CLOCK_ENABLE_MASK);
+
+	_XAie_LPartMaskWrite32(DevInst, RegAddr,
+		XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_1_MASK, FldVal);
+
+}
+
 #endif		/* end of protection macro */
 /** @} */
