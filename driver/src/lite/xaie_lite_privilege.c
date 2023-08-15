@@ -33,6 +33,7 @@
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 #include "xaie_helper.h"
+#include "xaie_lite_internal.h"
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_ISOLATE_EAST_MASK	(1U << 3)

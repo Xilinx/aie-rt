@@ -52,6 +52,9 @@
 		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0))
 #include "xaie_lite_aieml.h"
 #include "xaie_lite_shim_aie2p.h"
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2PS
+#include "xaie_lite_aie2ps.h"
+#include "xaie_lite_shim_aie2ps.h"
 #else
 #include <xaie_custom_device.h>
 #endif

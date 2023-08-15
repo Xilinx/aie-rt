@@ -27,9 +27,15 @@
 
 #ifdef __AIEIPU__
 
-#include "com_helper.h"
-
+#ifdef _ENABLE_IPU_LX7_
+#include "com_io_generic.h"
 #endif
+
+#ifdef _ENABLE_IPU_LX6_
+#include "com_helper.h"
+#endif
+
+#endif /* __AIEIPU__ */
 
 #include "xaie_helper.h"
 #include "xaie_io.h"

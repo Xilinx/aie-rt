@@ -30,7 +30,7 @@
 #include "xaie_device_aieml.h"
 #include "xaie_dma_aieml.h"
 #include "xaie_dma_aie2ps.h"
-#include "xaie_interrupt_aieml.h"
+#include "xaie_interrupt_aie2ps.h"
 #include "xaie_events_aie2ps.h"
 #include "xaie_locks_aieml.h"
 #include "xaie_reset_aieml.h"
@@ -4548,7 +4548,7 @@ static const XAie_L1IntrMod Aie2PSPlL1IntrMod =
 	.NumBroadcastIds = 16U,
 	.MaxErrorBcIdsRvd = 4U,
 #ifdef XAIE_FEATURE_INTR_INIT_ENABLE
-	.IntrCtrlL1IrqId = &_XAieMl_IntrCtrlL1IrqId,
+	.IntrCtrlL1IrqId = &_XAie2ps_IntrCtrlL1IrqId,
 #else
 	.IntrCtrlL1IrqId = NULL,
 #endif
