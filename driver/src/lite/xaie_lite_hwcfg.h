@@ -245,6 +245,7 @@
 
 #ifdef __AIEIPU__
 #include <platform-hw-config.h>
+#include <com_io_generic.h>
 #endif
 
 #ifndef XAIE_BASE_ADDR

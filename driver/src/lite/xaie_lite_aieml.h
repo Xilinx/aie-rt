@@ -660,6 +660,10 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 
 }
 
+static inline void _XAie_LCertMemZeroInit(XAie_DevInst *DevInst)
+{
+}
+
 /*****************************************************************************/
 /**
 *

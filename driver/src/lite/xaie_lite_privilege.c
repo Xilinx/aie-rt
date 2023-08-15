@@ -465,6 +465,8 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 
 	_XAie_LPartMemZeroInit(DevInst);
 
+	_XAie_LCertMemZeroInit(DevInst);
+
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
 
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);

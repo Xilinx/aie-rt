@@ -647,6 +647,24 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 
 }
 
+static inline void _XAie_LCertMemZeroInit(XAie_DevInst *DevInst)
+{
+	u64 RegAddr;
+
+	for(u8 C = 0; C < DevInst->NumCols; C++) {
+
+		RegAddr = _XAie_LGetTileAddr(0, C) + XAIE2PSGBL_UC_MODULE_MEMORY_ZEROIZATION;
+		_XAie_LPartMaskWrite32(DevInst, RegAddr,
+				       XAIE2PSGBL_UC_MODULE_MEMORY_ZEROIZATION_MASK,
+				       XAIE2PSGBL_UC_MODULE_MEMORY_ZEROIZATION_MASK);
+	}
+	/* Read last col Reg to make sure all the writes went though and
+	 * Zeroization is complete.
+	 */
+	RegAddr = _XAie_LGetTileAddr(0, DevInst->NumCols - 1) + XAIE2PSGBL_UC_MODULE_MEMORY_ZEROIZATION;
+	_XAie_LPartPoll32(DevInst, RegAddr, XAIE2PSGBL_UC_MODULE_MEMORY_ZEROIZATION_MASK, 0, 1000);
+}
+
 /*****************************************************************************/
 /**
 *
