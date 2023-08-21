@@ -46,6 +46,8 @@
 #define WRITE_32_DATA_OPSZ				12
 #define UC_DMA_BD_OPSZ					16
 #define UC_DMA_DATASZ					4
+#define DATA_SECTION_ALIGNMENT          16
+#define HEADER_SIZE						16
 
 /************************** Constant Definitions *****************************/
 
@@ -62,7 +64,8 @@ typedef struct {
 	u32  UcbdDataNum;
 	u32  UcDmaDataNum;
 	u32  UcJobNum;
-	u32  UcJobSize;
+	u32  UcJobSize;;
+	u32  UcJobTextSize;
 	u32 PageSize;
 	u8 CombineCommands;
 } XAie_ControlCodeIO;
@@ -138,22 +141,25 @@ static AieRC XAie_ControlCodeIO_Init(XAie_DevInst *DevInst)
 static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 {
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
+		(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
 
 	if (ControlCodeInst->ControlCodefp != NULL) {
 
 		if((ControlCodeInst->UcJobSize + UC_DMA_WRITE_DES_SYNC_OPSZ +
-			UC_DMA_BD_OPSZ + UC_DMA_DATASZ) >= ControlCodeInst->PageSize) {
+			UC_DMA_BD_OPSZ + UC_DMA_DATASZ + DataAligner) >= ControlCodeInst->PageSize) {
 				fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 				fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 				ControlCodeInst->UcJobNum);
-				ControlCodeInst->UcJobSize = START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+				ControlCodeInst->UcJobTextSize = HEADER_SIZE + START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+				ControlCodeInst->UcJobSize = ControlCodeInst->UcJobTextSize;
 				ControlCodeInst->UcJobNum++;
 				ControlCodeInst->CombineCommands = 0;
 		}
 
 		if(ControlCodeInst->CombineCommands) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
-				fprintf(ControlCodeInst->ControlCodedatafp, "1\n");
+				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			}
 		else {
 			fprintf(ControlCodeInst->ControlCodefp,
@@ -163,15 +169,16 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 					ControlCodeInst->UcbdLabelNum);
 			ControlCodeInst->CombineCommands = 1;
 			ControlCodeInst->UcbdLabelNum++;
+			ControlCodeInst->UcJobTextSize += UC_DMA_WRITE_DES_SYNC_OPSZ;
 			ControlCodeInst->UcJobSize += UC_DMA_WRITE_DES_SYNC_OPSZ;
 		}
 		fprintf(ControlCodeInst->ControlCodedatafp,
 				"\t UC_DMA_BD\t 0, 0x%lx, @WRITE_data_%d, 1, 0, 0\n",
-				(ControlCodeInst->BaseAddr + RegOff),  ControlCodeInst->UcbdDataNum);
+				RegOff,  ControlCodeInst->UcbdDataNum);
 		ControlCodeInst->UcJobSize += UC_DMA_BD_OPSZ;
 		fprintf(ControlCodeInst->ControlCodedata2fp, "WRITE_data_%d:\n",
 				ControlCodeInst->UcbdDataNum);
-		fprintf(ControlCodeInst->ControlCodedata2fp, "\tWORD 0x%08x\n", Value);
+		fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", Value);
 		ControlCodeInst->UcbdDataNum++;
 		ControlCodeInst->UcJobSize += UC_DMA_DATASZ;
 	}
@@ -223,22 +230,27 @@ static AieRC XAie_ControlCodeIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 static AieRC XAie_ControlCodeIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 		u32 Value)
 {
-
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
+		(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
+
+
 	if (ControlCodeInst->ControlCodefp != NULL) {
 		if((ControlCodeInst->UcJobSize + UC_DMA_WRITE_DES_SYNC_OPSZ +
-			UC_DMA_DATASZ ) >= ControlCodeInst->PageSize) {
+			UC_DMA_DATASZ + DataAligner) >= ControlCodeInst->PageSize) {
 			fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 			fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 					ControlCodeInst->UcJobNum);
-			ControlCodeInst->UcJobSize = START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+			ControlCodeInst->UcJobTextSize = HEADER_SIZE + START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+			ControlCodeInst->UcJobSize = ControlCodeInst->UcJobTextSize;
 			ControlCodeInst->UcJobNum++;
 		}
 
-		fprintf(ControlCodeInst->ControlCodefp, "MASK_WRITE32\t 0x%lx, 0x%x, 0x%x\n",
-				(ControlCodeInst->BaseAddr + RegOff), Mask, Value );
+		fprintf(ControlCodeInst->ControlCodefp, "MASK_WRITE_32\t 0x%lx, 0x%x, 0x%x\n",
+				RegOff, Mask, Value );
 		ControlCodeInst->CombineCommands = 0;
 		ControlCodeInst->UcJobSize += MASK_WRITE32_OPSZ;
+		ControlCodeInst->UcJobTextSize += MASK_WRITE32_OPSZ;
 	}
 	return XAIE_OK;
 }
@@ -297,24 +309,29 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 	u64 AdjustedOff = 0;
 
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
+		(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
+
+
 
 	CompletedSize = 0;
 	while (Size > CompletedSize) {
 		if (ControlCodeInst->ControlCodefp != NULL) {
 
 			if((ControlCodeInst->UcJobSize + UC_DMA_WRITE_DES_SYNC_OPSZ +
-				UC_DMA_BD_OPSZ + UC_DMA_DATASZ) >= ControlCodeInst->PageSize) {
+				UC_DMA_BD_OPSZ + UC_DMA_DATASZ + DataAligner) >= ControlCodeInst->PageSize) {
 				fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 				fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 						ControlCodeInst->UcJobNum);
-				ControlCodeInst->UcJobSize = START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+				ControlCodeInst->UcJobTextSize = HEADER_SIZE + START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+				ControlCodeInst->UcJobSize = ControlCodeInst->UcJobTextSize;
 				ControlCodeInst->UcJobNum++;
 				ControlCodeInst->CombineCommands = 0;
 			}
 
 			if(ControlCodeInst->CombineCommands) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
-				fprintf(ControlCodeInst->ControlCodedatafp, "1\n");
+				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			}
 			else {
 				fprintf(ControlCodeInst->ControlCodefp,
@@ -325,19 +342,22 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 				ControlCodeInst->CombineCommands = 1;
 				ControlCodeInst->UcbdLabelNum++;
 				ControlCodeInst->UcJobSize += UC_DMA_WRITE_DES_SYNC_OPSZ;
+				ControlCodeInst->UcJobTextSize += UC_DMA_WRITE_DES_SYNC_OPSZ;
 			}
 
+			DataAligner = (DATA_SECTION_ALIGNMENT -
+				(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
 			fprintf(ControlCodeInst->ControlCodedata3fp, "DMAWRITE_data_%d:\n",
 					ControlCodeInst->UcDmaDataNum);
 			ControlCodeInst->UcJobSize += UC_DMA_BD_OPSZ;
-			for(IterationSize = 0; (IterationSize + CompletedSize) < Size && (ControlCodeInst->UcJobSize + UC_DMA_DATASZ) <= ControlCodeInst->PageSize; IterationSize++) {
-				fprintf(ControlCodeInst->ControlCodedata3fp, "\tWORD 0x%08x\n", *(Data+IterationSize));
+			for(IterationSize = 0; (IterationSize + CompletedSize) < Size && (ControlCodeInst->UcJobSize + UC_DMA_DATASZ + DataAligner) <= ControlCodeInst->PageSize; IterationSize++) {
+				fprintf(ControlCodeInst->ControlCodedata3fp, "\t.long 0x%08x\n", *(Data+IterationSize));
 				ControlCodeInst->UcJobSize += UC_DMA_DATASZ;
 			}
 
 			fprintf(ControlCodeInst->ControlCodedatafp,
 					"\t UC_DMA_BD\t 0, 0x%lx, @DMAWRITE_data_%d, 0x%x, 0, 0\n",
-					(ControlCodeInst->BaseAddr + RegOff),  ControlCodeInst->UcDmaDataNum, IterationSize);
+					RegOff,  ControlCodeInst->UcDmaDataNum, IterationSize);
 			AdjustedOff += (IterationSize * UC_DMA_DATASZ);
 			CompletedSize += IterationSize;
 			ControlCodeInst->UcDmaDataNum++;
@@ -372,24 +392,27 @@ static AieRC XAie_ControlCodeIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u
 	u64 AdjustedOff = 0;
 
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
+		(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
 
 	CompletedSize = 0;
 	while (Size > CompletedSize) {
 		if (ControlCodeInst->ControlCodefp != NULL) {
 
 			if((ControlCodeInst->UcJobSize + UC_DMA_WRITE_DES_SYNC_OPSZ +
-				UC_DMA_BD_OPSZ + UC_DMA_DATASZ) >= ControlCodeInst->PageSize) {
+				UC_DMA_BD_OPSZ + UC_DMA_DATASZ + DataAligner) >= ControlCodeInst->PageSize) {
 				fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 				fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 						ControlCodeInst->UcJobNum);
-				ControlCodeInst->UcJobSize = START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+				ControlCodeInst->UcJobTextSize = HEADER_SIZE + START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+				ControlCodeInst->UcJobSize = ControlCodeInst->UcJobTextSize;
 				ControlCodeInst->UcJobNum++;
 				ControlCodeInst->CombineCommands = 0;
 			}
 
 			if(ControlCodeInst->CombineCommands) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
-				fprintf(ControlCodeInst->ControlCodedatafp, "1\n");
+				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			}
 			else {
 				fprintf(ControlCodeInst->ControlCodefp,
@@ -400,20 +423,23 @@ static AieRC XAie_ControlCodeIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u
 				ControlCodeInst->CombineCommands = 1;
 				ControlCodeInst->UcbdLabelNum++;
 				ControlCodeInst->UcJobSize += UC_DMA_WRITE_DES_SYNC_OPSZ;
+				ControlCodeInst->UcJobTextSize += UC_DMA_WRITE_DES_SYNC_OPSZ;
 			}
 
+			DataAligner = (DATA_SECTION_ALIGNMENT -
+				(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
 			fprintf(ControlCodeInst->ControlCodedata3fp, "DMAWRITE_data_%d:\n",
 					ControlCodeInst->UcDmaDataNum);
 			ControlCodeInst->UcJobSize += UC_DMA_BD_OPSZ;
 			for(IterationSize = 0; (IterationSize + CompletedSize) < Size &&
-				(ControlCodeInst->UcJobSize + UC_DMA_DATASZ) <= ControlCodeInst->PageSize; IterationSize++) {
-				fprintf(ControlCodeInst->ControlCodedata3fp, "\tWORD 0x%08x\n", Data);
+				(ControlCodeInst->UcJobSize + UC_DMA_DATASZ + DataAligner) <= ControlCodeInst->PageSize; IterationSize++) {
+				fprintf(ControlCodeInst->ControlCodedata3fp, "\t.long 0x%08x\n", Data);
 				ControlCodeInst->UcJobSize += UC_DMA_DATASZ;
 			}
 
 			fprintf(ControlCodeInst->ControlCodedatafp,
 					"\t UC_DMA_BD\t 0, 0x%lx, @DMAWRITE_data_%d, %d, 0, 0\n\n",
-					(ControlCodeInst->BaseAddr + RegOff + AdjustedOff),
+					( RegOff + AdjustedOff),
 					ControlCodeInst->UcDmaDataNum, IterationSize);
 			AdjustedOff += (IterationSize * UC_DMA_DATASZ);
 			CompletedSize += IterationSize;
@@ -589,6 +615,7 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 	ControlCodeInst->UcDmaDataNum = 0;
 	ControlCodeInst->UcJobNum = 0;
 	ControlCodeInst->UcJobSize = 0;
+	ControlCodeInst->UcJobTextSize = 0;
 	strcpy(ControlCodeInst->ControlCodeFileName, FileName);
 	ControlCodeInst->ControlCodefp      = fopen(FileName, "w");
 	ControlCodeInst->ControlCodedatafp  = fopen(TEMP_ASM_FILE1, "w");
@@ -625,14 +652,15 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 	fprintf(ControlCodeInst->ControlCodefp, ";\n");
 	fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 			ControlCodeInst->UcJobNum);
-	ControlCodeInst->UcJobSize += START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+	ControlCodeInst->UcJobTextSize += HEADER_SIZE + START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
+	ControlCodeInst->UcJobSize += HEADER_SIZE + START_JOB_OPSZ + END_JOB_OPSZ + EOF_OPSZ;
 	ControlCodeInst->UcJobNum++;
 
 	fprintf(ControlCodeInst->ControlCodedatafp, ";\n");
 	fprintf(ControlCodeInst->ControlCodedatafp, ";data\n");
 	fprintf(ControlCodeInst->ControlCodedatafp, ";\n");
-	fprintf(ControlCodeInst->ControlCodedatafp, "ALIGN    16\n");
-	fprintf(ControlCodeInst->ControlCodedata2fp, "ALIGN    4\n");
+	fprintf(ControlCodeInst->ControlCodedatafp, ".align    16\n");
+	fprintf(ControlCodeInst->ControlCodedata2fp, ".align    4\n");
 	return XAIE_OK;
 }
 
