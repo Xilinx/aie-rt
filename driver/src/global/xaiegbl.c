@@ -25,6 +25,8 @@
 * 1.5   Nishad  09/15/2020  Add check to validate XAie_MemCacheProp value in
 *			    XAie_MemAllocate().
 * </pre>
+* @addtogroup AIEAPI AI Engine Software APIs
+* @{
 *
 ******************************************************************************/
 
@@ -130,8 +132,8 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 * The function sets up the Device Instance pointer with the appropriate values
 * from the ConfigPtr.
 *
-* @param	InstPtr - Global AIE instance structure.
-* @param	ConfigPtr - Global AIE configuration pointer.
+* @param	InstPtr: Global AIE instance structure.
+* @param	ConfigPtr: Global AIE configuration pointer.
 *
 * @return	XAIE_OK on success and error code on failure
 *
@@ -251,11 +253,11 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 /*****************************************************************************/
 /**
 *
-* This is the api to initialize the AI engine partition. It will initialize the
+* This is the API to initialize the AI engine partition. It will initialize the
 * AI engine partition hardware.
 *
-* @param	DevInst - Global AIE device instance pointer.
-* @param	Opts - AI engine partition initialization options.
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Opts: AI engine partition initialization options.
 *			If @Opts is NULL, it will do the default options without
 *			clock gating. The default options will:
 *			* reset columns,
@@ -272,8 +274,6 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 *			* XAIE_PART_INIT_OPT_ZEROIZEMEM (not on by default)
 *
 * @return	XAIE_OK on success and error code on failure.
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
@@ -299,14 +299,12 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 /*****************************************************************************/
 /**
 *
-* This is the api to teardown the AI engine partition. It will initialize
+* This is the API to teardown the AI engine partition. It will initialize
 * the AI engine partition hardware.
 *
-* @param	DevInst - Global AIE device instance pointer.
+* @param	DevInst: Global AIE device instance pointer.
 *
 * @return	XAIE_OK on success and error code on failure.
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
@@ -334,11 +332,9 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 *
 * The API clears partition context
 *
-* @param        DevInst - Global AIE device instance pointer.
+* @param        DevInst: Global AIE device instance pointer.
 *
 * @return       XAIE_OK on success and error code on failure.
-*
-* @note         None.
 *
 ******************************************************************************/
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
@@ -365,16 +361,16 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
-* This is the api to setup the AI engine partition intialization. It is
+* This is the API to setup the AI engine partition intialization. It is
 * supposed to be called after the partition resets.
 *
-* @param	DevInst - Global AIE device instance pointer.
+* @param	DevInst: Global AIE device instance pointer.
 *
 * @return	XAIE_OK on success and error code on failure.
 *
-* @note		This is a temporary wrapper. Expect all users will migrate
-*		to use partition initialization function instead. And then
-*		this wrapper function can be removed in future.
+* @note		This is a temporary wrapper. Users should migrate to use
+* 		partition initialize function instead. This function will
+* 		be deprecated in the future.
 *
 ******************************************************************************/
 AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
@@ -392,14 +388,12 @@ AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
-* This is the api to finish the AI enigne partition. It will release
-* the occupied AI engine resource
+* This is the API to finish the AI enigne partition. It will release
+* the occupied AI engine resources.
 *
-* @param	DevInst - Global AIE device instance pointer.
+* @param	DevInst: Global AIE device instance pointer.
 *
 * @return	XAIE_OK on success and error code on failure.
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_Finish(XAie_DevInst *DevInst)
@@ -436,14 +430,12 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
-* This is the api to set the IO backend of the driver at runtime.
+* This is the API to set the I/O backend of the driver at runtime.
 *
-* @param	DevInst - Global AIE device instance pointer.
-* @param	Backend - Backend IO type to switch to.
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Backend: Backend I/O type to switch to.
 *
 * @return	XAIE_OK on success and error code on failure.
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
@@ -499,8 +491,6 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 *
 * @return	Pointer to the allocated memory instance.
 *
-* @note		None.
-*
 *******************************************************************************/
 XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
@@ -532,8 +522,6 @@ XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
-*
 *******************************************************************************/
 AieRC XAie_MemFree(XAie_MemInst *MemInst)
 {
@@ -558,8 +546,6 @@ AieRC XAie_MemFree(XAie_MemInst *MemInst)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
-*
 *******************************************************************************/
 AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 {
@@ -583,8 +569,6 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 * @param	MemInst: Memory instance pointer.
 *
 * @return	XAIE_OK on success, Error code on failure.
-*
-* @note		None.
 *
 *******************************************************************************/
 AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
@@ -611,8 +595,6 @@ AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 *
 * @return	Mapped virtual address of the memory instance.
 *
-* @note		None.
-*
 *******************************************************************************/
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 {
@@ -634,8 +616,6 @@ void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 *
 * @return	Physical address of the memory instance.
 *
-* @note		None.
-*
 *******************************************************************************/
 u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 {
@@ -654,7 +634,7 @@ u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 * partition device instance.
 *
 * @param	DevInst: Device Instance
-* @param	MemInst: pointer to memory instance which will be filled with
+* @param	MemInst: Pointer to memory instance which will be filled with
 *			 attached AI engine memory instance information by
 *			 this function.
 * @param	DevAddr: Device address of the allocated memory. It is usually
@@ -668,8 +648,6 @@ u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 *			   backend, it is the file descriptor of a dmabuf.
 *
 * @return	XAIE_OK for success, or error code for failure.
-*
-* @note		None.
 *
 *******************************************************************************/
 AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
@@ -710,8 +688,6 @@ AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
 * @param	MemInst: Memory Instance
 *
 * @return	XAIE_OK for success, and error code for failure.
-*
-* @note		None.
 *
 *******************************************************************************/
 AieRC XAie_MemDetach(XAie_MemInst *MemInst)
@@ -823,15 +799,15 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
-* This api starts the execution of the driver in transaction mode. All the
-* resulting IO operations are stored in an internally managed buffer. The user
-* has to explicitly submit the transaction for the driver to execute the IO
+* This API starts the execution of the driver in transaction mode. All the
+* resulting I/O operations are stored in an internally managed buffer. The user
+* has to explicitly submit the transaction for the driver to execute the I/O
 * operations to configure the device. The transaction instance allocated by this
-* api is tied to the thread id of the executing context. SubmitTransaction api
+* API is tied to the thread ID of the executing context. SubmitTransaction API
 * must be called from the same context with NULL for the TxnInst parameter.
 *
-* @param	DevInst - Device instance pointer.
-* @param	Flags - Flags passed by the user.
+* @param	DevInst: Device instance pointer.
+* @param	Flags: Flags passed by the user.
 *			XAIE_TRANSACTION_ENABLE/DISBALE_AUTO_FLUSH
 *
 * @return	XAIE_OK on success and error code on failure.
@@ -842,7 +818,7 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 *		If the DISABLE_AUTO_FLUSH flag is set, the driver will return an
 *		error when an API results in Read/MaskPoll/CmdWrite/RunOp
 *		operation. In both cases, the user has to call
-*		XAie_SubmitTransaction API to flush all the pending IO
+*		XAie_SubmitTransaction API to flush all the pending I/O
 *		operations stored in the command buffer.
 *
 ******************************************************************************/
@@ -860,19 +836,17 @@ AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags)
 /*****************************************************************************/
 /**
 *
-* This api executes all the pending IO operations stored in the command buffer.
-* The transaction instance returned by the StartTransaction api is tied to the
-* thread id of the executing context. If TxnInst is NULL, the transaction
-* instance is automatically fetched using the thread id of the current context.
+* This API executes all the pending I/O operations stored in the command buffer.
+* The transaction instance returned by the StartTransaction API is tied to the
+* thread ID of the executing context. If TxnInst is NULL, the transaction
+* instance is automatically fetched using the thread ID of the current context.
 * If the TxnInst is not NULL, the transaction instance passed by the user is
 * executed.
 *
-* @param	DevInst - Device instance pointer.
-* @param	TxnInst - Transaction instance pointer.
+* @param	DevInst: Device instance pointer.
+* @param	TxnInst: Transaction instance pointer.
 *
 * @return	XAIE_OK on success and Error code or failure.
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
@@ -889,11 +863,11 @@ AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 /*****************************************************************************/
 /**
 *
-* This api copies an existing transaction instance and returns a copy of the
+* This API copies an existing transaction instance and returns a copy of the
 * instance with all the commands for users to save the commands and use them
 * at a later point.
 *
-* @param	DevInst - Device instance pointer.
+* @param	DevInst: Device instance pointer.
 *
 * @return	Pointer to copy of transaction instance on success and NULL
 *		on error.
@@ -903,7 +877,7 @@ AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 *		enabled during the creating of the initial transaction, the
 *		instance returned by this API will not have the commands that
 *		are already flushed. The transaction instance must be exported
-*		before it is submitted as the XAie_SubmitTransaction api will
+*		before it is submitted as the XAie_SubmitTransaction API will
 *		free all the resources associated with it.
 *
 ******************************************************************************/
@@ -921,13 +895,11 @@ XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
-* This api releases the memory resources used by exported transaction instance.
+* This API releases the memory resources used by exported transaction instance.
 *
-* @param	TxnInst - Existing Transaction instance
+* @param	TxnInst: Existing Transaction instance
 *
 * @return	XAIE_OK on success or error code on failure.
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst)
@@ -946,11 +918,9 @@ AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst)
 * This is the API to return if the device generation has checkboarded tiles for
 * broadcast ungating
 *
-* @param	DevInst - Global AIE device instance pointer.
-* @param	IsCheckerBoard - pointer to be set if tile is checkerboarded
+* @param	DevInst: Global AIE device instance pointer.
+* @param	IsCheckerBoard: pointer to be set if tile is checkerboarded
 * @return	XAIE_OK on success
-*
-* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard)
@@ -967,6 +937,16 @@ AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+*
+* This is the API updates the base NPI address.
+*
+* @param	DevInst: Global AIE device instance pointer.
+* @param	NpiAddr: Base NPI address
+* @return	XAIE_OK on success error code on failure.
+*
+******************************************************************************/
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr)
 {
 	if((DevInst == NULL) || (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -981,19 +961,17 @@ AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr)
 /*****************************************************************************/
 /**
 *
-* This api copies an existing transaction instance and returns a copy of the
+* This API copies an existing transaction instance and returns a copy of the
 * instance with all the commands for users to save the commands and use them
 * at a later point.
 *
-* @param	DevInst - Device instance pointer.
-* @param	NumConsumers - Number of consumers for the generated
+* @param	DevInst: Device instance pointer.
+* @param	NumConsumers: Number of consumers for the generated
 *		transactions (Unused for now)
-* @param	Flags - Flags (Unused for now)
+* @param	Flags: Flags (Unused for now)
 *
 * @return	Pointer to copy of transaction instance on success and NULL
 *		on error.
-*
-* @note		None.
 *
 ******************************************************************************/
 u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
@@ -1011,14 +989,10 @@ u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
-* This api deallocates the memory allocated for the serialized transaction
+* This API deallocates the memory allocated for the serialized transaction
 * buffer.
 *
-* @param	Ptr - Pointer to the transaction buffer.
-*
-* @return	None.
-*
-* @note		None.
+* @param	Ptr: Pointer to the transaction buffer.
 *
 ******************************************************************************/
 void XAie_FreeSerializedTransaction(void *Ptr)
@@ -1043,11 +1017,11 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 /*****************************************************************************/
 /**
-* This function configure the attribute for the backend.
+* This function configures the attribute for the backend.
 *
-* @param	DevInst - Device instance pointer.
-* @param	AttrType - Backend attribute type.
-* @param	AttrVal - Backend attribute value.
+* @param	DevInst: Device instance pointer.
+* @param	AttrType: Backend attribute type.
+* @param	AttrVal: Backend attribute value.
 *
 * @return	XAIE_OK on success and error code on failure
 *
@@ -1066,17 +1040,16 @@ AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
 * This function captures kernel utilization of the core tiles mentioned in the
 * columns in range in PerfInst.
 *
-* @param	DevInst - Device instance pointer.
-* @param	PerfInst - Performance instance pointer.
-*
+* @param	DevInst: Device instance pointer.
+* @param	PerfInst: Performance instance pointer.
 * @return	XAIE_OK on success and error code on failure.
 *
 * @note		If Range in PerfInst is NULL, all the columns in the partition
 *		will be scaned to gather all the core tiles in the partition.
 *
 ******************************************************************************/
-
-AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst) {
+AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
+{
 
 	AieRC RC = XAIE_OK;
 	XAie_Range PartRange;
@@ -1143,4 +1116,4 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst) {
 	return XAIE_OK;
 }
 
-/** @} */
+/** @}@} */
