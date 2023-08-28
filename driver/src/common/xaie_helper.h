@@ -96,28 +96,6 @@
 #define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
 #endif
 
-/**************************** Type Definitions *******************************/
-typedef enum {
-	XAIE_IO_WRITE,
-	XAIE_IO_BLOCKWRITE,
-	XAIE_IO_BLOCKSET,
-	XAIE_IO_MASKWRITE,
-	XAIE_IO_MASKPOLL,
-	XAIE_CONFIG_SHIMDMA_BD,
-	XAIE_CONFIG_SHIMDMA_DMABUF_BD,
-	XAIE_IO_CUSTOM_OP_BEGIN = 1U<<7U,
-	XAIE_IO_CUSTOM_OP_MAX = UCHAR_MAX,
-} XAie_TxnOpcode;
-
-struct XAie_TxnCmd {
-	XAie_TxnOpcode Opcode;
-	u32 Mask;
-	u64 RegOff;
-	u32 Value;
-	u64 DataPtr;
-	u32 Size;
-};
-
 /* Data structure to capture the dma status */
 typedef struct {
         u32 S2MMStatus;
