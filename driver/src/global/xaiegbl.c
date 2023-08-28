@@ -79,7 +79,7 @@ extern u8 XAieDevType;
 * @param	Inst: Pointer of AI engine partition instance
 * @param	PartBaseAddr: Partition base address
 * @param	PartStartCol: Absolute partition start column
-* @param	PartNumCols: number of columns of the partition
+* @param	PartNumCols: Number of columns of the partition
 *
 * @return	XAIE_OK.
 *
@@ -674,7 +674,6 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 * @param        DevInst: Device Instance
 *
 * @return       XAIE_OK on success
-* @note         None
 *
 *******************************************************************************/
 AieRC XAie_TurnEccOff(XAie_DevInst *DevInst)
@@ -698,7 +697,6 @@ AieRC XAie_TurnEccOff(XAie_DevInst *DevInst)
 * @param        DevInst: Device Instance
 *
 * @return       XAIE_OK on success
-* @note         None
 *
 *******************************************************************************/
 AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
@@ -867,7 +865,7 @@ AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst)
 * broadcast ungating
 *
 * @param	DevInst: Global AIE device instance pointer.
-* @param	IsCheckerBoard: pointer to be set if tile is checkerboarded
+* @param	IsCheckerBoard: Pointer to be set if tile is checkerboarded
 * @return	XAIE_OK on success
 *
 ******************************************************************************/
