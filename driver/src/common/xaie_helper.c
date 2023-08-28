@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include "xaie_helper.h"
+#include "xaie_txn.h"
 
 /************************** Constant Definitions *****************************/
 #define XAIE_DEFAULT_NUM_CMDS 1024U
@@ -581,7 +582,7 @@ AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags)
 	Inst->NumCmds = 0U;
 	Inst->MaxCmds = XAIE_DEFAULT_NUM_CMDS;
 	Inst->Tid = Backend->Ops.GetTid();
-	Inst->NextCustomOp = (u8)XAIE_IO_CUSTOM_OP_BEGIN;
+	Inst->NextCustomOp = (u8)XAIE_IO_CUSTOM_OP_NEXT;
 
 	XAIE_DBG("Transaction buffer allocated with id: %ld\n", Inst->Tid);
 	Inst->Flags = Flags;
