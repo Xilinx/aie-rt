@@ -42,7 +42,7 @@
 *
 *******************************************************************************/
 static inline int _XAie_Length(const char* XAie_RegStrings) {
-	u8 XAie_RegStrSize = 0;
+	int XAie_RegStrSize = 0;
 	while(*XAie_RegStrings != '\0') {
 		XAie_RegStrSize++;
 		XAie_RegStrings++;
@@ -74,9 +74,9 @@ static int _XAie_strcpy(char* Destination, u32 DestSize, const char* Source,
 
     int len = 0;
     const char* Ptr = Source;
-    u32 RegStrSize = _XAie_Length(Ptr);
+    u32 RegStrSize = (u32)_XAie_Length(Ptr);
 
-    RegStrSize += CommaNeeded ? 1U: 0U;
+    RegStrSize += (CommaNeeded != 0U) ? 1U: 0U;
 
     if (Destination == NULL || Source == NULL || DestSize < RegStrSize) {
         return -1;

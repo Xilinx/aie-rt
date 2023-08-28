@@ -1029,7 +1029,7 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
 		XAie_BackendAttrType AttrType, u64 AttrVal)
 {
-	if(!DevInst || !DevInst->Backend->Ops.SetAttr) {
+	if((DevInst == 0U) || (DevInst->Backend->Ops.SetAttr == 0U)) {
 		return XAIE_INVALID_ARGS;
 	}
 	return DevInst->Backend->Ops.SetAttr(DevInst->IOInst, AttrType, AttrVal);
@@ -1082,7 +1082,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	Size = sizeof(XAie_Occupancy);
+	Size = (u32)sizeof(XAie_Occupancy);
 	NumTiles = (DevInst->NumCols) * DevInst->AieTileNumRows;
 	if((PerfInst->UtilSize)	< (NumTiles * Size)) {
 		XAIE_ERROR("Insufficient Buffer Size!\n");
@@ -1092,7 +1092,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	/*
 	 * PerfInst->UtilSize will contain the number of elements hereforth.
 	 */
-	PerfInst->UtilSize /= sizeof(XAie_Occupancy);
+	PerfInst->UtilSize =(u32)(PerfInst->UtilSize/sizeof(XAie_Occupancy));
 
 	/*
 	 * By default kernel utilization is captured over a time interval of

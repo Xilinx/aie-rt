@@ -369,8 +369,8 @@ static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 *******************************************************************************/
 static AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 {
-	Xil_DCacheFlushRange((uintptr_t)MemInst->VAddr,
-			(uintptr_t)MemInst->Size);
+	Xil_DCacheFlushRange((intptr_t)MemInst->VAddr,
+			(intptr_t)MemInst->Size);
 
 	return XAIE_OK;
 }

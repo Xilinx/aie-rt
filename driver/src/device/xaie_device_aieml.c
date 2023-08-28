@@ -323,11 +323,11 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		XAie_LocType Loc;
 		u32 ColClockStatus;
 
-		Loc = XAie_TileLoc(C, 1);
+		Loc = XAie_TileLoc((u8)C, 1U);
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, DevInst->NumRows - 1);
+				ColClockStatus, (u32)(DevInst->NumRows - 1U));
 	}
 
 	for(u32 i = 0; i < Args->NumTiles; i++) {
@@ -453,7 +453,7 @@ AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 	u32 ColClockStatus;
 
 	u32 StartBit, EndBit;
-	u32 PartEndCol = DevInst->StartCol + DevInst->NumCols - 1;
+	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
 
 	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
 	   ((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
@@ -463,7 +463,7 @@ AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 
 	/*Enable the clock control register for shims*/
 	for(u32 C = Args->StartCol; C < (Args->StartCol + Args->NumCols); C++) {
-		XAie_LocType TileLoc = XAie_TileLoc(C, 1);
+		XAie_LocType TileLoc = XAie_TileLoc((u8)C, 1U);
 
 		RC = _XAieMl_PmSetColumnClockBuffer(DevInst, TileLoc,
 				Args->Enable);
@@ -480,8 +480,10 @@ AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 		}
 	}
 
-	StartBit = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol, 0));
-	EndBit = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol + Args->NumCols, 0));
+	StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
+			 XAie_TileLoc((u8)Args->StartCol, 0));
+	EndBit = _XAie_GetTileBitPosFromLoc(DevInst,
+			 XAie_TileLoc((u8)(Args->StartCol + Args->NumCols), 0));
 
 	if(Args->Enable) {
 		/*

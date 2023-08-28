@@ -53,11 +53,12 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 		u8 TType, XAie_ModuleType Mod, u8 RegNum) {
 	int CharsWritten = 0, Ret;
 	XAie_Events Flag;
+	u32 FlagVal;
 	u8 MappedEvent, CommaNeeded, EventStrSize;
-
 	const XAie_EvntMod *EvntMod;
 	const char** XAie_EvntStrings = NULL, *XAie_EvntStringsPtr = NULL;
 	CommaNeeded = 0U;
+	FlagVal = (u32)Flag;
 
 	if((TType == XAIEGBL_TILE_TYPE_SHIMNOC) ||
 			(TType == XAIEGBL_TILE_TYPE_SHIMPL)) {
@@ -74,9 +75,9 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 		EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[Mod];
 	}
 
-	for(Flag = EvntMod->EventMin; Flag <= EvntMod->EventMax;
-					Flag++) {
-		XAie_Events Evnt = Flag - EvntMod->EventMin;
+	for(FlagVal = EvntMod->EventMin; FlagVal <= EvntMod->EventMax;
+					FlagVal++) {
+		XAie_Events Evnt = FlagVal - EvntMod->EventMin;
 		MappedEvent = EvntMod->XAie_EventNumber[Evnt];
 		/*
 		 * 1. Events no. 13 - 62, 67 - 75 are NoC only events skipping
@@ -92,7 +93,7 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 		}
 		if(XAie_EvntStrings[MappedEvent] != NULL) {
 			CommaNeeded = 0x1U;
-			u32 Val = (Reg >> MappedEvent) & 0x1;
+			u32 Val = (Reg >> MappedEvent) & 0x1U;
 			if(Val) {
 				Ret = _XAie_strcpy(&Buf[CharsWritten],
 						BufSize-CharsWritten,
