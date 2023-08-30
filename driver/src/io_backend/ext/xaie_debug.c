@@ -359,12 +359,11 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
 		{
-			XAie_ShimDmaBdArgs *BdArgs = (XAie_ShimDmaBdArgs *)Arg;
-			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
-				XAie_DebugIO_Write32(IOInst,
-						BdArgs->Addr + (u64)(i * 4U),
-						BdArgs->BdWords[i]);
-			}
+			XAie_ShimDmaBdArgs *BdArgs =
+				(XAie_ShimDmaBdArgs *)Arg;
+
+			XAie_DebugIO_BlockWrite32(IOInst, BdArgs->Addr,
+				BdArgs->BdWords, BdArgs->NumBdWords);
 			break;
 		}
 		case XAIE_BACKEND_OP_REQUEST_TILES:

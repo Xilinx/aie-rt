@@ -1622,11 +1622,9 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 								(u64)(uintptr_t)Buf;
 				TxnInst->NumCmds++;
 			} else {
-				for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
-					XAie_Write32(DevInst,
-							BdArgs->Addr + (u64)(i * 4U),
-							BdArgs->BdWords[i]);
-				}
+				XAie_BlockWrite32(DevInst,
+						     BdArgs->Addr, BdArgs->BdWords,
+						     BdArgs->NumBdWords);
 			}
 			return XAIE_OK;
 		}

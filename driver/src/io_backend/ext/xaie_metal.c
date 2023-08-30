@@ -557,13 +557,11 @@ static AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
 		{
-			XAie_ShimDmaBdArgs *BdArgs = (XAie_ShimDmaBdArgs *)Arg;
-			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
-				XAie_MetalIO_Write32(IOInst,
-						BdArgs->Addr + i * 4,
-						BdArgs->BdWords[i]);
-			}
-			RC = XAIE_OK;
+			XAie_ShimDmaBdArgs *BdArgs =
+				(XAie_ShimDmaBdArgs *)Arg;
+
+			XAie_MetalIO_BlockWrite32(IOInst, BdArgs->Addr,
+				BdArgs->BdWords, BdArgs->NumBdWords);
 			break;
 		}
 		case XAIE_BACKEND_OP_REQUEST_TILES:

@@ -532,11 +532,9 @@ static AieRC XAie_SocketIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		{
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
-			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
-				XAie_SocketIO_Write32(IOInst,
-						BdArgs->Addr + i * 4,
-						BdArgs->BdWords[i]);
-			}
+
+			XAie_SocketIO_BlockWrite32(IOInst, BdArgs->Addr,
+				BdArgs->BdWords, BdArgs->NumBdWords);
 			break;
 		}
 		case XAIE_BACKEND_OP_NPIWR32:
