@@ -286,11 +286,9 @@ static AieRC XAie_IpuIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		{
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
-			for(u8 i = 0; i < BdArgs->NumBdWords; i++) {
-				XAie_IpuIO_Write32(IOInst,
-						BdArgs->Addr + i * 4,
-						BdArgs->BdWords[i]);
-			}
+
+			XAie_IpuIO_BlockWrite32(IOInst, BdArgs->Addr,
+				BdArgs->BdWords, BdArgs->NumBdWords);
 			break;
 		}
 		default:
