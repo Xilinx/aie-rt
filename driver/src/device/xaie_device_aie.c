@@ -535,7 +535,7 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
 
 	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
-			((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
+			((Args->StartCol + Args->NumCols - 1U) > PartEndCol) ) {
 		XAIE_ERROR("Invalid Start Column/Numcols \n");
 		return XAIE_ERR;
 	}

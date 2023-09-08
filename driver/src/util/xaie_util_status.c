@@ -96,7 +96,7 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf, u32 BufSize) {
     u32 TempReg = Reg;
     if( (TempReg & 0x01U) ) {// if bit 0 is set then Enabled state.
 	CommaNeeded = 0x1U;
-        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 			XAie_CoreStatus_Strings[Shift], CommaNeeded);
 	if(Ret == -1) {
 		return -1;
@@ -112,7 +112,7 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf, u32 BufSize) {
     Val = TempReg & 0x01U;
     if(Val) {
 	    // if bit 1 is set then Reset state.
-	Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+	Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 			XAie_CoreStatus_Strings[Shift], CommaNeeded);
 	if(Ret == -1) {
 		return -1;
@@ -124,7 +124,7 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf, u32 BufSize) {
     }
     if((Reg&0x01U) || (Reg&0x02U) == 0U) {
 	    // if neither bit 0 nor bit  1 is set, Disabled is output.
-        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 			"Disabled", CommaNeeded);
 	if(Ret == -1) {
 		return -1;
@@ -137,11 +137,11 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf, u32 BufSize) {
 
     TempReg     = TempReg >> 1;
 
-    while(TempReg!=0){
+    while(TempReg!=0U){
 	Shift++;
 	Val 	= TempReg & 0x1U;
 	if (Val){
-            Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+            Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 			    XAie_CoreStatus_Strings[Shift], CommaNeeded);
 		if(Ret == -1) {
 			return -1;
@@ -186,20 +186,21 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
     u8 CommaNeeded = 0U;
     FlagVal = (u32)Flag;
 
-    for(FlagVal = (u32)XAIE_DMA_STATUS_S2MM_STATUS; FlagVal <= XAIE_DMA_STATUS_S2MM_MAX; FlagVal++) {
+    for(FlagVal = (u32)XAIE_DMA_STATUS_S2MM_STATUS; FlagVal <= (u32)XAIE_DMA_STATUS_S2MM_MAX;
+		    FlagVal++) {
 	Ret = 0;
 	CommaNeeded = 1U;
         // Below is for bits  8, 9 in DMAS2MM for mem tile
         if( (TType != XAIEGBL_TILE_TYPE_MEMTILE) && \
-			((FlagVal == XAIE_DMA_STATUS_S2MM_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
-			 (FlagVal == XAIE_DMA_STATUS_S2MM_ERROR_DM_ACCESS_TO_UNAVAIL))
+			((FlagVal == (u32)XAIE_DMA_STATUS_S2MM_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
+			 (FlagVal == (u32)XAIE_DMA_STATUS_S2MM_ERROR_DM_ACCESS_TO_UNAVAIL))
 	  ) {
 	   continue;
 	}
 
         // Below is for bits 16,17 in DMAS2MM for shim tile
-        if( (TType != XAIEGBL_TILE_TYPE_SHIMNOC) && ((FlagVal == XAIE_DMA_STATUS_S2MM_AXI_MM_DECODE_ERROR) || \
-				   (FlagVal == XAIE_DMA_STATUS_S2MM_AXI_MM_SLAVE_ERROR)) ) {
+        if( (TType != XAIEGBL_TILE_TYPE_SHIMNOC) && ((FlagVal == (u32)XAIE_DMA_STATUS_S2MM_AXI_MM_DECODE_ERROR) || \
+				   (FlagVal == (u32)XAIE_DMA_STATUS_S2MM_AXI_MM_SLAVE_ERROR)) ) {
 	   continue;
 	}
 
@@ -210,7 +211,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
             switch (FlagVal) {
 		case (u32)XAIE_DMA_STATUS_S2MM_STATUS:
 			CommaNeeded = 0U;
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten ,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten ,
 				    "Channel_status:", CommaNeeded);
 		    if(Ret == -1) {
 			    return -1;
@@ -222,19 +223,19 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 		    Val &= 0x3U;
 		    CommaNeeded = 1U;
 		    if (Val == 0U) {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Idle", CommaNeeded);
 		    }
 		    else if (Val == 1U) {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Starting", CommaNeeded);
 		    }
 		    else if (Val == 2U) {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Running", CommaNeeded);
 		    }
 		    else {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Invalid_State", CommaNeeded);
 		    }
 		    break;
@@ -242,11 +243,11 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 		    Val &= 0x01U;
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    if (Val == 0U) {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_status:okay", CommaNeeded);
 		    }
 		    else {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_status:channel_overflow",
 					CommaNeeded);
 		    }
@@ -255,11 +256,11 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 		    Val &= 0x1U;
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    if (Val == 0U) {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_empty", CommaNeeded);
 		    }
 		    else {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_not_empty", CommaNeeded);
 		    }
 		    break;
@@ -268,7 +269,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 		    CommaNeeded = 0U;
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    _XAie_ToString(TempString, (int)Val);
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    ";Tasks_in_queue:", CommaNeeded);
 		    if(Ret == -1) {
 			return -1;
@@ -277,7 +278,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 			CharsWritten += Ret;
                     }
 		    CommaNeeded = 1U;
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    TempString, CommaNeeded);
 		    break;
 		case (u32)XAIE_DMA_STATUS_S2MM_CURRENT_BD:
@@ -290,7 +291,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 		    CommaNeeded = 0U;
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    _XAie_ToString(TempString,(int)Val);
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    ";Current_bd:", CommaNeeded);
 		    if(Ret == -1) {
 			return -1;
@@ -299,13 +300,13 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 			CharsWritten += Ret;
                     }
 		    CommaNeeded = 1U;
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    TempString, CommaNeeded);
 		    break;
 		default:
 		    Val &= 0x1U;
 		    if (Val) {
-			Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+			Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					XAie_DmaS2MMStatus_Strings[FlagVal],
 					CommaNeeded);
 		    }
@@ -352,22 +353,23 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
     u8 CommaNeeded = 0U;
     FlagVal = (u32)Flag;
 
-    for(FlagVal = (u32)XAIE_DMA_STATUS_MM2S_STATUS; FlagVal <= XAIE_DMA_STATUS_MM2S_MAX; FlagVal++) {
+    for(FlagVal = (u32)XAIE_DMA_STATUS_MM2S_STATUS; FlagVal <= (u32)XAIE_DMA_STATUS_MM2S_MAX;
+			 FlagVal++) {
 	Ret = 0;
 	CommaNeeded = 1U;
         // Below is for bits  8, 9, 10 in DMA_MM2S for mem tile
         if( (TType != XAIEGBL_TILE_TYPE_MEMTILE) && \
-			((FlagVal == XAIE_DMA_STATUS_MM2S_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
-                         (FlagVal == XAIE_DMA_STATUS_MM2S_ERROR_DM_ACCESS_TO_UNAVAIL)   || \
-			 (FlagVal == XAIE_DMA_STATUS_MM2S_ERROR_BD_UNAVAIL))
+			((FlagVal == (u32)XAIE_DMA_STATUS_MM2S_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
+                         (FlagVal == (u32)XAIE_DMA_STATUS_MM2S_ERROR_DM_ACCESS_TO_UNAVAIL)   || \
+			 (FlagVal == (u32)XAIE_DMA_STATUS_MM2S_ERROR_BD_UNAVAIL))
 	  ) {
            continue;
 	}
 
 	// Below is for bits 16, 17 in DMA_MM2S for shim tile
 	if( (TType != XAIEGBL_TILE_TYPE_SHIMNOC) && \
-			((FlagVal == XAIE_DMA_STATUS_MM2S_AXI_MM_DECODE_ERROR) || \
-			 (FlagVal == XAIE_DMA_STATUS_MM2S_AXI_MM_SLAVE_ERROR))
+			((FlagVal == (u32)XAIE_DMA_STATUS_MM2S_AXI_MM_DECODE_ERROR) || \
+			 (FlagVal == (u32)XAIE_DMA_STATUS_MM2S_AXI_MM_SLAVE_ERROR))
 	  ) {
 	   continue;
 	}
@@ -379,7 +381,7 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
             switch (FlagVal) {
                 case (u32)XAIE_DMA_STATUS_MM2S_STATUS:
 		    CommaNeeded = 0U;
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    "Channel_status:", CommaNeeded);
 		    if(Ret == -1) {
 			return -1;
@@ -390,19 +392,19 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 		    CommaNeeded = 1U;
                     Val &= 0x3U;
                     if (Val == 0U) {
-                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Idle", CommaNeeded);
                     }
                     else if (Val == 1U) {
-                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Starting", CommaNeeded);
                     }
                     else if (Val == 2U) {
-                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Running", CommaNeeded);
                     }
                     else {
-                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					"Invalid_State", CommaNeeded);
                     }
                     break;
@@ -410,11 +412,11 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    Val &= 0x01U;
 		    if (Val == 0U) {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_status:okay", CommaNeeded);
 		    }
 		    else {
-		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_status:channel_overflow", CommaNeeded);
 		    }
 		    break;
@@ -422,11 +424,11 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 		    CharsWritten--; // to overwrite the comma in the previous write
                     Val &= 0x1U;
                     if (Val == 0U) {
-                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_empty", CommaNeeded);
 		    }
                     else {
-                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                        Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 					";Queue_not_empty", CommaNeeded);
 		    }
                     break;
@@ -435,7 +437,7 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 		    CharsWritten--; // to overwrite the comma in the previous write
                     Val &= 0x7U;
                     _XAie_ToString(TempString, (int)Val);
-		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+		    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    ";Tasks_in_queue:", CommaNeeded);
 		    if(Ret == -1) {
 			    return -1;
@@ -445,7 +447,7 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 		    }
 
 		    CommaNeeded = 1U;
-                    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    TempString, CommaNeeded);
                     break;
                 case (u32)XAIE_DMA_STATUS_MM2S_CURRENT_BD:
@@ -459,7 +461,7 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 		    }
 
                     _XAie_ToString(TempString, (int)Val);
-                    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    ";Current_bd:", CommaNeeded);
 		    if(Ret == -1) {
 			    return -1;
@@ -468,14 +470,14 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 			CharsWritten += Ret;
 		    }
 		    CommaNeeded = 1U;
-                    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-CharsWritten,
+                    Ret = _XAie_strcpy(&Buf[CharsWritten], BufSize-(u32)CharsWritten,
 				    TempString, CommaNeeded);
                     break;
                 default:
                     Val &= 0x1U;
                     if (Val) {
                         Ret = _XAie_strcpy(&Buf[CharsWritten],
-					BufSize-CharsWritten,
+					BufSize-(u32)CharsWritten,
 					XAie_DmaMM2SStatus_Strings[FlagVal],
 					CommaNeeded);
                     }

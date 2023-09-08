@@ -1356,11 +1356,12 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 Trigger)
 {
 	AieRC RC;
-	u32 FldVal;
+	u32 FldVal, EventVal;
 	u64 RegAddr;
 	u8 TileType, HwEvent;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
@@ -1384,7 +1385,7 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
 		XAIE_ERROR("Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -1394,7 +1395,8 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, Event, &HwEvent);
+	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, (XAie_Events)EventVal,
+				&HwEvent);
 	if (RC != XAIE_OK) {
 		return RC;
 	}

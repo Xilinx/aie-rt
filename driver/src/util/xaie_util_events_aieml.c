@@ -85,10 +85,10 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 		 * 2. Mapping the events depending on the number of the event register.
 		 */
 		if(((TType == XAIEGBL_TILE_TYPE_SHIMPL) &&
-		  (((MappedEvent > 12) && (MappedEvent < 63))
-		  || ((MappedEvent > 66) && (MappedEvent < 76))))
-		  || ((MappedEvent < ((32*RegNum)))
-		  ||(MappedEvent >= (32 * (RegNum + 1))))) {
+		  (((MappedEvent > 12U) && (MappedEvent < 63U))
+		  || ((MappedEvent > 66U) && (MappedEvent < 76U))))
+		  || ((MappedEvent < ((32U*RegNum)))
+		  ||(MappedEvent >= (32U * (RegNum + 1U))))) {
 			continue;
 		}
 		if(XAie_EvntStrings[MappedEvent] != NULL) {
@@ -96,7 +96,7 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 			u32 Val = (Reg >> MappedEvent) & 0x1U;
 			if(Val) {
 				Ret = _XAie_strcpy(&Buf[CharsWritten],
-						BufSize-CharsWritten,
+						BufSize-(u32)CharsWritten,
 						XAie_EvntStrings[MappedEvent],
 						CommaNeeded);
 				if(Ret == -1) {

@@ -154,7 +154,7 @@ AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols,
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
 
 	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
-	   ((StartCol + NumCols - 1) > PartEndCol) ) {
+	   ((StartCol + NumCols - 1U) > PartEndCol) ) {
 
 		XAIE_ERROR("Invalid Start Column/Numcols \n");
 		return XAIE_INVALID_ARGS;
