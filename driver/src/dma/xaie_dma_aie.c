@@ -881,7 +881,7 @@ AieRC _XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 
 	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->ChStatusBase + Dir * DmaMod->ChStatusOffset;
+		DmaMod->ChStatusBase + (u32)Dir * DmaMod->ChStatusOffset;
 
 	Mask = DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Mask |
 		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.StartQSize.Mask |

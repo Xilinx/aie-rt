@@ -620,8 +620,9 @@ static AieRC _XAie_ErrorHandlingEventHaltCore(XAie_DevInst *DevInst)
 			XAie_LocType Loc;
 			Loc = XAie_TileLoc(Col, Row);
 
-			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
 				continue;
+			}
 
 			RC = XAie_CoreConfigureErrorHaltEvent(DevInst, Loc,
 					XAIE_EVENT_GROUP_ERRORS_0_CORE);

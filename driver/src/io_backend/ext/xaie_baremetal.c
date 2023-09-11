@@ -346,7 +346,7 @@ static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	Xil_DCacheInvalidateRange((intptr_t)MemInst->VAddr,
-			(uintptr_t)MemInst->Size);
+			(intptr_t)MemInst->Size);
 
 	return XAIE_OK;
 }

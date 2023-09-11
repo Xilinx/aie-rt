@@ -1128,8 +1128,9 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
-			if (TX_DUMP_ENABLE)
+			if (TX_DUMP_ENABLE) {
 				TxnCmdDump(Cmd);
+			}
 
 			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
 
@@ -1775,8 +1776,9 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		memcpy(tmpBuff, Args, size);
 		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)tmpBuff;
 
-		if (TX_DUMP_ENABLE)
+		if (TX_DUMP_ENABLE) {
 			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
 
 		TxnInst->NumCmds++;
 
@@ -1976,7 +1978,7 @@ static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
 	for(u32 LockCnt = 0; LockCnt < LockMod->NumLocks; LockCnt++) {
 
 		/* read lock value */
-		Lock.LockId = LockCnt;
+		Lock.LockId = (u8)LockCnt;
 		RC = XAie_LockGetValue(DevInst, Loc, Lock, &RegVal);
 		if (RC != XAIE_OK) {
 			return RC;
@@ -1984,12 +1986,12 @@ static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
 
 		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 			Index = Loc.Row - AieTileStart;
-			CoreTile[Index].LockValue[LockCnt] = RegVal;
+			CoreTile[Index].LockValue[LockCnt] = (u8)RegVal;
 		} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 			Index = Loc.Row - MemTileStart;
-			MemTile[Index].LockValue[LockCnt] = RegVal;
+			MemTile[Index].LockValue[LockCnt] = (u8)RegVal;
 		} else {
-			ShimTile[Loc.Row].LockValue[LockCnt] = RegVal;
+			ShimTile[Loc.Row].LockValue[LockCnt] = (u8)RegVal;
 		}
 	}
 	return XAIE_OK;
@@ -2047,7 +2049,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 			/* read event status register and store in output
 			 * buffer */
 			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_CORE_MOD,
-					EventReg, &RegVal);
+					(u8)EventReg, &RegVal);
 			if (RC != XAIE_OK) {
 				return RC;
 			}
@@ -2057,7 +2059,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 			/* read event status register and store in output
 			 * buffer */
 			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_MEM_MOD,
-					EventReg, &RegVal);
+					(u8)EventReg, &RegVal);
 			if (RC != XAIE_OK) {
 				return RC;
 			}
@@ -2069,7 +2071,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 		NumEventReg = EvntMod->NumEventReg;
 		for(u32 EventReg = 0; EventReg < NumEventReg; EventReg++) {
 			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_MEM_MOD,
-					EventReg, &RegVal);
+					(u8)EventReg, &RegVal);
 			if (RC != XAIE_OK) {
 				return RC;
 			}
@@ -2080,7 +2082,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 		NumEventReg = EvntMod->NumEventReg;
 		for(u32 EventReg = 0; EventReg < NumEventReg; EventReg++) {
 			RC = XAie_EventRegStatus(DevInst, Loc, XAIE_PL_MOD,
-					EventReg, &RegVal);
+					(u8)EventReg, &RegVal);
 			if (RC != XAIE_OK) {
 				return RC;
 			}
@@ -2105,27 +2107,28 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 ******************************************************************************/
 AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 {
-	AieRC RC = XAIE_ERR;
-	u32 StartCol = (u32)(DevInst->StartCol);
-	u32 NumCols  = (u32)(DevInst->NumCols);
-	u32 NumRows  = (u32) (DevInst->NumRows);
+	u32 RC = (u32)XAIE_ERR;
+	u8 StartCol = DevInst->StartCol;
+	u8 NumCols  = DevInst->NumCols;
+	u8 NumRows  = DevInst->NumRows;
 	XAie_LocType Loc;
 
-	if(Status == NULL)
+	if(Status == NULL) {
 		return XAIE_ERR;
+	}
 
 	/* iterate specified columns */
-	for(u32 Col = StartCol; Col < NumCols; Col++) {
-		for(u32 Row = 0; Row < NumRows; Row++) {
+	for(u8 Col = StartCol; Col < NumCols; Col++) {
+		for(u8 Row = 0; Row < NumRows; Row++) {
 			Loc.Row = Row;
 			Loc.Col = Col;
-			RC |= _XAie_CoreStatusDump(DevInst,Status, Loc);
-			RC |= _XAie_DmaStatusDump(DevInst, Status, Loc);
-			RC |= _XAie_LockValueStatusDump(DevInst, Status, Loc);
-			RC |= _XAie_EventStatusDump(DevInst, Status, Loc);
+			RC |= (u32)_XAie_CoreStatusDump(DevInst,Status, Loc);
+			RC |= (u32)_XAie_DmaStatusDump(DevInst, Status, Loc);
+			RC |= (u32)_XAie_LockValueStatusDump(DevInst, Status, Loc);
+			RC |= (u32)_XAie_EventStatusDump(DevInst, Status, Loc);
 		}
 	}
-	return RC;
+	return (AieRC)RC;
 }
 
 /** @} */
