@@ -766,7 +766,7 @@ static inline int _XAie_LMemBarrier(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + XAIE_PL_MODULE_SPARE_REG;
 	_XAie_LPartWrite32(DevInst, RegAddr, Value);
-	Ret = _XAie_LPartPoll32(DevInst, RegAddr, 0x1, Value, 800);
+	Ret = _XAie_LPartPoll32(DevInst, RegAddr, 0xFFFF, Value, 800);
 	if (Ret < 0)
 		return Ret;
 
