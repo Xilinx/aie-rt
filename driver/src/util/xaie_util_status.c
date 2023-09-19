@@ -121,7 +121,6 @@ static int _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
         return XAIE_ERR;
     }
 
-    char *ptr = Destination;
     while (*Source != '\0')
     {
         *Destination = *Source;
@@ -249,7 +248,7 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
 int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 
     int CharsWritten = 0;
-    enum DmaStatus_S2MM_enum Flag;
+    enum DmaStatus_S2MM_enum Flag = 0;
     u32 FlagVal;
     FlagVal = (u32)Flag;
 
@@ -359,7 +358,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 
     int CharsWritten = 0;
-    enum DmaStatus_MM2S_enum Flag;
+    enum DmaStatus_MM2S_enum Flag = 0;
     u32 FlagVal;
     FlagVal = (u32)Flag;
 

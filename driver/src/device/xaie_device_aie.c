@@ -530,7 +530,6 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 {
 	AieRC RC;
-	u8 flag;
 	u32 StartBit, EndBit;
 
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);

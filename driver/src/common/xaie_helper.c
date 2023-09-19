@@ -742,7 +742,7 @@ static AieRC _XAie_Txn_FlushCmdBuf(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 {
 	AieRC RC;
-	u64 Tid;
+	u64 Tid = 0;
 	XAie_TxnInst *Inst;
 	const XAie_Backend *Backend = DevInst->Backend;
 
@@ -1750,14 +1750,14 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 			return XAIE_ERR;
 		}
 
-		if ( TxnInst->NextCustomOp < OpNumber || (u8)XAIE_IO_CUSTOM_OP_BEGIN > OpNumber || (u8)XAIE_IO_CUSTOM_OP_MAX < OpNumber) {
+		if ( TxnInst->NextCustomOp < OpNumber || (u8)XAIE_IO_CUSTOM_OP_BEGIN > OpNumber) {
 			XAIE_ERROR("Invalid Op Code %d\n",OpNumber);
 			return XAIE_ERR;
 		}
 
 		/* check memory allocation before increase Cmd vector */
 		char* tmpBuff = malloc(size);
-		if(tmpBuff == 0U) {
+		if(tmpBuff == XAIE_NULL) {
 			XAIE_ERROR("Fail to malloc %d size memory for DataPtr\n", size);
 			return XAIE_ERR;
 		}

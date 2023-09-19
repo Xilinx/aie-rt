@@ -50,13 +50,14 @@
 /***************************** Macro Definitions *****************************/
 #define XAIE_128BIT_ALIGN_MASK 0xFF
 
+#ifdef __AIELINUX__
+
 /***************************** Global Variable *******************************/
 static struct aie_perfinst_args *Perfinst = NULL;
 static XAie_PerfInst *UserInst = NULL;
 static void *IOInstLinux = NULL;
 
 /****************************** Type Definitions *****************************/
-#ifdef __AIELINUX__
 
 typedef struct XAie_MemMap {
 	int Fd;
@@ -744,7 +745,7 @@ static u32* _XAie_GetVirtAddrFromOffset(XAie_LinuxIO *IOInst, u64 RegOff,
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,Loc);
 		if(!CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
 			XAIE_ERROR("Tile(%d,%d) is gated \n",Col,Row);
-			return XAIE_INVALID_TILE;
+			return (u32 *)XAIE_INVALID_TILE;
 		}
 	}
 
@@ -806,10 +807,10 @@ static AieRC XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff,
 
 	/* Handle PM and DM sections */
 	VirtAddr =  _XAie_GetVirtAddrFromOffset(Inst, RegOff, Size);
-	if(VirtAddr != NULL && VirtAddr != XAIE_INVALID_TILE) {
+	if(VirtAddr != NULL && VirtAddr != (u32 *)XAIE_INVALID_TILE) {
 		_XAie_CopyDataToMem(VirtAddr, Data, Size);
 		return XAIE_OK;
-	}else if(VirtAddr == XAIE_INVALID_TILE) {
+	}else if(VirtAddr == (u32 *)XAIE_INVALID_TILE) {
 		XAIE_ERROR("Tile is gated \n");
 		return XAIE_ERR;
 	}
@@ -850,12 +851,12 @@ static AieRC XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 
 	/* Handle PM and DM sections */
 	VirtAddr =  _XAie_GetVirtAddrFromOffset(Inst, RegOff, Size);
-	if(VirtAddr != NULL && VirtAddr != XAIE_INVALID_TILE) {
+	if(VirtAddr != NULL && VirtAddr != (u32 *)XAIE_INVALID_TILE) {
 		for(u32 i = 0; i < Size; i++) {
 			*VirtAddr++ = Data;
 		}
 		return XAIE_OK;
-	}else if(VirtAddr == XAIE_INVALID_TILE) {
+	}else if(VirtAddr == (u32 *)XAIE_INVALID_TILE) {
 		XAIE_ERROR("Tile is gated \n");
 		return XAIE_ERR;
 	}
@@ -1292,12 +1293,15 @@ static AieRC _XAie_LinuxIO_SetColumnClock(void *IOInst,
 * @note		Internal only.
 *
 *******************************************************************************/
-void _XAie_LinuxIO_UtilCalculation(int SignalNum, struct siginfo_t *SignalInfo,
+void _XAie_LinuxIO_UtilCalculation(int SignalNum, siginfo_t *SignalInfo,
 		void *Arg) {
 
 	XAie_LinuxIO *LinuxIO = (XAie_LinuxIO *)IOInstLinux;
 	int Ret;
 
+	(void)Arg;
+	(void)SignalInfo;
+	(void)SignalNum;
 	/*
 	 * Stores the size of the Util array in bytes.
 	 */
@@ -1400,7 +1404,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 		RscReq.req.mod = XAIE_CORE_MOD;
 		RscReq.req.type = XAIE_PERFCNT_RSC;
 		RscReq.req.num_rscs = 2;
-		RscReq.rscs = &Rscs;
+		RscReq.rscs = (__u64)&Rscs;
 		Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_REQ_IOCTL, &RscReq);
 		if(Ret != 0U) {
 			XAIE_WARN("Failed to request resource %u\n",

@@ -559,7 +559,7 @@ typedef struct {
 typedef struct {
 	u32 RegOff;
 	XAie_RegFldAttr RstCntr;
-	AieRC (*RstShims)(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols);
+	AieRC (*RstShims)(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols);
 } XAie_ShimRstMod;
 
 /*

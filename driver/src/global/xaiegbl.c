@@ -1002,8 +1002,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 			PerfInst->Range->Num > DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!\n");
 		return XAIE_INVALID_ARGS;
-	} else if(PerfInst->Range->Start < 0U ||
-			PerfInst->Range->Start >= DevInst->NumCols) {
+	} else if(PerfInst->Range->Start >= DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!\n");
 		return XAIE_INVALID_ARGS;
 	}
