@@ -26,6 +26,15 @@
 #define XAIE2PSGBL_PARAMS_H
 
 /* AIE2PS core module register definitions */
+
+/**
+ * @name Core Module register definitions
+ * This registers contains core module information
+ * @{
+ */
+/**
+ * Register:XAIE2PSGBL_CORE_MODULE
+ */
 #define XAIE2PSGBL_CORE_MODULE_PROGRAM_MEMORY      0x00020000
 #define XAIE2PSGBL_CORE_MODULE_PROGRAM_MEMORY_WIDTH                      128
 #define XAIE2PSGBL_CORE_MODULE_PROGRAM_MEMORY_MASK                       0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -7473,8 +7482,18 @@
 #define XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_WIDTH  1
 #define XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_MASK   0x00000001
 #define XAIE2PSGBL_CORE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_DEFVAL 0x1
+/** @} */
 
 /* AIE2PS memory module register definitions */
+
+/**
+ * @name Memory Module register definitions
+ * This registers contains memory module information
+ * @{
+ */
+/**
+ * Register:XAIE2PSGBL_MEMORY_MODULE
+ */
 #define XAIE2PSGBL_MEMORY_MODULE_DATAMEMORY                             0x00000000
 #define XAIE2PSGBL_MEMORY_MODULE_DATAMEMORY_WIDTH                       256
 #define XAIE2PSGBL_MEMORY_MODULE_DATAMEMORY_MASK                        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -11334,8 +11353,18 @@
 #define XAIE2PSGBL_MEMORY_MODULE_LOCK_REQUEST_REQUEST_RESULT_WIDTH    1
 #define XAIE2PSGBL_MEMORY_MODULE_LOCK_REQUEST_REQUEST_RESULT_MASK     0x00000001
 #define XAIE2PSGBL_MEMORY_MODULE_LOCK_REQUEST_REQUEST_RESULT_DEFVAL   0x0
+/** @} */
 
 /* AIE2PS PL module register definitions */
+
+/**
+ * @name Pl Module register definitions
+ * This registers contains pl module information
+ * @{
+ */
+/**
+ * Register:XAIE2PSGBL_PL_MODULE
+ */
 #define XAIE2PSGBL_PL_MODULE_PL_INTERFACE_UPSIZER_CONFIG                0x00030000
 #define XAIE2PSGBL_PL_MODULE_PL_INTERFACE_UPSIZER_CONFIG_WIDTH          32
 #define XAIE2PSGBL_PL_MODULE_PL_INTERFACE_UPSIZER_CONFIG_MASK           0x000001FF
@@ -21080,8 +21109,18 @@
 #define XAIE2PSGBL_PL_NORTH_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_WIDTH 1
 #define XAIE2PSGBL_PL_NORTH_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_MASK 0x00000001
 #define XAIE2PSGBL_PL_NORTH_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_DEFVAL 0x1
+/** @} */
 
 /* AIE2PS NOC module register definitions */
+
+/**
+ * @name Noc Module register definitions
+ * This registers contains noc module information
+ * @{
+ */
+/**
+ * Register:XAIE2PSGBL_NOC_MODULE
+ */
 #define XAIE2PSGBL_NOC_MODULE_LOCK0_VALUE                               0x00000000
 #define XAIE2PSGBL_NOC_MODULE_LOCK0_VALUE_WIDTH                         32
 #define XAIE2PSGBL_NOC_MODULE_LOCK0_VALUE_MASK                          0x0000003F
@@ -24441,8 +24480,18 @@
 #define XAIE2PSGBL_NOC_MODULE_LOCK_REQUEST_REQUEST_RESULT_WIDTH       1
 #define XAIE2PSGBL_NOC_MODULE_LOCK_REQUEST_REQUEST_RESULT_MASK        0x00000001
 #define XAIE2PSGBL_NOC_MODULE_LOCK_REQUEST_REQUEST_RESULT_DEFVAL      0x0
+/** @} */
 
 /* AIE2PS Mem Tile module register definitions */
+
+/**
+ * @name Mem tile Module register definitions
+ * This registers contains mem tile module information
+ * @{
+ */
+/**
+ * Register:XAIE2PSGBL_MEM_TILE_MODULE
+ */
 #define XAIE2PSGBL_MEM_TILE_MODULE_DATAMEMORY                           0x00000000
 #define XAIE2PSGBL_MEM_TILE_MODULE_DATAMEMORY_WIDTH                     256
 #define XAIE2PSGBL_MEM_TILE_MODULE_DATAMEMORY_MASK                      0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -38818,8 +38867,18 @@
 #define XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_WIDTH 1
 #define XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_MASK 0x00000001
 #define XAIE2PSGBL_MEM_TILE_MODULE_TILE_CONTROL_ISOLATE_FROM_SOUTH_DEFVAL 0x1
+/** @} */
 
 /* AIE2PS uc module register definitions */
+
+/**
+ * @name Uc Module register definitions
+ * This registers contains uc module information
+ * @{
+ */
+/**
+ * Register:XAIE2PSGBL_UC_MODULE
+ */
 #define XAIE2PSGBL_UC_MODULE_CORE_PROGRAM_MEMORY                                        0x00080000
 #define XAIE2PSGBL_UC_MODULE_CORE_PROGRAM_MEMORY_WIDTH                                  32
 #define XAIE2PSGBL_UC_MODULE_CORE_PROGRAM_MEMORY_MASK                                   0xFFFFFFFF
@@ -39163,5 +39222,5 @@
 #define XAIE2PSGBL_UC_MODULE_MODULE_DATA_MEMORY_MASK                                    0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 #define XAIE2PSGBL_UC_MODULE_MODULE_DATA_MEMORY_LSB                                     0
 #define XAIE2PSGBL_UC_MODULE_MODULE_DATA_MEMORY_DEFVAL                                  0x0
-
+/** @} */
 #endif

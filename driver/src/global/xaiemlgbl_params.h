@@ -29,6 +29,15 @@
 #define XAIEMLGBL_PARAMS_H
 
 /* AIE-ML core module register definitions */
+
+/**
+ * @name Core Module register definitions
+ * This registers contains core module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_CORE_MODULE
+ */
 #define XAIEMLGBL_CORE_MODULE_PROGRAM_MEMORY                             0x00020000
 #define XAIEMLGBL_CORE_MODULE_PROGRAM_MEMORY_WIDTH                       128
 #define XAIEMLGBL_CORE_MODULE_PROGRAM_MEMORY_MASK                        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -7200,8 +7209,18 @@
 #define XAIEMLGBL_CORE_MODULE_MODULE_RESET_CONTROL_STREAM_SWITCH_RESET_WIDTH 1
 #define XAIEMLGBL_CORE_MODULE_MODULE_RESET_CONTROL_STREAM_SWITCH_RESET_MASK 0x00000001
 #define XAIEMLGBL_CORE_MODULE_MODULE_RESET_CONTROL_STREAM_SWITCH_RESET_DEFVAL 0x0
+/** @} */
 
 /* AIE-ML memory module register definitions */
+
+/**
+ * @name Memory Module register definitions
+ * This registers contains memory module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_MEMORY_MODULE
+ */
 #define XAIEMLGBL_MEMORY_MODULE_DATAMEMORY                               0x00000000
 #define XAIEMLGBL_MEMORY_MODULE_DATAMEMORY_WIDTH                         128
 #define XAIEMLGBL_MEMORY_MODULE_DATAMEMORY_MASK                          0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -11061,8 +11080,18 @@
 #define XAIEMLGBL_MEMORY_MODULE_LOCK_REQUEST_REQUEST_RESULT_WIDTH      1
 #define XAIEMLGBL_MEMORY_MODULE_LOCK_REQUEST_REQUEST_RESULT_MASK       0x00000001
 #define XAIEMLGBL_MEMORY_MODULE_LOCK_REQUEST_REQUEST_RESULT_DEFVAL     0x0
+/** @} */
 
 /* AIE-ML PL module register definitions */
+
+/**
+ * @name PL Module register definitions
+ * This registers contains pl module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_PL_MODULE
+ */
 #define XAIEMLGBL_PL_MODULE_PERFORMANCE_CTRL0                            0x00031000
 #define XAIEMLGBL_PL_MODULE_PERFORMANCE_CTRL0_WIDTH                      32
 #define XAIEMLGBL_PL_MODULE_PERFORMANCE_CTRL0_MASK                       0x7F7F7F7F
@@ -15906,8 +15935,18 @@
 #define XAIEMLGBL_PL_MODULE_SPARE_REG_SPARE_REG_WIDTH                  16
 #define XAIEMLGBL_PL_MODULE_SPARE_REG_SPARE_REG_MASK                   0x0000FFFF
 #define XAIEMLGBL_PL_MODULE_SPARE_REG_SPARE_REG_DEFVAL                 0x0
+/** @} */
 
 /* AIE-ML NOC module register definitions */
+
+/**
+ * @name NOC Module register definitions
+ * This registers contains noc module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_NOC_MODULE
+ */
 #define XAIEMLGBL_NOC_MODULE_LOCK0_VALUE                                 0x00014000
 #define XAIEMLGBL_NOC_MODULE_LOCK0_VALUE_WIDTH                           32
 #define XAIEMLGBL_NOC_MODULE_LOCK0_VALUE_MASK                            0x0000003F
@@ -19191,8 +19230,18 @@
 #define XAIEMLGBL_NOC_MODULE_LOCK_REQUEST_REQUEST_RESULT_WIDTH         1
 #define XAIEMLGBL_NOC_MODULE_LOCK_REQUEST_REQUEST_RESULT_MASK          0x00000001
 #define XAIEMLGBL_NOC_MODULE_LOCK_REQUEST_REQUEST_RESULT_DEFVAL        0x0
+/** @} */
 
 /* AIE-ML Mem Tile module register definitions */
+
+/**
+ * @name Mem Tile Module register definitions
+ * This registers contains mem tile module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_MEM_TILE_MODULE
+ */
 #define XAIEMLGBL_MEM_TILE_MODULE_DATAMEMORY                             0x00000000
 #define XAIEMLGBL_MEM_TILE_MODULE_DATAMEMORY_WIDTH                       128
 #define XAIEMLGBL_MEM_TILE_MODULE_DATAMEMORY_MASK                        0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -33520,6 +33569,6 @@
 #define XAIEMLGBL_MEM_TILE_MODULE_MODULE_RESET_CONTROL_STREAM_SWITCH_RESET_WIDTH 1
 #define XAIEMLGBL_MEM_TILE_MODULE_MODULE_RESET_CONTROL_STREAM_SWITCH_RESET_MASK 0x00000001
 #define XAIEMLGBL_MEM_TILE_MODULE_MODULE_RESET_CONTROL_STREAM_SWITCH_RESET_DEFVAL 0x0
-
+/** @} */
 #endif /* XAIEMLGBL_PARAMS_H */
 /** @} */

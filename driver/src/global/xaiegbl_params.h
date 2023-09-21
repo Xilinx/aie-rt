@@ -29,6 +29,16 @@
 #ifndef XAIEGBL_PARAMS_H
 #define XAIEGBL_PARAMS_H
 
+/* XAIEGBL mem module register definitions */
+
+/**
+ * @name Mem Module register definitions
+ * This registers contains mem module information
+ * @{
+ */
+/**
+ * Register:XAIEGBL_MEM_MODULE
+ */
 #define XAIEGBL_MEM_DATMEM		0x00000000
 #define XAIEGBL_MEM_DATMEMWID		128
 #define XAIEGBL_MEM_DATMEMMSK		0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -5244,9 +5254,18 @@
 #define XAIEGBL_MEM_LOCKEVTVALCTRL1_LOCK8ACQ_MASK		0x00000003
 #define XAIEGBL_MEM_LOCKEVTVALCTRL1_LOCK8ACQ_DEFVAL		0x0
 #define XAIEGBL_MEM_VALUE_LOCKEVTVALCTRL1(Lock_15_Release,Lock_15_Acquired,Lock_14_Release,Lock_14_Acquired,Lock_13_Release,Lock_13_Acquired,Lock_12_Release,Lock_12_Acquired,Lock_11_Release,Lock_11_Acquired,Lock_10_Release,Lock_10_Acquired,Lock_9_Release,Lock_9_Acquired,Lock_8_Release,Lock_8_Acquired)		(((Lock_15_Release&0x00000003)<<30)+((Lock_15_Acquired&0x00000003)<<28)+((Lock_14_Release&0x00000003)<<26)+((Lock_14_Acquired&0x00000003)<<24)+((Lock_13_Release&0x00000003)<<22)+((Lock_13_Acquired&0x00000003)<<20)+((Lock_12_Release&0x00000003)<<18)+((Lock_12_Acquired&0x00000003)<<16)+((Lock_11_Release&0x00000003)<<14)+((Lock_11_Acquired&0x00000003)<<12)+((Lock_10_Release&0x00000003)<<10)+((Lock_10_Acquired&0x00000003)<<8)+((Lock_9_Release&0x00000003)<<6)+((Lock_9_Acquired&0x00000003)<<4)+((Lock_8_Release&0x00000003)<<2)+(Lock_8_Acquired&0x00000003))
-
+/** @} */
 
 /* Append new macros here */
+
+/**
+ * @name Core Module register definitions
+ * This registers contains core module information
+ * @{
+ */
+/**
+ * Register:XAIEGBL_CORE_MODULE
+ */
 #define XAIEGBL_CORE_PRGMEM		0x00020000
 #define XAIEGBL_CORE_PRGMEMWID		128
 #define XAIEGBL_CORE_PRGMEM_A_LSB		0
@@ -11267,8 +11286,18 @@
 #define XAIEGBL_CORE_MODULE_ERROR_HALT_EVENT_ERROR_HALT_CORE_EVENT_WIDTH 7
 #define XAIEGBL_CORE_MODULE_ERROR_HALT_EVENT_ERROR_HALT_CORE_EVENT_MASK 0x0000007F
 #define XAIEGBL_CORE_MODULE_ERROR_HALT_EVENT_ERROR_HALT_CORE_EVENT_DEFVAL 0x0
+/** @} */
 
 /* Append new macros here */
+
+/**
+ * @name Pl Module register definitions
+ * This registers contains pl module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_PL_MODULE
+ */
 #define XAIEGBL_PL_PERCTR0		0x00031000
 #define XAIEGBL_PL_PERCTR0WID		32
 #define XAIEGBL_PL_PERCTR0MSK		0x7F7F7F7F
@@ -16117,9 +16146,18 @@
 #define XAIEGBL_PL_STRSWIEVTPORTSEL1_PORT4ID_MASK		0x0000001F
 #define XAIEGBL_PL_STRSWIEVTPORTSEL1_PORT4ID_DEFVAL		0x0
 #define XAIEGBL_PL_VALUE_STRSWIEVTPORTSEL1(Port_7_Master_Slave,Port_7_ID,Port_6_Master_Slave,Port_6_ID,Port_5_Master_Slave,Port_5_ID,Port_4_Master_Slave,Port_4_ID)		(((Port_7_Master_Slave&0x00000001)<<29)+((Port_7_ID&0x0000001f)<<24)+((Port_6_Master_Slave&0x00000001)<<21)+((Port_6_ID&0x0000001f)<<16)+((Port_5_Master_Slave&0x00000001)<<13)+((Port_5_ID&0x0000001f)<<8)+((Port_4_Master_Slave&0x00000001)<<5)+(Port_4_ID&0x0000001f))
-
+/** @} */
 
 /* Append new macros here */
+
+/**
+ * @name Noc Module register definitions
+ * This registers contains noc module information
+ * @{
+ */
+/**
+ * Register:XAIEMLGBL_NOC_MODULE
+ */
 #define XAIEGBL_NOC_LOCK0RELNV		0x00014000
 #define XAIEGBL_NOC_LOCK0RELNVWID		32
 #define XAIEGBL_NOC_LOCK0RELNVMSK		0x00000001
@@ -19392,6 +19430,6 @@
 #define XAIEGBL_NOC_DEMCFG_SOU2_MASK		0x00000030
 #define XAIEGBL_NOC_DEMCFG_SOU2_DEFVAL		0x0
 #define XAIEGBL_NOC_VALUE_DEMCFG(South5,South4,South3,South2)		(((South5&0x00000003)<<10)+((South4&0x00000003)<<8)+((South3&0x00000003)<<6)+((South2&0x00000003)<<4))
-
+/** @} */
 #endif /* XAIEGBL_PARAMS_H */
 /* Append new macros here */
