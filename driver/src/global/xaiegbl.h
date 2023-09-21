@@ -621,6 +621,7 @@ AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
 		XAie_BackendAttrType AttrType, u64 AttrVal);
 AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize);
 void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
+AieRC XAie_StartNextJob(XAie_DevInst *DevInst);
 AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
 /*****************************************************************************/
 /*
