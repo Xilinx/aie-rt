@@ -40,6 +40,8 @@
 u8 _XAie2ps_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch)
 {
+	(void)DevInst;
+	(void)Loc;
 	return Switch;
 }
 

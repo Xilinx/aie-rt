@@ -1027,7 +1027,7 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
 		XAie_BackendAttrType AttrType, u64 AttrVal)
 {
-	if((DevInst == 0U) || (DevInst->Backend->Ops.SetAttr == 0U)) {
+	if((DevInst == XAIE_NULL) || (DevInst->Backend->Ops.SetAttr == XAIE_NULL)) {
 		return XAIE_INVALID_ARGS;
 	}
 	return DevInst->Backend->Ops.SetAttr(DevInst->IOInst, AttrType, AttrVal);
@@ -1074,8 +1074,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 			PerfInst->Range->Num > DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!\n");
 		return XAIE_INVALID_ARGS;
-	} else if(PerfInst->Range->Start < 0U ||
-			PerfInst->Range->Start >= DevInst->NumCols) {
+	} else if(PerfInst->Range->Start >= DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!\n");
 		return XAIE_INVALID_ARGS;
 	}

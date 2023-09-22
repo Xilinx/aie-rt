@@ -181,7 +181,7 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf, u32 BufSize) {
 int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 
     int CharsWritten = 0, Ret;
-    enum DmaStatus_S2MM_enum Flag;
+    enum DmaStatus_S2MM_enum Flag = 0;
     u32 FlagVal;
     u8 CommaNeeded = 0U;
     FlagVal = (u32)Flag;
@@ -348,7 +348,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u32 BufSize,  u8 TType) {
 int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u32 BufSize, u8 TType) {
 
     int CharsWritten = 0, Ret;
-    enum DmaStatus_MM2S_enum Flag;
+    enum DmaStatus_MM2S_enum Flag = 0;
     u32 FlagVal;
     u8 CommaNeeded = 0U;
     FlagVal = (u32)Flag;

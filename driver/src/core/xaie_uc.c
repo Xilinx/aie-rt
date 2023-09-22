@@ -203,7 +203,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 Addr;
 	XAie_LocType TgtLoc;
 	const unsigned char *Buffer = SectionPtr;
-	unsigned char *Tmp;
+	unsigned char *Tmp = XAIE_NULL;
 	const XAie_UcMod *UcMod;
 
 	UcMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].UcMod;

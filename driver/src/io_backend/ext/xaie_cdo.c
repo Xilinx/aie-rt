@@ -219,7 +219,7 @@ static AieRC XAie_CdoIO_BlockWrite32(void *IOInst, u64 RegOff, const u32 *Data,
 {
 	XAie_CdoIO *CdoIOInst = (XAie_CdoIO *)IOInst;
 
-	cdo_BlockWrite32(CdoIOInst->BaseAddr + RegOff, Data, Size);
+	cdo_BlockWrite32(CdoIOInst->BaseAddr + RegOff, (u32 *)Data, Size);
 
 	return XAIE_OK;
 }

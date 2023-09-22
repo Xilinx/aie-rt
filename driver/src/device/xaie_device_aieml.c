@@ -450,7 +450,6 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 {
 	AieRC RC;
-	u32 ColClockStatus;
 
 	u32 StartBit, EndBit;
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);

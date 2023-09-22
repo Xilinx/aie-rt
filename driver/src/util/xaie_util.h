@@ -81,7 +81,6 @@ static int _XAie_strcpy(char* Destination, u32 DestSize, const char* Source,
     if (Destination == NULL || Source == NULL || DestSize < RegStrSize) {
         return -1;
     }
-    char *ptr = Destination;
     while (*Source != '\0')
     {
 	*Destination = *Source;
