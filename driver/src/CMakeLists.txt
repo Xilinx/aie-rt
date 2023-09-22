@@ -6,7 +6,7 @@ project(aienginev2)
 find_package(common)
 collector_create (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}")
 collector_create (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}")
-include_directories(${CMAKE_BINARY_DIR}/include)
+include_directories(${CMAKE_BINARY_DIR}/include/xaiengine)
 
 #common
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/common/xaie_helper.c")
@@ -168,11 +168,11 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/util/xaie_util_status.
 collector_list (_sources PROJECT_LIB_SOURCES)
 collector_list (_headers PROJECT_LIB_HEADERS)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xaiengine.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xaiengine.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
 
-file(COPY ${_headers} DESTINATION ${CMAKE_BINARY_DIR}/include)
+file(COPY ${_headers} DESTINATION ${CMAKE_BINARY_DIR}/include/xaiengine)
 
 add_library(aienginev2 STATIC ${_sources})
 
 set_target_properties(aienginev2 PROPERTIES LINKER_LANGUAGE C)
-target_compile_options(aienginev2 PRIVATE -Wall -Wextra -D__AIEBAREMTL__)
+target_compile_options(aienginev2 PRIVATE -Wall -Wextra -D__AIEBAREMETAL__)
