@@ -155,7 +155,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 				fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 				fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 				ControlCodeInst->UcJobNum);
-				ControlCodeInst->UcJobTextSize = PAGE_HEADER_SIZE +  + ISA_OPSIZE_END_JOB + ISA_OPSIZE_EOF;
+				ControlCodeInst->UcJobTextSize = PAGE_HEADER_SIZE + ISA_OPSIZE_START_JOB + ISA_OPSIZE_END_JOB + ISA_OPSIZE_EOF;
 				ControlCodeInst->UcJobSize = ControlCodeInst->UcJobTextSize;
 				ControlCodeInst->UcJobNum++;
 				ControlCodeInst->CombineCommands = 0;
@@ -240,8 +240,8 @@ static AieRC XAie_ControlCodeIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 
 
 	if (ControlCodeInst->ControlCodefp != NULL) {
-		if((ControlCodeInst->UcJobSize + ISA_OPSIZE_UC_DMA_WRITE_DES_SYNC +
-			UC_DMA_WORD_LEN + DataAligner) >= ControlCodeInst->PageSize) {
+		if((ControlCodeInst->UcJobSize + ISA_OPSIZE_MASK_WRITE_32 +
+			DataAligner) >= ControlCodeInst->PageSize) {
 			fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 			fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
 					ControlCodeInst->UcJobNum);
@@ -279,12 +279,29 @@ static AieRC XAie_ControlCodeIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 static AieRC XAie_ControlCodeIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
-	(void)IOInst;
-	(void)RegOff;
-	(void)Mask;
-	(void)Value;
-	(void)TimeOutUs;
 
+	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
+		(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
+
+
+	if (ControlCodeInst->ControlCodefp != NULL) {
+		if((ControlCodeInst->UcJobSize + ISA_OPSIZE_MASK_POLL_32 +
+			DataAligner) >= ControlCodeInst->PageSize) {
+			fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
+			fprintf(ControlCodeInst->ControlCodefp, "START_JOB %d\n",
+					ControlCodeInst->UcJobNum);
+			ControlCodeInst->UcJobTextSize = PAGE_HEADER_SIZE + ISA_OPSIZE_START_JOB + ISA_OPSIZE_END_JOB + ISA_OPSIZE_EOF;
+			ControlCodeInst->UcJobSize = ControlCodeInst->UcJobTextSize;
+			ControlCodeInst->UcJobNum++;
+		}
+
+		fprintf(ControlCodeInst->ControlCodefp, "MASK_POLL_32\t 0x%lx, 0x%x, 0x%x\n",
+				RegOff, Mask, Value );
+		ControlCodeInst->CombineCommands = 0;
+		ControlCodeInst->UcJobSize += ISA_OPSIZE_MASK_POLL_32;
+		ControlCodeInst->UcJobTextSize += ISA_OPSIZE_MASK_POLL_32;
+	}
 	return XAIE_OK;
 }
 
