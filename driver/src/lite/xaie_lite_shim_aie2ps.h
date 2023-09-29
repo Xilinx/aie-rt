@@ -175,5 +175,97 @@ static inline void _XAie_PrivilegeSetShimClk(XAie_DevInst *DevInst,
 
 }
 
+/*****************************************************************************/
+/**
+* This API puts the uc-core to sleep in the given column.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+*
+* @note         Internal API only.
+*
+******************************************************************************/
+static inline void _XAie_UCCoreSleep(XAie_DevInst *DevInst,
+					  XAie_LocType Loc)
+{
+	u64 RegAddr;
+	u32 FldVal;
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+		XAIE_SHIM_TILE_UC_MODULE_CORE_CONTROL;
+
+	_XAie_LPartMaskWrite32(DevInst, RegAddr,
+			XAIE_SHIM_TILE_UC_MODULE_CORE_CONTROL_GO_TO_SLEEP_MASK,
+			XAIE_SHIM_TILE_UC_MODULE_CORE_CONTROL_GO_TO_SLEEP_MASK);
+
+}
+
+/*****************************************************************************/
+/**
+* This API wakes up the uc-core in the given column.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+*
+* @note         Internal API only.
+*
+******************************************************************************/
+static inline void _XAie_UCCoreWakeUp(XAie_DevInst *DevInst,
+					  XAie_LocType Loc)
+{
+	u64 RegAddr;
+	u32 FldVal;
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+		XAIE_SHIM_TILE_UC_MODULE_CORE_CONTROL;
+
+	_XAie_LPartMaskWrite32(DevInst, RegAddr,
+			XAIE_SHIM_TILE_UC_MODULE_CORE_CONTROL_WAKEUP_MASK,
+			XAIE_SHIM_TILE_UC_MODULE_CORE_CONTROL_WAKEUP_MASK);
+
+}
+
+/*****************************************************************************/
+/**
+* This API puts all the uc-cores to sleep in the partition.
+*
+* @param        DevInst: Device Instance.
+*
+* @return	None.
+*
+* @note         None.
+*
+******************************************************************************/
+static inline void XAie_LPartUCCoreSleep(XAie_DevInst *DevInst)
+{
+	XAie_LocType Loc;
+
+	Loc.Row = 0U;
+	for(Loc.Col = 0U; Loc.Col < DevInst->NumCols; Loc.Col++) {
+		_XAie_UCCoreSleep(DevInst, Loc);
+	}
+}
+
+/*****************************************************************************/
+/**
+* This API wakes all the uc-cores up in the partition.
+*
+* @param        DevInst: Device Instance.
+*
+* @return	None.
+*
+* @note         None.
+*
+******************************************************************************/
+static inline void XAie_LPartUCCoreWakeUp(XAie_DevInst *DevInst)
+{
+	XAie_LocType Loc;
+
+	Loc.Row = 0U;
+	for(Loc.Col = 0U; Loc.Col < DevInst->NumCols; Loc.Col++) {
+		_XAie_UCCoreWakeUp(DevInst, Loc);
+	}
+}
+
 #endif		/* end of protection macro */
 /** @} */
