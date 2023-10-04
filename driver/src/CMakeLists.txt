@@ -11,6 +11,7 @@ include_directories(${CMAKE_BINARY_DIR}/include/xaiengine)
 #common
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/common/xaie_helper.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/common/xaie_helper.h")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/common/xaie_txn.h")
 
 #core
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_core.c")
@@ -64,6 +65,7 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interru
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aie.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aieml.h")
 
+
 #io_backend
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/xaie_io.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/xaie_io.h")
@@ -79,6 +81,7 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/ext/xaie_io
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/ext/xlnx-ai-engine.h")
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/privilege/xaie_io_privilege.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/privilege/xaie_io_privilege.h")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/io_backend/xaie_io_internal.h")
 
 #lite
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/lite/xaie_lite.c")
@@ -93,6 +96,7 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/lite/xaie_lite_regdef_
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/lite/xaie_lite_regdef_aieml.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/lite/xaie_lite_shim_aie.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/lite/xaie_lite_util.h")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/lite/xaie_lite_internal.h")
 
 #locks
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/locks/xaie_locks.c")
