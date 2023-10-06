@@ -208,23 +208,25 @@ jobs:
         sed -i "/Subject:/a \\\n $SIGN_OFF" pr.patch
         sed -i "/Subject:/a \\\n PR URL: $PULL_REQ_URL" pr.patch
 
-        # Extract CR number if present
-        CR_INFO=$(echo "$PR_DETAILS" | jq -r '.body | capture("\\[CR-(?<cr>\\d+)\\]\\((?<link>https://jira.xilinx.com/browse/CR-\\d+)\\)")')
+        # Extract CR, PR or JIRA ID if present
+        ID_INFO=$(echo "$PR_DETAILS" | jq -r '.body | capture("\\[(?<type>CR|PR|JIRA)-(?<id>\\d+)\\]\\((?<link>https://jira.xilinx.com/browse/(CR|PR|JIRA)-\\d+)\\)")')
 
-        CR_NUMBER=$(echo "$CR_INFO" | jq -r '.cr')
-        CR_LINK=$(echo "$CR_INFO" | jq -r '.link')
-        
-        if [ -z "$CR_NUMBER" ]; then
-          echo "No valid CR number found in PR body"
-          # Add comment to PR that CR was not tagged
-          gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid CR number was tagged in the PR body. Please tag a CR tag before approving. :x:"
+        ID_NUMBER=$(echo "$ID_INFO" | jq -r '.id')
+        ID_TYPE=$(echo "$ID_INFO" | jq -r '.type')
+        ID_LINK=$(echo "$ID_INFO" | jq -r '.link')
+
+        if [ -z "$ID_NUMBER" ]; then
+          echo "No valid ID number found in PR body"
+          # Add comment to PR that ID was not tagged
+          gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid ID number was tagged in the PR body. Please tag a CR, PR or JIRA ID tag before approving. :x:"
           exit 1
         else
-          echo "CR Number: $CR_NUMBER"
-          echo "CR Link: $CR_LINK"
-          sed -i "/Subject:/a \\\n CR: $CR_NUMBER" pr.patch
+          echo "ID Type: $ID_TYPE"
+          echo "ID Number: $ID_NUMBER"
+          echo "ID Link: $ID_LINK"
+          sed -i "/Subject:/a \\\n $ID_TYPE: $ID_NUMBER" pr.patch
         fi
-        
+ 
         # Configure git user details and send email
         git config --global user.email "${SUBMITTER_EMAIL}"
         git config --global user.name "${SUBMITTER_NAME}"
