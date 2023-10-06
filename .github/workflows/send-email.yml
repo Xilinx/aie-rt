@@ -1,0 +1,237 @@
+name: Send PR Diff Patch
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  check-approvals:
+    runs-on: self-hosted
+
+    outputs:
+      all_conditions_met: ${{ steps.approval-check.outputs.all_conditions_met }}
+      first_approver_name: ${{ steps.approval-check.outputs.first_approver_name }}
+      first_approver_login: ${{ steps.approval-check.outputs.first_approver_login }}
+  
+    if: (github.event_name == 'issue_comment' && github.event.comment.body == 'approved') || (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+    steps:
+    - name: Set PR Number
+      continue-on-error: true
+      id: set-pr-number
+      run: |
+        if [ "${{ github.event_name }}" == "issue_comment" ]; then
+            echo "::set-output name=pr_number::${{ github.event.issue.number }}"
+        else
+            echo "::set-output name=pr_number::${{ github.event.pull_request.number }}"
+        fi
+
+    - name: Check if all reviewers approved
+      id: approval-check
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        sleep 10  # Add a delay of 10 seconds
+        PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }}  # Use the output from set-pr-number step here
+        echo "PR Number: $PR_NUMBER"
+
+        REVIEWS_JSON=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews)
+
+        APPROVED_REVIEWERS=$(echo "$REVIEWS_JSON" | jq '[.[] | select(.state=="APPROVED") | .user.login] | unique')
+        echo "APPROVED_REVIEWERS are $APPROVED_REVIEWERS"
+
+        # Check if there is at least one approval
+        if [ $(echo "$APPROVED_REVIEWERS" | jq 'length') -eq 0 ]; then
+            echo "No valid approvals found."
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: The process of generating and sending the patch email failed. Atleast one reviewer approval needed! :x: ."
+            exit 1
+        fi
+
+        # Fetch the login of the first approver
+        FIRST_APPROVER_LOGIN=$(echo "$REVIEWS_JSON" | jq -r '[.[] | select(.state=="APPROVED")][0].user.login')
+        echo "FIRST APPROVED LOGIN: $FIRST_APPROVER_LOGIN"
+
+        # Fetch the URL for the first approver's details
+        FIRST_APPROVER_URL=$(echo "$REVIEWS_JSON" | jq -r '[.[] | select(.state=="APPROVED")][0].user.url')
+        echo "FIRST APPROVED URL: $FIRST_APPROVER_URL"
+
+        sleep 5
+        # Now, make a curl request to the first approver's URL to fetch their full name
+        FIRST_APPROVER_NAME=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" $FIRST_APPROVER_URL | jq -r '.name')
+        echo "FIRST APPROVED NAME: $FIRST_APPROVER_NAME"
+
+        sleep 5
+        DISTINCT_REVIEWERS=$(echo "$REVIEWS_JSON" | jq '[.[] | .user.login] | unique')
+        echo "TOTAL DISTINCT REVIEWERS: $DISTINCT_REVIEWERS"
+
+        # Fetch PR's SHA
+        PR_SHA=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER} --jq ".head.sha")
+        echo "PR SHA: $PR_SHA"
+
+        # Fetch combined status of all checks for the PR's commit
+        sleep 5
+        COMMIT_STATUS=$(gh api repos/${{ github.repository }}/commits/${PR_SHA}/status --jq ".state")
+        echo "Commit Status: $COMMIT_STATUS"
+
+        MAX_RETRIES=10
+        RETRY_COUNT=0
+        SLEEP_DURATION=40
+
+        while [[ "$COMMIT_STATUS" == "pending" && $RETRY_COUNT -lt $MAX_RETRIES ]]; do
+            echo "Checks are still running. Waiting for them to complete..."
+            sleep $SLEEP_DURATION
+            COMMIT_STATUS=$(gh api repos/${{ github.repository }}/commits/${PR_SHA}/status --jq ".state")
+            echo "Commit Status after retry #${RETRY_COUNT} is ${COMMIT_STATUS}"
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+        done
+
+        if [[ "$RETRY_COUNT" == "$MAX_RETRIES" ]]; then
+            echo "Max retries reached. Please check the checks manually."
+            gh pr comment $PR_NUMBER --body "[GITHUB ACTIONS] :x: The process of generating and sending the patch email failed. Please ensure all checks are passing before approving. :x: "
+            exit 1
+        fi
+
+        # Check if PR is mergeable
+        PR_MERGEABLE=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER} --jq ".mergeable_state")
+        echo "PR Mergeable Status: $PR_MERGEABLE"
+
+        if [[ "$PR_MERGEABLE" == "behind" || "$PR_MERGEABLE" == "dirty" ]]; then
+            echo "PR has merge conflicts. Source repo is behind the target repo."
+            echo "::set-output name=all_conditions_met::false"
+            if [ "${{ github.event_name }}" == "issue_comment" ]; then
+                gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x:  This PR is not up-to-date with the destination. Please pull/update! :x: "
+            fi
+            exit 1
+        fi
+
+        echo "APPROVED_COUNT $APPROVED_COUNT"
+        echo "TOTAL_REVIEWERS $TOTAL_REVIEWERS"
+        echo "COMMIT_STATUS $COMMIT_STATUS"
+
+        # Convert arrays to strings for comparison
+        APPROVED_REVIEWERS_STR="${APPROVED_REVIEWERS[*]}"
+        DISTINCT_REVIEWERS_STR="${DISTINCT_REVIEWERS[*]}"
+
+        echo "APPROVED_REVIEWERS_STR: $APPROVED_REVIEWERS_STR"
+        echo "DISTINCT_REVIEWERS_STR: $DISTINCT_REVIEWERS_STR"
+
+        if [[ -n "$APPROVED_REVIEWERS_STR" && "$DISTINCT_REVIEWERS_STR" == "$APPROVED_REVIEWERS_STR" && "$COMMIT_STATUS" == "success" ]]; then
+            echo "PR CAN BE APPROVED"
+            echo "::set-output name=all_conditions_met::true"
+            echo "::set-output name=first_approver_name::$FIRST_APPROVER_NAME"
+            echo "::set-output name=first_approver_login::$FIRST_APPROVER_LOGIN"
+        else
+            echo "PR CANNOT BE APPROVED"
+            echo "::set-output name=all_conditions_met::false"
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: The process of generating and sending the patch email failed. Please ensure all checks are passing with atleast one valid review before approving. :x:"
+        fi
+
+    - name: Generate and Send Patch Email
+      continue-on-error: true
+      if: steps.approval-check.outputs.all_conditions_met == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TO_MAIL: ${{ secrets.TO_MAIL_1 }}
+      run: |
+        # Extract Information from GitHub Event
+        PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }} 
+        echo "PR Number: $PR_NUMBER"
+
+        REPO_FULL_NAME=$(jq --raw-output .repository.full_name "$GITHUB_EVENT_PATH")
+        echo "Repository Full Name: $REPO_FULL_NAME"
+
+        # Fetch PR details using gh API with PR_NUMBER
+        PR_DETAILS=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+
+        # Extract Issue (PR) Title
+        ISSUE_TITLE=$(echo "$PR_DETAILS" | jq --raw-output .title)
+        echo "Issue Title: $ISSUE_TITLE"
+
+        # Extract Pull Request URL
+        PULL_REQ_URL=$(echo "$PR_DETAILS" | jq --raw-output .html_url)
+        echo "Pull Request URL: $PULL_REQ_URL"
+
+        # Get the last review from the pull request
+        LAST_REVIEW=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews -q ".[-1]")
+        APPROVER_NAME=$(echo "$LAST_REVIEW" | jq --raw-output .user.login)
+        echo "Approver Name: $APPROVER_NAME"
+
+        # Fetch PR Patch
+        PATCH_URL="https://gitenterprise.xilinx.com/raw/${REPO_FULL_NAME}/pull/${PR_NUMBER}.patch"
+        curl -L -o pr.patch ${PATCH_URL}
+
+        # Extract Target Branch
+        TARGET_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .base.ref)
+        echo "Target Branch: $TARGET_BRANCH"
+
+        # Edit PR Patch Headers
+        sed -i 's/From: ".*" \(<.*>\)/From: \1/' pr.patch
+        #sed -i "s/Subject:.*/Subject: [AIENGINE PATCH] ${ISSUE_TITLE} /" pr.patch
+        sed -i "s/Subject:\ \[PATCH \(.*\)\]/Subject: [AIENGINE PATCH \1]/" pr.patch
+  
+        sed -i "/Subject:/a ---\n BRANCH: ${TARGET_BRANCH}\n---\n" pr.patch
+
+        # Extract all the approved reviewers' logins
+        sleep 5
+        REVIEWS_JSON=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews)
+        APPROVED_REVIEWERS_LOGINS=$(echo "$REVIEWS_JSON" | jq -r '[.[] | select(.state=="APPROVED") | .user.login] | unique | .[]')
+
+        declare -a CC_EMAILS_ARRAY=()
+        for LOGIN in $APPROVED_REVIEWERS_LOGINS; do
+            EMAIL="${LOGIN}@amd.com"
+            CC_EMAILS_ARRAY+=( "--cc" "${EMAIL}" )
+        done
+
+        # Fetch submitter details
+        SUBMITTER_LOGIN=$(echo "$PR_DETAILS" | jq -r ".user.login")
+        echo "Submitter Login: $SUBMITTER_LOGIN"
+
+        SUBMITTER_DETAILS_URL=$(echo "$PR_DETAILS" | jq -r ".user.url")
+        echo "Submitter Details URL: $SUBMITTER_DETAILS_URL"
+
+        sleep 5
+        
+        SUBMITTER_DETAILS=$(curl -H "Authorization: token $GITHUB_TOKEN" -s $SUBMITTER_DETAILS_URL)
+        echo "$SUBMITTER_DETAILS"
+
+        SUBMITTER_NAME=$(echo "$SUBMITTER_DETAILS" | jq -r ".name // .login") # Use login as a fallback
+        echo "Submitter Name: $SUBMITTER_NAME"
+
+        # Build submitter email ID
+        SUBMITTER_EMAIL="${SUBMITTER_LOGIN}@amd.com"
+        echo "Submitter Email: $SUBMITTER_EMAIL"
+
+        # Modify PR Patch with additional details
+        SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
+        sed -i "/Subject:/a \\\n $SIGN_OFF" pr.patch
+        sed -i "/Subject:/a \\\n PR URL: $PULL_REQ_URL" pr.patch
+
+        # Extract CR, PR or JIRA ID if present
+        ID_INFO=$(echo "$PR_DETAILS" | jq -r '.body | capture("\\[(?<type>CR|PR|JIRA)-(?<id>\\d+)\\]\\((?<link>https://jira.xilinx.com/browse/(CR|PR|JIRA)-\\d+)\\)")')
+
+        ID_NUMBER=$(echo "$ID_INFO" | jq -r '.id')
+        ID_TYPE=$(echo "$ID_INFO" | jq -r '.type')
+        ID_LINK=$(echo "$ID_INFO" | jq -r '.link')
+
+        if [ -z "$ID_NUMBER" ]; then
+          echo "No valid ID number found in PR body"
+          # Add comment to PR that ID was not tagged
+          gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid ID number was tagged in the PR body. Please tag a CR, PR or JIRA ID tag before approving. :x:"
+          exit 1
+        else
+          echo "ID Type: $ID_TYPE"
+          echo "ID Number: $ID_NUMBER"
+          echo "ID Link: $ID_LINK"
+          sed -i "/Subject:/a \\\n $ID_TYPE: $ID_NUMBER" pr.patch
+        fi
+ 
+        # Configure git user details and send email
+        git config --global user.email "${SUBMITTER_EMAIL}"
+        git config --global user.name "${SUBMITTER_NAME}"
+
+        echo "git send-email --confirm=never --force --to "$TO_MAIL" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch"
+        git send-email --confirm=never --force --to "$TO_MAIL" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
+        gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail Sent out! :white_check_mark:"
+
