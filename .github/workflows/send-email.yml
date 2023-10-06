@@ -168,7 +168,9 @@ jobs:
 
         # Edit PR Patch Headers
         sed -i 's/From: ".*" \(<.*>\)/From: \1/' pr.patch
-        sed -i "s/Subject:.*/Subject: [AIENGINE PATCH] ${ISSUE_TITLE} /" pr.patch
+        #sed -i "s/Subject:.*/Subject: [AIENGINE PATCH] ${ISSUE_TITLE} /" pr.patch
+        sed -i "s/Subject:\ \[PATCH \(.*\)\]/Subject: [AIENGINE PATCH \1]/" pr.patch
+  
         sed -i "/Subject:/a ---\n BRANCH: ${TARGET_BRANCH}\n---\n" pr.patch
 
         # Extract all the approved reviewers' logins
