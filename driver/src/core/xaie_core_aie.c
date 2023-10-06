@@ -232,6 +232,5 @@ AieRC _XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	return XAIE_OK;
 }
 
-#endif 
-/* XAIE_FEATURE_CORE_ENABLE */
+#endif /* XAIE_FEATURE_CORE_ENABLE */
 /** @} */
