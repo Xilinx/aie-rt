@@ -133,7 +133,7 @@ jobs:
       if: steps.approval-check.outputs.all_conditions_met == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TO_MAIL: ${{ secrets.TO_MAIL }}
+        TO_MAIL: ${{ secrets.TO_MAIL_1 }}
       run: |
         # Extract Information from GitHub Event
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }} 
@@ -220,7 +220,7 @@ jobs:
         else
           echo "CR Number: $CR_NUMBER"
           echo "CR Link: $CR_LINK"
-          sed -i "/Subject:/a CR: $CR_LINK" pr.patch
+          sed -i "/Subject:/a \\\n CR: $CR_NUMBER" pr.patch
         fi
         
         # Configure git user details and send email
