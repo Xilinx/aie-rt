@@ -36,7 +36,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        sleep 10  # Add a delay of 10 seconds
+        sleep 5  # Add a delay of 10 seconds
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }}  # Use the output from set-pr-number step here
         echo "PR Number: $PR_NUMBER"
 
@@ -136,7 +136,6 @@ jobs:
       if: steps.approval-check.outputs.all_conditions_met == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TO_MAIL: ${{ secrets.TO_MAIL_1 }}
       run: |
         # Extract Information from GitHub Event
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }} 
@@ -179,21 +178,19 @@ jobs:
         SOURCE_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .head.ref)
         TARGET_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .base.ref)
 
-        # Add the source repository as a remote, then fetch and checkout the source branch
-        git remote add source-repo $SOURCE_REPO_URL
-        git fetch source-repo $SOURCE_BRANCH
-        git checkout source-repo/$SOURCE_BRANCH -b source-branch
-
         # Checkout the target branch
         git checkout $TARGET_BRANCH
 
+        # Fetch the PR's merge commit
+        git fetch origin pull/$PR_NUMBER/merge:pr-merge
+
         # Create a diff summary and save it to a file
-        git diff --stat $TARGET_BRANCH..source-branch > ../diff-summary.txt
+        git diff --stat $TARGET_BRANCH pr-merge > ../diff-summary.txt
 
-        # Create a patch file with the difference between the source and target branches
-        git diff $TARGET_BRANCH..source-branch > ../pr_1.patch
+        # Create a patch file with the difference between the target branch and the PR's merge commit
+        git diff $TARGET_BRANCH pr-merge > ../pr_1.patch
 
-        # Move back to the original directory (assuming the working directory was one level above the target-repo directory)
+        # Move back to the original directory 
         cd ..
 
         # Extract all the approved reviewers' logins
@@ -248,17 +245,15 @@ jobs:
         echo -e "\n" >> pr.patch  # Append a newline to pr.patch
         cat pr_1.patch >> pr.patch  # Append the contents of pr_1.patch to pr.patch
 
-        #echo "pr.patch +++++++++++++++++++++++++++++++++++"
-        #cat pr.patch
-        #echo "pr.patch -----------------------------------"
+        echo "pr.patch +++++++++++++++++++++++++++++++++++"
+        cat pr.patch
+        echo "pr.patch -----------------------------------"
 
         # Configure git user details and send email
         git config --global user.email "${SUBMITTER_EMAIL}"
         git config --global user.name "${SUBMITTER_NAME}"
-        #git config --global user.email "Arunkumar Bhattar" #TEST
-        #git config --global user.name "abhattar@amd.com" #TEST
 
         echo "git send-email --confirm=never --force --to \"$TO_MAIL\" \"${CC_EMAILS_ARRAY[@]}\" --attach \"$pr.patch\""
-        git send-email --confirm=never --force --to "$TO_MAIL" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
-        #git send-email --confirm=never --force --to "abhattar@amd.com"  --attach pr.patch #TEST
+        git send-email --confirm=never --force --to "git_aiengine_dev@xilinx.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
+
