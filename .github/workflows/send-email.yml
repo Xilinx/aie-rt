@@ -136,7 +136,6 @@ jobs:
       if: steps.approval-check.outputs.all_conditions_met == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TO_MAIL: ${{ secrets.TO_MAIL_1 }}
       run: |
         # Extract Information from GitHub Event
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }} 
@@ -240,9 +239,7 @@ jobs:
           # Configure git user details and send email
           git config --global user.email "${SUBMITTER_EMAIL}"
           git config --global user.name "${SUBMITTER_NAME}"
-
-          echo "git send-email --confirm=never --force --to \"$TO_MAIL\" \"${CC_EMAILS_ARRAY[@]}\" --attach \"$patch_file\""
-          git send-email --confirm=never --force --to "$TO_MAIL" "${CC_EMAILS_ARRAY[@]}" --attach "$patch_file"
+          git send-email --confirm=never --force --to "git_aiengine_dev@xilinx.com" "${CC_EMAILS_ARRAY[@]}" --attach "$patch_file"
         done  
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
 
