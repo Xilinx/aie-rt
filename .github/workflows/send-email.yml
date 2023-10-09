@@ -162,86 +162,103 @@ jobs:
         echo "Approver Name: $APPROVER_NAME"
 
         # Fetch PR Patch
-        PATCH_URL="https://gitenterprise.xilinx.com/raw/${REPO_FULL_NAME}/pull/${PR_NUMBER}.patch"
-        curl -L -o pr.patch ${PATCH_URL}
-
-        # Split the main patch file into separate patch files if it contains multiple patches
-        csplit -z -f "patch_" -b "%02d.patch" pr.patch '/^From /' '{*}'
-
-        # Get the list of patch files sorted by modification time in ascending order
-        patch_files=$(ls -1t patch_*.patch | tac)
-        
-        # Extract Target Branch
+        # Extract source and target branch names
+        SOURCE_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .head.ref)
         TARGET_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .base.ref)
-        echo "Target Branch: $TARGET_BRANCH"
+
+        # Clone the target repository
+        git clone https://gitenterprise.xilinx.com/${{ github.repository }}.git target-repo
+
+        cd target-repo
+
+        # Fetch PR details using gh API with PR_NUMBER
+        PR_DETAILS=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
+
+        # Extract source repository URL and source branch name
+        SOURCE_REPO_URL=$(echo "$PR_DETAILS" | jq --raw-output .head.repo.clone_url)
+        SOURCE_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .head.ref)
+        TARGET_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .base.ref)
+
+        # Add the source repository as a remote, then fetch and checkout the source branch
+        git remote add source-repo $SOURCE_REPO_URL
+        git fetch source-repo $SOURCE_BRANCH
+        git checkout source-repo/$SOURCE_BRANCH -b source-branch
+
+        # Checkout the target branch
+        git checkout $TARGET_BRANCH
+
+        # Create a diff summary and save it to a file
+        git diff --stat $TARGET_BRANCH..source-branch > ../diff-summary.txt
+
+        # Create a patch file with the difference between the source and target branches
+        git diff $TARGET_BRANCH..source-branch > ../pr_1.patch
+
+        # Move back to the original directory (assuming the working directory was one level above the target-repo directory)
+        cd ..
+
+        # Extract all the approved reviewers' logins
+        sleep 5
+        REVIEWS_JSON=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews)
+        APPROVED_REVIEWERS_LOGINS=$(echo "$REVIEWS_JSON" | jq -r '[.[] | select(.state=="APPROVED") | .user.login] | unique | .[]')
+
+        for LOGIN in $APPROVED_REVIEWERS_LOGINS; do
+          EMAIL="${LOGIN}@amd.com"
+          CC_EMAILS_ARRAY+=( "--cc" "${EMAIL}" )
+        done
+
+        # Fetch submitter details
+        SUBMITTER_LOGIN=$(echo "$PR_DETAILS" | jq -r ".user.login")
+        echo "Submitter Login: $SUBMITTER_LOGIN"
+
+        SUBMITTER_DETAILS_URL=$(echo "$PR_DETAILS" | jq -r ".user.url")
+        echo "Submitter Details URL: $SUBMITTER_DETAILS_URL"
+
+        sleep 5
+       
+        SUBMITTER_DETAILS=$(curl -H "Authorization: token $GITHUB_TOKEN" -s $SUBMITTER_DETAILS_URL)
+        echo "$SUBMITTER_DETAILS"
+        SUBMITTER_NAME=$(echo "$SUBMITTER_DETAILS" | jq -r ".name // .login") # Use login as a fallback
+        echo "Submitter Name: $SUBMITTER_NAME"
+
+        # Build submitter email ID
+        SUBMITTER_EMAIL="${SUBMITTER_LOGIN}@amd.com"
+        echo "Submitter Email: $SUBMITTER_EMAIL"
+        ID_INFO=$(echo "$PR_DETAILS" | jq -r '.body | capture("\\[(?<type>CR|PR|JIRA)-(?<id>\\d+)\\]\\((?<link>https://jira.xilinx.com/browse/(CR|PR|JIRA)-\\d+)\\)")')
+        ID_NUMBER=$(echo "$ID_INFO" | jq -r '.id')
+        ID_TYPE=$(echo "$ID_INFO" | jq -r '.type')
+        ID_LINK=$(echo "$ID_INFO" | jq -r '.link')
         
-        # Loop through each patch file
-        for patch_file in $patch_files; do
-          # Edit PR Patch Headers
-          sed -i 's/From: ".*" \(<.*>\)/From: \1/' "$patch_file" 
-          sed -i "s/Subject:\ \[PATCH \(.*\)\]/Subject: [AIENGINE PATCH \1]/" "$patch_file"
-  
-          sed -i "/Subject:/a ---\n BRANCH: ${TARGET_BRANCH}\n---\n" "$patch_file"
-
-          # Extract all the approved reviewers' logins
-          sleep 5
-          REVIEWS_JSON=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews)
-          APPROVED_REVIEWERS_LOGINS=$(echo "$REVIEWS_JSON" | jq -r '[.[] | select(.state=="APPROVED") | .user.login] | unique | .[]')
-
-          declare -a CC_EMAILS_ARRAY=()
-          for LOGIN in $APPROVED_REVIEWERS_LOGINS; do
-            EMAIL="${LOGIN}@amd.com"
-            CC_EMAILS_ARRAY+=( "--cc" "${EMAIL}" )
-          done
-
-          # Fetch submitter details
-          SUBMITTER_LOGIN=$(echo "$PR_DETAILS" | jq -r ".user.login")
-          echo "Submitter Login: $SUBMITTER_LOGIN"
-
-          SUBMITTER_DETAILS_URL=$(echo "$PR_DETAILS" | jq -r ".user.url")
-          echo "Submitter Details URL: $SUBMITTER_DETAILS_URL"
-
-          sleep 5
+        if [ -z "$ID_NUMBER" ]; then
+          echo "No valid ID number found in PR body"
+          # Add comment to PR that ID was not tagged
+          gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid ID number was tagged in the PR body. Please tag a CR, PR or JIRA ID tag before approving. :x:"
+          exit 1
+        else
+          echo "ID Type: $ID_TYPE"
+          echo "ID Number: $ID_NUMBER"
+          echo "ID Link: $ID_LINK"
+        fi
         
-          SUBMITTER_DETAILS=$(curl -H "Authorization: token $GITHUB_TOKEN" -s $SUBMITTER_DETAILS_URL)
-          echo "$SUBMITTER_DETAILS"
+        SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
+        # Modify PR Patch with additional details
+        echo -e "From: ${SUBMITTER_NAME}  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
+        echo -e "---\nBRANCH: ${TARGET_BRANCH}\n---\n$ID_TYPE: $ID_NUMBER\n---\n$SIGN_OFF\n---\nPR URL: $PULL_REQ_URL\n---\n" >> pr.patch
 
-          SUBMITTER_NAME=$(echo "$SUBMITTER_DETAILS" | jq -r ".name // .login") # Use login as a fallback
-          echo "Submitter Name: $SUBMITTER_NAME"
+        cat diff-summary.txt >> pr.patch  # Write the contents of diff-summary.txt to pr.patch
+        echo -e "\n" >> pr.patch  # Append a newline to pr.patch
+        cat pr_1.patch >> pr.patch  # Append the contents of pr_1.patch to pr.patch
 
-          # Build submitter email ID
-          SUBMITTER_EMAIL="${SUBMITTER_LOGIN}@amd.com"
-          echo "Submitter Email: $SUBMITTER_EMAIL"
+        #echo "pr.patch +++++++++++++++++++++++++++++++++++"
+        #cat pr.patch
+        #echo "pr.patch -----------------------------------"
 
-          # Modify PR Patch with additional details
-          SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
-          sed -i "/Subject:/a \\\n $SIGN_OFF" "$patch_file"
-          sed -i "/Subject:/a \\\n PR URL: $PULL_REQ_URL" "$patch_file"
+        # Configure git user details and send email
+        git config --global user.email "${SUBMITTER_EMAIL}"
+        git config --global user.name "${SUBMITTER_NAME}"
+        #git config --global user.email "Arunkumar Bhattar" #TEST
+        #git config --global user.name "abhattar@amd.com" #TEST
 
-          # Extract CR, PR or JIRA ID if present
-          ID_INFO=$(echo "$PR_DETAILS" | jq -r '.body | capture("\\[(?<type>CR|PR|JIRA)-(?<id>\\d+)\\]\\((?<link>https://jira.xilinx.com/browse/(CR|PR|JIRA)-\\d+)\\)")')
-
-          ID_NUMBER=$(echo "$ID_INFO" | jq -r '.id')
-          ID_TYPE=$(echo "$ID_INFO" | jq -r '.type')
-          ID_LINK=$(echo "$ID_INFO" | jq -r '.link')
-
-          if [ -z "$ID_NUMBER" ]; then
-            echo "No valid ID number found in PR body"
-            # Add comment to PR that ID was not tagged
-            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid ID number was tagged in the PR body. Please tag a CR, PR or JIRA ID tag before approving. :x:"
-            exit 1
-          else
-            echo "ID Type: $ID_TYPE"
-            echo "ID Number: $ID_NUMBER"
-            echo "ID Link: $ID_LINK"
-            sed -i "/Subject:/a \\\n $ID_TYPE: $ID_NUMBER" "$patch_file"
-          fi
- 
-          # Configure git user details and send email
-          git config --global user.email "${SUBMITTER_EMAIL}"
-          git config --global user.name "${SUBMITTER_NAME}"
-
-          echo "git send-email --confirm=never --force --to \"$TO_MAIL\" \"${CC_EMAILS_ARRAY[@]}\" --attach \"$patch_file\""
-          git send-email --confirm=never --force --to "$TO_MAIL" "${CC_EMAILS_ARRAY[@]}" --attach "$patch_file"
-        done  
+        echo "git send-email --confirm=never --force --to \"$TO_MAIL\" \"${CC_EMAILS_ARRAY[@]}\" --attach \"$pr.patch\""
+        git send-email --confirm=never --force --to "$TO_MAIL" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
+        #git send-email --confirm=never --force --to "abhattar@amd.com"  --attach pr.patch #TEST
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
