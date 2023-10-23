@@ -514,7 +514,7 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 			DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Incr,
 			BdProp->AddrMode->AieMultiDimAddr.Y_Incr.Lsb,
 			BdProp->AddrMode->AieMultiDimAddr.Y_Incr.Mask) |
-		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.X_Wrap,
+		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Wrap,
 				BdProp->AddrMode->AieMultiDimAddr.Y_Wrap.Lsb,
 				BdProp->AddrMode->AieMultiDimAddr.Y_Wrap.Mask) |
 		XAie_SetField(DmaDesc->MultiDimDesc.AieMultiDimDesc.Y_Offset,
