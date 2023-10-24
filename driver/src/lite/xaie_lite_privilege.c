@@ -352,7 +352,6 @@ static void _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
 	u32 OptFlags;
-	AieRC RC;
 
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 		XAIE_INVALID_ARGS,

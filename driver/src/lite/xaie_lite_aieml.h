@@ -500,7 +500,6 @@ static inline void _XAie_LShimTileStatus(XAie_DevInst *DevInst, XAie_Col_Status 
 __FORCE_INLINE__
 static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status)
 {
-	u32 StartCol = (u32)(DevInst->StartCol);
 	u32 NumCols  = (u32)(DevInst->NumCols);
 
 	/* iterate specified columns */
@@ -889,6 +888,7 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
  *****************************************************************************/
 static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
 {
+	(void)DevInst;
 }
 #else
 /*****************************************************************************/
