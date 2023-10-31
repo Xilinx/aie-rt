@@ -13,4 +13,7 @@ properties:
   compatible:
     items:
       - const: xlnx,ai-engine-2.0
+
+depends:
+        aiefal: []
 ...
