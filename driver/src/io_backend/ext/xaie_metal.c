@@ -560,7 +560,7 @@ static AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
 
-			XAie_MetalIO_BlockWrite32(IOInst, BdArgs->Addr,
+			RC = XAie_MetalIO_BlockWrite32(IOInst, BdArgs->Addr,
 				BdArgs->BdWords, BdArgs->NumBdWords);
 			break;
 		}
