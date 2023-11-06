@@ -4,7 +4,7 @@
 ###############################################################################
 
 cmake_minimum_required(VERSION 3.1)
-project(xaiengine LANGUAGES C VERSION 3.4)
+project(xaiengine LANGUAGES C VERSION 3.5)
 
 set(CMAKE_C_STANDARD 11)
 
