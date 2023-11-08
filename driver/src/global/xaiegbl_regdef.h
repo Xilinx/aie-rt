@@ -886,6 +886,8 @@ typedef struct XAie_TileCtrlMod{
 typedef struct XAie_MemCtrlMod{
 	u32 MemCtrlRegOff;		/**< memory control reg offset */
 	XAie_RegFldAttr MemZeroisation;	/**< memory zeroisation field */
+	XAie_RegFldAttr MemInterleaving;	/**< memory interleaving field,
+						  This will be used only for memtile memory control register */
 } XAie_MemCtrlMod;
 
 /*

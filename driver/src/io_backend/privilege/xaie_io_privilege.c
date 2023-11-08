@@ -331,6 +331,52 @@ static AieRC _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 
 /*****************************************************************************/
 /**
+*
+* This API Enable/Disable interleaving mode for all MemTiles of the partition.
+*
+* @param	DevInst: Device Instance
+* @param	Enable: 0/1 to disable/enable memory interleaving mode
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		It is not required to check the DevInst as the caller function
+*		should provide the correct value.
+*		Internal API only.
+*
+******************************************************************************/
+static AieRC _XAie_PrivilegeConfigMemInterleaving(XAie_DevInst *DevInst, u8 Enable)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 FldVal;
+	const XAie_MemCtrlMod *MCtrlMod;
+	u8 C, R;
+
+	for(C = 0; C < DevInst->NumCols; C++) {
+		for(R = DevInst->MemTileRowStart;
+		    R < (DevInst->MemTileRowStart + DevInst->MemTileNumRows);
+		    R++) {
+			MCtrlMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemCtrlMod;
+			RegAddr = MCtrlMod->MemCtrlRegOff +
+					_XAie_GetTileAddr(DevInst, R, C);
+			FldVal = XAie_SetField(Enable,
+					       MCtrlMod->MemInterleaving.Lsb,
+					       MCtrlMod->MemInterleaving.Mask);
+			RC = XAie_MaskWrite32(DevInst, RegAddr,
+					      MCtrlMod->MemInterleaving.Mask,
+					      FldVal);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to config memory interleaving"
+						" for partition.\n");
+				return RC;
+			}
+		}
+	}
+	return RC;
+}
+
+/*****************************************************************************/
+/**
 * This API initializes the AI engine partition
 *
 * @param	DevInst: AI engine partition device instance pointer
@@ -430,6 +476,14 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0U) {
 		RC = DevInst->DevOps->PartMemZeroInit(DevInst);
+		if(RC != XAIE_OK) {
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+			return RC;
+		}
+	}
+
+	if ((OptFlags & XAIE_PART_INIT_OPT_DISABLE_MEMINTERLEAVING) != 0U) {
+		RC = _XAie_PrivilegeConfigMemInterleaving(DevInst, XAIE_DISABLE);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
@@ -543,6 +597,12 @@ AieRC _XAie_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 
 	RC = DevInst->DevOps->PartMemZeroInit(DevInst);
 	if (RC != XAIE_OK) {
+		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+		return RC;
+	}
+
+	RC = _XAie_PrivilegeConfigMemInterleaving(DevInst, XAIE_ENABLE);
+	if(RC != XAIE_OK) {
 		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 		return RC;
 	}
