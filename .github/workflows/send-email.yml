@@ -217,29 +217,31 @@ jobs:
         SUBMITTER_NAME=$(echo "$SUBMITTER_DETAILS" | jq -r ".name // .login") # Use login as a fallback
         echo "Submitter Name: $SUBMITTER_NAME"
 
+        # Format Submitter Name, replacing spaces with dots
+        FORMATTED_SUBMITTER_NAME=$(echo "$SUBMITTER_NAME" | tr ' ' '.')
+        
         # Build submitter email ID
-        SUBMITTER_EMAIL="${SUBMITTER_LOGIN}@amd.com"
+        SUBMITTER_EMAIL="${FORMATTED_SUBMITTER_NAME}@amd.com"
         echo "Submitter Email: $SUBMITTER_EMAIL"
-        ID_INFO=$(echo "$PR_DETAILS" | jq -r '.body | capture("\\[(?<type>CR|PR|JIRA)-(?<id>\\d+)\\]\\((?<link>https://jira.xilinx.com/browse/(CR|PR|JIRA)-\\d+)\\)")')
-        ID_NUMBER=$(echo "$ID_INFO" | jq -r '.id')
-        ID_TYPE=$(echo "$ID_INFO" | jq -r '.type')
-        ID_LINK=$(echo "$ID_INFO" | jq -r '.link')
         
-        if [ -z "$ID_NUMBER" ]; then
+        echo "PR Details: $PR_DETAILS"
+        PR_BODY=$(echo "$PR_DETAILS" | jq -r '.body')
+        echo "PR Body: $PR_BODY"
+        ID_INFOS=$(echo "$PR_BODY" | grep -oiP '\b(cr|pr|jira)-\d+\b' | tr '\n' ',' | sed 's/,$//')
+        echo "ID Infos: $ID_INFOS"
+
+        if [ -z "$ID_INFOS" ]; then
           echo "No valid ID number found in PR body"
-          # Add comment to PR that ID was not tagged
-          gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid ID number was tagged in the PR body. Please tag a CR, PR or JIRA ID tag before approving. :x:"
-          exit 1
+          # gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No valid ID number was tagged in the PR body. Please tag a CR, PR or JIRA ID tag before approving. :x:"
+          # exit 1
         else
-          echo "ID Type: $ID_TYPE"
-          echo "ID Number: $ID_NUMBER"
-          echo "ID Link: $ID_LINK"
+          echo "ID Infos: $ID_INFOS"
         fi
-        
+
         SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
         # Modify PR Patch with additional details
         echo -e "From: ${SUBMITTER_NAME}  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
-        echo -e "---\nBRANCH: ${TARGET_BRANCH}\n---\n$ID_TYPE: $ID_NUMBER\n---\n$SIGN_OFF\n---\nPR URL: $PULL_REQ_URL\n---\n" >> pr.patch
+        echo -e "---\nBRANCH: ${TARGET_BRANCH}\n---\n$ID_INFOS\n---\n$SIGN_OFF\n---\nPR URL: $PULL_REQ_URL\n---\n" >> pr.patch
 
         cat diff-summary.txt >> pr.patch  # Write the contents of diff-summary.txt to pr.patch
         echo -e "\n" >> pr.patch  # Append a newline to pr.patch
@@ -256,4 +258,3 @@ jobs:
         echo "git send-email --confirm=never --force --to \"$TO_MAIL\" \"${CC_EMAILS_ARRAY[@]}\" --attach \"$pr.patch\""
         git send-email --confirm=never --force --to "git_aiengine_dev@xilinx.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
-
