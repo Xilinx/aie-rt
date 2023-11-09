@@ -173,6 +173,10 @@ jobs:
         # Fetch PR details using gh API with PR_NUMBER
         PR_DETAILS=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
 
+        # Extract Pull Request Description
+        PR_DESCRIPTION=$(echo "$PR_DETAILS" | jq -r '.body')
+        echo "Pull Request Description: $PR_DESCRIPTION"
+        
         # Extract source repository URL and source branch name
         SOURCE_REPO_URL=$(echo "$PR_DETAILS" | jq --raw-output .head.repo.clone_url)
         SOURCE_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .head.ref)
@@ -240,7 +244,9 @@ jobs:
 
         SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
         # Modify PR Patch with additional details
+        # Insert PR Description at the top of the patch
         echo -e "From: ${SUBMITTER_NAME}  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
+        echo -e "PR Description:\n$PR_DESCRIPTION\n\n" >> pr.patch
         echo -e "---\nBRANCH: ${TARGET_BRANCH}\n---\n$ID_INFOS\n---\n$SIGN_OFF\n---\nPR URL: $PULL_REQ_URL\n---\n" >> pr.patch
 
         cat diff-summary.txt >> pr.patch  # Write the contents of diff-summary.txt to pr.patch
@@ -251,10 +257,30 @@ jobs:
         cat pr.patch
         echo "pr.patch -----------------------------------"
 
-        # Configure git user details and send email
+        # Store the original git config
+        ORIGINAL_GIT_USER_EMAIL=$(git config --global user.email)
+        ORIGINAL_GIT_USER_NAME=$(git config --global user.name)
+
+        # Configure git with the new user details
         git config --global user.email "${SUBMITTER_EMAIL}"
         git config --global user.name "${SUBMITTER_NAME}"
 
-        echo "git send-email --confirm=never --force --to \"$TO_MAIL\" \"${CC_EMAILS_ARRAY[@]}\" --attach \"$pr.patch\""
+        # Send the email with the patch
         git send-email --confirm=never --force --to "git_aiengine_dev@xilinx.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
+
+        # Comment on the PR
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
+
+        # Restore the original git config
+        git config --global user.email "${ORIGINAL_GIT_USER_EMAIL}"
+        git config --global user.name "${ORIGINAL_GIT_USER_NAME}"
+
+    - name: Close Pull Request
+      if: steps.approval-check.outputs.all_conditions_met == 'true' # Only run this step if the patch was approved and sent
+      run: |
+        PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }}
+        echo "Closing PR Number: $PR_NUMBER"
+        gh pr close $PR_NUMBER --repo ${{ github.repository }}
+        echo "Pull Request #$PR_NUMBER has been closed."
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
