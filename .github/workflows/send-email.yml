@@ -125,11 +125,24 @@ jobs:
             echo "::set-output name=all_conditions_met::true"
             echo "::set-output name=first_approver_name::$FIRST_APPROVER_NAME"
             echo "::set-output name=first_approver_login::$FIRST_APPROVER_LOGIN"
+        elif [[ -z "$APPROVED_REVIEWERS_STR" ]]; then
+            echo "PR CANNOT BE APPROVED"
+            echo "::set-output name=all_conditions_met::false"
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No reviewers found. Please ensure the PR has atleast one reviewer. :x:"
+        elif [[ "$DISTINCT_REVIEWERS_STR" != "$APPROVED_REVIEWERS_STR" ]]; then
+            echo "PR CANNOT BE APPROVED"
+            echo "::set-output name=all_conditions_met::false"
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: The list of total reviewers does not match the list of approved reviewers. Please ensure all the reviewers have approved! :x:"
+        elif [[ "$COMMIT_STATUS" != "success" ]]; then
+            echo "PR CANNOT BE APPROVED"
+            echo "::set-output name=all_conditions_met::false"
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: The commit status is not successful. Please ensure all checks are passing before approving. :x:"
         else
             echo "PR CANNOT BE APPROVED"
             echo "::set-output name=all_conditions_met::false"
-            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: The process of generating and sending the patch email failed. Please ensure all checks are passing with atleast one valid review before approving. :x:"
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: An unknown issue has occurred. Please check the PR conditions and try again. :x:"
         fi
+
 
     - name: Generate and Send Patch Email
       continue-on-error: true
