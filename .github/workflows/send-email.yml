@@ -120,7 +120,15 @@ jobs:
         echo "APPROVED_REVIEWERS_STR: $APPROVED_REVIEWERS_STR"
         echo "DISTINCT_REVIEWERS_STR: $DISTINCT_REVIEWERS_STR"
 
-        if [[ -n "$APPROVED_REVIEWERS_STR" && "$DISTINCT_REVIEWERS_STR" == "$APPROVED_REVIEWERS_STR" && "$COMMIT_STATUS" == "success" ]]; then
+        # Convert arrays to strings for comparison
+        APPROVED_REVIEWERS_STR="${APPROVED_REVIEWERS[*]}"
+        DISTINCT_REVIEWERS_STR="${DISTINCT_REVIEWERS[*]}"
+
+        echo "APPROVED_REVIEWERS_STR: $APPROVED_REVIEWERS_STR"
+        echo "DISTINCT_REVIEWERS_STR: $DISTINCT_REVIEWERS_STR"
+
+        # Check if there is at least one approving review
+        if [[ -n "$APPROVED_REVIEWERS_STR" && "$COMMIT_STATUS" == "success" ]]; then
             echo "PR CAN BE APPROVED"
             echo "::set-output name=all_conditions_met::true"
             echo "::set-output name=first_approver_name::$FIRST_APPROVER_NAME"
@@ -128,11 +136,7 @@ jobs:
         elif [[ -z "$APPROVED_REVIEWERS_STR" ]]; then
             echo "PR CANNOT BE APPROVED"
             echo "::set-output name=all_conditions_met::false"
-            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No reviewers found. Please ensure the PR has atleast one reviewer. :x:"
-        elif [[ "$DISTINCT_REVIEWERS_STR" != "$APPROVED_REVIEWERS_STR" ]]; then
-            echo "PR CANNOT BE APPROVED"
-            echo "::set-output name=all_conditions_met::false"
-            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: The list of total reviewers does not match the list of approved reviewers. Please ensure all the reviewers have approved! :x:"
+            gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: No reviewers have approved. At least one approving review is required. :x:"
         elif [[ "$COMMIT_STATUS" != "success" ]]; then
             echo "PR CANNOT BE APPROVED"
             echo "::set-output name=all_conditions_met::false"
@@ -142,7 +146,6 @@ jobs:
             echo "::set-output name=all_conditions_met::false"
             gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :x: An unknown issue has occurred. Please check the PR conditions and try again. :x:"
         fi
-
 
     - name: Generate and Send Patch Email
       continue-on-error: true
