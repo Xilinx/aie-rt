@@ -59,7 +59,7 @@ u8 _XAieMl_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	if(Loc.Row == 0U) {
 		ColType = (DevInst->StartCol + Loc.Col) % 4U;
-		if((ColType == 0U) || (ColType == 1U)) {
+		if((DevInst->StartCol + Loc.Col) == 0U) {
 			return XAIEGBL_TILE_TYPE_SHIMPL;
 		}
 
