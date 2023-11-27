@@ -1800,7 +1800,7 @@ static const XAie_DmaMod Aie2PSMemTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = NULL,
+	.AxiBurstLenCheck = &_XAie2PS_AxiBurstLenCheck,
 };
 
 static const XAie_DmaBdEnProp Aie2PSTileDmaBdEnProp =
@@ -2035,7 +2035,7 @@ static const XAie_DmaMod Aie2PSTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = NULL,
+	.AxiBurstLenCheck = &_XAie2PS_AxiBurstLenCheck,
 };
 
 static const XAie_DmaBdEnProp Aie2PSShimDmaBdEnProp =
