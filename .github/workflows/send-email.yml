@@ -14,12 +14,11 @@ jobs:
       all_conditions_met: ${{ steps.approval-check.outputs.all_conditions_met }}
       first_approver_name: ${{ steps.approval-check.outputs.first_approver_name }}
       first_approver_login: ${{ steps.approval-check.outputs.first_approver_login }}
-  
-    if: (github.event_name == 'issue_comment' && github.event.comment.body == 'approved') || (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-    
+
     - name: Set PR Number
       continue-on-error: true
       id: set-pr-number
@@ -30,13 +29,23 @@ jobs:
             echo "::set-output name=pr_number::${{ github.event.pull_request.number }}"
         fi
 
+    - name: Retrieve PR Data for Issue Comments
+      if: github.event_name == 'issue_comment'
+      id: retrieve-pr-data
+      run: |
+        PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }})
+        PR_BASE_REF=$(echo "$PR_DATA" | jq -r .base.ref)
+        echo "::set-output name=target_branch::$PR_BASE_REF"
+
     - name: Check if all reviewers approved
-      id: approval-check
+      if: (github.event_name == 'issue_comment' && github.event.comment.body == 'approved' && (steps.retrieve-pr-data.outputs.target_branch == 'main' || steps.retrieve-pr-data.outputs.target_branch == 'main-aie')) || 
+          (github.event_name == 'pull_request_review' && (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'main-aie') && github.event.review.state == 'approved')
       continue-on-error: true
+      id: approval-check
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        sleep 5  # Add a delay of 10 seconds
+        sleep 5
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }}  # Use the output from set-pr-number step here
         echo "PR Number: $PR_NUMBER"
 
