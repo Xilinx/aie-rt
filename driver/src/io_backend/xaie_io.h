@@ -56,6 +56,7 @@ typedef enum {
 	XAIE_BACKEND_OP_UPDATE_NPI_ADDR,
 	XAIE_BACKEND_OP_SET_COLUMN_CLOCK,
 	XAIE_BACKEND_OP_PERFORMANCE_UTILIZATION,
+	XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG,
 } XAie_BackendOpCode;
 
 /*
@@ -92,6 +93,15 @@ typedef struct XAie_BackendColumnReq {
 	u32 NumCols;
 	u8 Enable;
 } XAie_BackendColumnReq;
+
+/*
+ * Typedef for structure for tiles array with enable/disable flag for all of them
+ */
+typedef struct XAie_BackendTilesEnableArray {
+	XAie_LocType *Locs;
+	u32 NumTiles;
+	u8 Enable;
+} XAie_BackendTilesEnableArray;
 
 /*
  * Typedef for structure for tiles resource

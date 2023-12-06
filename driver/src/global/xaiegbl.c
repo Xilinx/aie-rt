@@ -1113,4 +1113,58 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+ *
+ * This API is to enable/disable memory interleaving mode in all MemTiles of AI
+ * engine partition.
+ *
+ * @param	DevInst - Global AIE device instance pointer.
+ * @param	Locs - Pointer to tiles locatations
+ * @param	NumTiles - Number of tiles
+ * @param	Enable - 0/1 to Disable/Enable memory interleaving.
+ *
+ * @return	XAIE_OK on success and error code on failure.
+ *
+ * @note		None.
+ *
+ ******************************************************************************/
+AieRC XAie_ConfigMemTilesMemInterleaving(XAie_DevInst *DevInst,
+		XAie_LocType *Locs, u32 NumTiles, u8 Enable)
+{
+	AieRC RC;
+	XAie_BackendTilesEnableArray Tiles;
+	u32 i;
+
+	if((DevInst == XAIE_NULL) ||
+	   (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Verify Locations */
+	for (i = 0; i < NumTiles; i++) {
+		if ((Locs[i].Row < DevInst->MemTileRowStart) ||
+		    (Locs[i].Row > (DevInst->MemTileRowStart + DevInst->MemTileNumRows)) ||
+		    (Locs[i].Col > DevInst->NumCols)) {
+			XAIE_ERROR("Wrong Location of tile Loc (%d, %d)\n",
+					Locs[i].Row, Locs[i].Col);
+			return XAIE_INVALID_TILE;
+		}
+	}
+
+	Tiles.Locs = Locs;
+	Tiles.NumTiles = NumTiles;
+	Tiles.Enable = Enable;
+
+	RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG,
+			(void *)&Tiles);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Failed to configure memory interleaving.\n");
+		return RC;
+	}
+
+	return XAIE_OK;
+}
+
 /** @}@} */

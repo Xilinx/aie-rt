@@ -692,6 +692,59 @@ AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 
 	return RC;
 }
+
+/*****************************************************************************/
+/**
+ *
+ * This API Enable/Disable interleaving mode for all MemTiles of the partition.
+ *
+ * @param	DevInst: Device Instance
+ * @param	Enable: 0/1 to disable/enable memory interleaving mode
+ *
+ * @return       XAIE_OK on success, error code on failure
+ *
+ * @note		It is not required to check the DevInst as the caller function
+ *		should provide the correct value.
+ *		Internal API only.
+ *
+ ******************************************************************************/
+AieRC _XAie_PrivilegeConfigMemInterleavingLoc(XAie_DevInst *DevInst,
+		XAie_BackendTilesEnableArray *Args)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 FldVal;
+	const XAie_MemCtrlMod *MCtrlMod;
+	u32 i;
+
+	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to configure memory interleaving,"
+				" enable protected registers failed.\n");
+		return RC;
+	}
+
+	MCtrlMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemCtrlMod;
+	for (i = 0; i < Args->NumTiles; i++) {
+		RegAddr = MCtrlMod->MemCtrlRegOff +
+			_XAie_GetTileAddr(DevInst, Args->Locs[i].Row, Args->Locs[i].Col);
+		FldVal = XAie_SetField(Args->Enable ? XAIE_ENABLE : XAIE_DISABLE,
+				MCtrlMod->MemInterleaving.Lsb,
+				MCtrlMod->MemInterleaving.Mask);
+		RC = XAie_MaskWrite32(DevInst, RegAddr,
+				MCtrlMod->MemInterleaving.Mask,
+				FldVal);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to config memory interleaving, Loc (%d, %d)\n",
+					Args->Locs[i].Row, Args->Locs[i].Col);
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst,
+					XAIE_DISABLE);
+			return RC;
+		}
+	}
+
+	return _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+}
 #else /* XAIE_FEATURE_PRIVILEGED_ENABLE */
 AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
@@ -717,6 +770,14 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 
 AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		XAie_BackendColumnReq *Args)
+{
+	(void)DevInst;
+	(void)Args;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
+AieRC _XAie_PrivilegeConfigMemInterleavingLoc(XAie_DevInst *DevInst,
+		XAie_BackendTilesEnableArray *Args)
 {
 	(void)DevInst;
 	(void)Args;

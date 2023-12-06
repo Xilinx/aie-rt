@@ -624,6 +624,8 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
 AieRC XAie_StartNextJob(XAie_DevInst *DevInst);
 AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
+AieRC XAie_ConfigMemTilesMemInterleaving(XAie_DevInst *DevInst,
+		XAie_LocType *Locs, u32 NumTiles, u8 Enable);
 /*****************************************************************************/
 /*
 *
