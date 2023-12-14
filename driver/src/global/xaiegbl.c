@@ -185,7 +185,8 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
-	InstPtr->EccStatus = XAIE_ENABLE;
+	//InstPtr->EccStatus = XAIE_ENABLE;
+	InstPtr->EccStatus = XAIE_DISABLE; // IPU
 	InstPtr->TxnList.Next = NULL;
 
 	RC = _XAie_RscMgrInit(InstPtr);
