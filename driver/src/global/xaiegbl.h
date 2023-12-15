@@ -62,6 +62,9 @@
 		XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR | \
 		XAIE_PART_INIT_OPT_ISOLATE)
 
+#define XAIE_INIT_ISOLATION				0
+#define XAIE_CLEAR_ISOLATION			1
+
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
 typedef struct XAie_DeviceOps XAie_DeviceOps;
@@ -210,6 +213,18 @@ typedef struct XAie_PartInitOpts {
 	u32 NumUseTiles; /* Number of tiles to use */
 	u32 InitOpts; /* AI engine partition initialization options */
 } XAie_PartInitOpts;
+
+/*
+ *
+ * This typedef contains the attributes for AIE partiton/ device partition
+ *
+ */
+typedef struct XAie_DevicePartInfo {
+	u8 StartCol;  /* Absolute start column of the partition */
+	u8 NumCols;   /* Number of cols allocated to the partition */
+	u64 BaseAddr;
+} XAie_DevicePartInfo;
+
 
 /*
  * This enum contains all the Stream Switch Port types. These enums are used to
@@ -582,6 +597,8 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
+AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
+		XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo);
 AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
 AieRC XAie_Finish(XAie_DevInst *DevInst);

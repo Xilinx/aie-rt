@@ -557,7 +557,7 @@ static inline void _XAie_LSetPartColShimReset(XAie_DevInst *DevInst,
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst)
+static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 ClearIsolation)
 {
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u64 RegAddr;

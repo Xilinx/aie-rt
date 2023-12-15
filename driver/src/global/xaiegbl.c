@@ -208,6 +208,82 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 /*****************************************************************************/
 /**
 *
+* This is the API to initialize the AI engine soft partition. It will initialize the
+* AI engine partition hardware.
+*           Soft parition is like a subset of a partition. It is same as the partition
+	        but isolation will not be there in the boundary. Isolation will be there only
+			on device parititon.
+
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Opts: AI engine partition initialization options.
+* @param    DevPartInfo: Device Partition Info.
+*			If @Opts is NULL, it will do the default options without
+*			clock gating. The default options will:
+*			* reset columns,
+*			* reset shims,
+*			* set to block NOC AXI MM decode and slave errors
+*			* setup isolation
+*			If @Opts is not NULL, it will follow the set bits of the
+*			InitOpts field, the available options are as follows:
+*			* XAIE_PART_INIT_OPT_DEFAULT
+*			* XAIE_PART_INIT_OPT_COLUMN_RST
+*			* XAIE_PART_INIT_OPT_SHIM_RST
+*			* XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR
+*			* XAIE_PART_INIT_OPT_ISOLATE
+*			* XAIE_PART_INIT_OPT_ZEROIZEMEM (not on by default)
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+******************************************************************************/
+AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo)
+{
+	XAie_PartInitOpts SoftPartOpts;
+	XAie_DevInst DevPartDevInst;
+	AieRC RC;
+	u32 OptFlags;
+	const XAie_Backend *CurrBackend;
+
+	memset(&SoftPartOpts, 0, sizeof(SoftPartOpts));
+
+	if(Opts != NULL) {
+		OptFlags = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));
+	} else {
+		OptFlags = (XAIE_PART_INIT_OPT_DEFAULT & (~XAIE_PART_INIT_OPT_ISOLATE));
+	}
+
+	memcpy(&DevPartDevInst, DevInst, sizeof(XAie_DevInst));
+
+	if (DevPartInfo->StartCol <= DevInst->StartCol &&
+		DevPartInfo->NumCols >= DevInst->NumCols) {
+		/*Isolation for soft Partition is cleared*/
+		SoftPartOpts.InitOpts = OptFlags;
+		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
+		if (RC == XAIE_OK) {
+			/*Fix the isolation for top level partition*/
+			DevPartDevInst.StartCol = DevPartInfo->StartCol;
+			DevPartDevInst.NumCols = DevPartInfo->NumCols;
+			DevPartDevInst.BaseAddr = DevPartInfo->BaseAddr;
+			DevPartDevInst.IOInst = NULL;
+			CurrBackend = DevInst->Backend;
+			RC = CurrBackend ->Ops.Init(&DevPartDevInst);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to initialize backend \n");
+				return RC;
+			}
+			RC = DevInst->DevOps->SetPartIsolationAfterRst(&DevPartDevInst, XAIE_INIT_ISOLATION);
+
+			CurrBackend ->Ops.Finish(DevPartDevInst.IOInst);
+		}
+	}
+	else {
+		return XAIE_INVALID_ARGS;
+	}
+
+	return RC;
+}
+/*****************************************************************************/
+/**
+*
 * This is the API to initialize the AI engine partition. It will initialize the
 * AI engine partition hardware.
 *
@@ -336,7 +412,7 @@ AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	return DevInst->DevOps->SetPartIsolationAfterRst(DevInst);
+	return DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
 
 }
 

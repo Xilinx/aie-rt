@@ -422,7 +422,13 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	}
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0U) {
-		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst);
+		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
+		if(RC != XAIE_OK) {
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+		}
+	}
+	else {
+		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_CLEAR_ISOLATION);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 		}

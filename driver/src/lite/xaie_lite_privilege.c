@@ -287,6 +287,73 @@ static void _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 
 /*****************************************************************************/
 /**
+* This API initializes the AI engine Soft partition
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Opts: Initialization options
+* @param	DevPartInfo Device Partition information.
+*
+* @return       XAIE_OK
+*
+* @note		This operation does the following steps to initialize an AI
+*		engine partition:
+*		- Clock gate all columns
+*		- Reset Columns
+*		- Ungate all Columns
+*		- Remove columns reset
+*		- Reset shims
+*		- Setup AXI MM not to return errors for AXI decode or slave
+*		  errors, raise events instead.
+*		- ungate all columns
+*		- Setup partition isolation on device parition
+*		- zeroize memory if it is requested
+*
+*******************************************************************************/
+AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
+									XAie_DevicePartInfo *DevPartInfo)
+{
+	XAie_PartInitOpts SoftPartOpts;
+	XAie_DevInst DevPartDevInst;
+	AieRC RC;
+	const XAie_Backend *CurrBackend;
+
+	memset(&SoftPartOpts,0, sizeof(SoftPartOpts));
+
+	memcpy(&DevPartDevInst, DevInst, sizeof(XAie_DevInst));
+
+	if (DevPartInfo->StartCol <= DevInst->StartCol &&
+		DevPartInfo->NumCols >= DevInst->NumCols) {
+		/*Isolation for soft Partition is cleared*/
+		SoftPartOpts.InitOpts = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));
+		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
+		if (RC == XAIE_OK) {
+			/*Fix the isolation for top level partition*/
+			DevPartDevInst.StartCol = DevPartInfo->StartCol;
+			DevPartDevInst.NumCols = DevPartInfo->NumCols;
+			DevPartDevInst.BaseAddr = DevPartInfo->BaseAddr;
+			DevPartDevInst.IOInst = NULL;
+			CurrBackend = DevInst->Backend;
+			RC = CurrBackend ->Ops.Init(&DevPartDevInst);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to initialize backend \n");
+				return RC;
+			}
+			RC = _XAie_LSetPartIsolationAfterRst(&DevPartDevInst, 0);
+
+			CurrBackend ->Ops.Finish(DevPartDevInst.IOInst);
+		}
+	}
+	else
+	{
+		XAIE_ERROR("Invalid Device Partition Soft Partition Info\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	return RC;
+
+}
+/*****************************************************************************/
+/**
 * This API initializes the AI engine partition
 *
 * @param	DevInst: AI engine partition device instance pointer

@@ -273,20 +273,22 @@ AieRC _XAie_SetPartColClockAfterRst(XAie_DevInst *DevInst, u8 Enable)
 *		Internal API only.
 *
 ******************************************************************************/
-AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst)
+AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 ClearIsolation)
 {
 	AieRC RC = XAIE_OK;
 
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u8 Dir = 0;
 
-		if(C == 0U) {
-			Dir = XAIE_ISOLATE_WEST_MASK;
-		} else if(C == (u8)(DevInst->NumCols - 1U)) {
-			Dir = XAIE_ISOLATE_EAST_MASK;
-		} else {
-			/* No isolation for tiles by default for AIE */
-			continue;
+		if(!ClearIsolation) {
+			if(C == 0U) {
+				Dir = XAIE_ISOLATE_WEST_MASK;
+			} else if(C == (u8)(DevInst->NumCols - 1U)) {
+				Dir = XAIE_ISOLATE_EAST_MASK;
+			} else {
+				/* No isolation for tiles by default for AIE */
+				continue;
+			}
 		}
 
 		for(u8 R = 0; R < DevInst->NumRows; R++) {
