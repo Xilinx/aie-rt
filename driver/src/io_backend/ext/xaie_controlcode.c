@@ -606,6 +606,9 @@ static AieRC XAie_ControlCodeIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			ControlCodeIOInst->NpiBaseAddr = *((u64 *)Arg);
 			break;
 		}
+		case XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG:
+			return _XAie_PrivilegeConfigMemInterleavingLoc(DevInst,
+					(XAie_BackendTilesEnableArray *)Arg);
 		default:
 			XAIE_ERROR("CDO backend doesn't support operation"
 					" %u.\n", Op);

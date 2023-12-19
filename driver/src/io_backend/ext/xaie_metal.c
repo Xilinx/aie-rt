@@ -588,6 +588,9 @@ static AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
 			return _XAie_PrivilegeSetColumnClk(DevInst,
 					(XAie_BackendColumnReq *)Arg);
+		case XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG:
+			return _XAie_PrivilegeConfigMemInterleavingLoc(DevInst,
+					(XAie_BackendTilesEnableArray *)Arg);
 		default:
 			RC = XAIE_FEATURE_NOT_SUPPORTED;
 			break;

@@ -553,6 +553,9 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
 			return _XAie_PrivilegeSetColumnClk(DevInst,
 					(XAie_BackendColumnReq *)Arg);
+		case XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG:
+			return _XAie_PrivilegeConfigMemInterleavingLoc(DevInst,
+					(XAie_BackendTilesEnableArray *)Arg);
 		default:
 			XAIE_ERROR("Baremetal backend doesn't support operation"
 					" %d\n", Op);
