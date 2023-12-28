@@ -100,7 +100,7 @@ namespace xaiefal {
 				if (isStaticAllocated) {
 					if (id == XAIE_RSC_ID_ANY) {
 						RC = XAIE_INVALID_ARGS;
-						Logger::log(LogLevel::ERROR) << __func__ << " " <<
+						Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 							typeid(*this).name() <<
 							" If Rsc ID is any, cannot be statically allocated" << std::endl;
 					} else {
@@ -132,11 +132,11 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Reserved == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ << " " <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 					typeid(*this).name() << " resource has been allocated." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Initialized == 0) {
-				Logger::log(LogLevel::ERROR) << __func__ << " " <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 					typeid(*this).name() << " resource not configured." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -159,7 +159,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ << " " <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 					typeid(*this).name() << "resource is running." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1) {
@@ -184,12 +184,12 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Prereserved == 0) {
-				Logger::log(LogLevel::ERROR) << __func__ << " " <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 					typeid(*this).name() << " resource is not preserved." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
 				if (State.Running == 1) {
-					Logger::log(LogLevel::ERROR) << __func__ << " " <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 						typeid(*this).name() << " resource is running." << std::endl;
 					RC = XAIE_INVALID_ARGS;
 				} else if (State.Reserved == 1) {
@@ -218,12 +218,12 @@ namespace xaiefal {
 						State.Running = 1;
 					}
 				} else {
-					Logger::log(LogLevel::ERROR) << __func__ << " " <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 						typeid(*this).name() << " resource is not configured." << std::endl;
 					RC = XAIE_ERR;
 				}
 			} else {
-				Logger::log(LogLevel::ERROR) << __func__ << " " <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ << " " <<
 					typeid(*this).name() << " resource is not allocated." << std::endl;
 				RC = XAIE_ERR;
 			}
@@ -469,7 +469,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << typeid(*this).name() << " " <<
+				Logger::log(LogLevel::FAL_ERROR) << typeid(*this).name() << " " <<
 					__func__ << "(" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
@@ -510,7 +510,8 @@ namespace xaiefal {
 		}
 	};
 
-	struct XAieRscGetRscsWrapper {
+	class XAieRscGetRscsWrapper {
+	public:
 		XAieRscGetRscsWrapper() = delete;
 		XAieRscGetRscsWrapper(std::shared_ptr<XAieRsc> &R,
 				std::vector<XAie_UserRsc> &Rscs) {

@@ -62,14 +62,14 @@ namespace xaiefal {
 			_XAIEFAL_MUTEX_ACQUIRE(mLock);
 
 			if (Hid == nullptr) {
-				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << ", empty handle." << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 			if (State.Reserved == 1) {
 				if (GroupComposition != C) {
-					Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 						" Mod=" << Mod << "(" <<
 						GroupEvent << ") is reserved with " <<
@@ -106,7 +106,7 @@ namespace xaiefal {
 
 			auto H = Handles.find(Hid);
 			if (H == Handles.end()) {
-				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
 					" group event(" << GroupEvent <<
@@ -141,7 +141,7 @@ namespace xaiefal {
 
 			auto H = Handles.find(Hid);
 			if (H == Handles.end()) {
-				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
 					" group event(" << GroupEvent <<
@@ -193,7 +193,7 @@ namespace xaiefal {
 
 			auto H = Handles.find(Hid);
 			if (H == Handles.end()) {
-				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
 					" group event(" << GroupEvent <<
@@ -229,7 +229,7 @@ namespace xaiefal {
 			Rsc.RscId = static_cast<uint32_t>(GroupEvent);
 			RC = XAie_RequestAllocatedGroupEvents(dev(), 1, &Rsc);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_WARN) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << " resource not available.\n";
 			}
@@ -295,14 +295,14 @@ namespace xaiefal {
 					sizeof(DevHd->XAieGroupEventMapPl[0]);
 			}
 			for (i = 0; i < EIdsTotal; i++) {
-				if (E == EIds[i]) {
+				if (E == static_cast<XAie_Events>(EIds[i])) {
 					Id = i;
 					break;
 				}
 			}
 			if (i >= EIdsTotal) {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					" Mod=" << M << " " << E <<
 					" invalid." << std::endl;
 			} else {

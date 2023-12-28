@@ -22,7 +22,7 @@ foreach (hf ${_headers})
            DESTINATION include RENAME ${PROJECT_NAME}/${d}/${f})
 endforeach (hf)
 
-collect (PROJECT_LIB_DIRS "${CMAKE_CURRENT_BINARY_DIR}")
-collect (PROJECT_INC_DIRS "${CMAKE_CURRENT_BINARY_DIR}/include")
+#collect (PROJECT_LIB_DIRS "${CMAKE_CURRENT_BINARY_DIR}")
+#collect (PROJECT_INC_DIRS "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 # vim: expandtab:ts=2:sw=2:smartindent

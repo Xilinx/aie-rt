@@ -73,7 +73,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_ERR;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, tracing already started." << std::endl;
 			} else {
 				for (uint32_t i = 0; i < TraceSlotBits.size(); i++) {
@@ -97,10 +97,10 @@ namespace xaiefal {
 			AieRC RC = XAIE_ERR;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, tracing already started." << std::endl;
 			} else if (Slot >= static_cast<uint32_t>(TraceSlotBits.size())) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, invalid slot id " << Slot << "." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
@@ -128,19 +128,19 @@ namespace xaiefal {
 		AieRC setTraceEvent(uint32_t Slot, XAie_Events E) {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << __func__ << " " <<
+			Logger::log(LogLevel::FAL_DEBUG) << __func__ << " " <<
 				"(" << static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ") Mod=" << Mod <<
 				" Slot=" << Slot << " E=" << E << std::endl;
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else if (Slot >= static_cast<uint32_t>(TraceSlotBits.size())) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, invalid slot." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else if ((TraceSlotBits.test(Slot) == 0)) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, trace slot is not reserved." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
@@ -165,14 +165,14 @@ namespace xaiefal {
 		 * @return XAIE_OK for success, error code for failure
 		 */
 		AieRC setCntrEvent(XAie_Events StartE, XAie_Events StopE) {
-			XAie_ModuleType StartM, StopM;
+			XAie_ModuleType StartM = XAIE_MEM_MOD, StopM = XAIE_MEM_MOD;
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << __func__ << " " <<
+			Logger::log(LogLevel::FAL_DEBUG) << __func__ << " " <<
 				"(" << static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ") Mod=" << Mod <<
 				" StartE=" << StartE << " StopE=" << StopE << std::endl;
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -188,7 +188,7 @@ namespace xaiefal {
 				}
 				if ((StartM != Mod || StopM != Mod) &&
 					State.Reserved == 1) {
-					Logger::log(LogLevel::ERROR) << __func__ <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 						"failed, trace reserved," <<
 						"but start/stop event not of the same module of trace control. " <<
 						"Please set control event before reserve() if they are of different mod" <<
@@ -218,7 +218,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -241,7 +241,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -268,7 +268,7 @@ namespace xaiefal {
 		 * @return number of reserved events.
 		 */
 		uint32_t getReservedTraceEvents() const {
-			return TraceSlotBits.count();
+			return static_cast<uint32_t>(TraceSlotBits.count());
 		}
 		/**
 		 * This function returns the trace control start event broadcast
@@ -287,7 +287,7 @@ namespace xaiefal {
 					BcId = -EINVAL;
 				}
 			} else {
-				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace control " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") trace control Mod=" << Mod <<
 					" not reserved" << Mod << std::endl;
@@ -313,7 +313,7 @@ namespace xaiefal {
 					BcId = -EINVAL;
 				}
 			} else {
-				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace control " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") trace control Mod=" << Mod <<
 					" not reserved" << Mod << std::endl;
@@ -327,7 +327,7 @@ namespace xaiefal {
 			return static_cast<uint32_t>(XAIE_TRACE_CTRL_RSC);
 		}
 		uint32_t getAvailManagedRscs() {
-			return TraceSlotBits.size() - TraceSlotBits.count();
+			return static_cast<uint32_t>(TraceSlotBits.size() - TraceSlotBits.count());
 		}
 		uint32_t getManagedRscsType() {
 			return static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC);
@@ -339,7 +339,7 @@ namespace xaiefal {
 
 			RC = XAie_RequestTraceCtrl(AieHd->dev(), 1, &Req, 1, &Rsc);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace control " << __func__ << " (" <<
 							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 							") Mod=" << Mod <<" failed to reserve." << std::endl;
 			}
@@ -386,7 +386,7 @@ namespace xaiefal {
 
 			RC = XAie_ReleaseTraceCtrl(AieHd->dev(), 1, &Rsc);
 			if(RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace control " << __func__ << " (" <<
 							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 							") Mod=" << Mod <<" failed to release." << std::endl;
 			}
@@ -400,7 +400,7 @@ namespace xaiefal {
 			XAie_Events lStartE = StartEvent;
 			XAie_Events lStopE = StopEvent;
 
-			Logger::log(LogLevel::DEBUG) << "trace control " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "trace control " << __func__ << " (" <<
 				static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ") Mod=" << Mod << std::endl;
 			for (uint32_t i = 0; i < TraceSlotBits.size(); i++) {
 				if (TraceSlotBits.test(i) != 0) {
@@ -428,7 +428,7 @@ namespace xaiefal {
 			if (RC == XAIE_OK) {
 				RC = XAie_TraceEventList(dev(), Loc, Mod,
 						vE.data(), vSlot.data(),
-						vE.size());
+						static_cast<uint32_t>(vE.size()));
 			}
 			if (RC == XAIE_OK) {
 				RC = XAie_TracePktConfig(dev(), Loc, Mod, Pkt);
@@ -444,7 +444,7 @@ namespace xaiefal {
 		AieRC _stop() {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "trace control " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "trace control " << __func__ << " (" <<
 				static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ") Mod=" << Mod << std::endl;
 			// Do not reset the packet setting as it can
 			// cause issues on outstanding contents in
@@ -566,20 +566,20 @@ namespace xaiefal {
 			RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 					M, E, &HwEvent);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") Event Mod=" << M << " Event=" << E <<
 					" invalid event" << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else if (State.Running == 1) {
 				RC = XAIE_ERR;
-				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") Event Mod=" << M << " Event=" << E <<
 					" trace event already in used" << std::endl;
 			} else if (State.Reserved == 1 && M != EventMod) {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") Event Mod=" << M << " Event=" << E <<
 					" trace event already reserved, input event module is different to the one already set" << std::endl;
@@ -602,7 +602,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Configured == 0) {
-				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") trace control Mod=" << TraceCntr->getModule() <<
 					" Event Mod=" << Mod << " no event specified" << std::endl;
@@ -631,7 +631,7 @@ namespace xaiefal {
 					BcId = -EINVAL;
 				}
 			} else {
-				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") trace control Mod=" << TraceCntr->getModule() <<
 					" Event Mod=" << EventMod <<
@@ -648,13 +648,13 @@ namespace xaiefal {
 		AieRC _reserve() {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "trace event " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "trace event " << __func__ << " (" <<
 				static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 				") trace control Mod=" << TraceCntr->getModule() <<
 				" Event Mod=" << Mod << std::endl;
 			RC = TraceCntr->reserveTraceSlot(Slot);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "trace event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_WARN) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 					") trace control Mod=" << TraceCntr->getModule() <<
 					" Event Mod=" << Mod << " no trace slot" << std::endl;
@@ -666,7 +666,7 @@ namespace xaiefal {
 					XAIE_CORE_MOD, XAIE_MEM_MOD);
 				RC = BC->reserve();
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 						") trace control Mod=" << TraceCntr->getModule() <<
 						" Event Mod=" << Mod << " no broadcast event" << std::endl;
@@ -682,7 +682,7 @@ namespace xaiefal {
 			return RC;
 		}
 		AieRC _release() {
-			Logger::log(LogLevel::DEBUG) << "trace event " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "trace event " << __func__ << " (" <<
 				static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 				") trace control Mod=" << TraceCntr->getModule() <<
 				" Event Mod=" << Mod << "Event=" << Event << std::endl;
@@ -695,7 +695,7 @@ namespace xaiefal {
 		AieRC _start() {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "trace event " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "trace event " << __func__ << " (" <<
 				static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 				") trace control Mod=" << TraceCntr->getModule() <<
 				" Event Mod=" << EventMod << "Event=" << Event << std::endl;
@@ -711,7 +711,7 @@ namespace xaiefal {
 					if (RC == XAIE_OK) {
 						RC = TraceCntr->setTraceEvent(Slot, BcE);
 					} else {
-						Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
+						Logger::log(LogLevel::FAL_ERROR) << "trace event " << __func__ << " (" <<
 							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 							") trace control Mod=" << TraceCntr->getModule() <<
 							" Event Mod=" << EventMod << "Event=" << Event <<
@@ -727,7 +727,7 @@ namespace xaiefal {
 			AieRC RC, lRC;
 			XAie_Events E;
 
-			Logger::log(LogLevel::DEBUG) << "trace event " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "trace event " << __func__ << " (" <<
 				static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 				") trace control Mod=" << TraceCntr->getModule() <<
 				" Event Mod=" << Mod << "Event=" << Event << std::endl;
@@ -747,14 +747,14 @@ namespace xaiefal {
 			return RC;
 		}
 		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
-			XAie_UserRsc Rsc;
+			XAie_UserRsc tempRsc;
 
-			Rsc.Loc.Col = Loc.Col;
-			Rsc.Loc.Row = Loc.Row;
-			Rsc.Mod = static_cast<uint32_t>(TraceCntr->getModule());
-			Rsc.RscType = static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC);
-			Rsc.RscId = Slot;
-			vRscs.push_back(Rsc);
+			tempRsc.Loc.Col = Loc.Col;
+			tempRsc.Loc.Row = Loc.Row;
+			tempRsc.Mod = static_cast<uint32_t>(TraceCntr->getModule());
+			tempRsc.RscType = static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC);
+			tempRsc.RscId = Slot;
+			vRscs.push_back(tempRsc);
 
 			if (EventMod != TraceCntr->getModule()) {
 				BC->getRscs(vRscs);
@@ -811,15 +811,15 @@ namespace xaiefal {
 		AieRC addEvent(XAie_ModuleType M, XAie_Events E) {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(M) << " E=" << E << std::endl;
 			if (Events.size() == TraceCntr->getMaxTraceEvents()) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed for tracing, exceeded max num of events." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed for tracing, resource reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -827,12 +827,12 @@ namespace xaiefal {
 
 				RC = TraceE.setEvent(M, E);
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::ERROR) << __func__ <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 						"failed for tracing, failed to initialize event." << std::endl;
 				} else if (State.Reserved == 1) {
 					RC = TraceE.reserve();
 					if (RC != XAIE_OK) {
-						Logger::log(LogLevel::ERROR) << __func__ <<
+						Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 							"failed for tracing, reserved new event failed." << std::endl;
 					} else {
 						RC = TraceE.start();
@@ -859,11 +859,11 @@ namespace xaiefal {
 		AieRC removeEvent(XAie_ModuleType M, XAie_Events E) {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(M) << " E=" << E << std::endl;
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed for tracing, resource reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -880,7 +880,7 @@ namespace xaiefal {
 					}
 				}
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::ERROR) << __func__ <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 						"failed for tracing, event doesn't exist." << std::endl;
 				} else {
 					changeToConfigured();
@@ -902,7 +902,7 @@ namespace xaiefal {
 		AieRC setCntrEvent(XAie_Events StartE, XAie_Events StopE) {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(TraceCntr->getModule()) <<
 				" StartE=" << StartE << " StopE=" << StopE << std::endl;
@@ -924,7 +924,7 @@ namespace xaiefal {
 		AieRC setMode(XAie_TraceMode M) {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") M=" << M << std::endl;
 			RC = TraceCntr->setMode(M);
@@ -945,7 +945,7 @@ namespace xaiefal {
 		AieRC setPkt(const XAie_Packet &P) {
 			AieRC RC;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(TraceCntr->getModule()) << std::endl;
 			RC = TraceCntr->setPkt(P);
@@ -980,7 +980,7 @@ namespace xaiefal {
 		AieRC _reserve() {
 			AieRC RC = XAIE_OK;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(TraceCntr->getModule()) << std::endl;
 			if (RC == XAIE_OK && !(TraceCntr->isReserved())) {
@@ -1008,7 +1008,7 @@ namespace xaiefal {
 			return RC;
 		}
 		AieRC _release() {
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(TraceCntr->getModule()) << std::endl;
 			TraceCntr->release();
@@ -1020,7 +1020,7 @@ namespace xaiefal {
 		AieRC _start() {
 			AieRC RC = XAIE_OK;
 
-			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing " << __func__ << " (" <<
 				static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) << ")" <<
 				" Mod=" << TraceCntr->getModule() << ", " << Events.size() << " events to trace." << std::endl;
 			for (uint32_t i = 0; i < Events.size(); i++) {
@@ -1040,7 +1040,7 @@ namespace xaiefal {
 			return RC;
 		}
 		AieRC _stop() {
-			Logger::log(LogLevel::DEBUG) << "tracing "<< __func__ << " (" <<
+			Logger::log(LogLevel::FAL_DEBUG) << "tracing "<< __func__ << " (" <<
 				static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) << ")" <<
 				" Mod=" << TraceCntr->getModule() << ", " << Events.size() << " events to trace." << std::endl;
 			TraceCntr->stop();

@@ -60,7 +60,7 @@ namespace xaiefal {
 		AieRC getEvent(XAie_Events &E) const {
 			AieRC RC = XAIE_OK;
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "PC Event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "PC Event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" resource not resesrved." << std::endl;
 				RC = XAIE_ERR;
@@ -80,7 +80,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (_XAie_GetTileTypefromLoc(dev(), Loc) != XAIEGBL_TILE_TYPE_AIETILE) {
-				Logger::log(LogLevel::ERROR) << "PC event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "PC event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" tile is not core tile." << std::endl;
 				RC = XAIE_ERR;
@@ -99,7 +99,7 @@ namespace xaiefal {
 					RC = XAie_RequestAllocatedPCEvents(AieHd->dev(), 1, &Rsc);
 				}
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::WARN) << "PC event " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_WARN) << "PC event " << __func__ << " (" <<
 						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 						" no available resource.\n";
 				}
@@ -181,7 +181,7 @@ namespace xaiefal {
 		AieRC getEvent(XAie_Events &E) const {
 			AieRC RC = XAIE_OK;
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "PC range " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" resource not resesrved." << std::endl;
 				RC = XAIE_ERR;
@@ -204,7 +204,7 @@ namespace xaiefal {
 			XAie_UserRscReq Req = {Loc, Mod, 2};
 
 			if (_XAie_GetTileTypefromLoc(dev(), Loc) != XAIEGBL_TILE_TYPE_AIETILE) {
-				Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "PC range " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" not core tile." << std::endl;
 				RC = XAIE_ERR;
@@ -212,7 +212,7 @@ namespace xaiefal {
 					RC = XAie_RequestPCRangeEvents(AieHd->dev(), 1, &Req, 2, Rscs);
 				}
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_ERROR) << "PC range " << __func__ << " (" <<
 						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 						" resource not availalble." << std::endl;
 				} else {
@@ -242,7 +242,7 @@ namespace xaiefal {
 				RC = XAie_EventPCEnable(dev(), Loc, Rscs[1].RscId, PcAddrs[1]);
 			}
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "PC range " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" failed to start." << std::endl;
 			}
@@ -256,7 +256,7 @@ namespace xaiefal {
 			iRC |= (int)XAie_EventPCDisable(dev(), Loc, Rscs[1].RscId);
 
 			if (iRC != (int)XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "PC range " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" failed to stop." << std::endl;
 				RC = XAIE_ERR;

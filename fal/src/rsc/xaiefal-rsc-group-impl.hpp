@@ -134,8 +134,8 @@ namespace xaiefal {
 			}
 
 			if (XAie_GetStaticRscStat(AieHdPtr->dev(),
-				RscStats.size(), RscStats.data())) {
-				Logger::log(LogLevel::ERROR) << "failed to get static resource stat." << std::endl;
+				static_cast<uint32_t>(RscStats.size()), RscStats.data())) {
+				Logger::log(LogLevel::FAL_ERROR) << "failed to get static resource stat." << std::endl;
 			} else {
 				for (auto S: RscStats) {
 					if (S.NumRscs != 0) {
@@ -237,8 +237,8 @@ namespace xaiefal {
 			}
 
 			if (XAie_GetAvailRscStat(AieHdPtr->dev(),
-				RscStats.size(), RscStats.data())) {
-				Logger::log(LogLevel::ERROR) << "failed to get avail resource stat." << std::endl;
+				static_cast<uint32_t>(RscStats.size()), RscStats.data())) {
+				Logger::log(LogLevel::FAL_ERROR) << "failed to get avail resource stat." << std::endl;
 			} else {
 				for (auto S: RscStats) {
 					if (S.NumRscs == 0) {
@@ -252,7 +252,7 @@ namespace xaiefal {
 			for (auto Ref: vRefs) {
 				uint32_t NumRscs;
 				XAie_LocType Loc;
-				uint32_t Mod;
+				uint32_t tMod;
 				uint32_t ManagedRscType;
 
 				auto R = Ref.lock();
@@ -271,8 +271,8 @@ namespace xaiefal {
 				}
 
 				Loc = std::static_pointer_cast<XAieSingleTileRsc>(R)->loc();
-				Mod = std::static_pointer_cast<XAieSingleTileRsc>(R)->mod();
-				if (RscStat.getNumRsc(Loc, Mod, R->getRscType()) == 0 &&
+				tMod = std::static_pointer_cast<XAieSingleTileRsc>(R)->mod();
+				if (RscStat.getNumRsc(Loc, tMod, R->getRscType()) == 0 &&
 					R->isReserved() == false) {
 					// If the parent resource is occupied
 					// but not by the current app, number of

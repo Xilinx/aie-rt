@@ -8,17 +8,17 @@
 
 namespace xaiefal {
 	enum class LogLevel {
-		DEBUG,
-		INFO,
-		WARN,
-		ERROR,
-		MAX,
+		FAL_DEBUG,
+		FAL_INFO,
+		FAL_WARN,
+		FAL_ERROR,
+		FAL_MAX,
 	};
 
 	class Logger
 	{
 	private:
-		Logger() : Level(LogLevel::INFO) {}
+		Logger() : Level(LogLevel::FAL_INFO) {}
 	public:
 		LogLevel Level;
 		std::ofstream of;
@@ -47,14 +47,14 @@ namespace xaiefal {
 
 			return logger;
 		}
-		static std::ostream &log(LogLevel L=LogLevel::MAX) {
+		static std::ostream &log(LogLevel L=LogLevel::FAL_MAX) {
 			const char* label;
 
 			switch(L) {
-				case LogLevel::DEBUG: label = "XAIEFAL: DEBUG: "; break;
-				case LogLevel::INFO:  label = "XAIEFAL: INFO: "; break;
-				case LogLevel::WARN:  label = "XAIEFAL: WARN: "; break;
-				case LogLevel::ERROR: label = "XAIEFAL: ERROR: "; break;
+				case LogLevel::FAL_DEBUG: label = "XAIEFAL: DEBUG: "; break;
+				case LogLevel::FAL_INFO:  label = "XAIEFAL: INFO: "; break;
+				case LogLevel::FAL_WARN:  label = "XAIEFAL: WARN: "; break;
+				case LogLevel::FAL_ERROR: label = "XAIEFAL: ERROR: "; break;
 				default: label = ""; break;
 			}
 
