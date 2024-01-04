@@ -26,18 +26,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef __AIECDO__ /* AIE simulator */
-
-//#include "cdo_rts.h"
-
-#endif
-
 #include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaie_io_common.h"
 #include "xaie_io_privilege.h"
 #include "xaie_npi.h"
+
+extern void cdo_Write32(u64, u32);
+extern void cdo_MaskWrite32(u64 , u32, u32);
+extern void cdo_MaskPoll(u64 , u32, u32, u32);
+extern void cdo_BlockWrite32(u64, const u32*, u32);
+extern void cdo_BlockSet32(u64, u32, u32);
 
 /************************** Constant Definitions *****************************/
 /****************************** Type Definitions *****************************/
