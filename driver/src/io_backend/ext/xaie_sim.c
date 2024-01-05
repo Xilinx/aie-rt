@@ -323,7 +323,7 @@ static void _XAie_SimIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
 	u64 RegAddr;
 
 	RegAddr = SimIOInst->NpiBaseAddr + RegOff;
-	ess_Write32(RegAddr, RegVal);
+	ess_NpiWrite32(RegAddr, RegVal);
 	return;
 }
 
@@ -344,10 +344,9 @@ static void _XAie_SimIO_NpiWrite32(void *IOInst, u32 RegOff, u32 RegVal)
 *******************************************************************************/
 static AieRC XAie_SimIO_NpiRead32(void *IOInst, u64 RegOff, u32 *Data)
 {
-	/* TODO: workaround until read supported/verified */
-	(void)IOInst;
-	(void)RegOff;
-	*Data = 0U;
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+
+	*Data = ess_NpiRead32(SimIOInst->NpiBaseAddr + RegOff);
 
 	return XAIE_OK;
 }
