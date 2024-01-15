@@ -29,12 +29,6 @@
 #include "xaiegbl_defs.h"
 #include "xaie_helper.h"
 
-#define XAie_LDeclareDevInst(DevInst, _BaseAddr, _StartCol, _NumCols) \
-	XAie_DevInst DevInst = { \
-		.BaseAddr = (_BaseAddr), \
-		.StartCol = (_StartCol), \
-		.NumCols = (_NumCols), \
-	}
 
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
 #include "xaie_lite_aie.h"
