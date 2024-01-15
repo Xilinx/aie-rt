@@ -426,9 +426,26 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		/* Disbale all the column clock and enable only the requested column clock */
 		_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
 
+#ifndef __AIEIPU__
+		/* Clear the TilesInuse bitmap to reflect the current status */
+		for(u32 C = 0; C < DevInst->NumCols; C++) {
+			XAie_LocType Loc;
+			u32 ColClockStatus;
+
+			Loc = XAie_TileLoc(C, 1);
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+
+			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+					ColClockStatus, DevInst->NumRows - 1);
+		}
+#endif
+
 		/* Ungate the tiles that is requested */
 		for(u32 i = 0; i < Opts->NumUseTiles; i++)
 		{
+#ifndef __AIEIPU__
+			u32 ColClockStatus;
+#endif
 
 			if(Opts->Locs[i].Row == 0) {
 				continue;
@@ -436,7 +453,30 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			/*
 			* Check if column clock buffer is already enabled and continue
 			*/
+#ifndef __AIEIPU__
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
+					Opts->Locs[i]);
+			if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+				continue;
+			}
+#endif
 			_XAie_PrivilegeSetColClkBuf(DevInst, Opts->Locs[i], XAIE_ENABLE);
+#ifndef __AIEIPU__
+			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+					ColClockStatus, DevInst->NumRows - 1);
+		}
+	}
+	else {
+			for(u32 C = 0; C < DevInst->NumCols; C++) {
+			XAie_LocType Loc;
+			u32 ColClockStatus;
+
+			Loc = XAie_TileLoc(C, 1);
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+
+			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+					ColClockStatus, DevInst->NumRows - 1);
+#endif
 
 		}
 	}
