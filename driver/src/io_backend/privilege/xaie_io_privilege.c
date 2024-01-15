@@ -464,6 +464,22 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		}
 	}
 
+	/* Enable only the tiles requested in Opts parameter */
+	if(Opts != NULL) {
+		XAie_BackendTilesArray TilesArray;
+
+		TilesArray.NumTiles = Opts->NumUseTiles;
+		TilesArray.Locs = Opts->Locs;
+
+		RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_REQUEST_TILES,
+		(void *)&TilesArray);
+
+		if(RC != XAIE_OK) {
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+			return RC;
+		}
+	}
+
 	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 	return RC;
 }

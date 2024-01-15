@@ -313,6 +313,25 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 				XAIE_ENABLE);
 	}
 
+	/* Disbale all the column clock and enable only the requested column clock */
+	RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to set partition clock buffers.\n");
+		return RC;
+	}
+
+	/* Clear the TilesInuse bitmap to reflect the current status */
+	for(u32 C = 0; C < DevInst->NumCols; C++) {
+		XAie_LocType Loc;
+		u32 ColClockStatus;
+
+		Loc = XAie_TileLoc(C, 1);
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+
+		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				ColClockStatus, DevInst->NumRows - 1);
+	}
+
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u32 ColClockStatus;
 

@@ -32,6 +32,7 @@
 #include "xaie_lite_internal.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
+#include "xaie_helper.h
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_ISOLATE_EAST_MASK	(1U << 3)
@@ -378,6 +379,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
 	u32 OptFlags;
+	AieRC RC;
 
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 		XAIE_INVALID_ARGS,
@@ -416,6 +418,59 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0) {
 		_XAie_LPartMemZeroInit(DevInst);
+	}
+
+	/* Gate all the tiles and ungate the requested tiles*/
+	if(Opts != NULL)
+	{
+		/* Disbale all the column clock and enable only the requested column clock */
+		_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
+
+		/* Clear the TilesInuse bitmap to reflect the current status */
+		for(u32 C = 0; C < DevInst->NumCols; C++) {
+			XAie_LocType Loc;
+			u32 ColClockStatus;
+
+			Loc = XAie_TileLoc(C, 1);
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+
+			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+					ColClockStatus, DevInst->NumRows - 1);
+		}
+
+		/* Ungate the tiles that is requested */
+		for(u32 i = 0; i < Opts->NumUseTiles; i++)
+		{
+			u32 ColClockStatus;
+
+			if(Opts->Locs[i].Row == 0) {
+				continue;
+			}
+			/*
+			* Check if column clock buffer is already enabled and continue
+			*/
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
+					Opts->Locs[i]);
+			if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+				continue;
+			}
+			_XAie_PrivilegeSetColClkBuf(DevInst, Opts->Locs[i], XAIE_ENABLE);
+
+			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+					ColClockStatus, DevInst->NumRows - 1);
+		}
+	}
+	else {
+			for(u32 C = 0; C < DevInst->NumCols; C++) {
+			XAie_LocType Loc;
+			u32 ColClockStatus;
+
+			Loc = XAie_TileLoc(C, 1);
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+
+			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+					ColClockStatus, DevInst->NumRows - 1);
+		}
 	}
 
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
