@@ -329,7 +329,7 @@ static const  XAie_StrmPort Aie2PSTileStrmSlv[SS_PORT_TYPE_MAX] =
 	},
 	{	/* Trace */
 		.NumPorts = 2,
-		.PortBaseAddr = XAIE2PSGBL_CORE_MODULE_STREAM_SWITCH_SLAVE_CONFIG_MEM_TRACE
+		.PortBaseAddr = XAIE2PSGBL_CORE_MODULE_STREAM_SWITCH_SLAVE_CONFIG_AIE_TRACE
 	}
 };
 
