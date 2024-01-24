@@ -42,31 +42,31 @@ typedef enum {
 } XAie_TraceMode;
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event, u8 SlotId);
-AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events StartEvent);
-AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events StopEvent);
-AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Packet Pkt);
-AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_TraceMode Mode);
-AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_TraceState *State);
-AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_TraceMode *Mode);
-AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events StartEvent,
 		XAie_Events StopEvent, XAie_TraceMode Mode);
-AieRC XAie_TraceControlConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceControlConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
-AieRC XAie_TracePktConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TracePktConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
-AieRC XAie_TraceEventList(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceEventList(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events *Events, u8 *SlotId,
 		u8 NumEvents);
-AieRC XAie_TraceEventReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_TraceEventReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 SlotId);
 
 #endif		/* end of protection macro */

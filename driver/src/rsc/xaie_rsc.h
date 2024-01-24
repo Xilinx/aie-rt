@@ -353,80 +353,80 @@ static inline AieRC XAie_GetAvailRscStat(XAie_DevInst *DevInst, u32 NumRscStat,
 #else /* !XAIE_FEATURE_RSC_ENABLE */
 
 /* Performance counter resource management APIs */
-AieRC XAie_RequestPerfcnt(XAie_DevInst *DevInst, u32 NumTiles,
+XAIE_AIG_EXPORT AieRC XAie_RequestPerfcnt(XAie_DevInst *DevInst, u32 NumTiles,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-AieRC XAie_ReleasePerfcnt(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleasePerfcnt(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_FreePerfcnt(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreePerfcnt(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_RequestAllocatedPerfcnt(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedPerfcnt(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
-AieRC XAie_SaveAllocatedRscsToFile(XAie_DevInst *DevInst, const char *File);
+XAIE_AIG_EXPORT AieRC XAie_SaveAllocatedRscsToFile(XAie_DevInst *DevInst, const char *File);
 
 /* User Events resource management APIs */
-AieRC XAie_RequestUserEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestUserEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-AieRC XAie_ReleaseUserEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleaseUserEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_FreeUserEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreeUserEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_RequestAllocatedUserEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedUserEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
 
 /* PC Events resource management APIs */
-AieRC XAie_RequestPCEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestPCEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-AieRC XAie_ReleasePCEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleasePCEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_FreePCEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreePCEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_RequestAllocatedPCEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedPCEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
-AieRC XAie_RequestPCRangeEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestPCRangeEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
 
 /* Stream switch event port selection resource management APIs */
-AieRC XAie_RequestSSEventPortSelect(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestSSEventPortSelect(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-AieRC XAie_ReleaseSSEventPortSelect(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleaseSSEventPortSelect(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_FreeSSEventPortSelect(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreeSSEventPortSelect(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_RequestAllocatedSSEventPortSelect(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedSSEventPortSelect(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
 
 /* Trace control resource management API */
-AieRC XAie_RequestTraceCtrl(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestTraceCtrl(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-AieRC XAie_ReleaseTraceCtrl(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleaseTraceCtrl(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_FreeTraceCtrl(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreeTraceCtrl(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_RequestAllocatedTraceCtrl(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedTraceCtrl(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
 
 /* Group Events Resource management APIs */
-AieRC XAie_RequestAllocatedGroupEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedGroupEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
-AieRC XAie_FreeGroupEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreeGroupEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
 
 /* Combo Events resource management APIs */
-AieRC XAie_RequestComboEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestComboEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-AieRC XAie_ReleaseComboEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleaseComboEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_FreeComboEvents(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_FreeComboEvents(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
-AieRC XAie_RequestAllocatedComboEvents(XAie_DevInst *DevInst, u32 NumReq,
+XAIE_AIG_EXPORT AieRC XAie_RequestAllocatedComboEvents(XAie_DevInst *DevInst, u32 NumReq,
 		XAie_UserRsc *RscReq);
 
 /* Broadcast channel resource management APIs */
-AieRC XAie_RequestBroadcastChannel(XAie_DevInst *DevInst, u32 *UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_RequestBroadcastChannel(XAie_DevInst *DevInst, u32 *UserRscNum,
 		XAie_UserRsc *Rscs, u8 BroadcastAllFlag);
-AieRC XAie_RequestSpecificBroadcastChannel(XAie_DevInst *DevInst, u32 BcId,
+XAIE_AIG_EXPORT AieRC XAie_RequestSpecificBroadcastChannel(XAie_DevInst *DevInst, u32 BcId,
 		u32 *UserRscNum, XAie_UserRsc *Rscs, u8 BroadcastAllFlag);
-AieRC XAie_ReleaseBroadcastChannel(XAie_DevInst *DevInst, u32 UserRscNum,
+XAIE_AIG_EXPORT AieRC XAie_ReleaseBroadcastChannel(XAie_DevInst *DevInst, u32 UserRscNum,
 		XAie_UserRsc *Rscs);
 
 /*****************************************************************************/
@@ -451,10 +451,10 @@ static inline XAie_UserRscReq XAie_SetupRscRequest(XAie_LocType Loc,
 	return RscReq;
 }
 
-AieRC XAie_LoadStaticRscfromMem(XAie_DevInst *DevInst, const char *MetaData);
-AieRC XAie_GetStaticRscStat(XAie_DevInst *DevInst, u32 NumRscStat,
+XAIE_AIG_EXPORT AieRC XAie_LoadStaticRscfromMem(XAie_DevInst *DevInst, const char *MetaData);
+XAIE_AIG_EXPORT AieRC XAie_GetStaticRscStat(XAie_DevInst *DevInst, u32 NumRscStat,
 		XAie_UserRscStat *RscStats);
-AieRC XAie_GetAvailRscStat(XAie_DevInst *DevInst, u32 NumRscStat,
+XAIE_AIG_EXPORT AieRC XAie_GetAvailRscStat(XAie_DevInst *DevInst, u32 NumRscStat,
 		XAie_UserRscStat *RscStats);
 #endif /* XAIE_FEATURE_RSC_ENABLE */
 #endif		/* end of protection macro */

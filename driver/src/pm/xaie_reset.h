@@ -19,8 +19,8 @@
 #include "xaiegbl.h"
 /**************************** Type Definitions *******************************/
 /************************** Function Prototypes  *****************************/
-AieRC XAie_ResetPartition(XAie_DevInst *DevInst);
-AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ResetPartition(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst);
 #endif		/* end of protection macro */
 
 /** @} */

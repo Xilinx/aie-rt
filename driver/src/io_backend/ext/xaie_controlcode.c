@@ -68,7 +68,7 @@ typedef struct {
 	u32  UcbdDataNum;
 	u32  UcDmaDataNum;
 	u32  UcJobNum;
-	u32  UcJobSize;;
+	u32  UcJobSize;
 	u32  UcJobTextSize;
 	u32 PageSize;
 	u8 CombineCommands;

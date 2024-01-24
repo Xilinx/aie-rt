@@ -40,26 +40,26 @@
 #define XAIE_ERROR_L2_ENABLE			0x3FU
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_IntrCtrlL1Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IntrId);
-AieRC XAie_IntrCtrlL1Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IntrId);
-AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 BroadcastId);
-AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IrqEventId, XAie_Events Event);
-AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u32 ChannelBitMap);
-AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u32 ChannelBitMap);
-AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
-AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
-AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
-void XAie_DisableErrorInterrupts(u8 IrqId);
+XAIE_AIG_EXPORT AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT void XAie_DisableErrorInterrupts(u8 IrqId);
 
-AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData);
 
 #endif		/* end of protection macro */

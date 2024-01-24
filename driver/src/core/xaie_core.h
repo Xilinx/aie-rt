@@ -101,43 +101,43 @@ static inline u32 XAie_CheckCoreStatus(u32 CoreStatus, u32 CoreStatMask)
 	return ((CoreStatus & CoreStatMask) != 0U) ? 1U : 0U;
 }
 
-AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
-AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
-AieRC XAie_CoreDebugHalt(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreDebugUnhalt(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreGetDebugHaltStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreDebugHalt(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreDebugUnhalt(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreGetDebugHaltStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *DebugStatus);
-AieRC XAie_CoreGetPCValue(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreGetPCValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *PCValue);
-AieRC XAie_CoreGetSPValue(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreGetSPValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *SPValue);
-AieRC XAie_CoreGetLRValue(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreGetLRValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *LRValue);
-AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *DoneBit);
-AieRC XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *CoreStatus);
-AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event0, XAie_Events Event1,
 		XAie_Events SingleStepEvent, XAie_Events ResumeCoreEvent);
-AieRC XAie_CoreClearDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreClearDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event);
-AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event);
-AieRC XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 		XAie_LocType Loc, StrmSwPortType InDir, StrmSwPortType OutDir);
-AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
 		XAie_LocType Loc);
-AieRC XAie_CoreProcessorBusEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CoreProcessorBusDisable(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreProcessorBusEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CoreProcessorBusDisable(XAie_DevInst *DevInst, XAie_LocType Loc);
 
 #endif		/* end of protection macro */
 /** @} */

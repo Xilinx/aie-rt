@@ -39,45 +39,45 @@ typedef enum {
 } XAie_StrmSwPktHeader;
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_StrmConnCctEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmConnCctEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum);
 
-AieRC XAie_StrmConnCctDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmConnCctDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum);
 
-AieRC XAie_StrmPktSwMstrPortEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmPktSwMstrPortEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Master, u8 MstrPortNum,
 		XAie_StrmSwPktHeader DropHeader, u8 Arbitor, u8 MSelEn);
 
-AieRC XAie_StrmPktSwMstrPortDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmPktSwMstrPortDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Master, u8 MstrPortNum);
 
-AieRC XAie_StrmPktSwSlavePortEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmPktSwSlavePortEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum);
 
-AieRC XAie_StrmPktSwSlavePortDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmPktSwSlavePortDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum);
 
-AieRC XAie_StrmPktSwSlaveSlotEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmPktSwSlaveSlotEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, u8 SlotNum,
 		XAie_Packet Pkt, u8 Mask, u8 MSel, u8 Arbitor);
 
-AieRC XAie_StrmPktSwSlaveSlotDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmPktSwSlaveSlotDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, u8 SlotNum);
-AieRC XAie_StrmSwLogicalToPhysicalPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmSwLogicalToPhysicalPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_StrmPortIntf Port, StrmSwPortType PortType, u8 PortNum,
 		u8 *PhyPortId);
-AieRC XAie_StrmSwPhysicalToLogicalPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_StrmSwPhysicalToLogicalPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_StrmPortIntf Port, u8 PhyPortId, StrmSwPortType *PortType,
 		u8 *PortNum);
-AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 Arbitor, StrmSwPortType Slave, u8 PortNum,
 		u8 PktCount, u8 Position);
-AieRC XAie_StrmSwDeterministicMergeEnable(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_StrmSwDeterministicMergeEnable(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 Arbitor);
-AieRC XAie_StrmSwDeterministicMergeDisable(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_StrmSwDeterministicMergeDisable(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 Arbitor);
 
 #endif		/* end of protection macro */

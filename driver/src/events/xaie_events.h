@@ -947,61 +947,61 @@ typedef enum {
 } XAie_EdgeEventTrig;
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event);
-AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId,
 		XAie_EventComboOps Op, XAie_Events Event1, XAie_Events Event2);
-AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events *Event);
-AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_EventComboId ComboId);
-AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 SelectId, XAie_StrmPortIntf PortIntf, StrmSwPortType Port,
 		u8 PortNum);
-AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 SelectId);
-AieRC XAie_EventSelectDmaChannel(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventSelectDmaChannel(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 SelectId, XAie_DmaDirection DmaDir, u8 ChannelNum);
-AieRC XAie_EventSelectDmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventSelectDmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 SelectId, XAie_DmaDirection DmaDir);
-AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events *Event);
-AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 BroadcastId, XAie_Events Event);
-AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 BroadcastId);
-AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
 		u8 Dir);
-AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_BroadcastSw Switch,
 		u32 ChannelBitMap, u8 Dir);
-AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
 		u8 Dir);
-AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events GroupEvent, u32 GroupBitMap);
-AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events GroupEvent);
-AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 SelectId, XAie_Events Event,
 		u8 Trigger);
-AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId, u16 PCAddr);
-AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId);
-AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId);
-AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 HwEvent, XAie_Events *EnumEvent);
-AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event, u8 *HwEvent);
-AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Events, u8 *Status);
-AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 	XAie_ModuleType Module, XAie_Events *Event);
-AieRC XAie_EventRegStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_EventRegStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 EventRegNo, u32 *Status);
 
 #endif		/* end of protection macro */

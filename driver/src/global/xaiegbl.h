@@ -42,6 +42,7 @@
 
 /***************************** Include Files *********************************/
 #include "xaiegbl_defs.h"
+#include "xaiegbl_dynlink.h"
 
 /************************** Constant Definitions *****************************/
 #define XAIE_LOCK_WITH_NO_VALUE		(-1)
@@ -587,44 +588,91 @@ typedef struct {
 	uint32_t UtilSize;
 } XAie_PerfInst;
 
+
+/*
+ *  * Typedef for ELF relted stuct, Taken from GNU version of elf.h
+ *   */
+/* These constants are for the segment types stored in the image headers */
+#define PT_NULL    0
+#define PT_LOAD    1
+#define PT_DYNAMIC 2
+#define PT_INTERP  3
+#define PT_NOTE    4
+#define PT_SHLIB   5
+#define PT_PHDR    6
+#define EI_NIDENT       16
+typedef u16     Elf32_Half;
+typedef u32     Elf32_Word;
+typedef u32     Elf32_Addr;
+typedef u32     Elf32_Off;
+typedef struct elf32_hdr {
+  unsigned char       e_ident[EI_NIDENT];
+  Elf32_Half        e_type;
+  Elf32_Half      e_machine;
+  Elf32_Word    e_version;
+  Elf32_Addr  e_entry;  /* Entry point */
+  Elf32_Off e_phoff;
+  Elf32_Off       e_shoff;
+  Elf32_Word    e_flags;
+  Elf32_Half  e_ehsize;
+  Elf32_Half        e_phentsize;
+  Elf32_Half      e_phnum;
+  Elf32_Half    e_shentsize;
+  Elf32_Half  e_shnum;
+  Elf32_Half        e_shstrndx;
+} Elf32_Ehdr;
+
+typedef struct elf32_phdr {
+  Elf32_Word  p_type;
+  Elf32_Off p_offset;
+  Elf32_Addr      p_vaddr;
+  Elf32_Addr    p_paddr;
+  Elf32_Word  p_filesz;
+  Elf32_Word        p_memsz;
+  Elf32_Word      p_flags;
+  Elf32_Word    p_align;
+} Elf32_Phdr;
+
+
+
 /**************************** Function prototypes ***************************/
-AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
-AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
-AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
-AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
-AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
-AieRC XAie_Finish(XAie_DevInst *DevInst);
-AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
-XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
+XAIE_AIG_EXPORT AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
+XAIE_AIG_EXPORT AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
+XAIE_AIG_EXPORT AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_Finish(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
+XAIE_AIG_EXPORT XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache);
-AieRC XAie_MemFree(XAie_MemInst *MemInst);
-AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
-AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
-void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
-u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
-AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DAddr,
+XAIE_AIG_EXPORT AieRC XAie_MemFree(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DAddr,
 		u64 VAddr, u64 Size, XAie_MemCacheProp Cache, u64 MemHandle);
-AieRC XAie_MemDetach(XAie_MemInst *MemInst);
-AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
-AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
-AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);
-AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
+XAIE_AIG_EXPORT AieRC XAie_MemDetach(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);
+XAIE_AIG_EXPORT AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
-u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
-AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
-AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
-AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
-AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
-AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
-AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
+XAIE_AIG_EXPORT AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
+XAIE_AIG_EXPORT AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
+XAIE_AIG_EXPORT AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
+XAIE_AIG_EXPORT AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
+XAIE_AIG_EXPORT AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
 		XAie_BackendAttrType AttrType, u64 AttrVal);
-AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize);
-void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
-AieRC XAie_StartNextJob(XAie_DevInst *DevInst);
-AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
-AieRC XAie_ConfigMemTilesMemInterleaving(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize);
+XAIE_AIG_EXPORT void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_StartNextJob(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
+XAIE_AIG_EXPORT AieRC XAie_ConfigMemTilesMemInterleaving(XAie_DevInst *DevInst,
 		XAie_LocType *Locs, u32 NumTiles, u8 Enable);
 /*****************************************************************************/
 /*

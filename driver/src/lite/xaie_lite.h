@@ -78,9 +78,9 @@
 
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
-AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
-AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
-AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols, u8 Enable);
+XAIE_AIG_EXPORT AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols, u8 Enable);
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/

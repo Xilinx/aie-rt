@@ -38,13 +38,13 @@
 #define XAIE_MEM_WORD_ROUND_DOWN(Addr)	((Addr) & (~XAIE_MEM_WORD_ALIGN_MASK))
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 Addr, u32 Data);
-AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 Addr, u32 *Data);
-AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
+XAIE_AIG_EXPORT AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		const void *Src, u32 Size);
-AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
+XAIE_AIG_EXPORT AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		void *Dst, u32 Size);
 
 #endif		/* end of protection macro */

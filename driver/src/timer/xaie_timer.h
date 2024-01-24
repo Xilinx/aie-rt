@@ -30,17 +30,17 @@
 /************************** Enum *********************************************/
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u32 LowEventValue, u32 HighEventValue);
-AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
-AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event,
 		XAie_Reset Reset);
-AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 *TimerVal);
-AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 CycleCnt);
-AieRC XAie_SyncTimer(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_SyncTimer(XAie_DevInst *DevInst);
 
 #endif		/* end of protection macro */
