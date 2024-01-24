@@ -169,13 +169,19 @@ static inline u8 _XAie_GetColNum(XAie_LinuxIO *IOInst, u64 RegOff)
 static AieRC XAie_LinuxIO_Finish(void *IOInst)
 {
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	const XAie_MemMod *MemTileMod =
+		LinuxIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemMod;
 
 	munmap(LinuxIOInst->RegMap.VAddr, LinuxIOInst->RegMap.MapSize);
+	if(MemTileMod != NULL)
+		munmap(LinuxIOInst->MemTileMem.VAddr, LinuxIOInst->MemTileMem.MapSize);
 	munmap(LinuxIOInst->ProgMem.VAddr, LinuxIOInst->ProgMem.MapSize);
 	munmap(LinuxIOInst->DataMem.VAddr, LinuxIOInst->DataMem.MapSize);
 
 	close(LinuxIOInst->ProgMem.Fd);
 	close(LinuxIOInst->DataMem.Fd);
+	if(MemTileMod != NULL)
+		close(LinuxIOInst->MemTileMem.Fd);
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
