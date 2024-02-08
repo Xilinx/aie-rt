@@ -596,7 +596,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	Fd = fopen(ElfPtr, "r");
+	Fd = fopen(ElfPtr, "rb");
 	if(Fd == XAIE_NULL) {
 		XAIE_ERROR("Unable to open elf file, %d: %s\n",
 			errno, strerror(errno));
