@@ -197,7 +197,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
 
-	RC = XAie_IOInit(InstPtr);
+	RC = XAie_IOInit(InstPtr, ConfigPtr->Backend);
 	if(RC != XAIE_OK) {
 		return RC;
 	}
