@@ -518,9 +518,8 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 
 	Fd = fopen(MapPtr, "r");
 	if(Fd == NULL) {
-		XAIE_ERROR("Invalid Map file, %d: %s\n",
-			errno, strerror(errno));
-		return XAIE_ERR;
+		XAIE_WARN("Invalid Map file\n");
+		return XAIE_OK;
 	}
 
 	while(fgets(buffer, 200U, Fd) != NULL) {
