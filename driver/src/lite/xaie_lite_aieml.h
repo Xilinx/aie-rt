@@ -563,10 +563,12 @@ static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 Cle
 		u64 RegAddr;
 		u32 RegVal = 0;
 
-		if(C == 0) {
-			RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
-		} else if(C == (u8)(DevInst->NumCols - 1)) {
-			RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
+		if (!ClearIsolation) {
+			if(C == 0) {
+				RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
+			} else if(C == (u8)(DevInst->NumCols - 1)) {
+				RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
+			}
 		}
 
 		/* Isolate boundrary of SHIM tiles */

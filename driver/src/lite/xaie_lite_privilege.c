@@ -339,7 +339,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 				XAIE_ERROR("Failed to initialize backend \n");
 				return RC;
 			}
-			RC = _XAie_LSetPartIsolationAfterRst(&DevPartDevInst, 0);
+			_XAie_LSetPartIsolationAfterRst(&DevPartDevInst, 0);
 
 			CurrBackend ->Ops.Finish(DevPartDevInst.IOInst);
 		}
@@ -413,7 +413,7 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0) {
-		_XAie_LSetPartIsolationAfterRst(DevInst);
+		_XAie_LSetPartIsolationAfterRst(DevInst, 0);
 	}
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0) {
@@ -624,7 +624,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
-	_XAie_LSetPartIsolationAfterRst(DevInst);
+	_XAie_LSetPartIsolationAfterRst(DevInst, 0);
 
 	RC = _XAie_LPartDataMemZeroInit(DevInst);
 	if (RC != XAIE_OK)

@@ -100,19 +100,21 @@ static inline void _XAie_LSetPartColShimReset(XAie_DevInst *DevInst,
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst)
+static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 ClearIsolation)
 {
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u64 RegAddr;
 		u32 RegVal = 0;
 
-		if(C == 0) {
-			RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
-		} else if(C == (u8)(DevInst->NumCols - 1)) {
-			RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
-		} else {
-			/* No isolation for tiles by default for AIE */
-			continue;
+		if (!ClearIsolation) {
+			if(C == 0) {
+				RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
+			} else if(C == (u8)(DevInst->NumCols - 1)) {
+				RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
+			} else {
+				/* No isolation for tiles by default for AIE */
+				continue;
+			}
 		}
 
 		/* Isolate boundrary of SHIM tiles */
