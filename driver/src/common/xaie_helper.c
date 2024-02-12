@@ -2112,6 +2112,7 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 	u8 NumCols  = DevInst->NumCols;
 	u8 NumRows  = DevInst->NumRows;
 	XAie_LocType Loc;
+	u8 TileType;
 
 	if(Status == NULL) {
 		return XAIE_ERR;
@@ -2122,10 +2123,21 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 		for(u8 Row = 0; Row < NumRows; Row++) {
 			Loc.Row = Row;
 			Loc.Col = Col;
-			RC |= (u32)_XAie_CoreStatusDump(DevInst,Status, Loc);
+			TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+			if(TileType >= XAIEGBL_TILE_TYPE_MAX) {
+				continue;
+			}
+
+			RC |= (u32)_XAie_EventStatusDump(DevInst, Status, Loc);
+
+			if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
+				RC |= (u32)_XAie_CoreStatusDump(DevInst,Status, Loc);
+			} else if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+				continue;
+			}
+
 			RC |= (u32)_XAie_DmaStatusDump(DevInst, Status, Loc);
 			RC |= (u32)_XAie_LockValueStatusDump(DevInst, Status, Loc);
-			RC |= (u32)_XAie_EventStatusDump(DevInst, Status, Loc);
 		}
 	}
 	return (AieRC)RC;
