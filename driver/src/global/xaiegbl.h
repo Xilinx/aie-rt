@@ -784,7 +784,7 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 *		more memory from the user application for resource management.
 *
 *******************************************************************************/
-#define XAie_InstDeclare(Inst, ConfigPtr) XAie_DevInst Inst = { 0 }
+#define XAie_InstDeclare(Inst, ConfigPtr) XAie_DevInst Inst = {}
 
 /*****************************************************************************/
 /**
