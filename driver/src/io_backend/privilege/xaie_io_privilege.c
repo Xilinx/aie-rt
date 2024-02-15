@@ -354,7 +354,7 @@ static AieRC _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 *******************************************************************************/
 AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
-	u32 OptFlags, SetTileStatus, NumTiles;
+	u32 OptFlags;
 	AieRC RC;
 
 	if(Opts != NULL) {
@@ -420,10 +420,6 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 		return RC;
 	}
-
-	NumTiles = (u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
-	SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(0U, 1U));
-	_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus, NumTiles);
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0U) {
 		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
