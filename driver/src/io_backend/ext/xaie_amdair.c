@@ -4,6 +4,10 @@
 ******************************************************************************/
 
 /***************************** Include Files *********************************/
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
+#endif // _XOPEN_SOURCE
+
 #ifdef __linux__
 #include <pthread.h>
 #endif
@@ -230,9 +234,8 @@ static AieRC XAie_AmdAirIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 static AieRC XAie_AmdAirIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
-	u32 Count, RegVal;
+	u32 RegVal;
 	u32 MinTimeOutUs = 200;
-	XAie_AmdAirIO *AmdAirIOInst = (XAie_AmdAirIO *)IOInst;
 	AieRC Ret = XAIE_ERR;
 
 	XAIE_DBG("MP: 0x%lx, 0x%x, 0x%x, %u\n", RegOff, Mask, Value, TimeOutUs);
@@ -338,13 +341,11 @@ static AieRC XAie_AmdAirIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 static void _XAie_AmdAirIO_NpiWrite32(void *IOInst, u32 RegOff,
 		u32 RegVal)
 {
-	XAie_AmdAirIO *AmdAirIOInst = (XAie_AmdAirIO *)IOInst;
-	u64 RegAddr;
+	UNUSED(IOInst);
+	UNUSED(RegOff);
+	UNUSED(RegVal);
 
-	XAIE_DBG("NPIMW: 0x%lx, 0x%x\n", RegAddr, RegVal);
 	XAIE_DBG("NPIMW not implemented\n");
-
-	RegAddr = AmdAirIOInst->NpiBaseAddr + RegOff;
 }
 
 /*****************************************************************************/
@@ -366,7 +367,11 @@ static void _XAie_AmdAirIO_NpiWrite32(void *IOInst, u32 RegOff,
 static AieRC _XAie_AmdAirIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 		u32 Value, u32 TimeOutUs)
 {
-	XAie_AmdAirIO *AmdAirIOInst = (XAie_AmdAirIO *)IOInst;
+	UNUSED(IOInst);
+	UNUSED(RegOff);
+	UNUSED(Mask);
+	UNUSED(Value);
+	UNUSED(TimeOutUs);
 
 	XAIE_DBG("NPIMP: 0x%lx, 0x%x, 0x%x, 0x%d\n", AmdAirIOInst->NpiBaseAddr + RegOff,
 			Mask, Value, TimeOutUs);

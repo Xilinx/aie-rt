@@ -1026,7 +1026,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 		PartRange.Num = DevInst->NumCols;
 		XAIE_DBG("Start Col: %d\tnum: %d\n", PartRange.Start, PartRange.Num);
 		PerfInst->Range = &PartRange;
-	} else if (PerfInst->Range->Num <= 0U ||
+	} else if (PerfInst->Range->Num == 0U ||
 			PerfInst->Range->Num > DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!\n");
 		return XAIE_INVALID_ARGS;

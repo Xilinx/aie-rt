@@ -53,9 +53,6 @@
 #ifdef __AIELINUX__
 
 /***************************** Global Variable *******************************/
-static struct aie_perfinst_args *Perfinst = NULL;
-static XAie_PerfInst *UserInst = NULL;
-static void *IOInstLinux = NULL;
 
 /****************************** Type Definitions *****************************/
 
