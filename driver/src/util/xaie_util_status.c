@@ -121,7 +121,6 @@ static int _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
         return XAIE_ERR;
     }
 
-    char *ptr = Destination;
     while (*Source != '\0')
     {
         *Destination = *Source;

@@ -51,9 +51,6 @@
 #define XAIE_128BIT_ALIGN_MASK 0xFF
 
 /***************************** Global Variable *******************************/
-static struct aie_perfinst_args *Perfinst = NULL;
-static XAie_PerfInst *UserInst = NULL;
-static void *IOInstLinux = NULL;
 
 /****************************** Type Definitions *****************************/
 #ifdef __AIELINUX__
