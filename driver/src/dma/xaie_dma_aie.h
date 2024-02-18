@@ -31,6 +31,8 @@ void _XAie_TileDmaInit(XAie_DmaDesc *Desc);
 void _XAie_ShimDmaInit(XAie_DmaDesc *Desc);
 AieRC _XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel,
 		u8 AcqEn, u8 RelEn);
+AieRC XAie_DmaLockControl(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
+		XAie_Lock Rel, u8 AcqEn, u8 RelEn);
 AieRC _XAie_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
 AieRC _XAie_ShimDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,

@@ -162,6 +162,30 @@ AieRC XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel)
 /*****************************************************************************/
 /**
 *
+* This API initializes the Acquire and Release Locks for a a Dma descriptor and
+* enables the lock in the dma descriptor.
+*
+* @param	DmaDesc: Initialized Dma Descriptor.
+* @param	Acq: Lock object with acquire lock ID and lock value.
+* @param	Rel: Lock object with release lock ID and lock value.
+* @param 	AcqEn: XAIE_ENABLE/XAIE_DISABLE for enable or disable acquire lock.
+* @param 	RelEn: XAIE_ENABLE/XAIE_DISABLE for enable or disable release lock.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		The API sets up the value in the dma descriptor and does not
+*		configure the buffer descriptor field in the hardware.
+*
+******************************************************************************/
+AieRC XAie_DmaLockControl(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
+		XAie_Lock Rel, u8 AcqEn, u8 RelEn)
+{
+	return _XAie_DmaLockConfig(DmaDesc, Acq, Rel, AcqEn, RelEn);
+}
+
+/*****************************************************************************/
+/**
+*
 * This api sets up the packet id and packet type for a dma descriptor.
 *
 * @param	DmaDesc: Initialized dma descriptor.
