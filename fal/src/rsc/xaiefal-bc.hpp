@@ -32,7 +32,7 @@ namespace xaiefal {
 		XAieBroadcast(std::shared_ptr<XAieDevHandle> DevHd,
 			const std::vector<XAie_LocType> &vL,
 			XAie_ModuleType StartM, XAie_ModuleType EndM):
-			XAieRsc(DevHd) {
+			XAieRsc(DevHd, XAIE_BROADCAST) {
 			StartMod = StartM;
 			EndMod = EndM;
 			vLocs = vL;
@@ -115,10 +115,6 @@ namespace xaiefal {
 			EndM = EndMod;
 
 			return XAIE_OK;
-		}
-		/* TODO Remove once porting is complete */
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_BCAST_CHANNEL_RSC);
 		}
 		XAieRscStat getRscStat(const std::string &GName) const {
 			XAieRscStat RscStat(GName);
@@ -322,17 +318,8 @@ namespace xaiefal {
 			return RC;
 		}
 
-		/* TODO: Replace once porting is complete */
-		void _getRscs(std::vector<XAie_UserRsc> &vRs) const {
-			for (auto rsc : vRscs) {
-				XAie_UserRsc tmp;
-				tmp.Loc = rsc.Loc;
-				tmp.Mod = static_cast<uint32_t>(rsc.Mod);
-				tmp.RscType = static_cast<uint32_t>(rsc.RscType);
-				tmp.RscId = rsc.RscId;
-
-				vRs.push_back(tmp);
-			}
+		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 	private:
 		XAie_ModuleType StartMod; /**< module type of the starting module on the channel */

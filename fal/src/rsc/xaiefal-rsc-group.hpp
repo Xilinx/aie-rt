@@ -20,10 +20,6 @@ namespace xaiefal {
 	class XAieRscGetRscsWrapper;
 	class XAieDevHandle;
 
-	enum XAieFalRscType {
-		XAIE_TRACE_EVENTS_RSC = 0x100U,
-	};
-
 	/**
 	 * @enum XAieRscType
 	 * @brief Enums representing all requestable resources
@@ -37,8 +33,8 @@ namespace xaiefal {
 		XAIE_BROADCAST,
 		XAIE_COMBOEVENT,
 		XAIE_GROUPEVENT,
-		XAIE_TRACEEVENT,
-		XAIE_MAXRSC
+		XAIE_MAXRSC,
+		XAIE_TRACEEVENT = 0x100U
 	};
 
 	/**
@@ -82,14 +78,15 @@ namespace xaiefal {
 		 * @param RscType resource type
 		 * @param NumRscs number of resources of the resource type
 		 */
-		void addRscStat(XAie_LocType Loc, uint32_t Mod, uint32_t RscType,
-			uint32_t NumRscs) {
+		void addRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
+				XAieRscType RscType, uint32_t NumRscs) {
 			(void)Mod;
 			(void)RscType;
 			(void)NumRscs;
 
 			std::tuple<uint8_t, uint8_t, uint32_t, uint32_t> rKey {
-				Loc.Col, Loc.Row, Mod, RscType};
+				Loc.Col, Loc.Row, static_cast<uint32_t>(Mod),
+				static_cast<uint32_t>(RscType)};
 
 			if (Rscs.find(rKey) != Rscs.end()) {
 				Rscs[rKey] += NumRscs;
@@ -108,10 +105,12 @@ namespace xaiefal {
 		 * @return number of resources of the type of resources of a module
 		 *	of a tile.
 		 */
-		uint32_t getNumRsc(XAie_LocType Loc, uint32_t Mod, uint32_t RscType) {
+		uint32_t getNumRsc(XAie_LocType Loc, XAie_ModuleType Mod,
+				XAieRscType RscType) {
 			uint32_t NumRscs = 0;
 			std::tuple<uint8_t, uint8_t, uint32_t, uint32_t> rKey {
-				Loc.Col, Loc.Row, Mod, RscType};
+				Loc.Col, Loc.Row, static_cast<uint32_t>(Mod),
+				static_cast<uint32_t>(RscType)};
 
 			if (Rscs.find(rKey) != Rscs.end()) {
 				NumRscs =  Rscs[rKey];
@@ -159,31 +158,31 @@ namespace xaiefal {
 				Str += ": ";
 
 				switch (std::get<3>(r.first)) {
-				case static_cast<uint32_t>(XAIE_PERFCNT_RSC):
+				case static_cast<uint32_t>(XAIE_PERFCOUNT):
 					Str += "Perfcount ";
 					break;
-				case static_cast<uint32_t>(XAIE_USER_EVENTS_RSC):
+				case static_cast<uint32_t>(XAIE_USEREVENT):
 					Str += "UserEvents ";
 					break;
-				case static_cast<uint32_t>(XAIE_TRACE_CTRL_RSC):
+				case static_cast<uint32_t>(XAIE_TRACECTRL):
 					Str += "TraceCntr ";
 					break;
-				case static_cast<uint32_t>(XAIE_PC_EVENTS_RSC):
+				case static_cast<uint32_t>(XAIE_PCEVENT):
 					Str += "PCEvents ";
 					break;
-				case static_cast<uint32_t>(XAIE_SS_EVENT_PORTS_RSC):
+				case static_cast<uint32_t>(XAIE_SSEVENT):
 					Str += "SSEventsPorts ";
 					break;
-				case static_cast<uint32_t>(XAIE_BCAST_CHANNEL_RSC):
+				case static_cast<uint32_t>(XAIE_BROADCAST):
 					Str += "BC ";
 					break;
-				case static_cast<uint32_t>(XAIE_COMBO_EVENTS_RSC):
+				case static_cast<uint32_t>(XAIE_COMBOEVENT):
 					Str += "ComboEvents ";
 					break;
-				case static_cast<uint32_t>(XAIE_GROUP_EVENTS_RSC):
+				case static_cast<uint32_t>(XAIE_GROUPEVENT):
 					Str += "GroupEvents ";
 					break;
-				case static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC):
+				case static_cast<uint32_t>(XAIE_TRACEEVENT):
 					Str += "TraceEvents ";
 					break;
 				default:
@@ -226,8 +225,8 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		XAieRscStat getRscStat(XAie_LocType Loc) const {
-			return _getRscStatTile(Loc, XAIE_MOD_ANY,
-					XAIE_RSC_TYPE_ANY, XAIE_RSC_ID_ANY);
+			return _getRscStatTile(Loc, static_cast<XAie_ModuleType>(XAIE_MOD_ANY),
+					static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY), XAIE_RSC_ID_ANY);
 		}
 		/**
 		 * This function is to return resources statics of this function
@@ -238,8 +237,8 @@ namespace xaiefal {
 		 *
 		 * @return resoruce group statics object.
 		 */
-		XAieRscStat getRscStat(XAie_LocType Loc, uint32_t RscType) const {
-			return _getRscStatTile(Loc, XAIE_MOD_ANY,
+		XAieRscStat getRscStat(XAie_LocType Loc, XAieRscType RscType) const {
+			return _getRscStatTile(Loc, static_cast<XAie_ModuleType>(XAIE_MOD_ANY),
 					RscType, XAIE_RSC_ID_ANY);
 		}
 		/**
@@ -252,7 +251,7 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod) const {
-			return getRscStat(Loc, Mod, XAIE_RSC_TYPE_ANY);
+			return getRscStat(Loc, Mod, static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY));
 		}
 		/**
 		 * This function is to return resources statics of this function
@@ -265,7 +264,7 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
-			uint32_t RscType) const {
+			XAieRscType RscType) const {
 			return getRscStat(Loc, Mod, RscType, XAIE_RSC_ID_ANY);
 		}
 
@@ -281,9 +280,8 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
-			uint32_t RscType, uint32_t RscId) const {
-			return _getRscStatTile(Loc, static_cast<uint32_t>(Mod),
-					RscType, RscId);
+			XAieRscType RscType, uint32_t RscId) const {
+			return _getRscStatTile(Loc, Mod, RscType, RscId);
 		}
 
 		/**
@@ -296,8 +294,9 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		XAieRscStat getRscStat(const std::vector<XAie_LocType> &vLocs,
-			uint32_t RscType) const {
-			return _getRscStat(vLocs, XAIE_MOD_ANY, RscType, XAIE_RSC_ID_ANY);
+			XAieRscType RscType) const {
+			return _getRscStat(vLocs, static_cast<XAie_ModuleType>(XAIE_MOD_ANY),
+					RscType, XAIE_RSC_ID_ANY);
 		}
 
 		/**
@@ -312,8 +311,9 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		XAieRscStat getRscStat(const std::vector<XAie_LocType> &vLocs,
-			uint32_t RscType, uint32_t RscId) const {
-			return _getRscStat(vLocs, XAIE_MOD_ANY, RscType, RscId);
+			XAieRscType RscType, uint32_t RscId) const {
+			return _getRscStat(vLocs, static_cast<XAie_ModuleType>(XAIE_MOD_ANY),
+					RscType, RscId);
 		}
 
 		virtual AieRC addRsc(std::shared_ptr<XAieRsc> R) {
@@ -337,7 +337,7 @@ namespace xaiefal {
 		 * @return resoruce group statics object.
 		 */
 		virtual XAieRscStat _getRscStat(const std::vector<XAie_LocType> &vLocs,
-				uint32_t Mod, uint32_t RscType,
+				XAie_ModuleType Mod, XAieRscType RscType,
 				uint32_t RscId) const {
 			XAieRscStat RscStat(FuncName);
 
@@ -349,8 +349,8 @@ namespace xaiefal {
 			throw std::invalid_argument("Get rsc stat not supported, rsc group: " + FuncName);
 			return RscStat;
 		}
-		XAieRscStat _getRscStatTile(XAie_LocType Loc, uint32_t Mod,
-			uint32_t RscType, uint32_t RscId) const {
+		XAieRscStat _getRscStatTile(XAie_LocType Loc, XAie_ModuleType Mod,
+			XAieRscType RscType, uint32_t RscId) const {
 			std::vector<XAie_LocType> vLocs;
 
 			vLocs.push_back(Loc);
@@ -397,51 +397,51 @@ namespace xaiefal {
 		 * @return resource statistics vector which can be passed to
 		 *	   lower level driver.
 		 */
-		static inline std::vector<XAie_UserRscStat> _createDrvRscStats(
+		static inline std::vector<XAieUserRscStat> _createDrvRscStats(
 				XAie_DevInst *DevInst,
 				const std::vector<XAie_LocType> &vLocs,
-				uint32_t Mod, uint32_t RscType) {
+				XAie_ModuleType Mod, XAieRscType RscType) {
 			uint32_t NumStats = 0;
-			uint32_t MaxNumRscs = static_cast<uint32_t>(XAIE_MAX_RSC);
+			uint32_t MaxNumRscs = static_cast<uint32_t>(XAIE_MAXRSC);
 			uint32_t ShimModNumRscs = 0, CoreModNumRscs = 0;
 			uint32_t CoreMemModNumRscs = 0, MemModNumRscs = 0;
 			uint32_t NumTiles = 0, NumCoreTiles = 0, NumShimTiles = 0;
 			uint32_t i;
 
-			if (RscType != XAIE_RSC_TYPE_ANY && RscType > static_cast<uint32_t>(XAIE_MAX_RSC)) {
+			if (RscType != XAIE_RSC_TYPE_ANY && RscType >= XAIE_MAXRSC) {
 				throw std::invalid_argument("Invalid Rsc Type to get rsc stat");
 			}
 
 			// Get number of resources per module
-			if (static_cast<XAie_ModuleType>(Mod) == XAIE_PL_MOD ||
-				Mod == XAIE_MOD_ANY) {
-				if (RscType == XAIE_RSC_TYPE_ANY) {
+			if (Mod == static_cast<XAie_ModuleType>(XAIE_MOD_ANY) ||
+					Mod == XAIE_PL_MOD) {
+				if (RscType == static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)) {
 					ShimModNumRscs = MaxNumRscs - 1;
-				} else if (static_cast<XAie_RscType>(RscType) == XAIE_PC_EVENTS_RSC) {
+				} else if (RscType == XAIE_PCEVENT) {
 					ShimModNumRscs = 0;
 				} else {
 					ShimModNumRscs = 1;
 				}
 			}
-			if (static_cast<XAie_ModuleType>(Mod) == XAIE_CORE_MOD ||
-				Mod == XAIE_MOD_ANY) {
-				if (RscType == XAIE_RSC_TYPE_ANY) {
+			if (Mod == static_cast<XAie_ModuleType>(XAIE_MOD_ANY) ||
+					Mod == XAIE_CORE_MOD) {
+				if (RscType == static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)) {
 					CoreModNumRscs = MaxNumRscs;
 				} else {
 					CoreModNumRscs = 1;
 				}
 			}
-			if (static_cast<XAie_ModuleType>(Mod) == XAIE_MEM_MOD ||
-				Mod == XAIE_MOD_ANY) {
-				if (RscType == XAIE_RSC_TYPE_ANY) {
+			if (Mod == static_cast<XAie_ModuleType>(XAIE_MOD_ANY) ||
+					Mod == XAIE_MEM_MOD) {
+				if (RscType == static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)) {
 					MemModNumRscs = MaxNumRscs - 1;
 					CoreMemModNumRscs = MaxNumRscs - 2;
-				} else if (static_cast<XAie_RscType>(RscType) == XAIE_PC_EVENTS_RSC) {
+				} else if (RscType == XAIE_PCEVENT) {
 					MemModNumRscs = 0;
 					CoreMemModNumRscs = 0;
 				} else {
 					MemModNumRscs = 1;
-					if (static_cast<XAie_RscType>(RscType) == XAIE_SS_EVENT_PORTS_RSC) {
+					if (RscType == XAIE_SSEVENT) {
 						CoreMemModNumRscs = 0;
 					} else {
 						CoreMemModNumRscs = 1;
@@ -468,7 +468,7 @@ namespace xaiefal {
 			NumStats += NumCoreTiles * CoreMemModNumRscs;
 			NumStats += (NumTiles - NumShimTiles - NumCoreTiles) * MemModNumRscs;
 
-			std::vector<XAie_UserRscStat> RscsStats(NumStats);
+			std::vector<XAieUserRscStat> RscsStats(NumStats);
 
 			// Fill in Rsc stats parameters
 			i = 0;
@@ -480,20 +480,20 @@ namespace xaiefal {
 					}
 					if (ShimModNumRscs == 1) {
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_PL_MOD);
-						RscsStats[i].RscType = static_cast<uint8_t>(RscType);
+						RscsStats[i].Mod = XAIE_PL_MOD;
+						RscsStats[i].RscType = RscType;
 						RscsStats[i].NumRscs = 0;
 						i++;
 						continue;
 					}
-					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCNT_RSC);
-						Rsc < static_cast<uint8_t>(XAIE_MAX_RSC); Rsc++) {
-						if (Rsc == static_cast<uint8_t>(XAIE_PC_EVENTS_RSC)) {
+					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
+						Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
+						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT)) {
 							continue;
 						}
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_PL_MOD);
-						RscsStats[i].RscType = Rsc;
+						RscsStats[i].Mod = XAIE_PL_MOD;
+						RscsStats[i].RscType = static_cast<XAieRscType>(Rsc);
 						RscsStats[i].NumRscs = 0;
 						i++;
 					}
@@ -501,16 +501,16 @@ namespace xaiefal {
 					// Core tiles, core modules
 					if (CoreModNumRscs == 1) {
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_CORE_MOD);
-						RscsStats[i].RscType = static_cast<uint8_t>(RscType);
+						RscsStats[i].Mod = XAIE_CORE_MOD;
+						RscsStats[i].RscType = RscType;
 						RscsStats[i].NumRscs = 0;
 						i++;
 					} else if (CoreModNumRscs > 1) {
-						for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCNT_RSC);
-							Rsc < static_cast<uint8_t>(XAIE_MAX_RSC); Rsc++) {
+						for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
+							Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
 							RscsStats[i].Loc = L;
-							RscsStats[i].Mod = static_cast<uint8_t>(XAIE_CORE_MOD);
-							RscsStats[i].RscType = Rsc;
+							RscsStats[i].Mod = XAIE_CORE_MOD;
+							RscsStats[i].RscType = static_cast<XAieRscType>(Rsc);
 							RscsStats[i].NumRscs = 0;
 							i++;
 						}
@@ -522,21 +522,21 @@ namespace xaiefal {
 					}
 					if (CoreMemModNumRscs == 1) {
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_MEM_MOD);
-						RscsStats[i].RscType = static_cast<uint8_t>(RscType);
+						RscsStats[i].Mod = XAIE_MEM_MOD;
+						RscsStats[i].RscType = RscType;
 						RscsStats[i].NumRscs = 0;
 						i++;
 						continue;
 					}
-					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCNT_RSC);
-						Rsc < static_cast<uint8_t>(XAIE_MAX_RSC); Rsc++) {
-						if (Rsc == static_cast<uint8_t>(XAIE_PC_EVENTS_RSC) ||
-							Rsc == static_cast<uint8_t>(XAIE_SS_EVENT_PORTS_RSC)) {
+					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
+						Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
+						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT) ||
+							Rsc == static_cast<uint8_t>(XAIE_SSEVENT)) {
 							continue;
 						}
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_MEM_MOD);
-						RscsStats[i].RscType = Rsc;
+						RscsStats[i].Mod = XAIE_MEM_MOD;
+						RscsStats[i].RscType = static_cast<XAieRscType>(Rsc);
 						RscsStats[i].NumRscs = 0;
 						i++;
 					}
@@ -547,20 +547,20 @@ namespace xaiefal {
 					}
 					if (MemModNumRscs == 1) {
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_MEM_MOD);
-						RscsStats[i].RscType = static_cast<uint8_t>(RscType);
+						RscsStats[i].Mod = XAIE_MEM_MOD;
+						RscsStats[i].RscType = RscType;
 						RscsStats[i].NumRscs = 0;
 						i++;
 						continue;
 					}
-					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCNT_RSC);
-						Rsc < static_cast<uint8_t>(XAIE_MAX_RSC); Rsc++) {
-						if (Rsc == static_cast<uint8_t>(XAIE_PC_EVENTS_RSC)) {
+					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
+						Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
+						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT)) {
 							continue;
 						}
 						RscsStats[i].Loc = L;
-						RscsStats[i].Mod = static_cast<uint8_t>(XAIE_MEM_MOD);
-						RscsStats[i].RscType = Rsc;
+						RscsStats[i].Mod = XAIE_MEM_MOD;
+						RscsStats[i].RscType = static_cast<XAieRscType>(Rsc);
 						RscsStats[i].NumRscs = 0;
 						i++;
 					}

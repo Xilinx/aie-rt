@@ -37,7 +37,7 @@ namespace xaiefal {
 		 * This function makes a call to RscMgr Backend to request
 		 * a resource
 		 *
-		 * @param reference to any resource class inherited
+		 * @param Rsc reference to any resource class inherited
 		 * from XAieRsc
 		 *
 		 * @return XAIE_OK for success, error code for failure
@@ -85,13 +85,11 @@ namespace xaiefal {
 
 				BcastAll = false;
 				if (vRequests.size() == 0) {
-					NumRscs = dev()->AieTileNumRows * dev()->NumCols * 2
-						+ (dev()->NumRows - dev()->AieTileNumRows)
-						* dev()->NumCols;
-					vRequests.resize(NumRscs);
+					vRequests.resize(1);
 					BcastAll = true;
 				}
 
+				vRequests[0].RscId = Rsc.getPreferredId();
 				RC = Backend->requestBc(vRequests, BcastAll);
 				if (RC == XAIE_OK) {
 					RC = Rsc.setRscs(vRequests);
@@ -135,7 +133,7 @@ namespace xaiefal {
 		 * This function makes a call to RscMgr Backend to release
 		 * a resource
 		 *
-		 * @param reference to any resource class inherited
+		 * @param Rsc reference to any resource class inherited
 		 * from XAieRsc
 		 *
 		 * @return XAIE_OK for success, error code for failure
@@ -162,7 +160,7 @@ namespace xaiefal {
 		 * This function makes a call to RscMgr Backend to free
 		 * a resource
 		 *
-		 * @param reference to any resource class inherited
+		 * @param Rsc reference to any resource class inherited
 		 * from XAieRsc
 		 *
 		 * @return XAIE_OK for success, error code for failure
@@ -207,6 +205,12 @@ namespace xaiefal {
 			return Backend->getRscStats(vStats, XAIE_AVAIL_RSC);
 		}
 
+		/**
+		 * This function saves the runtime allocated resources to
+		 * the given file name.
+		 *
+		 * @return XAIE_OK for success, error code for failure
+		 */
 		AieRC saveAllocatedRscs(const std::string &File) {
 			uint64_t FirstBitmapOffset = 0x10;
 			uint64_t NumRscsInFile = 0;
@@ -258,8 +262,27 @@ namespace xaiefal {
 		}
 
 		AieRC loadStaticRscs(const char *MetaData) {
-			(void)MetaData;
-			return XAIE_OK;
+			uint64_t *MetaHeader = (uint64_t *)MetaData;
+			uint64_t NumBitmaps, FirstBitmapOffset;
+
+			if (MetaHeader == NULL) {
+				Logger::log(LogLevel::ERROR) <<
+					"Invalid resource metadata" << std::endl;
+				return XAIE_INVALID_ARGS;
+			}
+
+			NumBitmaps = MetaHeader[0U];
+			FirstBitmapOffset = MetaHeader[1U];
+
+			if (FirstBitmapOffset < (sizeof(uint64_t) * 2U) ||
+				NumBitmaps == 0U) {
+					Logger::log(LogLevel::ERROR) <<
+						"Invalid metadata header"
+						<< std::endl;
+					return XAIE_INVALID_ARGS;
+			}
+			return Backend->loadRscBitmaps(MetaData + FirstBitmapOffset,
+					NumBitmaps);
 		}
 
 		/**
@@ -399,7 +422,7 @@ namespace xaiefal {
 	 * @param MetaData pointer to resource metadata
 	 * @return XAIE_OK for success, error code for failure
 	 */
-	inline AieRC XAieDev::loadStaticRscFromMem(const char *MetaData) {
+	inline AieRC XAieDev::loadStaticRscsFromMem(const char *MetaData) {
 		return AieHandle->rscMgr()->loadStaticRscs(MetaData);
 	}
 

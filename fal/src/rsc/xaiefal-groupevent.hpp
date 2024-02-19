@@ -210,9 +210,6 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_GROUP_EVENTS_RSC);
-		}
 
 		uint32_t getRscIdfromEvent(XAie_Events Event) {
 			uint8_t TileType;
@@ -278,10 +275,6 @@ namespace xaiefal {
 			return XAie_EventGroupReset(dev(), Loc, Mod, GroupEvent);
 		}
 
-		/* TODO Remove this once porting is complete */
-		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
-			vRscs.push_back(Rsc);
-		}
 	private:
 		/**
 		 * TODO: Following function will not be required.

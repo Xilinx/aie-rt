@@ -58,10 +58,10 @@ namespace xaiefal {
 		std::vector<std::weak_ptr<XAieRsc>> vRefs; /**< vector of AI engine resource objects */
 
 		XAieRscStat _getRscStat(const std::vector<XAie_LocType> &vLocs,
-				uint32_t Mod, uint32_t RscType,
+				XAie_ModuleType Mod, XAieRscType RscType,
 				uint32_t RscId) const {
 			XAieRscStat RscStat(FuncName);
-			std::vector<XAie_UserRsc> vRscs;
+			std::vector<XAieUserRsc> vRscs;
 
 			for (auto Ref: vRefs) {
 				auto R = Ref.lock();
@@ -78,8 +78,10 @@ namespace xaiefal {
 				for (auto L: vLocs) {
 					if ((L.Col != XAIE_LOC_ANY && R.Loc.Col != L.Col) ||
 						(L.Row != XAIE_LOC_ANY && R.Loc.Row != L.Row) ||
-						(Mod != XAIE_MOD_ANY && R.Mod != Mod) ||
-						(RscType != XAIE_RSC_TYPE_ANY && R.RscType != RscType) ||
+						(Mod != static_cast<XAie_ModuleType>(XAIE_MOD_ANY)
+						 && R.Mod != Mod) ||
+						(RscType != static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)
+						 && R.RscType != RscType) ||
 						(RscId != XAIE_RSC_ID_ANY && R.RscId != RscId)) {
 						continue;
 					}
@@ -105,14 +107,14 @@ namespace xaiefal {
 		~XAieRscGroupStatic() {}
 	private:
 		XAieRscStat _getRscStat(const std::vector<XAie_LocType> &vLocs,
-				uint32_t Mod, uint32_t RscType,
+				XAie_ModuleType Mod, XAieRscType RscType,
 				uint32_t RscId) const {
 			XAieRscStat RscStat(FuncName);
-			std::vector<XAie_UserRscStat> RscStats;
+			std::vector<XAieUserRscStat> RscStats;
 
 			(void)RscId;
 
-			if (RscType == static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC)) {
+			if (RscType == XAIE_TRACEEVENT) {
 				// Trace events are only allocated at runtime by AIEFAL
 				return RscStat;
 			}
@@ -133,8 +135,7 @@ namespace xaiefal {
 						vLocs, Mod, RscType);
 			}
 
-			if (XAie_GetStaticRscStat(AieHdPtr->dev(),
-				RscStats.size(), RscStats.data())) {
+			if (AieHdPtr->rscMgr()->getStaticRscs(RscStats) != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "failed to get static resource stat." << std::endl;
 			} else {
 				for (auto S: RscStats) {
@@ -176,7 +177,7 @@ namespace xaiefal {
 			bool toAdd = true;
 			std::vector<std::weak_ptr<XAieRsc>>::iterator it;
 
-			if (R->getRscType() != static_cast<uint32_t>(XAIE_TRACE_CTRL_RSC)) {
+			if (R->getRscType() != XAIE_TRACECTRL) {
 				throw std::invalid_argument(
 					"failed to add rsc to avail group, only trace controller is allowed");
 			}
@@ -204,11 +205,11 @@ namespace xaiefal {
 							    */
 	private:
 		XAieRscStat _getRscStat(const std::vector<XAie_LocType> &vLocs,
-				uint32_t Mod, uint32_t RscType,
+				XAie_ModuleType Mod, XAieRscType RscType,
 				uint32_t RscId) const {
-			std::vector<XAie_UserRscStat> RscStats;
+			std::vector<XAieUserRscStat> RscStats;
 			XAieRscStat RscStat(FuncName);
-			uint32_t lRscType = RscType;
+			XAieRscType lRscType = RscType;
 
 			(void)RscId;
 			auto AieHdPtr = AieHd.lock();
@@ -217,13 +218,13 @@ namespace xaiefal {
 						FuncName);
 			}
 
-			if (RscType == static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC)) {
+			if (RscType == XAIE_TRACEEVENT) {
 				// If user wants to know the trace events availability,
 				// we also needs to know the trace control availability as
 				// the trace control is managed by the lower level driver
 				// while the trace events avaialability is managed by
 				// the AIEFAL.
-				lRscType = static_cast<uint32_t>(XAIE_TRACE_CTRL_RSC);
+				lRscType = XAIE_TRACECTRL;
 			}
 
 			if (vLocs[0].Col == XAIE_LOC_ANY) {
@@ -236,8 +237,7 @@ namespace xaiefal {
 						vLocs, Mod, lRscType);
 			}
 
-			if (XAie_GetAvailRscStat(AieHdPtr->dev(),
-				RscStats.size(), RscStats.data())) {
+			if (AieHdPtr->rscMgr()->getAvailRscs(RscStats) != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "failed to get avail resource stat." << std::endl;
 			} else {
 				for (auto S: RscStats) {
@@ -252,8 +252,8 @@ namespace xaiefal {
 			for (auto Ref: vRefs) {
 				uint32_t NumRscs;
 				XAie_LocType Loc;
-				uint32_t Mod;
-				uint32_t ManagedRscType;
+				XAie_ModuleType Mod;
+				XAieRscType ManagedRscType;
 
 				auto R = Ref.lock();
 				if (R == nullptr) {

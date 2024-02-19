@@ -72,10 +72,6 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		/* TODO Remove once porting is complete */
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_PC_EVENTS_RSC);
-		}
 	protected:
 		uint32_t PcAddr; /**< PC address */
 	private:
@@ -188,9 +184,6 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_PC_EVENTS_RSC);
-		}
 	protected:
 		uint32_t PcAddrs[2]; /**< starting and end PC addresses */
 	private:
@@ -260,17 +253,8 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		/* TODO remove once porting is complete */
-		void _getRscs(std::vector<XAie_UserRsc> &vR) const {
-			for (auto rsc : vRscs) {
-				XAie_UserRsc tmp;
-				tmp.Loc = rsc.Loc;
-				tmp.Mod = static_cast<uint32_t>(rsc.Mod);
-				tmp.RscType = static_cast<uint32_t>(rsc.RscType);
-				tmp.RscId = rsc.RscId;
-
-				vR.push_back(tmp);
-			}
+		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 	};
 }

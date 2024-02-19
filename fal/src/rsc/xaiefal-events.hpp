@@ -137,9 +137,6 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_COMBO_EVENTS_RSC);
-		}
 	protected:
 		std::vector<XAie_Events> vEvents; /**< input events */
 		std::vector<XAie_EventComboOps> vOps; /**< combo operations */
@@ -226,18 +223,8 @@ namespace xaiefal {
 			}
 			return XAIE_OK;
 		}
-		/* TODO: When porting complete, this should be removed */
-		void _getRscs(std::vector<XAie_UserRsc> &vRs) const {
-			std::vector<XAie_UserRsc> tmp;
-			for (auto rsc : vRscs) {
-				XAie_UserRsc uRsc;
-				uRsc.Loc = rsc.Loc;
-				uRsc.Mod = (uint32_t)rsc.Mod;
-				uRsc.RscType = (uint32_t)rsc.RscType;
-				uRsc.RscId = rsc.RscId;
-				tmp.push_back(uRsc);
-			}
-			vRs.insert(vRs.end(), tmp.begin(), tmp.end());
+		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 	};
 
@@ -277,9 +264,6 @@ namespace xaiefal {
 				E = _getEventFromId(vRscs[0].RscId);
 			}
 			return RC;
-		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_USER_EVENTS_RSC);
 		}
 	private:
 		AieRC _reserve() {

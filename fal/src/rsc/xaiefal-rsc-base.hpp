@@ -75,6 +75,7 @@ namespace xaiefal {
 				throw std::invalid_argument("aie rsc: empty device handle");
 			}
 			preferredId = XAIE_RSC_ID_ANY;
+			Type = static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY);
 		}
 		XAieRsc(std::shared_ptr<XAieDevHandle> DevHd, XAieRscType T):
 			State(), Type(T), AieHd(DevHd) {
@@ -86,6 +87,7 @@ namespace xaiefal {
 		XAieRsc(XAieDev &Dev):
 			State(), AieHd(Dev.getDevHandle()) {
 				preferredId = XAIE_RSC_ID_ANY;
+				Type = static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY);
 			}
 		virtual ~XAieRsc() {
 			if (State.Running == 1) {
@@ -316,9 +318,9 @@ namespace xaiefal {
 		 *
 		 * @param vR vector to store the reserved resources
 		 */
-		void getRscs(std::vector<XAie_UserRsc> &vR) const {
+		void getReservedRscs(std::vector<XAieUserRsc> &vR) const {
 			if (State.Reserved != 0) {
-				_getRscs(vR);
+				_getReservedRscs(vR);
 			}
 		}
 		/**
@@ -346,20 +348,7 @@ namespace xaiefal {
 		 *
 		 * @return resource type
 		 */
-		virtual uint32_t getRscType() const {
-			std::string rName(typeid(*this).name());
-
-			throw std::invalid_argument("get rsc type not supported of rsc" +
-					rName);
-			return XAIE_RSC_TYPE_ANY;
-		}
-		/**
-		 * TODO: After porting remove uint32_t implementation
-		 * This function returns resources type.
-		 *
-		 * @return resource type
-		 */
-		virtual XAieRscType RscType() const {
+		virtual XAieRscType getRscType() const {
 			return Type;
 		}
 		/**
@@ -399,7 +388,7 @@ namespace xaiefal {
 		 * This function returns the type of child resources
 		 * which is managed by this resource in AIEFAL
 		 */
-		virtual uint32_t getManagedRscsType() {
+		virtual XAieRscType getManagedRscsType() {
 			std::string rName(typeid(*this).name());
 			throw std::invalid_argument("get managed rsc type not supported of rsc " +
 					rName);
@@ -453,7 +442,7 @@ namespace xaiefal {
 		 *
 		 * @param vR vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAie_UserRsc> &vR) const {
+		virtual void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
 			std::string rName(typeid(*this).name());
 
 			(void)vR;
@@ -541,8 +530,8 @@ namespace xaiefal {
 				Mod = XAIE_MEM_MOD;
 			}
 		}
-		XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L):
-			XAieSingleTileRsc(Dev.getDevHandle(), L) {}
+		//XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L):
+		//	XAieSingleTileRsc(Dev.getDevHandle(), L) {}
 		XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L, XAieRscType T):
 			XAieSingleTileRsc(Dev.getDevHandle(), L, T) {}
 		virtual ~XAieSingleTileRsc() {}
@@ -572,7 +561,7 @@ namespace xaiefal {
 		 */
 		AieRC getRscId(XAie_LocType &L, XAie_ModuleType &M,
 				uint32_t &I) {
-			AieRC RC;
+			AieRC RC = XAIE_ERR;
 
 			if (State.Reserved == 0) {
 				Logger::log(LogLevel::ERROR) << typeid(*this).name() << " " <<
@@ -580,20 +569,13 @@ namespace xaiefal {
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
 					" resource not reserved." << std::endl;
-				RC = XAIE_ERR;
 			} else {
-				if (vRscs.size() >= 1) {
-					L = Loc;
+				if (vRscs.size() > 0) {
 					M = vRscs[0].Mod;
 					I = vRscs[0].RscId;
-					RC = XAIE_OK;
-				} else {
-					/* TODO Remove once porting is complete */
-					L = Loc;
-					M = static_cast<XAie_ModuleType>(Rsc.Mod);
-					I = Rsc.RscId;
-					RC = XAIE_OK;
 				}
+				L = Loc;
+				RC = XAIE_OK;
 			}
 			return RC;
 		}
@@ -612,23 +594,24 @@ namespace xaiefal {
 	protected:
 		XAie_LocType Loc; /**< tile location */
 		XAie_ModuleType Mod; /**< expected resource module */
-		XAie_UserRsc Rsc; /**< resource */
 	private:
 		/**
 		 * This function returns resources reserved.
 		 *
 		 * @param vR vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAie_UserRsc> &vR) const {
-			vR.push_back(Rsc);
+		virtual void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			if (vRscs.size() > 0) {
+				vR.push_back(vRscs[0]);
+			}
 		}
 	};
 
 	struct XAieRscGetRscsWrapper {
 		XAieRscGetRscsWrapper() = delete;
 		XAieRscGetRscsWrapper(std::shared_ptr<XAieRsc> &R,
-				std::vector<XAie_UserRsc> &Rscs) {
-			R->getRscs(Rscs);
+				std::vector<XAieUserRsc> &Rscs) {
+			R->getReservedRscs(Rscs);
 		}
 		~XAieRscGetRscsWrapper() {};
 	};

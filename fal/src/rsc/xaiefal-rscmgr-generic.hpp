@@ -28,13 +28,18 @@ namespace xaiefal {
 	 */
 	typedef std::vector<std::bitset<32>> XAieRscBitmap;
 	/**
+	 * @typedef XAieRscMaxRsc
+	 * @brief Type to hold max resources per module given tile type
+	 */
+	typedef std::vector<std::pair<XAie_ModuleType, uint32_t>> XAieRscMaxRsc;
+	/**
 	 * @struct AieRscMap
 	 * @brief Structure containing resource bitmaps and
 	 *	  relevant information.
 	 */
 	struct AieRscMap {
-		XAieRscBitmap Bitmaps[XAIE_MAXRSC];
-		std::vector<std::pair<XAie_ModuleType, uint32_t>> MaxRscs[XAIE_MAXRSC];
+		XAieRscBitmap *Bitmaps[XAIE_MAXRSC];
+		XAieRscMaxRsc MaxRscs[XAIE_MAXRSC];
 	};
 	/**
 	 * @class XAieRscMgrGeneric
@@ -45,9 +50,30 @@ namespace xaiefal {
 		XAieRscMgrGeneric() = delete;
 		XAieRscMgrGeneric(XAieDevHandle *DevHd):
 			XAieRscMgrBackend(DevHd) {
-			rscBitmapsInit();
+			std::string errStr = "Could not create resource manager";
+			if (rscBitmapsInit() != XAIE_OK) {
+				throw std::runtime_error(errStr);
+			}
 		}
-		~XAieRscMgrGeneric() {}
+		~XAieRscMgrGeneric() {
+			for(uint8_t TType = 0U; TType < (uint8_t)XAIEGBL_TILE_TYPE_MAX; TType++) {
+				if (TType == XAIEGBL_TILE_TYPE_SHIMNOC)
+					continue;
+
+				for (uint8_t RType = 0U; RType < (uint8_t)XAIE_MAXRSC; RType++) {
+					auto MaxRsc = RscMaps[TType].MaxRscs[RType];
+					uint32_t NumRscs = 0;
+
+					for (auto x: MaxRsc)
+						NumRscs += x.second;
+
+					if (NumRscs == 0U)
+						continue;
+
+					delete RscMaps[TType].Bitmaps[RType];
+				}
+			}
+		}
 
 		/**
 		 * This function checks for resource availibility and will
@@ -71,7 +97,7 @@ namespace xaiefal {
 			StaticOffset = getStaticOff(RscReq.Loc, RscReq.Mod, RscReq.RscType);
 			StartBit = getStartBit(RscReq.Loc, RscReq.Mod, RscReq.RscType);
 			MaxRscId = getMaxRsc(RscReq.Loc, RscReq.Mod, RscReq.RscType);
-			auto Bitmap = &RscMaps[TileType].Bitmaps[RscReq.RscType];
+			auto Bitmap = RscMaps[TileType].Bitmaps[RscReq.RscType];
 
 			for (uint32_t i = 0; i < MaxRscId; i++) {
 				uint32_t sIndex, rIndex, rBit, sBit;
@@ -122,7 +148,7 @@ namespace xaiefal {
 
 			rBit = RscReq.RscId + getStartBit(RscReq.Loc, RscReq.Mod, RscReq.RscType);
 			StaticOff = getStaticOff(RscReq.Loc, RscReq.Mod, RscReq.RscType);
-			auto Bitmap = &RscMaps[TileType].Bitmaps[RscReq.RscType];
+			auto Bitmap = RscMaps[TileType].Bitmaps[RscReq.RscType];
 
 			sIndex = (rBit + StaticOff) / 32U;
 			sBit = (rBit + StaticOff) % 32U;
@@ -165,7 +191,7 @@ namespace xaiefal {
 			StartBit = getStartBit(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			MaxRscId = getMaxRsc(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			NumContigRscs = RscReq.size();
-			auto Bitmap = &RscMaps[TileType].Bitmaps[RscReq[0].RscType];
+			auto Bitmap = RscMaps[TileType].Bitmaps[RscReq[0].RscType];
 
 			for (uint32_t i = 0; i < MaxRscId; i++) {
 				uint32_t sIndex, rIndex, sBit, rBit;
@@ -240,7 +266,7 @@ namespace xaiefal {
 
 			for (uint32_t i = 0; i < RscReq.size(); i++) {
 				uint8_t TType = _XAie_GetTileTypefromLoc(dev(), RscReq[i].Loc);
-				auto Bitmap = &RscMaps[TType].Bitmaps[RscReq[i].RscType];
+				auto Bitmap = RscMaps[TType].Bitmaps[RscReq[i].RscType];
 				uint32_t StartBit, rBit, rIndex;
 
 				RscReq[i].RscId = CommonId;
@@ -281,7 +307,7 @@ namespace xaiefal {
 
 			rBit = RscRel.RscId + getStartBit(RscRel.Loc, RscRel.Mod, RscRel.RscType);
 			StaticOff = getStaticOff(RscRel.Loc, RscRel.Mod, RscRel.RscType);
-			auto Bitmap = &RscMaps[TileType].Bitmaps[RscRel.RscType];
+			auto Bitmap = RscMaps[TileType].Bitmaps[RscRel.RscType];
 
 			sIndex = (rBit + StaticOff) / 32U;
 			sBit = (rBit + StaticOff) % 32U;
@@ -319,7 +345,7 @@ namespace xaiefal {
 			}
 
 			rBit = RscFree.RscId + getStartBit(RscFree.Loc, RscFree.Mod, RscFree.RscType);
-			auto Bitmap = &RscMaps[TileType].Bitmaps[RscFree.RscType];
+			auto Bitmap = RscMaps[TileType].Bitmaps[RscFree.RscType];
 
 			rIndex = rBit / 32U;
 			rBit %= 32U;
@@ -361,7 +387,7 @@ namespace xaiefal {
 				MaxRscId = getMaxRsc(L, M, T);
 				StartBit = getStartBit(L, M, T);
 				StaticOff = getStaticOff(L, M, T);
-				auto Bitmap = &RscMaps[TileType].Bitmaps[T];
+				auto Bitmap = RscMaps[TileType].Bitmaps[T];
 
 				sIndex = (StartBit + StaticOff) / 32U;
 				sBit = (StartBit + StaticOff) % 32U;
@@ -418,8 +444,8 @@ namespace xaiefal {
 				NumRows = _XAie_GetNumRows(dev(), TType);
 
 				for (RType = 0; RType < XAIE_MAXRSC; RType++) {
-					auto Bitmap = &RscMaps[TType].Bitmaps[RType];
 					auto MaxRsc = &RscMaps[TType].MaxRscs[RType];
+					auto Bitmap = RscMaps[TType].Bitmaps[RType];
 
 					for (uint8_t i = 0; i < NumMods; i++) {
 						uint32_t Size, ModOff = 0U;
@@ -430,8 +456,9 @@ namespace xaiefal {
 							continue;
 
 						Mod = estimateModfromIndex(TType, i);
-						Size = ((NumRows * dev()->NumCols *
-							MaxRsc->at(i).second) / 32U) + 1U;
+						Size = roundUp(NumRows * dev()->NumCols *
+							MaxRsc->at(i).second, 32U);
+						Size /= 32U;
 
 						RscHeader = createRscHeader(TType,
 								static_cast<XAieRscType>(RType),
@@ -442,8 +469,8 @@ namespace xaiefal {
 							return XAIE_ERR;
 
 						if (Mod == XAIE_CORE_MOD) {
-							ModOff = (MaxRsc->at(0).second *
-								dev()->NumCols * NumRows) / 32U;
+							ModOff = (MaxRsc->at(XAIE_MEM_MOD).second *
+								dev()->NumCols * NumRows * 2U) / 32U;
 						}
 
 						for (uint32_t Word = 0U; Word < Size; Word += 2U) {
@@ -456,8 +483,8 @@ namespace xaiefal {
 							 * 64 bit payloads
 							 */
 							if (Word != Size - 1U) {
-								Payload = Bitmap->at(Index + 1).to_ulong();
-								Payload <<= 32U;
+								Payload |= (uint64_t)Bitmap->at(Index +
+										1).to_ulong() << 32U;
 								Payload |= Bitmap->at(Index).to_ulong();
 							} else {
 								Payload = Bitmap->at(Index).to_ulong();
@@ -474,6 +501,106 @@ namespace xaiefal {
 			return XAIE_OK;
 		}
 
+		/**
+		 * This function reads the resources metadata and loads
+		 * it into the static resource bitmaps.
+		 *
+		 * @param MetaData metadata to load static resource bitmaps
+		 * @param NumBitmaps number of resource bitmaps in the metadata
+		 *
+		 * @return XAIE_OK for success, error code for failure
+		 */
+		AieRC loadRscBitmaps(const char *MetaData, uint64_t NumBitmaps) {
+			uint64_t *Data = (uint64_t *)MetaData;
+
+			for (uint32_t i = 0; i < NumBitmaps; i++) {
+				uint32_t BitmapSize, Bitmap64Size, BitmapOffset = 0U;
+				uint32_t RscSize, NumRows, NumRscs;
+				const uint64_t *Bits64;
+				XAie_ModuleType Mod;
+				XAieRscType RscType;
+				uint64_t RscHeader;
+				uint8_t TileType;
+
+				RscHeader = Data[0U];
+				TileType = (RscHeader >> XAIE_RSC_HEADER_TTYPE_SHIFT)
+						& XAIE_RSC_HEADER_TTYPE_MASK;
+				Mod = static_cast<XAie_ModuleType>(
+						(RscHeader >> XAIE_RSC_HEADER_MOD_SHIFT)
+						& XAIE_RSC_HEADER_MOD_MASK);
+				RscType = static_cast<XAieRscType>(
+						(RscHeader >> XAIE_RSC_HEADER_RTYPE_SHIFT)
+						& XAIE_RSC_HEADER_RTYPE_MASK);
+				RscSize = (RscHeader >> XAIE_RSC_HEADER_SIZE_SHIFT)
+						& XAIE_RSC_HEADER_SIZE_MASK;
+
+				if (RscSize == 0U) {
+					Logger::log(LogLevel::ERROR) <<
+						"Invalid resource length in bitmap"
+						<< std::endl;
+					return XAIE_INVALID_ARGS;
+				}
+
+				if (TileType == XAIEGBL_TILE_TYPE_SHIMNOC ||
+						TileType >= XAIEGBL_TILE_TYPE_MAX) {
+					Logger::log(LogLevel::ERROR) <<
+						"Invalid tile type in bitmap"
+						<< std::endl;
+					return XAIE_INVALID_ARGS;
+				}
+
+				NumRows = _XAie_GetNumRows(dev(), TileType);
+				NumRscs = getTotalRscs(TileType, Mod, RscType);
+				BitmapSize = NumRows * dev()->NumCols * NumRscs;
+				Bitmap64Size = roundUp(BitmapSize, 64U) / 64U;
+
+				if (RscSize != Bitmap64Size) {
+					Logger::log(LogLevel::ERROR) <<
+						"Invalid resource length in bitmap"
+						<< std::endl;
+					return XAIE_INVALID_ARGS;
+				}
+
+				if (Mod == XAIE_CORE_MOD) {
+					uint32_t MemModRscs;
+
+					MemModRscs = getTotalRscs(TileType, XAIE_MEM_MOD,
+							RscType);
+					BitmapOffset = MemModRscs * dev()->NumCols *
+						NumRows * 2U;
+				}
+				/* Get static bitmap offset */
+				BitmapOffset += BitmapSize;
+				BitmapOffset /= 32U;
+				Bits64 = &Data[1U];
+
+				auto StaticBitmap = RscMaps[TileType].Bitmaps[RscType];
+				for (uint32_t j = 0; j < RscSize; j++) {
+					uint64_t Val64 = Bits64[j];
+
+					for (uint8_t k = 0; k < 64U; k++) {
+						uint32_t Pos;
+
+						Pos = k + (j * 64U);
+						if (Pos > BitmapSize)
+							break;
+
+						if (Val64 & 1LU) {
+							uint32_t Index;
+
+							Index = BitmapOffset + (Pos / 32U);
+							StaticBitmap->at(Index).set(Pos % 32U);
+						}
+						Val64 >>= 1U;
+					}
+				}
+
+				Data = (uint64_t *)((const char *)Data + sizeof(RscHeader)
+						+ (RscSize * sizeof(uint64_t)));
+			}
+			return XAIE_OK;
+		}
+
 	private:
 		AieRscMap RscMaps[XAIEGBL_TILE_TYPE_MAX]; /**< Resource mappings */
 
@@ -481,9 +608,9 @@ namespace xaiefal {
 		 * This function initializes the resource bitmaps for
 		 * all tile types and resource types.
 		 *
-		 * @return None.
+		 * @return XAIE_OK for success, XAIE_ERR on error.
 		 */
-		void rscBitmapsInit() {
+		AieRC rscBitmapsInit() {
 			uint8_t TType, RType;
 
 			for (TType = 0; TType < XAIEGBL_TILE_TYPE_MAX; TType++) {
@@ -494,7 +621,6 @@ namespace xaiefal {
 
 				NumRows = _XAie_GetNumRows(dev(), TType);
 				for (RType = 0; RType < (uint8_t)XAIE_MAXRSC; RType++) {
-					auto Bitmap = &RscMaps[TType].Bitmaps[RType];
 					auto MaxRsc = &RscMaps[TType].MaxRscs[RType];
 					uint32_t BitmapSize, TotalRscs = 0;
 
@@ -526,19 +652,22 @@ namespace xaiefal {
 						MaxRsc->push_back(std::make_pair(XAIE_PL_MOD, numRscs));
 						TotalRscs += numRscs;
 					}
+
 					/**
 					 * Calculate number of bits needed for
 					 * static and runtime bitmaps, hence
 					 * multiply by 2U.
 					 */
-					BitmapSize = NumRows * dev()->NumCols * TotalRscs * 2U;
-					Bitmap->resize(((BitmapSize + (32U - 1U)) / 32U)); //align by 32 bits
-					for (unsigned int i = 0; i < Bitmap->size(); i++)
-						Bitmap->at(i).reset();
+					BitmapSize = roundUp(NumRows * dev()->NumCols * TotalRscs * 2U, 32U);
+					if (BitmapSize == 0U)
+						continue;
+
+					BitmapSize /= 32U;
+					RscMaps[TType].Bitmaps[RType] = new XAieRscBitmap(BitmapSize + 1);
 				}
 			}
-
 			RscMaps[XAIEGBL_TILE_TYPE_SHIMNOC] = RscMaps[XAIEGBL_TILE_TYPE_SHIMPL];
+			return XAIE_OK;
 		}
 
 		/**
@@ -649,7 +778,7 @@ namespace xaiefal {
 
 				StaticOff = getStaticOff(rsc.Loc, rsc.Mod, rsc.RscType);
 				StartBit = getStartBit(rsc.Loc, rsc.Mod, rsc.RscType);
-				auto Bitmap = &RscMaps[TType].Bitmaps[rsc.RscType];
+				auto Bitmap = RscMaps[TType].Bitmaps[rsc.RscType];
 				Mask = (1 << MaxRscId) - 1;
 
 				sIndex = (StartBit + StaticOff) / 32U;
@@ -790,7 +919,10 @@ namespace xaiefal {
 			}
 			case XAIE_TRACECTRL:
 			{
-				return XAIE_TRACE_PER_MOD;
+				if (_XAie_GetNumRows(dev(), TileType) > 0U)
+					return XAIE_TRACE_PER_MOD;
+				else
+					return 0U;
 			}
 			case XAIE_PCEVENT:
 			{
@@ -838,7 +970,10 @@ namespace xaiefal {
 			}
 			case XAIE_COMBOEVENT:
 			{
-				return XAIE_COMBO_PER_MOD;
+				if (_XAie_GetNumRows(dev(), TileType) > 0U)
+					return XAIE_COMBO_PER_MOD;
+				else
+					return 0U;
 			}
 			case XAIE_GROUPEVENT:
 			{
@@ -856,7 +991,7 @@ namespace xaiefal {
 
 			}
 			default:
-				return 0;
+				return 0U;
 			}
 		}
 
@@ -930,6 +1065,18 @@ namespace xaiefal {
 				M = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
 			}
 			return M;
+		}
+		/**
+		 * This function rounds the value to nearest multiple of
+		 * aligned.
+		 *
+		 * @param Val: Value to round
+		 * @param Aligned: Multiple to round up to
+		 *
+		 * @return Aligned value
+		 */
+		uint32_t roundUp(uint32_t Val, uint32_t Aligned) {
+			return (Aligned * ((Val + (Aligned - 1U)) / Aligned));
 		}
 	}; /* class XAieRscMgrGeneric */
 } /* namespace xaiefal */

@@ -220,7 +220,23 @@ namespace xaiefal {
 			(void)Fs;
 			(void)NumRscs;
 			Logger::log(LogLevel::ERROR) << __func__ <<
-				" Not supported for base backend " << std::endl;
+				" Not supported for selected backend " << std::endl;
+			return XAIE_ERR;
+		}
+
+		/**
+		 * This function reads the resources metadata and loads
+		 * it into the static resource bitmaps.
+		 *
+		 * @param MetaData metadata to load static resource bitmaps
+		 * @param NumBitmaps number of resource bitmaps in the metadata
+		 *
+		 * @return XAIE_OK for success, error code for failure
+		 */
+		virtual AieRC loadRscBitmaps(const char *MetaData, uint64_t NumBitmaps) {
+			(void)MetaData;
+			Logger::log(LogLevel::ERROR) << __func__ <<
+				" Not supported for selected backend " << std::endl;
 			return XAIE_ERR;
 		}
 

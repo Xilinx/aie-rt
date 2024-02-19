@@ -64,27 +64,27 @@ namespace xaiefal {
 		XAieRscStat getRscStat(XAie_LocType Loc) const {
 			return RscGroup->getRscStat(Loc);
 		}
-		XAieRscStat getRscStat(XAie_LocType Loc, uint32_t RscType) const {
+		XAieRscStat getRscStat(XAie_LocType Loc, XAieRscType RscType) const {
 			return RscGroup->getRscStat(Loc, RscType);
 		}
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod) const {
 			return RscGroup->getRscStat(Loc, Mod);
 		}
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
-			uint32_t RscType) const {
+			XAieRscType RscType) const {
 			return RscGroup->getRscStat(Loc, Mod, RscType);
 		}
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
-			uint32_t RscType, uint32_t RscId) const {
+			XAieRscType RscType, uint32_t RscId) const {
 			return RscGroup->getRscStat(Loc, Mod, RscType,
 					RscId);
 		}
 		XAieRscStat getRscStat(const std::vector<XAie_LocType> &vLocs,
-			uint32_t RscType) const {
+			XAieRscType RscType) const {
 			return RscGroup->getRscStat(vLocs, RscType);
 		}
 		XAieRscStat getRscStat(const std::vector<XAie_LocType> &vLocs,
-			uint32_t RscType, uint32_t RscId) const {
+			XAieRscType RscType, uint32_t RscId) const {
 			return RscGroup->getRscStat(vLocs, RscType, RscId);
 		}
 
@@ -353,7 +353,7 @@ namespace xaiefal {
                  * @param MetaData pointer to resource metadata
                  * @return XAIE_OK for success, error code for failure
                  */
-                AieRC loadStaticRscFromMem(const char *MetaData);
+                AieRC loadStaticRscsFromMem(const char *MetaData);
 
                 /**
                  * This function makes a call to RscMgr Backend to reserve

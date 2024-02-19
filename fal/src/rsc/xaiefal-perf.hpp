@@ -310,9 +310,6 @@ namespace xaiefal {
 
 			return RC;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_PERFCNT_RSC);
-		}
 		XAieRscStat getRscStat(const std::string &GName) const {
 			XAieRscStat RscStat(GName);
 			(void) GName;
@@ -528,7 +525,7 @@ namespace xaiefal {
 			if (iRC != (int)XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					" Expect Mod= " << (int)Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" failed to stop." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -537,17 +534,16 @@ namespace xaiefal {
 			return RC;
 		}
 
-		/* TODO replace with XAieUserRsc once porting is complete */
-		void _getRscs(std::vector<XAie_UserRsc> &vR) const {
-			vR.push_back(Rsc);
+		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.push_back(vRscs[0]);
 			if (StartMod != vRscs[0].Mod) {
-				StartBC->getRscs(vR);
+				StartBC->getReservedRscs(vR);
 			}
 			if (StopMod != vRscs[0].Mod) {
-				StopBC->getRscs(vR);
+				StopBC->getReservedRscs(vR);
 			}
-			if (RstEvent != XAIE_EVENT_NONE_CORE && StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				RstBC->getRscs(vR);
+			if (RstEvent != XAIE_EVENT_NONE_CORE && StopMod != vRscs[0].Mod) {
+				RstBC->getReservedRscs(vR);
 			}
 			_getRscsAppend(vR);
 		}
@@ -563,8 +559,8 @@ namespace xaiefal {
 		virtual AieRC _releaseAppend() {
 			return XAIE_OK;
 		}
-		virtual void _getRscsAppend(std::vector<XAie_UserRsc> &vRscs) const {
-			(void)vRscs;
+		virtual void _getRscsAppend(std::vector<XAieUserRsc> &vR) const {
+			(void)vR;
 		}
 	};
 }

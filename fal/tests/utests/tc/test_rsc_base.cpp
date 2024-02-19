@@ -170,7 +170,7 @@ TEST(XAieRsc, XAieRscBaseError)
 	RC = Rsc.start();
 	CHECK_EQUAL(RC, XAIE_ERR);
 
-	CHECK_THROWS(std::invalid_argument, Rsc.getRscType());
+	CHECK_EQUAL(static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY), Rsc.getRscType());
 	CHECK_THROWS(std::invalid_argument, Rsc.getRscStat(RscString));
 	CHECK_THROWS(std::invalid_argument, Rsc.getAvailManagedRscs());
 	CHECK_THROWS(std::invalid_argument, Rsc.getManagedRscsType());
@@ -216,9 +216,6 @@ TEST(XAieRsc, XAieRscSingleTile)
 
 	RC = RscCore.getRscId(Loc, Mod, id);
 	CHECK_EQUAL(RC, XAIE_OK);
-
-	CHECK_THROWS(std::invalid_argument, RscCore.getRscStat(RscString));
-
 }
 
 #if AIE_GEN != 1
