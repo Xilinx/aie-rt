@@ -777,8 +777,6 @@ AieRC XAie_TurnEccOff(XAie_DevInst *DevInst)
 *******************************************************************************/
 AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 {
-	AieRC RC;
-
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");

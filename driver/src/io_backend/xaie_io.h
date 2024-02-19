@@ -168,6 +168,7 @@ typedef struct XAie_ShimDmaBdArgs {
  * MemAttach    : Backend operation to attach memory to AI engine device.
  * MemDetach    : Backend operation to detach memory from AI engine device
  * GetTid	: Backend operation to get unique thread id.
+ * GetPartFd   : Backend operation to get unique partition fd.
  * SubmitTxn	: Backend operation to submit transaction.
  */
 typedef struct XAie_BackendOps {
@@ -192,6 +193,7 @@ typedef struct XAie_BackendOps {
 	AieRC (*MemAttach)(XAie_MemInst *MemInst, u64 MemHandle);
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
 	u64 (*GetTid)(void);
+	int (*GetPartFd)(void *IOInst);
 	AieRC (*SubmitTxn)(void *IOInst, XAie_TxnInst *TxnInst);
 	void* (*GetShimDmaBdConfig)(XAie_ShimDmaBdArgs *Args);
 } XAie_BackendOps;

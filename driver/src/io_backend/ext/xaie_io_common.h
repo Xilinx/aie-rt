@@ -29,6 +29,13 @@ static inline u64 XAie_IODummyGetTid(void)
 	return 0;
 }
 
+static inline int XAie_IODummyGetPartFd(void *IOInst)
+{
+	(void)IOInst;
+	return -1;
+}
+
+
 void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args);
 

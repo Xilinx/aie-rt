@@ -759,6 +759,7 @@ const XAie_Backend SocketBackend =
 	.Ops.MemAttach = XAie_SocketMemAttach,
 	.Ops.MemDetach = XAie_SocketMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
+	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 };
 

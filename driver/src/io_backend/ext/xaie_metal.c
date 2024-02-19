@@ -773,6 +773,7 @@ const XAie_Backend MetalBackend =
 	.Ops.MemAttach = XAie_MetalMemAttach,
 	.Ops.MemDetach = XAie_MetalMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
+	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 };
 

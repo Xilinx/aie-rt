@@ -1892,6 +1892,14 @@ static u64 XAie_LinuxGetTid(void)
 		return (u64)pthread_self();
 }
 
+static int XAie_LinuxGetPartFd(void *IOInst)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+
+	return LinuxIOInst->PartitionFd;
+}
+
+
 /*****************************************************************************/
 /**
 *
@@ -2035,8 +2043,15 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 
 static u64 XAie_LinuxGetTid(void)
 {
-		return 0;
+	return 0;
 }
+
+static int XAie_LinuxGetPartFd(void *IOInst)
+{
+	(void)IOInst;
+	return 0;
+}
+
 
 static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)
 {
@@ -2114,6 +2129,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.MemAttach = XAie_LinuxMemAttach,
 	.Ops.MemDetach = XAie_LinuxMemDetach,
 	.Ops.GetTid = XAie_LinuxGetTid,
+	.Ops.GetPartFd = XAie_LinuxGetPartFd,
 	.Ops.SubmitTxn = XAie_LinuxSubmitTxn,
 	.Ops.GetShimDmaBdConfig = XAie_LinuxIO_GetShimDmaBdConfig
 };
