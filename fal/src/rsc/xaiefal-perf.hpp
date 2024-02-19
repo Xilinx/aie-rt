@@ -10,6 +10,7 @@
 
 #include <xaiefal/rsc/xaiefal-bc.hpp>
 #include <xaiefal/rsc/xaiefal-rsc-base.hpp>
+#include <xaiefal/rsc/xaiefal-rscmgr.hpp>
 
 #pragma once
 
@@ -32,7 +33,8 @@ namespace xaiefal {
 		XAiePerfCounter(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M,
 			bool CrossM = false, uint32_t Threshold = 0):
-			XAieSingleTileRsc(DevHd, L, M), CrossMod(CrossM) {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_PERFCOUNT),
+			CrossMod(CrossM) {
 			StartMod = Mod;
 			StopMod = Mod;
 			RstMod = Mod;
@@ -46,14 +48,14 @@ namespace xaiefal {
 			XAiePerfCounter(Dev.getDevHandle(), L, M, CrossM) {}
 		~XAiePerfCounter() {
 			if (State.Reserved == 1) {
-				if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+				if (StartMod != vRscs[0].Mod) {
 					delete StartBC;
 				}
-				if (StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+				if (StopMod != vRscs[0].Mod) {
 					delete StopBC;
 				}
 				if (RstEvent != XAIE_EVENT_NONE_CORE &&
-					RstMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+					RstMod != vRscs[0].Mod) {
 					delete RstBC;
 				}
 			}
@@ -140,14 +142,14 @@ namespace xaiefal {
 
 			if (State.Running == 1) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use" << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1 && M != RstMod) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is reserved, event module type cannot change." <<
 					std::endl;
 				RC = XAIE_INVALID_ARGS;
@@ -176,8 +178,8 @@ namespace xaiefal {
 
 			if (State.Running == 1) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -201,14 +203,14 @@ namespace xaiefal {
 
 			if (State.Running == 1) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1 && M != StartMod) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is reserved, event module type cannot change." <<
 					std::endl;
 				RC = XAIE_INVALID_ARGS;
@@ -238,14 +240,14 @@ namespace xaiefal {
 
 			if (State.Running == 1) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1 && M != StopMod) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Counter Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Counter Mod=" << (int)vRscs[0].Mod <<
 					" resource is reserved, event module type cannot change." <<
 					std::endl;
 				RC = XAIE_INVALID_ARGS;
@@ -278,8 +280,8 @@ namespace xaiefal {
 					" resource not in use." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				RC = XAie_PerfCounterGet(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod),
-					Rsc.RscId, &R);
+				RC = XAie_PerfCounterGet(dev(), Loc, vRscs[0].Mod,
+						vRscs[0].RscId, &R);
 			}
 			return RC;
 		}
@@ -300,9 +302,9 @@ namespace xaiefal {
 					" resource not allocated." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				M = static_cast<XAie_ModuleType>(Rsc.Mod);
+				M = vRscs[0].Mod;
 				XAie_PerfCounterGetEventBase(AieHd->dev(), Loc, M, &E);
-				E = static_cast<XAie_Events>(static_cast<uint32_t>(E) + Rsc.RscId);
+				E = static_cast<XAie_Events>(static_cast<uint32_t>(E) + vRscs[0].RscId);
 				RC = XAIE_OK;
 			}
 
@@ -345,22 +347,16 @@ namespace xaiefal {
 		AieRC _reserve() {
 			AieRC RC;
 			uint32_t TType = _XAie_GetTileTypefromLoc(dev(), Loc);
+			XAieUserRsc Rsc;
 
-			XAie_UserRscReq Req = {Loc, Mod, 1};
-
-			if (preferredId == XAIE_RSC_ID_ANY) {
-				RC = XAie_RequestPerfcnt(AieHd->dev(), 1, &Req, 1, &Rsc);
-			} else {
-				Rsc.RscType = XAIE_PERFCNT_RSC;
-				Rsc.Loc.Col = Loc.Col;
-				Rsc.Loc.Row = Loc.Row;
-				Rsc.Mod = static_cast<uint32_t>(Mod);
-				Rsc.RscId = preferredId;
-				RC = XAie_RequestAllocatedPerfcnt(AieHd->dev(), 1, &Rsc);
-			}
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = preferredId;
+			vRscs.push_back(Rsc);
+			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK && preferredId == XAIE_RSC_ID_ANY) {
-				if (TType == XAIEGBL_TILE_TYPE_AIETILE &&
-					CrossMod) {
+				if (TType == XAIEGBL_TILE_TYPE_AIETILE && CrossMod) {
 					XAie_ModuleType lM;
 
 					if (Mod == XAIE_CORE_MOD) {
@@ -368,57 +364,56 @@ namespace xaiefal {
 					} else {
 						lM = XAIE_CORE_MOD;
 					}
-					Req.Mod = lM;
-					RC = XAie_RequestPerfcnt(AieHd->dev(), 1, &Req, 1, &Rsc);
+					vRscs[0].Mod = lM;
+					RC = AieHd->rscMgr()->request(*this);
 				}
 			}
-			if (RC  == XAIE_OK &&
-				TType == XAIEGBL_TILE_TYPE_AIETILE) {
+			if (RC == XAIE_OK && TType == XAIEGBL_TILE_TYPE_AIETILE) {
 				std::vector<XAie_LocType> vL;
 
 				vL.push_back(Loc);
-				if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+				if (StartMod != vRscs[0].Mod) {
 					StartBC = new XAieBroadcast(AieHd, vL,
-						StartMod, static_cast<XAie_ModuleType>(Rsc.Mod));
+						StartMod, vRscs[0].Mod);
 					RC = StartBC->reserve();
 					if (RC != XAIE_OK) {
 						delete StartBC;
 					}
 				}
-				if (RC == XAIE_OK && StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+				if (RC == XAIE_OK && StopMod != vRscs[0].Mod) {
 					StopBC = new XAieBroadcast(AieHd, vL,
-							StartMod, static_cast<XAie_ModuleType>(Rsc.Mod));
+							StartMod, vRscs[0].Mod);
 					RC = StopBC->reserve();
 					if (RC != XAIE_OK) {
 						delete StopBC;
-						if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+						if (StartMod != vRscs[0].Mod) {
 							StartBC->release();
 							delete StartBC;
 						}
 					}
 				}
 				if (RC == XAIE_OK && RstEvent != XAIE_EVENT_NONE_CORE &&
-					RstMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+					RstMod != vRscs[0].Mod) {
 					RstBC = new XAieBroadcast(AieHd, vL,
-							StartMod, static_cast<XAie_ModuleType>(Rsc.Mod));
+							StartMod, vRscs[0].Mod);
 					RC = RstBC->reserve();
 					if (RC != XAIE_OK) {
 						delete RstBC;
-						if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+						if (StartMod != vRscs[0].Mod) {
 							StartBC->release();
 							delete StartBC;
 						}
-						if (StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+						if (StopMod != vRscs[0].Mod) {
 							StopBC->release();
 							delete StopBC;
 						}
 					}
 				}
 				if (RC != XAIE_OK) {
-					XAie_ReleasePerfcnt(AieHd->dev(), 1, &Rsc);
+					AieHd->rscMgr()->release(*this);
+					vRscs.clear();
 				}
 			}
-
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::WARN) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
@@ -429,20 +424,25 @@ namespace xaiefal {
 			return RC;
 		}
 		AieRC _release() {
-			if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+			AieRC RC;
+
+			if (StartMod != vRscs[0].Mod) {
 				StartBC->release();
 				delete StartBC;
 			}
-			if (StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+			if (StopMod != vRscs[0].Mod) {
 				StopBC->release();
 				delete StopBC;
 			}
-			if (RstEvent != XAIE_EVENT_NONE_CORE && RstMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
+			if (RstEvent != XAIE_EVENT_NONE_CORE && RstMod != vRscs[0].Mod) {
 				RstBC->release();
 				delete RstBC;
 			}
 			_releaseAppend();
-			return XAie_ReleasePerfcnt(AieHd->dev(), 1, &Rsc);
+
+			RC = AieHd->rscMgr()->release(*this);
+			vRscs.clear();
+			return RC;
 		}
 		AieRC _start() {
 			AieRC RC;
@@ -454,45 +454,45 @@ namespace xaiefal {
 				XAie_Events lRstE = RstEvent;
 
 				if(EventVal != 0) {
-					RC = XAie_PerfCounterEventValueSet(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod),
-						Rsc.RscId, EventVal);
+					RC = XAie_PerfCounterEventValueSet(dev(), Loc, vRscs[0].Mod,
+						vRscs[0].RscId, EventVal);
 				}
 
-				if (RC == XAIE_OK && StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-					StartBC->getEvent(Loc, static_cast<XAie_ModuleType>(Rsc.Mod), lStartE);
+				if (RC == XAIE_OK && StartMod != vRscs[0].Mod) {
+					StartBC->getEvent(Loc, vRscs[0].Mod, lStartE);
 					RC = XAie_EventBroadcast(dev(), Loc, StartMod, StartBC->getBc(), StartEvent);
 					if (RC == XAIE_OK) {
 						RC = StartBC->start();
 					}
 				}
-				if (RC == XAIE_OK && StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-					StopBC->getEvent(Loc, static_cast<XAie_ModuleType>(Rsc.Mod), lStopE);
+				if (RC == XAIE_OK && StopMod != vRscs[0].Mod) {
+					StopBC->getEvent(Loc, vRscs[0].Mod, lStopE);
 					XAie_EventBroadcast(dev(), Loc, StopMod, StopBC->getBc(), StopEvent);
 					if (RC == XAIE_OK) {
 						RC = StopBC->start();
 					}
 				}
-				if (RC == XAIE_OK && RstEvent != XAIE_EVENT_NONE_CORE && RstMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-					RstBC->getEvent(Loc, static_cast<XAie_ModuleType>(Rsc.Mod), lRstE);
+				if (RC == XAIE_OK && RstEvent != XAIE_EVENT_NONE_CORE && RstMod != vRscs[0].Mod) {
+					RstBC->getEvent(Loc, vRscs[0].Mod, lRstE);
 					RC = XAie_EventBroadcast(dev(), Loc, RstMod, RstBC->getBc(), RstEvent);
 					if (RC == XAIE_OK) {
 						RC = RstBC->start();
 					}
 				}
 				if (RC == XAIE_OK) {
-					RC = XAie_PerfCounterControlSet(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod),
-						Rsc.RscId, lStartE, lStopE);
+					RC = XAie_PerfCounterControlSet(dev(), Loc, vRscs[0].Mod,
+						vRscs[0].RscId, lStartE, lStopE);
 				}
 				if (RC == XAIE_OK && RstEvent != XAIE_EVENT_NONE_CORE) {
 					RC = XAie_PerfCounterResetControlSet(dev(), Loc,
-						static_cast<XAie_ModuleType>(Rsc.Mod), Rsc.RscId, lRstE);
+						vRscs[0].Mod, vRscs[0].RscId, lRstE);
 				}
 			}
 
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
-					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-					" Expect Mod= " << Mod << " Actual Mod=" << Rsc.Mod <<
+					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" failed to start." << std::endl;
 			}
 			return RC;
@@ -501,25 +501,25 @@ namespace xaiefal {
 			AieRC RC;
 			int iRC;
 
-			iRC = (int)XAie_PerfCounterControlReset(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod), Rsc.RscId);
-			iRC |= (int)XAie_PerfCounterResetControlReset(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod), Rsc.RscId);
-			iRC |= (int)XAie_PerfCounterReset(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod), Rsc.RscId);
-			iRC |= (int)XAie_PerfCounterEventValueReset(dev(), Loc, static_cast<XAie_ModuleType>(Rsc.Mod), Rsc.RscId);
+			iRC = (int)XAie_PerfCounterControlReset(dev(), Loc, vRscs[0].Mod, vRscs[0].RscId);
+			iRC |= (int)XAie_PerfCounterResetControlReset(dev(), Loc, vRscs[0].Mod, vRscs[0].RscId);
+			iRC |= (int)XAie_PerfCounterReset(dev(), Loc, vRscs[0].Mod, vRscs[0].RscId);
+			iRC |= (int)XAie_PerfCounterEventValueReset(dev(), Loc, vRscs[0].Mod, vRscs[0].RscId);
 
-			if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				StartBC->getEvent(Loc, static_cast<XAie_ModuleType>(Rsc.Mod), StartEvent);
+			if (StartMod != vRscs[0].Mod) {
+				StartBC->getEvent(Loc, vRscs[0].Mod, StartEvent);
 				iRC |= XAie_EventBroadcastReset(dev(), Loc,
 						StartMod, StartBC->getBc());
 				iRC |= StartBC->stop();
 			}
-			if (StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				StopBC->getEvent(Loc, static_cast<XAie_ModuleType>(Rsc.Mod), StopEvent);
+			if (StopMod != vRscs[0].Mod) {
+				StopBC->getEvent(Loc, vRscs[0].Mod, StopEvent);
 				iRC |= XAie_EventBroadcastReset(dev(), Loc,
 						StopMod, StopBC->getBc());
 				iRC |= StopBC->stop();
 			}
-			if (RstEvent != XAIE_EVENT_NONE_CORE && RstMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				RstBC->getEvent(Loc, static_cast<XAie_ModuleType>(Rsc.Mod), RstEvent);
+			if (RstEvent != XAIE_EVENT_NONE_CORE && RstMod != vRscs[0].Mod) {
+				RstBC->getEvent(Loc, vRscs[0].Mod, RstEvent);
 				iRC |= XAie_EventBroadcastReset(dev(), Loc,
 						RstMod, RstBC->getBc());
 				iRC |= RstBC->stop();
@@ -536,18 +536,19 @@ namespace xaiefal {
 			return RC;
 		}
 
-		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
-			vRscs.push_back(Rsc);
-			if (StartMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				StartBC->getRscs(vRscs);
+		/* TODO replace with XAieUserRsc once porting is complete */
+		void _getRscs(std::vector<XAie_UserRsc> &vR) const {
+			vR.push_back(Rsc);
+			if (StartMod != vRscs[0].Mod) {
+				StartBC->getRscs(vR);
 			}
-			if (StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				StopBC->getRscs(vRscs);
+			if (StopMod != vRscs[0].Mod) {
+				StopBC->getRscs(vR);
 			}
 			if (RstEvent != XAIE_EVENT_NONE_CORE && StopMod != static_cast<XAie_ModuleType>(Rsc.Mod)) {
-				RstBC->getRscs(vRscs);
+				RstBC->getRscs(vR);
 			}
-			_getRscsAppend(vRscs);
+			_getRscsAppend(vR);
 		}
 		virtual AieRC _startPrepend() {
 			return XAIE_OK;

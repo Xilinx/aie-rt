@@ -593,10 +593,18 @@ namespace xaiefal {
 					" resource not reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				L = Loc;
-				M = static_cast<XAie_ModuleType>(Rsc.Mod);
-				I = Rsc.RscId;
-				RC = XAIE_OK;
+				if (vRscs.size() >= 1) {
+					L = Loc;
+					M = vRscs[0].Mod;
+					I = vRscs[0].RscId;
+					RC = XAIE_OK;
+				} else {
+					/* TODO Remove once porting is complete */
+					L = Loc;
+					M = static_cast<XAie_ModuleType>(Rsc.Mod);
+					I = Rsc.RscId;
+					RC = XAIE_OK;
+				}
 			}
 			return RC;
 		}
