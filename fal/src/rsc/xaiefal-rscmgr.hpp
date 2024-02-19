@@ -35,7 +35,7 @@ namespace xaiefal {
 
 		/**
 		 * This function makes a call to RscMgr Backend to request
-		 * a resourc
+		 * a resource
 		 *
 		 * @param reference to any resource class inherited
 		 * from XAieRsc
@@ -52,7 +52,6 @@ namespace xaiefal {
 			case XAIE_TRACECTRL:
 			case XAIE_PCEVENT:
 			case XAIE_SSEVENT:
-			case XAIE_PCRANGE:
 			{
 				RC = Rsc.getRscs(vRequests);
 				if (RC != XAIE_OK) {
@@ -115,6 +114,7 @@ namespace xaiefal {
 				if (RC != XAIE_OK) {
 					return RC;
 				}
+
 				RC = Backend->requestAllocated(vRequests);
 				if (RC == XAIE_OK) {
 					RC = Rsc.setRscs(vRequests);
@@ -129,12 +129,14 @@ namespace xaiefal {
 
 		/**
 		 * This function makes a call to RscMgr Backend to release
-		 * a resourc
+		 * a resource
 		 *
 		 * @param reference to any resource class inherited
 		 * from XAieRsc
 		 *
 		 * @return XAIE_OK for success, error code for failure
+		 *
+		 * @note Will remove resource from runtime and static bitmaps
 		 */
 		AieRC release(XAieRsc& Rsc) {
 			AieRC RC = XAIE_OK;
@@ -150,6 +152,34 @@ namespace xaiefal {
 			}
 
 			return Backend->release(vReleases);
+		}
+
+		/**
+		 * This function makes a call to RscMgr Backend to free
+		 * a resource
+		 *
+		 * @param reference to any resource class inherited
+		 * from XAieRsc
+		 *
+		 * @return XAIE_OK for success, error code for failure
+		 *
+		 * @note Will only remove resource from runtime bitmaps,
+		 * 	 does not affect static bitmaps
+		 */
+		AieRC free(XAieRsc& Rsc) {
+			AieRC RC = XAIE_OK;
+			std::vector<XAieUserRsc> vReleases;
+
+			if (Rsc.getRscType() >= XAIE_MAXRSC) {
+				return XAIE_ERR;
+			}
+
+			RC = Rsc.getRscs(vReleases);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+
+			return Backend->free(vReleases);
 		}
 
 		/**

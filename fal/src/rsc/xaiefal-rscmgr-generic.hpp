@@ -498,10 +498,6 @@ namespace xaiefal {
 					auto MaxRsc = &RscMaps[TType].MaxRscs[RType];
 					uint32_t BitmapSize, TotalRscs = 0;
 
-					/* Skip PCRange as it uses pcevent bitmap */
-					if (RType == XAIE_PCRANGE)
-						continue;
-
 					if (TType == XAIEGBL_TILE_TYPE_AIETILE) {
 						uint32_t numRscs = 0;
 
