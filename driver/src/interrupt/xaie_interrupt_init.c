@@ -665,95 +665,6 @@ static AieRC _XAie_FindNextNoCTile(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 /*****************************************************************************/
 /**
- *
-* This API reserves broadcast resources for errors interrupt.
-*
-* @param	DevInst: Device Instance
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		This function is used internally only.
-******************************************************************************/
-static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
-{
-	XAie_UserRsc *RscsBc, *ShimRscsBc;
-	const XAie_L1IntrMod *L1IntrMod;
-	u32 UserRscNum = 0, ShimUserRscNum;
-	AieRC RC;
-
-	/* Reserved for error broadcast channel */
-	for(u8 i = 0; i < XAIEGBL_TILE_TYPE_MAX; i++) {
-		if(i == XAIEGBL_TILE_TYPE_SHIMNOC ||
-			i == XAIEGBL_TILE_TYPE_SHIMPL) {
-			UserRscNum += DevInst->NumCols;
-		} else {
-			UserRscNum += (DevInst->DevProp.DevMod[i].NumModules) *
-				_XAie_GetNumRows(DevInst, i) * DevInst->NumCols;
-		}
-	}
-
-	RscsBc = (XAie_UserRsc *)malloc(UserRscNum * sizeof(*RscsBc));
-	if(RscsBc == NULL) {
-		XAIE_ERROR("Memory allocation failed for interrupt resource\n");
-		return XAIE_ERR;
-	}
-
-	RC = XAie_RequestSpecificBroadcastChannel(DevInst,
-		XAIE_ERROR_BROADCAST_ID, &UserRscNum, RscsBc, 1U);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to request error BC for partition.\n");
-		free(RscsBc);
-		return RC;
-	}
-
-	/* Request channels for shim tiles from resource manager */
-	ShimUserRscNum = DevInst->NumCols;
-	/*
-	 * Allocate another memory for SHIM BC resources, in case reservation
-	 * failed, it can release the previously requested error broadcast
-	 * resource.
-	 */
-	ShimRscsBc = (XAie_UserRsc *)malloc(ShimUserRscNum *
-			sizeof(*ShimRscsBc));
-	if (ShimRscsBc == NULL) {
-		XAIE_ERROR("Memory allocation failed for interrupt resource\n");
-		XAie_ReleaseBroadcastChannel(DevInst, UserRscNum, RscsBc);
-		free(RscsBc);
-		return XAIE_ERR;
-	}
-
-	for(u32 i = 0; i < ShimUserRscNum; i++) {
-		ShimRscsBc[i].Loc = (XAie_LocType)XAie_TileLoc((u8)i, 0);
-		ShimRscsBc[i].Mod = (u32)XAIE_PL_MOD;
-		ShimRscsBc[i].RscType = (u32)XAIE_BCAST_CHANNEL_RSC;
-	}
-
-	L1IntrMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMPL].L1IntrMod;
-	for(u32 i = 1; i < L1IntrMod->MaxErrorBcIdsRvd; i++) {
-		RC = XAie_RequestSpecificBroadcastChannel(DevInst,
-			i, &ShimUserRscNum, ShimRscsBc, 0U);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to request SHIM error BC %u.\n", i);
-			for (u32 j = 1; j < i; j++) {
-				for (u32 k = 0; k < ShimUserRscNum; k++) {
-					ShimRscsBc[i].RscId = j;
-				}
-				XAie_ReleaseBroadcastChannel(DevInst,
-					ShimUserRscNum, ShimRscsBc);
-			}
-			XAie_ReleaseBroadcastChannel(DevInst, UserRscNum,
-					RscsBc);
-			break;
-		}
-	}
-
-	free(ShimRscsBc);
-	free(RscsBc);
-	return RC;
-}
-
-/*****************************************************************************/
-/**
 *
 * This API configures broadcast network to deliver error events as interrupts in
 * NPI. When error occurs, interrupt is raised on NPI interrupt line #5. Also it
@@ -785,11 +696,6 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
 		return XAIE_INVALID_ARGS;
-	}
-
-	RC = XAie_ErrorHandlingReserveRsc(DevInst);
-	if (RC != XAIE_OK) {
-		return RC;
 	}
 
 	MemTileStart = DevInst->MemTileRowStart;
