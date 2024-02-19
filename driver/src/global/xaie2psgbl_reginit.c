@@ -29,6 +29,7 @@
 #include "xaie_device_aie2ps.h"
 #include "xaie_device_aieml.h"
 #include "xaie_dma_aieml.h"
+#include "xaie_dma_aie2p.h"
 #include "xaie_dma_aie2ps.h"
 #include "xaie_interrupt_aie2ps.h"
 #include "xaie_events_aie2ps.h"
@@ -1738,7 +1739,7 @@ static const  XAie_DmaMod Aie2PSMemTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = &_XAie2PS_AxiBurstLenCheck,
+	.AxiBurstLenCheck = NULL,
 };
 
 static const  XAie_DmaBdEnProp Aie2PSTileDmaBdEnProp =
@@ -1973,7 +1974,7 @@ static const  XAie_DmaMod Aie2PSTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = &_XAie2PS_AxiBurstLenCheck,
+	.AxiBurstLenCheck = NULL,
 };
 
 static const  XAie_DmaBdEnProp Aie2PSShimDmaBdEnProp =
@@ -2223,7 +2224,7 @@ static const  XAie_DmaMod Aie2PSShimDmaMod =
 	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAie2PS_ShimDmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = &_XAie2PS_AxiBurstLenCheck,
+	.AxiBurstLenCheck = &_XAie2P_AxiBurstLenCheck,
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 

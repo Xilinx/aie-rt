@@ -44,7 +44,6 @@
 #define XAIE_DMA_32BIT_TXFER_LEN			2U
 #define XAIE_DMA_MAX_QUEUE_SIZE				4U
 
-#define XAIE_SHIM_BLEN_SHIFT				0x3
 #define XAIE_DMA_CHCTRL_NUM_WORDS			2U
 #define XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US		1000000U
 
@@ -732,14 +731,26 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 	if (!DmaDesc->DmaMod->AxiBurstLenCheck) {
 		XAIE_ERROR("Invalid AxiBurstLenCheck pointer\n");
 		return XAIE_INVALID_API_POINTER;
-	}
-	if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen)) {
+	} else if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen)) {
 		XAIE_ERROR("Invalid Burst length\n");
 		return XAIE_INVALID_BURST_LENGTH;
 	}
 
 	DmaDesc->AxiDesc.SMID = Smid;
-	DmaDesc->AxiDesc.BurstLen = BurstLen >> XAIE_SHIM_BLEN_SHIFT;
+	switch(BurstLen) {
+		case 4:
+			DmaDesc->AxiDesc.BurstLen = 0;
+			break;
+		case 8:
+			DmaDesc->AxiDesc.BurstLen = 1;
+			break;
+		case 16:
+			DmaDesc->AxiDesc.BurstLen = 2;
+			break;
+		case 32:
+			DmaDesc->AxiDesc.BurstLen = 3;
+			break;
+	}
 	DmaDesc->AxiDesc.AxQos = Qos;
 	DmaDesc->AxiDesc.AxCache = Cache;
 	DmaDesc->AxiDesc.SecureAccess = Secure;

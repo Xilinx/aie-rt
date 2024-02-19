@@ -1,15 +1,15 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2024 AMD, Inc.  All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
 
 /*****************************************************************************/
 /**
-* @file xaie_dma_aie2ps.h
+* @file xaie_dma_aie2p.h
 * @{
 *
-* This file contains routines for AIEML DMA configuration and controls. This
+* This file contains routines for AIE2P DMA configuration and controls. This
 * header file is not exposed to the user.
 *
 * <pre>
@@ -17,25 +17,18 @@
 *
 * Ver   Who        Date        Changes
 * ----- ------     --------    -----------------------------------------------------
-* 1.0   Sanakrji   10/04/2022  Initial creation
+* 1.0   jbaniset   16/02/2024  Initial creation
 * </pre>
 *
 ******************************************************************************/
-#ifndef XAIE_DMA_AIE2PS_H
-#define XAIE_DMA_AIE2PS_H
+#ifndef XAIE_DMA_AIE2P_H
+#define XAIE_DMA_AIE2P_H
 
 /***************************** Include Files *********************************/
 #include "xaiegbl.h"
 
 /************************** Function Prototypes  *****************************/
-AieRC _XAie2PS_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum);
-AieRC _XAie2PS_ShimDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum);
+AieRC _XAie2P_AxiBurstLenCheck(u8 BurstLen);
 
-AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
-		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u64 Addr,
-		u8 BdNum);
-
-#endif /* XAIE_DMA_AIE2PS_H */
+#endif /* XAIE_DMA_AIE2P_H */
 /** @} */

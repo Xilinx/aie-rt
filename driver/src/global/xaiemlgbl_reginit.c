@@ -58,6 +58,7 @@
 /***************************** Include Files *********************************/
 #include "xaie_core_aieml.h"
 #include "xaie_device_aieml.h"
+#include "xaie_dma_aie.h"
 #include "xaie_dma_aieml.h"
 #include "xaie_events.h"
 #include "xaie_events_aieml.h"
@@ -451,7 +452,7 @@ static const  XAie_DmaMod AieMlMemTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = &_XAie_AxiBurstLenCheck,
+	.AxiBurstLenCheck = NULL,
 };
 
 static const  XAie_DmaBdEnProp AieMlTileDmaBdEnProp =
@@ -688,7 +689,7 @@ static const  XAie_DmaMod AieMlTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
-	.AxiBurstLenCheck = &_XAie_AxiBurstLenCheck,
+	.AxiBurstLenCheck = NULL,
 };
 
 static const  XAie_DmaBdEnProp AieMlShimDmaBdEnProp =
