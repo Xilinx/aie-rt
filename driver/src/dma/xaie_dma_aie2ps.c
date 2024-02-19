@@ -397,6 +397,19 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, RegVal);
 }
 
+AieRC _XAie2PS_AxiBurstLenCheck(u8 BurstLen)
+{
+	switch (BurstLen) {
+	case 4:
+	case 8:
+	case 16:
+	case 32:
+		return XAIE_OK;
+	default:
+		return XAIE_INVALID_BURST_LENGTH;
+	}
+}
+
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
 /** @} */

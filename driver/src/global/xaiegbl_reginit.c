@@ -1513,6 +1513,7 @@ static const XAie_DmaMod AieTileDmaMod =
 	.UpdateBdLen = &_XAie_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAie_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAie_DmaGetChannelStatus,
+	.AxiBurstLenCheck = _XAie_AxiBurstLenCheck,
 };
 
 /* shim dma structures */
@@ -1718,6 +1719,8 @@ static const XAie_DmaMod AieShimDmaMod =
 	.UpdateBdLen = &_XAie_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAie_ShimDmaUpdateBdAddr,
 	.GetChannelStatus = &_XAie_DmaGetChannelStatus,
+	.AxiBurstLenCheck = _XAie_AxiBurstLenCheck,
+
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 

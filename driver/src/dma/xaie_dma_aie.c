@@ -1074,6 +1074,18 @@ AieRC _XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u8 Wrap,
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
+AieRC _XAie_AxiBurstLenCheck(u8 BurstLen)
+{
+	switch (BurstLen) {
+	case 4:
+	case 8:
+	case 16:
+		return XAIE_OK;
+	default:
+		return XAIE_INVALID_BURST_LENGTH;
+	}
+}
+
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
 /** @} */

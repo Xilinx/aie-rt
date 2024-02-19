@@ -63,6 +63,6 @@ AieRC _XAie_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		u8 BdNum);
 AieRC _XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u8 Wrap,
 		u8 IterCurr);
-
+AieRC _XAie_AxiBurstLenCheck(u8 BurstLen);
 #endif /* XAIE_DMA_AIE_H */
 /** @} */

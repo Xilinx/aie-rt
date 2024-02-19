@@ -729,7 +729,11 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 		return XAIE_INVALID_TILE;
 	}
 
-	if((BurstLen != 4U) && (BurstLen != 8U) && (BurstLen != 16U)) {
+	if (!DmaDesc->DmaMod->AxiBurstLenCheck) {
+		XAIE_ERROR("Invalid AxiBurstLenCheck pointer\n");
+		return XAIE_INVALID_API_POINTER;
+	}
+	if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen)) {
 		XAIE_ERROR("Invalid Burst length\n");
 		return XAIE_INVALID_BURST_LENGTH;
 	}

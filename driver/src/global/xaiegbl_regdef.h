@@ -585,6 +585,7 @@ struct XAie_DmaMod {
 	AieRC (*GetChannelStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
 			XAie_DmaDirection Dir, u32 *Status);
+	AieRC (*AxiBurstLenCheck)(u8 BurstLen);
 };
 
 /*

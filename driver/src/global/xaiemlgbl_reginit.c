@@ -451,6 +451,7 @@ static const  XAie_DmaMod AieMlMemTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
+	.AxiBurstLenCheck = &_XAie_AxiBurstLenCheck,
 };
 
 static const  XAie_DmaBdEnProp AieMlTileDmaBdEnProp =
@@ -687,6 +688,7 @@ static const  XAie_DmaMod AieMlTileDmaMod =
 	.UpdateBdLen = &_XAieMl_DmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_DmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
+	.AxiBurstLenCheck = &_XAie_AxiBurstLenCheck,
 };
 
 static const  XAie_DmaBdEnProp AieMlShimDmaBdEnProp =
@@ -937,6 +939,7 @@ static const  XAie_DmaMod AieMlShimDmaMod =
 	.UpdateBdLen = &_XAieMl_ShimDmaUpdateBdLen,
 	.UpdateBdAddr = &_XAieMl_ShimDmaUpdateBdAddr,
 	.GetChannelStatus = &_XAieMl_DmaGetChannelStatus,
+	.AxiBurstLenCheck = &_XAie_AxiBurstLenCheck,
 };
 #endif /* XAIE_FEATURE_DMA_ENABLE */
 
