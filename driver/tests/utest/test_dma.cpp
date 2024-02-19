@@ -32,6 +32,43 @@ TEST_GROUP(DmaApis)
 	}
 };
 
+TEST(DmaApis, AxiBurstLenCheck)
+{
+	AieRC RC;
+	XAie_DmaDesc DmaDesc;
+	XAie_LocType loc = XAie_TileLoc(3, 0);
+
+	printf("AxiBurstLenCheck test:\n");
+
+	RC = XAie_DmaDescInit(&DevInst, &DmaDesc, loc);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	CHECK(DmaDesc.DmaMod->AxiBurstLenCheck != NULL);
+
+	RC = XAie_DmaSetAxi(&DmaDesc, 16U, 4U, 0U, 0U, 0U);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = XAie_DmaSetAxi(&DmaDesc, 16U, 8U, 0U, 0U, 0U);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = XAie_DmaSetAxi(&DmaDesc, 16U, 16U, 0U, 0U, 0U);
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = XAie_DmaSetAxi(&DmaDesc, 16U, 32U, 0U, 0U, 0U);
+	switch (DevInst.DevProp.DevGen) {
+	case XAIE_DEV_GEN_AIE2P:
+	case XAIE_DEV_GEN_AIE2PS:
+	case XAIE_DEV_GEN_AIE2P_STRIX_A0:
+	case XAIE_DEV_GEN_AIE2P_STRIX_B0:
+		CHECK_EQUAL(RC, XAIE_OK);
+		break;
+	default:
+		CHECK_EQUAL(RC, XAIE_INVALID_BURST_LENGTH);
+	}
+	RC = XAie_DmaSetAxi(&DmaDesc, 16U, 3U, 0U, 0U, 0U);
+	CHECK_EQUAL(RC, XAIE_INVALID_BURST_LENGTH);
+};
+
 TEST(DmaApis, BdApis)
 {
 	AieRC RC;
