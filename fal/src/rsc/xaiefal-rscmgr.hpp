@@ -60,6 +60,10 @@ namespace xaiefal {
 
 				if (Rsc.getPreferredId() != XAIE_RSC_ID_ANY) {
 					RC = Backend->requestAllocated(vRequests);
+				} else if ((Rsc.getRscType() == XAIE_PCEVENT) &&
+						(vRequests.size() > 1)) {
+					/* PCRange */
+					RC = Backend->requestContiguous(vRequests);
 				} else {
 					RC = Backend->request(vRequests);
 				}

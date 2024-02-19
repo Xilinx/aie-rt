@@ -44,13 +44,13 @@ TEST(PC, PCEvent) {
 	RC = pcEvent->getEvent(pcCurrEvent);
 	CHECK_EQUAL(RC, XAIE_ERR);
 
+	RC = pcEvent->updatePcAddr(0x4);
+	CHECK_EQUAL(RC, XAIE_OK);
+
 	RC = pcEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = pcEvent->getEvent(pcCurrEvent);
-	CHECK_EQUAL(RC, XAIE_OK);
-
-	RC = pcEvent->updatePcAddr(0x4);
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = pcEvent->start();
@@ -100,13 +100,13 @@ TEST(PC, PCEventID) {
 	RC = pcEvent->setPreferredId(3);
 	CHECK_EQUAL(RC, XAIE_OK);
 
+	RC = pcEvent->updatePcAddr(0x4);
+	CHECK_EQUAL(RC, XAIE_OK);
+
 	RC = pcEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = pcEvent->getEvent(pcCurrEvent);
-	CHECK_EQUAL(RC, XAIE_OK);
-
-	RC = pcEvent->updatePcAddr(0x4);
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = pcEvent->start();
@@ -155,27 +155,30 @@ TEST(PC, PCEventExtra)
 	auto pcEvent4 = Aie->tile(1,3).core().pcEvent();
 	auto pcEventFail = Aie->tile(1,3).core().pcEvent();
 
-	DevInst.IsReady = 0;
-
-	RC = pcEvent->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 1;
-
+	RC = pcEvent->updatePcAddr(0x0);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = pcEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
+	RC = pcEvent2->updatePcAddr(0x0);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = pcEvent2->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
+	RC = pcEvent3->updatePcAddr(0x0);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = pcEvent3->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
+	RC = pcEvent4->updatePcAddr(0x0);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = pcEvent4->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
+	RC = pcEventFail->updatePcAddr(0x0);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = pcEventFail->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	CHECK_EQUAL(RC, XAIE_ERR);
 
 	RC = pcEvent->release();
 	CHECK_EQUAL(RC, XAIE_OK);
