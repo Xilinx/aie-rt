@@ -328,11 +328,8 @@ namespace xaiefal {
 		 * @return XAIE_OK for success, error code for failure
 		 */
 		AieRC getRscs(std::vector<XAieUserRsc> &vR) {
-			if (State.Configured != 0) {
-				_getRscs(vR);
-				return XAIE_OK;
-			}
-			return XAIE_ERR;;
+			_getRscs(vR);
+			return XAIE_OK;
 		}
 		/**
 		 * This function sets the resources
@@ -341,11 +338,8 @@ namespace xaiefal {
 		 * @return XAIE_OK for success, error code for failure
 		 */
 		AieRC setRscs(std::vector<XAieUserRsc> &vR) {
-			if (State.Configured != 0) {
-				_setRscs(vR);
-				return XAIE_OK;
-			}
-			return XAIE_ERR;;
+			_setRscs(vR);
+			return XAIE_OK;
 		}
 		/**
 		 * This function returns resources type.
@@ -518,6 +512,9 @@ namespace xaiefal {
 		XAieSingleTileRsc(XAieDev &Dev,
 			XAie_LocType L, XAie_ModuleType M):
 			XAieSingleTileRsc(Dev.getDevHandle(), L, M) {}
+		XAieSingleTileRsc(XAieDev &Dev,
+			XAie_LocType L, XAie_ModuleType M, XAieRscType T):
+			XAieSingleTileRsc(Dev.getDevHandle(), L, M, T) {}
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L):
 			XAieRsc(DevHd), Loc(L) {

@@ -24,7 +24,7 @@ namespace xaiefal {
 		XAieTraceCntr() = delete;
 		XAieTraceCntr(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(DevHd, L, M), Pkt() {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_TRACECTRL), Pkt() {
 			XAie_EventPhysicalToLogicalConv(dev(), Loc, Mod, 0,
 				&StartEvent);
 			StopEvent = StartEvent;
@@ -40,7 +40,7 @@ namespace xaiefal {
 		}
 		XAieTraceCntr(XAieDev &Dev,
 			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(Dev, L, M), Pkt() {}
+			XAieSingleTileRsc(Dev, L, M, XAIE_TRACECTRL), Pkt() {}
 		~XAieTraceCntr() {
 			if (State.Reserved == 1) {
 				if (StartMod != Mod) {
@@ -322,6 +322,7 @@ namespace xaiefal {
 			return BcId;
 		}
 
+		/* TODO Change types here when porting is complete */
 		uint32_t getRscType() const {
 			return static_cast<uint32_t>(XAIE_TRACE_CTRL_RSC);
 		}
@@ -335,8 +336,15 @@ namespace xaiefal {
 		AieRC _reserve() {
 			AieRC RC;
 			XAie_UserRscReq Req = {Loc, Mod, 1};
+			XAieUserRsc Rsc;
 
-			RC = XAie_RequestTraceCtrl(AieHd->dev(), 1, &Req, 1, &Rsc);
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = 0U;
+			vRscs.push_back(Rsc);
+
+			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
 							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
@@ -368,6 +376,9 @@ namespace xaiefal {
 					}
 				}
 			}
+			if (RC != XAIE_OK) {
+				vRscs.clear();
+			}
 			return RC;
 		}
 
@@ -383,12 +394,13 @@ namespace xaiefal {
 				delete StopBC;
 			}
 
-			RC = XAie_ReleaseTraceCtrl(AieHd->dev(), 1, &Rsc);
+			RC = AieHd->rscMgr()->release(*this);
 			if(RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
 							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
 							") Mod=" << Mod <<" failed to release." << std::endl;
 			}
+			vRscs.clear();
 			return RC;
 		}
 
@@ -478,6 +490,7 @@ namespace xaiefal {
 			}
 			return RC;
 		}
+		/* TODO replace once porting is complete */
 		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
 			vRscs.push_back(Rsc);
 			if (StartMod != Mod) {
@@ -531,7 +544,7 @@ namespace xaiefal {
 		XAieTraceEvent(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M,
 			std::shared_ptr<XAieTraceCntr> TCntr):
-			XAieSingleTileRsc(DevHd, L, M),
+			XAieSingleTileRsc(DevHd, L, M, XAIE_TRACEEVENT),
 			EventMod(M) {
 			if (!TCntr) {
 				throw std::invalid_argument("Trace event failed, empty trace control");
@@ -542,10 +555,11 @@ namespace xaiefal {
 			}
 			TraceCntr = std::move(TCntr);
 			State.Initialized = 1;
+			vRscs.resize(1);
 		}
 		XAieTraceEvent(XAieDev &Dev,
 			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(Dev, L, M),
+			XAieSingleTileRsc(Dev, L, M, XAIE_TRACEEVENT),
 			EventMod(M) {
 			TraceCntr = Dev.tile(L).module(M).traceControl();
 			State.Initialized = 1;
@@ -640,6 +654,7 @@ namespace xaiefal {
 
 			return BcId;
 		}
+		/* TODO Remove once porting is complete */
 		uint32_t getRscType() const {
 			return static_cast<uint32_t>(XAIE_TRACE_EVENTS_RSC);
 		}
@@ -671,12 +686,12 @@ namespace xaiefal {
 						" Event Mod=" << Mod << " no broadcast event" << std::endl;
 					TraceCntr->releaseTraceSlot(Slot);
 				} else {
-					Rsc.Mod = Mod;
-					Rsc.RscId = Slot;
+					vRscs[0].Mod = Mod;
+					vRscs[0].RscId = Slot;
 				}
 			} else {
-				Rsc.Mod = Mod;
-				Rsc.RscId = Slot;
+				vRscs[0].Mod = Mod;
+				vRscs[0].RscId = Slot;
 			}
 			return RC;
 		}
@@ -745,6 +760,8 @@ namespace xaiefal {
 			}
 			return RC;
 		}
+
+		/* TODO: Replace once porting is complete */
 		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
 			XAie_UserRsc Rsc;
 
@@ -777,7 +794,7 @@ namespace xaiefal {
 		XAieTracing() = delete;
 		XAieTracing(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M, std::shared_ptr<XAieTraceCntr> TCntr):
-			XAieSingleTileRsc(DevHd, L, M) {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_MAXRSC) {
 			if (!TCntr) {
 				throw std::invalid_argument("Trace event failed, empty trace control");
 			}
@@ -790,7 +807,7 @@ namespace xaiefal {
 		}
 		XAieTracing(XAieDev &Dev, XAie_LocType L,
 			XAie_ModuleType M):
-			XAieSingleTileRsc(Dev, L, M) {
+			XAieSingleTileRsc(Dev, L, M, XAIE_MAXRSC) {
 			TraceCntr = Dev.tile(L).module(M).traceControl();
 			State.Initialized = 1;
 		}

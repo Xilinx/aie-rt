@@ -270,14 +270,20 @@ TEST(Combo, ComboSetEventsBranch)
 
 	CHECK_THROWS(std::invalid_argument, Aie.tile(1,3).core().comboEvent(5));
 
+	RC = ComboTwoEvents1->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+	RC = ComboTwoEvents2->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+	RC = ComboTwoEvents3->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+	RC = ComboFourEvents->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
 	/* setEvents Condition: vE.size() != vEvents.size()) */
 	vE1.push_back(XAIE_EVENT_ACTIVE_CORE);
 
 	RC = ComboTwoEvents1->setEvents(vE1, vOps1);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	RC = ComboTwoEvents1->reserve();
-	CHECK_EQUAL(RC, XAIE_ERR);
 
 	/* setEvents Condition: vOp.size() > 3 */
 	vE2.push_back(XAIE_EVENT_ACTIVE_CORE);
@@ -289,9 +295,6 @@ TEST(Combo, ComboSetEventsBranch)
 
 	RC = ComboTwoEvents2->setEvents(vE2, vOps2);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	RC = ComboTwoEvents2->reserve();
-	CHECK_EQUAL(RC, XAIE_ERR);
 
 	RC = ComboTwoEvents2->release();
 	CHECK_EQUAL(RC, XAIE_OK);
@@ -307,9 +310,6 @@ TEST(Combo, ComboSetEventsBranch)
 	RC = ComboTwoEvents3->setEvents(vE3, vOps3);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
 
-	RC = ComboTwoEvents3->reserve();
-	CHECK_EQUAL(RC, XAIE_ERR);
-
 	RC = ComboTwoEvents3->release();
 	CHECK_EQUAL(RC, XAIE_OK);
 
@@ -323,9 +323,6 @@ TEST(Combo, ComboSetEventsBranch)
 
 	RC = ComboFourEvents->setEvents(vE4, vOps4);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	RC = ComboFourEvents->reserve();
-	CHECK_EQUAL(RC, XAIE_ERR);
 
 	RC = ComboFourEvents->release();
 	CHECK_EQUAL(RC, XAIE_OK);
