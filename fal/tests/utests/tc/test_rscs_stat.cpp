@@ -197,8 +197,6 @@ TEST(RSC, RscDefaultGroups) {
 	AieRC RC;
 	std::vector<XAie_LocType> vL;
 	XAie_ModuleType StartM, EndM;
-	XAie_UserRscReq RscReq[2];
-	XAie_UserRsc ReturnRsc[XAIE_TOTAL_MODS];
 	u32 UserRscNum;
 	FILE *f;
 	long fsize;

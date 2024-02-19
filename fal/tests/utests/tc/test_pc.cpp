@@ -12,11 +12,6 @@
 using namespace std;
 using namespace xaiefal;
 
-extern "C" {
-	AieRC XAie_RequestPCEvents(XAie_DevInst *DevInst, u32 NumReq,
-		XAie_UserRscReq *RscReq, u32 UserRscNum, XAie_UserRsc *Rscs);
-}
-
 TEST_GROUP(PC)
 {
 };
@@ -195,8 +190,6 @@ TEST(PC, PCRange) {
 	uint32_t PcAddr0, PcAddr1;
 	uint32_t pcRscType;
 	XAie_Events pcCurrEvent;
-
-	std::vector<XAie_UserRsc> pcRscs;
 
 	XAie_SetupConfig(ConfigPtr, HW_GEN, XAIE_BASE_ADDR,
 			XAIE_COL_SHIFT, XAIE_ROW_SHIFT,
