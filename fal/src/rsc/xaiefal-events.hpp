@@ -164,6 +164,7 @@ namespace xaiefal {
 		}
 		AieRC _release() {
 			AieRC RC;
+
 			RC = AieHd->rscMgr()->release(*this);
 			vRscs.clear();
 			return RC;
@@ -292,7 +293,11 @@ namespace xaiefal {
 			return AieHd->rscMgr()->request(*this);
 		}
 		AieRC _release() {
-			return AieHd->rscMgr()->release(*this);
+			AieRC RC;
+
+			RC = AieHd->rscMgr()->release(*this);
+			vRscs.clear();
+			return RC;
 		}
 		AieRC _start() {
 			// As no hardware config is required for user event

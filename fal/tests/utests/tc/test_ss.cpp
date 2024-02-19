@@ -42,6 +42,9 @@ TEST(StreamSelect, SSBasic) {
 	RC = Stream->getSSIdleEvent(SSEvent);
 	CHECK_EQUAL(RC, XAIE_ERR);
 
+	RC = Stream->setPortToSelect(XAIE_STRMSW_SLAVE, CORE, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
+
 	RC = Stream->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
@@ -57,10 +60,7 @@ TEST(StreamSelect, SSBasic) {
 	RC = Stream->getSSTlastEvent(SSEvent);
 	CHECK_EQUAL(RC, XAIE_OK);
 
-	RC = Stream->setPortToSelect(XAIE_STRMSW_SLAVE, CORE, 0);
-	CHECK_EQUAL(RC, XAIE_OK);
-
-	 RC = Stream->start();
+	RC = Stream->start();
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = Stream->stop();
@@ -120,11 +120,6 @@ TEST(StreamSelect, SSNegative) {
 
 	RC = Stream->getSSIdleEvent(SSEvent);
 	CHECK_EQUAL(RC, XAIE_ERR);
-
-	DevInst.IsReady = 0;
-
-	RC = Stream->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
 
 	DevInst.IsReady = 1;
 

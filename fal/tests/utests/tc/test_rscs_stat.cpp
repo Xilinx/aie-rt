@@ -92,7 +92,10 @@ TEST(RSC, RSCBasic) {
 	RC = UserEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
-	auto SPort = Aie.tile(1,1).sswitchPort();
+	auto SPort = Aie.tile(1,3).sswitchPort();
+	RC = SPort->setPortToSelect(XAIE_STRMSW_SLAVE, CORE, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
+
 	RC = SPort->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 

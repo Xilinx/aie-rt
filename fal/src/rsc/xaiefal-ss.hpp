@@ -24,11 +24,11 @@ namespace xaiefal {
 		XAieStreamPortSelect() = delete;
 		XAieStreamPortSelect(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L):
-			XAieSingleTileRsc(DevHd, L) {
+			XAieSingleTileRsc(DevHd, L, XAIE_SSEVENT) {
 			State.Initialized = 1;
 		}
 		XAieStreamPortSelect(XAieDev &Dev, XAie_LocType L):
-			XAieSingleTileRsc(Dev.getDevHandle(), L) {}
+			XAieSingleTileRsc(Dev.getDevHandle(), L, XAIE_SSEVENT) {}
 		/**
 		 * This function sets which port to select.
 		 * It needs to be called before start() which configures the hardware.
@@ -72,7 +72,7 @@ namespace xaiefal {
 				RC = XAIE_ERR;
 			} else {
 				XAie_EventGetIdlePortEventBase(AieHd->dev(), Loc, Mod, &E);
-				E = static_cast<XAie_Events>(static_cast<XAie_Events>(E) + Rsc.RscId * 4);
+				E = static_cast<XAie_Events>(static_cast<XAie_Events>(E) + vRscs[0].RscId * 4);
 				RC = XAIE_OK;
 			}
 			return RC;
@@ -132,32 +132,33 @@ namespace xaiefal {
 	protected:
 		AieRC _reserve() {
 			AieRC RC;
+			XAieUserRsc Rsc;
 
-			if (preferredId == XAIE_RSC_ID_ANY) {
-				XAie_UserRscReq Req = {Loc, Mod, 1};
-				RC = XAie_RequestSSEventPortSelect(AieHd->dev(), 1, &Req, 1, &Rsc);
-			} else {
-				Rsc.RscType = XAIE_SS_EVENT_PORTS_RSC;
-				Rsc.Loc.Col = Loc.Col;
-				Rsc.Loc.Row = Loc.Row;
-				Rsc.Mod = static_cast<uint32_t>(Mod);
-				Rsc.RscId = preferredId;
-				RC = XAie_RequestAllocatedSSEventPortSelect(AieHd->dev(), 1, &Rsc);
-			}
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = preferredId;
+
+			vRscs.push_back(Rsc);
+			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Stream port select " << __func__ << " (" <<
-					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
-					" resource not available.\n";
+				Logger::log(LogLevel::WARN) << "Stream port select " << __func__ <<
+					" (" << static_cast<int>(Loc.Col) << "," <<
+					static_cast<int>(Loc.Row) << ")" << " resource not available.\n";
 			}
 			return RC;
 		}
 		AieRC _release() {
-			return XAie_ReleaseSSEventPortSelect(AieHd->dev(), 1, &Rsc);
+			AieRC RC;
+
+			RC = AieHd->rscMgr()->free(*this);
+			vRscs.clear();
+			return RC;
 		}
 		AieRC _start() {
 			AieRC RC;
 
-			RC = XAie_EventSelectStrmPort(dev(), Loc, Rsc.RscId,
+			RC = XAie_EventSelectStrmPort(dev(), Loc, vRscs[0].RscId,
 					PortIntf, PortType, PortNum);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "Stream port select " << __func__ << " (" <<
@@ -169,7 +170,7 @@ namespace xaiefal {
 		AieRC _stop() {
 			AieRC RC;
 
-			RC = XAie_EventSelectStrmPortReset(dev(), Loc, Rsc.RscId);
+			RC = XAie_EventSelectStrmPortReset(dev(), Loc, vRscs[0].RscId);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "Stream port select " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<

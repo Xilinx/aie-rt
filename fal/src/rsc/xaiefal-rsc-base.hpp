@@ -535,8 +535,27 @@ namespace xaiefal {
 				Mod = XAIE_MEM_MOD;
 			}
 		}
+		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
+			XAie_LocType L, XAieRscType T):
+			XAieRsc(DevHd, T), Loc(L){
+			uint8_t TType = _XAie_GetTileTypefromLoc(
+					AieHd->dev(), L);
+			if (TType == XAIEGBL_TILE_TYPE_MAX) {
+				throw std::invalid_argument("Invalid tile");
+			}
+			if (TType == XAIEGBL_TILE_TYPE_AIETILE) {
+				Mod = XAIE_CORE_MOD;
+			} else if (TType == XAIEGBL_TILE_TYPE_SHIMPL ||
+					TType == XAIEGBL_TILE_TYPE_SHIMNOC) {
+				Mod = XAIE_PL_MOD;
+			} else {
+				Mod = XAIE_MEM_MOD;
+			}
+		}
 		XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L):
 			XAieSingleTileRsc(Dev.getDevHandle(), L) {}
+		XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L, XAieRscType T):
+			XAieSingleTileRsc(Dev.getDevHandle(), L, T) {}
 		virtual ~XAieSingleTileRsc() {}
 		/**
 		 * This function returns tile location
