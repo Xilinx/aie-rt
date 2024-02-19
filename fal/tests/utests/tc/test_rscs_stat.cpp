@@ -96,7 +96,15 @@ TEST(RSC, RSCBasic) {
 	RC = SPort->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
-	auto ComboEvent= Aie.tile(1,1).core().comboEvent();
+	std::vector<XAie_Events> vE;
+	std::vector<XAie_EventComboOps> vOps;
+	vE.push_back(XAIE_EVENT_ACTIVE_CORE);
+	vE.push_back(XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
+	vOps.push_back(XAIE_EVENT_COMBO_E1_OR_E2);
+
+	auto ComboEvent = Aie.tile(1,1).core().comboEvent();
+	RC = ComboEvent->setEvents(vE, vOps);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = ComboEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 

@@ -143,41 +143,30 @@ namespace xaiefal {
 	protected:
 		std::vector<XAie_Events> vEvents; /**< input events */
 		std::vector<XAie_EventComboOps> vOps; /**< combo operations */
-		std::vector<XAie_UserRsc> vRscs; /**< combo events resources */
 	private:
 		AieRC _reserve() {
 			AieRC RC;
+			XAieUserRsc Rsc;
 
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = 0;
 			for (uint32_t i = 0; i < vEvents.size(); i++) {
-				XAie_UserRsc Rsc;
 				vRscs.push_back(Rsc);
 			}
 
-			XAie_UserRscReq Req = {Loc, Mod, static_cast<uint32_t>(vEvents.size())};
-			RC = XAie_RequestComboEvents(AieHd->dev(), 1, &Req, vEvents.size(), &vRscs[0]);
+			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
 				vRscs.clear();
-				return RC;
-			}
-
-			Rsc.Mod = vRscs[0].Mod;
-			if (vRscs.size() <= 2) {
-				// Only two input events, it can be combo0 or
-				// combo1
-				if (vRscs[0].RscId < 2) {
-					Rsc.RscId = 0;
-				} else {
-					Rsc.RscId = 1;
-				}
-			} else {
-				Rsc.RscId = 2;
 			}
 			return RC;
 		}
 		AieRC _release() {
-			XAie_ReleaseComboEvents(AieHd->dev(), vRscs.size(), &vRscs[0]);
+			AieRC RC;
+			RC = AieHd->rscMgr()->release(*this);
 			vRscs.clear();
-			return XAIE_OK;
+			return RC;
 		}
 		AieRC _start() {
 			AieRC RC;
@@ -236,8 +225,18 @@ namespace xaiefal {
 			}
 			return XAIE_OK;
 		}
+		/* TODO: When porting complete, this should be removed */
 		void _getRscs(std::vector<XAie_UserRsc> &vRs) const {
-			vRs.insert(vRs.end(), vRscs.begin(), vRscs.end());
+			std::vector<XAie_UserRsc> tmp;
+			for (auto rsc : vRscs) {
+				XAie_UserRsc uRsc;
+				uRsc.Loc = rsc.Loc;
+				uRsc.Mod = (uint32_t)rsc.Mod;
+				uRsc.RscType = (uint32_t)rsc.RscType;
+				uRsc.RscId = rsc.RscId;
+				tmp.push_back(uRsc);
+			}
+			vRs.insert(vRs.end(), tmp.begin(), tmp.end());
 		}
 	};
 

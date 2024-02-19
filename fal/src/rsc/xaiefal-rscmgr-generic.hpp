@@ -146,9 +146,14 @@ namespace xaiefal {
 		 * @return XAIE_OK for success, error code for failure
 		 */
 		AieRC requestContiguous(std::vector<XAieUserRsc>& RscReq) {
-			uint8_t TileType = _XAie_GetTileTypefromLoc(dev(), RscReq[0].Loc);
 			uint32_t StaticOff, StartBit, MaxRscId, NumContigRscs;
+			uint8_t TileType;
 
+			if (RscReq.size() <= 0) {
+				return XAIE_ERR;
+			}
+
+			TileType = _XAie_GetTileTypefromLoc(dev(), RscReq[0].Loc);
 			if ((_XAie_CheckModule(dev(), RscReq[0].Loc, RscReq[0].Mod) != XAIE_OK) ||
 					TileType >= XAIEGBL_TILE_TYPE_MAX) {
 				Logger::log(LogLevel::WARN) << __func__ <<
