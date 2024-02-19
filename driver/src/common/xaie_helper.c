@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include "xaie_helper.h"
+#include "xaie_reset_aie.h"
 #include "xaie_txn.h"
 
 /************************** Constant Definitions *****************************/
@@ -363,6 +364,47 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
 	return (u32)(Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U);
+}
+
+/*****************************************************************************/
+/**
+* This API populates ungated tiles of partition to Locs list.
+*
+* @param	DevInst: Device Instance
+* @param	NumTiles: Size of Locs array.
+* @param	Locs: Pointer to tile locations list
+*
+* @note		NumTiles pointer is used to indicate the size of Locs as input
+* 		when passed by the caller. The same pointer gets updated to
+* 		indicate the return locs list size.
+*
+*******************************************************************************/
+AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+		XAie_LocType *Locs)
+{
+	u32 Index = 0;
+
+	/* Add clock enabled tiles of the partition to Rscs */
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = 0; Row < DevInst->NumRows; Row++) {
+			XAie_LocType Loc = XAie_TileLoc(Col, Row);
+
+			if(_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_ENABLE) {
+				if(Index >= *NumTiles) {
+					XAIE_ERROR("Invalid NumTiles: %d\n",
+						*NumTiles);
+					return XAIE_INVALID_ARGS;
+				}
+
+				Locs[Index] = Loc;
+				Index++;
+			}
+		}
+	}
+
+	/* Update NumTiles to size equal to ungated tiles in partition */
+	*NumTiles = Index;
+	return XAIE_OK;
 }
 
 /*****************************************************************************/

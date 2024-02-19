@@ -95,7 +95,8 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 *
 * @return	XAIE_ENABLE if a tile is in use, otherwise XAIE_DISABLE.
 *
-* @note		This API is supposed to be called internal only.
+* @note		This API does not check clock values, it will check internal
+* 		data structure.
 *******************************************************************************/
 u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
