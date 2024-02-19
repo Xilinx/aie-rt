@@ -596,7 +596,7 @@ static u64 XAie_AmdAirGetTid(void)
 #endif
 }
 
-const XAie_Backend AmdAirBackend =
+const XAie_Backend AmdairBackend =
 {
 	.Type = XAIE_IO_BACKEND_AMDAIR,
 	.Ops.Init = XAie_AmdAirIO_Init,
