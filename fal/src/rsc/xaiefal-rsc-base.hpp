@@ -76,6 +76,13 @@ namespace xaiefal {
 			}
 			preferredId = XAIE_RSC_ID_ANY;
 		}
+		XAieRsc(std::shared_ptr<XAieDevHandle> DevHd, XAieRscType T):
+			State(), Type(T), AieHd(DevHd) {
+			if (!DevHd) {
+				throw std::invalid_argument("aie rsc: empty device handle");
+			}
+			preferredId = XAIE_RSC_ID_ANY;
+		}
 		XAieRsc(XAieDev &Dev):
 			State(), AieHd(Dev.getDevHandle()) {
 				preferredId = XAIE_RSC_ID_ANY;
@@ -320,7 +327,7 @@ namespace xaiefal {
 		 * @param vR vector to store the resources
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getRscs(std::vector<XAieUserRsc> &vR) const {
+		AieRC getRscs(std::vector<XAieUserRsc> &vR) {
 			if (State.Configured != 0) {
 				_getRscs(vR);
 				return XAIE_OK;
@@ -333,7 +340,7 @@ namespace xaiefal {
 		 * @param vR vector to set resources from
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC setRscs(std::vector<XAieUserRsc> &vR) const {
+		AieRC setRscs(std::vector<XAieUserRsc> &vR) {
 			if (State.Configured != 0) {
 				_setRscs(vR);
 				return XAIE_OK;
@@ -351,6 +358,15 @@ namespace xaiefal {
 			throw std::invalid_argument("get rsc type not supported of rsc" +
 					rName);
 			return XAIE_RSC_TYPE_ANY;
+		}
+		/**
+		 * TODO: After porting remove uint32_t implementation
+		 * This function returns resources type.
+		 *
+		 * @return resource type
+		 */
+		virtual XAieRscType RscType() const {
+			return Type;
 		}
 		/**
 		 * This function returns resources static for a specific
@@ -397,9 +413,10 @@ namespace xaiefal {
 
 	protected:
 		XAieRscState State; /**< resource state */
+		XAieRscType Type; /**< resource type */
 		std::shared_ptr<XAieDevHandle> AieHd; /**< AI engine device instance */
 		uint32_t preferredId; /**< preferred resource Id */
-		std::vector<XAieUserRsc> vRscs; /**< resources */
+		std::vector<XAieUserRsc> vRscs; /**< resources data*/
 	private:
 		/**
 		 * This function will be called by reserve(). It allows child
@@ -454,7 +471,7 @@ namespace xaiefal {
 		 *
 		 * @param vR vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAieUserRsc> &vR) const {
+		virtual void _getRscs(std::vector<XAieUserRsc> &vR) {
 			std::string rName(typeid(*this).name());
 
 			(void)vR;
@@ -466,7 +483,7 @@ namespace xaiefal {
 		 *
 		 * @param vR vector to set the resources to
 		 */
-		virtual void _setRscs(std::vector<XAieUserRsc> &vR) const {
+		virtual void _setRscs(std::vector<XAieUserRsc> &vR) {
 			std::string rName(typeid(*this).name());
 
 			(void)vR;
@@ -485,6 +502,14 @@ namespace xaiefal {
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M):
 			XAieRsc(DevHd), Loc(L), Mod(M) {
+			if (_XAie_CheckModule(AieHd->dev(), Loc, M) !=
+				XAIE_OK) {
+				throw std::invalid_argument("invalid module tile");
+			}
+		}
+		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
+			XAie_LocType L, XAie_ModuleType M, XAieRscType T):
+			XAieRsc(DevHd, T), Loc(L), Mod(M) {
 			if (_XAie_CheckModule(AieHd->dev(), Loc, M) !=
 				XAIE_OK) {
 				throw std::invalid_argument("invalid module tile");
@@ -586,7 +611,7 @@ namespace xaiefal {
 		 *
 		 * @param vR vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAieUserRsc> &vR) const {
+		virtual void _getRscs(std::vector<XAieUserRsc> &vR) {
 			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 		/**

@@ -8,6 +8,7 @@
 #include <xaiengine.h>
 
 #include <xaiefal/rsc/xaiefal-rsc-base.hpp>
+#include <xaiefal/rsc/xaiefal-rscmgr.hpp>
 
 #pragma once
 
@@ -21,7 +22,7 @@ namespace xaiefal {
 		XAieComboEvent() = delete;
 		XAieComboEvent(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M, uint32_t ENum = 2):
-			XAieSingleTileRsc(DevHd, L, M) {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_COMBOEVENT) {
 			if (ENum > 4 || ENum < 2) {
 				throw std::invalid_argument("Combo event failed, invalid input events number");
 			}
@@ -249,7 +250,7 @@ namespace xaiefal {
 		XAieUserEvent() = delete;
 		XAieUserEvent(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(DevHd, L, M) {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_USEREVENT) {
 			State.Initialized = 1;
 			State.Configured = 1;
 		}
@@ -273,7 +274,7 @@ namespace xaiefal {
 					" resource not resesrved." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				E = _getEventFromId(Rsc.RscId);
+				E = _getEventFromId(vRscs[0].RscId);
 			}
 			return RC;
 		}
@@ -282,38 +283,17 @@ namespace xaiefal {
 		}
 	private:
 		AieRC _reserve() {
-			AieRC RC;
+			XAieUserRsc Rsc;
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = preferredId;
 
-			if (preferredId == XAIE_RSC_ID_ANY) {
-				XAie_UserRscReq Req = {Loc, Mod, 1};
-
-				RC = XAie_RequestUserEvents(AieHd->dev(), 1, &Req, 1, &Rsc);
-				if (RC == XAIE_OK) {
-					Rsc.RscId = _getIdFromEvent(static_cast<XAie_Events>(Rsc.RscId));
-				}
-			} else {
-				Rsc.RscType = XAIE_USER_EVENTS_RSC;
-				Rsc.Loc.Col = Loc.Col;
-				Rsc.Loc.Row = Loc.Row;
-				Rsc.Mod = Mod;
-				Rsc.RscId = _getEventFromId(preferredId);
-				RC = XAie_RequestAllocatedUserEvents(AieHd->dev(), 1, &Rsc);
-				if (RC == XAIE_OK) {
-					Rsc.RscId = preferredId;
-				}
-			}
-
-			return RC;
+			vRscs.push_back(Rsc);
+			return AieHd->rscMgr()->request(*this);
 		}
 		AieRC _release() {
-			uint32_t RscId = Rsc.RscId;
-			AieRC RC;
-
-			Rsc.RscId = _getEventFromId(Rsc.RscId);
-			RC = XAie_ReleaseUserEvents(AieHd->dev(), 1, &Rsc);
-			Rsc.RscId = RscId;
-
-			return RC;
+			return AieHd->rscMgr()->release(*this);
 		}
 		AieRC _start() {
 			// As no hardware config is required for user event

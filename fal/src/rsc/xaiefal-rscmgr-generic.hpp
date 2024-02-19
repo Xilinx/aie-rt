@@ -531,8 +531,7 @@ namespace xaiefal {
 					 * multiply by 2U.
 					 */
 					BitmapSize = NumRows * dev()->NumCols * TotalRscs * 2U;
-					BitmapSize = (32U * ((BitmapSize + (32U - 1U)) / 32U)); //align by 32 bits
-					Bitmap->resize(BitmapSize / 32U);
+					Bitmap->resize(((BitmapSize + (32U - 1U)) / 32U)); //align by 32 bits
 					for (unsigned int i = 0; i < Bitmap->size(); i++)
 						Bitmap->at(i).reset();
 				}
