@@ -254,6 +254,7 @@ namespace xaiefal {
 				Logger::log(LogLevel::WARN) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << " resource not available.\n";
+				vRscs.clear();
 			}
 			return RC;
 		}

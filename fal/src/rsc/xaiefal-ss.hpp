@@ -145,6 +145,7 @@ namespace xaiefal {
 				Logger::log(LogLevel::WARN) << "Stream port select " << __func__ <<
 					" (" << static_cast<int>(Loc.Col) << "," <<
 					static_cast<int>(Loc.Row) << ")" << " resource not available.\n";
+				vRscs.clear();
 			}
 			return RC;
 		}

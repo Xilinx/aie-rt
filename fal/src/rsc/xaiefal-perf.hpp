@@ -418,6 +418,7 @@ namespace xaiefal {
 				Logger::log(LogLevel::WARN) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " resource not available.\n";
+				vRscs.clear();
 			} else {
 				RC = _reserveAppend();
 			}

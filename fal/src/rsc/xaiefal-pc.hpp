@@ -218,6 +218,7 @@ namespace xaiefal {
 				Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" resource not availalble." << std::endl;
+				vRscs.clear();
 			}
 			return RC;
 		}

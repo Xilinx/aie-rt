@@ -283,6 +283,7 @@ namespace xaiefal {
 		}
 	private:
 		AieRC _reserve() {
+			AieRC RC;
 			XAieUserRsc Rsc;
 			Rsc.Loc = Loc;
 			Rsc.Mod = Mod;
@@ -290,7 +291,11 @@ namespace xaiefal {
 			Rsc.RscId = preferredId;
 
 			vRscs.push_back(Rsc);
-			return AieHd->rscMgr()->request(*this);
+			RC = AieHd->rscMgr()->request(*this);
+			if (RC != XAIE_OK) {
+				vRscs.clear();
+			}
+			return RC;
 		}
 		AieRC _release() {
 			AieRC RC;
