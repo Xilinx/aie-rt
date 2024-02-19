@@ -466,11 +466,7 @@ namespace xaiefal {
 		 * @param vR vector to store the reserved resources
 		 */
 		virtual void _getRscs(std::vector<XAieUserRsc> &vR) {
-			std::string rName(typeid(*this).name());
-
-			(void)vR;
-			throw std::invalid_argument("get resource not supported of rsc" +
-					rName);
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 		/**
 		 * This function sets the resources to be reserved
@@ -478,11 +474,7 @@ namespace xaiefal {
 		 * @param vR vector to set the resources to
 		 */
 		virtual void _setRscs(std::vector<XAieUserRsc> &vR) {
-			std::string rName(typeid(*this).name());
-
-			(void)vR;
-			throw std::invalid_argument("get resource not supported of rsc" +
-					rName);
+			vRscs = vR;
 		}
 	};
 
@@ -629,22 +621,6 @@ namespace xaiefal {
 		 */
 		virtual void _getRscs(std::vector<XAie_UserRsc> &vR) const {
 			vR.push_back(Rsc);
-		}
-		/**
-		 * This function returns resources to be reserved.
-		 *
-		 * @param vR vector to store the reserved resources
-		 */
-		virtual void _getRscs(std::vector<XAieUserRsc> &vR) {
-			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
-		}
-		/**
-		 * This function sets resources that were reserved
-		 *
-		 * @param vR vector to set the reserved resources to
-		 */
-		virtual void _setRscs(std::vector<XAieUserRsc> &vR) {
-			vRscs = vR;
 		}
 	};
 

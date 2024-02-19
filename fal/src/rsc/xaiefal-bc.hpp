@@ -51,11 +51,10 @@ namespace xaiefal {
 		 * @return broadcast channel ID if resource has been reserved, -1 otherwise.
 		 */
 		int getBc() {
-			int BC = -1;
+			int BC = XAIE_RSC_ID_ANY;
 
 			if (State.Reserved == 1) {
 				BC = vRscs[0].RscId;
-			} else {
 			}
 			return BC;
 		}
@@ -117,6 +116,7 @@ namespace xaiefal {
 
 			return XAIE_OK;
 		}
+		/* TODO Remove once porting is complete */
 		uint32_t getRscType() const {
 			return static_cast<uint32_t>(XAIE_BCAST_CHANNEL_RSC);
 		}
@@ -134,47 +134,33 @@ namespace xaiefal {
 		}
 	private:
 		AieRC _reserve() {
-			AieRC RC = XAIE_INVALID_ARGS;
-			uint8_t broadcastAll = 1;
-			uint32_t numRscs;
+			AieRC RC = XAIE_OK;
 
-			vRscs.clear();
-
-			if (vLocs.size() == 0)  {
-				numRscs = AieHd->dev()->AieTileNumRows * AieHd->dev()->NumCols * 2
-				+ (AieHd->dev()->NumRows - AieHd->dev()->AieTileNumRows) * AieHd->dev()->NumCols;
-				XAie_UserRsc rsc;
-				for (uint32_t i = 0; i < numRscs; i++) {
-					rsc.RscType = XAIE_BCAST_CHANNEL_RSC;
-					vRscs.push_back(rsc);
-				}
-				RC = XAIE_OK;
-			} else {
+			if (vLocs.size() != 0)  {
 				RC = setRscs(AieHd, vLocs, StartMod, EndMod, vRscs);
-				numRscs = vRscs.size();
-				broadcastAll = 0;
 			}
 
 			if (RC == XAIE_OK) {
-				if (preferredId == XAIE_RSC_ID_ANY) {
-					RC = XAie_RequestBroadcastChannel(AieHd->dev(), &numRscs, &vRscs[0], broadcastAll);
-				} else {
-					RC = XAie_RequestSpecificBroadcastChannel(AieHd->dev(), preferredId, &numRscs, &vRscs[0], broadcastAll);
-				}
-				vRscs.resize(numRscs);
+				RC = AieHd->rscMgr()->request(*this);
+			}
+
+			if (RC != XAIE_OK) {
+				vRscs.clear();
 			}
 			return RC;
 
 		}
 		AieRC _release() {
-			return XAie_ReleaseBroadcastChannel(AieHd->dev(), vRscs.size(), &vRscs[0]);
+			AieRC RC;
+
+			RC = AieHd->rscMgr()->release(*this);
+			vRscs.clear();
+			return RC;
 		}
 		AieRC _start() {
 			AieRC RC = XAIE_OK;
 			int i = 0;
 			uint32_t TType;
-			u32 data;
-			u32 addr;
 
 			for(auto r = vRscs.begin(); r != vRscs.end();) {
 				uint8_t un_block = 0;
@@ -224,22 +210,22 @@ namespace xaiefal {
 					}
 
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-									(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+									(*r).Loc, (*r).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*r).RscId,
 									XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-									(*(r+1)).Loc, static_cast<XAie_ModuleType>((*(r + 1)).Mod),
+									(*(r+1)).Loc, (*(r + 1)).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*(r + 1)).RscId,
 									XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastBlockDir(dev(),
-									(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+									(*r).Loc, (*r).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*r).RscId,
 									XAIE_EVENT_BROADCAST_ALL & (~un_block));
 					RC = XAie_EventBroadcastBlockDir(dev(),
-									(*(r + 1)).Loc, static_cast<XAie_ModuleType>((*(r+1)).Mod),
+									(*(r + 1)).Loc, (*(r+1)).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*(r + 1)).RscId,
 									XAIE_EVENT_BROADCAST_ALL & (~un_block_n));
@@ -265,23 +251,23 @@ namespace xaiefal {
 						}
 					}
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_A,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_B,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastBlockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_A,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL & (~(un_block | XAIE_EVENT_BROADCAST_EAST)));
 
 					RC = XAie_EventBroadcastBlockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_B,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL & (~(un_block | XAIE_EVENT_BROADCAST_WEST)));
@@ -312,16 +298,16 @@ namespace xaiefal {
 				if (r.Loc.Row == 0) {
 					// Unblock SHIM tile switch A and B
 					iRC |= XAie_EventBroadcastUnblockDir(dev(),
-						r.Loc, static_cast<XAie_ModuleType>(r.Mod),
+						r.Loc, r.Mod,
 						XAIE_EVENT_SWITCH_A, r.RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 					iRC |= XAie_EventBroadcastUnblockDir(dev(),
-						r.Loc, static_cast<XAie_ModuleType>(r.Mod),
+						r.Loc, r.Mod,
 						XAIE_EVENT_SWITCH_B, r.RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 				} else {
 					iRC |= XAie_EventBroadcastUnblockDir(dev(),
-						r.Loc, static_cast<XAie_ModuleType>(r.Mod),
+						r.Loc, r.Mod,
 						XAIE_EVENT_SWITCH_A, r.RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 				}
@@ -336,19 +322,27 @@ namespace xaiefal {
 			return RC;
 		}
 
+		/* TODO: Replace once porting is complete */
 		void _getRscs(std::vector<XAie_UserRsc> &vRs) const {
-			vRs.insert(vRs.end(), vRscs.begin(), vRscs.end());
+			for (auto rsc : vRscs) {
+				XAie_UserRsc tmp;
+				tmp.Loc = rsc.Loc;
+				tmp.Mod = static_cast<uint32_t>(rsc.Mod);
+				tmp.RscType = static_cast<uint32_t>(rsc.RscType);
+				tmp.RscId = rsc.RscId;
+
+				vRs.push_back(tmp);
+			}
 		}
 	private:
 		XAie_ModuleType StartMod; /**< module type of the starting module on the channel */
 		XAie_ModuleType EndMod; /**< module type of the ending modile on the channel */
 		std::vector<XAie_LocType> vLocs; /**< tiles on the channel */
-		std::vector<XAie_UserRsc> vRscs; /**< broadcast channel allocated resources */
 	private:
 		static AieRC setRscs(std::shared_ptr<XAieDevHandle> Dev,
 				const std::vector<XAie_LocType> &vL,
 				XAie_ModuleType startM, XAie_ModuleType endM,
-				std::vector<XAie_UserRsc> &vR) {
+				std::vector<XAieUserRsc> &vR) {
 
 			if ((vL[0].Row == 0 && startM != XAIE_PL_MOD) ||
 			    (vL.back().Row == 0 && endM != XAIE_PL_MOD) ||
@@ -360,10 +354,10 @@ namespace xaiefal {
 			}
 
 			for (size_t i = 0; i < vL.size(); i++) {
-				XAie_UserRsc R;
+				XAieUserRsc R;
 				uint32_t TType;
 
-				R.RscType = XAIE_BCAST_CHANNEL_RSC;
+				R.RscType = XAIE_BROADCAST;
 
 				TType = _XAie_GetTileTypefromLoc(Dev->dev(),
 						vL[i]);

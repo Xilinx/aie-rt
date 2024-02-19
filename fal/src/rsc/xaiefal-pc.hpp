@@ -227,7 +227,7 @@ namespace xaiefal {
 
 			RC = AieHd->rscMgr()->release(*this);
 			vRscs.clear();
-			return XAIE_OK;
+			return RC;
 		}
 		AieRC _start() {
 			AieRC RC;

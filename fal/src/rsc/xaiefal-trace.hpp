@@ -335,7 +335,6 @@ namespace xaiefal {
 	protected:
 		AieRC _reserve() {
 			AieRC RC;
-			XAie_UserRscReq Req = {Loc, Mod, 1};
 			XAieUserRsc Rsc;
 
 			Rsc.Loc = Loc;
@@ -492,6 +491,7 @@ namespace xaiefal {
 		}
 		/* TODO replace once porting is complete */
 		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
+			XAie_UserRsc Rsc;
 			vRscs.push_back(Rsc);
 			if (StartMod != Mod) {
 				StartBC->getRscs(vRscs);
