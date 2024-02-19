@@ -25,6 +25,45 @@ namespace xaiefal {
 	};
 
 	/**
+	 * @enum XAieRscType
+	 * @brief Enums representing all requestable resources
+	 */
+	enum XAieRscType {
+		XAIE_PERFCOUNT = 0U,
+		XAIE_USEREVENT,
+		XAIE_TRACECTRL,
+		XAIE_PCEVENT,
+		XAIE_SSEVENT,
+		XAIE_BROADCAST,
+		XAIE_COMBOEVENT,
+		XAIE_GROUPEVENT,
+		XAIE_TRACEEVENT,
+		XAIE_PCRANGE,
+		XAIE_MAXRSC
+	};
+
+	/**
+	 * @struct XAieUserRscStat
+	 * @brief Data needed to make resource statistics request
+	 */
+	struct XAieUserRscStat {
+		/**< Location of Request */
+		XAie_LocType Loc {
+			XAie_TileLoc(XAIE_LOC_ANY, XAIE_LOC_ANY)
+		};
+		/**< Module of Request */
+		XAie_ModuleType Mod {
+			static_cast<XAie_ModuleType>(XAIE_MOD_ANY)
+		};
+		/**< Resource Type of Request */
+		XAieRscType RscType {
+			static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)
+		};
+		/**< Number of requests */
+		uint32_t NumRscs {0U};
+	};
+
+	/**
 	 * @struct XAieRscStat
 	 * @brief struct of resource usage statistics
 	 */

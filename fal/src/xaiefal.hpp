@@ -16,6 +16,6 @@
 #include <xaiefal/rsc/xaiefal-perf.hpp>
 #include <xaiefal/rsc/xaiefal-rsc-group.hpp>
 #include <xaiefal/rsc/xaiefal-rsc-group-impl.hpp>
+#include <xaiefal/rsc/xaiefal-rscmgr.hpp>
 #include <xaiefal/rsc/xaiefal-ss.hpp>
 #include <xaiefal/rsc/xaiefal-trace.hpp>
-

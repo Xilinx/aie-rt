@@ -41,6 +41,7 @@ namespace xaiefal {
 	class XAieRscGroupRuntime;
 	class XAieRscGroupStatic;
 	class XAieRscGroupAvail;
+	class XAieRscMgr;
 
 # define XAIEDEV_DEFAULT_GROUP_STATIC "Static"
 # define XAIEDEV_DEFAULT_GROUP_AVAIL "Avail"
@@ -167,6 +168,14 @@ namespace xaiefal {
 		std::shared_ptr<XAieDevHandle> getPtr() {
 			return shared_from_this();
 		}
+		/**
+		 * This function returns AIE resource manager shared pointer
+		 *
+		 * @return AI engine resource manager shared pointer
+		 */
+		std::shared_ptr<XAieRscMgr> rscMgr() {
+			return AieRscMgr;
+		}
 
 		/**
 		 * This function creates a resource group based on resource
@@ -211,6 +220,14 @@ namespace xaiefal {
 			}
 		}
 
+		/**
+		 * This function will create the resource manager and attach
+		 * it to the AieHandle
+		 */
+		void createRscMgr() {
+			AieRscMgr = std::make_shared<XAieRscMgr>(this);
+		}
+
 		uint32_t XAieGroupEventMapCore[9];
 		uint32_t XAieGroupEventMapMem[8];
 		uint32_t XAieGroupEventMapPl[8];
@@ -218,6 +235,7 @@ namespace xaiefal {
 	private:
 		XAie_DevInst *Dev;
 		bool FinishOnDestruct;
+		std::shared_ptr<XAieRscMgr> AieRscMgr; /**< Resource Manager */
 		std::map <std::string, XAieDevHdRscGroupWrapper> RscGroupsMap; /**< resource groups map */
 		_XAIEFAL_MUTEX_DECLARE(mLock); /**< mutex lock */
 
@@ -320,6 +338,41 @@ namespace xaiefal {
 		}
 
 		/**
+                 * This function saves all runtime allocated resources
+                 * metadata to given filename
+                 *
+                 * @param File filename string
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC saveAllocatedRscsToFile(const std::string &File);
+
+                /**
+                 * This loads resource metadata into the static resource
+                 * bitmaps
+                 *
+                 * @param MetaData pointer to resource metadata
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC loadStaticRscFromMem(const char *MetaData);
+
+                /**
+                 * This function makes a call to RscMgr Backend to reserve
+                 * resources necessary for ECC
+                 *
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC reserveEcc();
+
+                /**
+                 * This function makes a call to RscMgr Backend to reserve
+                 * resources necessary for Error Handling
+                 *
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC reserveErrorHandling();
+
+
+		/**
 		 * This function returns broadcast resource software object
 		 * within a tile.
 		 *
@@ -402,8 +455,7 @@ namespace xaiefal {
 		}
 
 	private:
-		std::shared_ptr<XAieDevHandle> AieHandle; /**< AI engine device
-							    handle */
+		std::shared_ptr<XAieDevHandle> AieHandle; /**< AI engine device handle */
 		uint32_t NumCols; /**< number of AI engine columns */
 		uint32_t NumRows; /**< number of AI engine rows */
 		std::vector<XAieTile> Tiles;
@@ -975,7 +1027,7 @@ namespace xaiefal {
 					XAie_TileLoc(c, r)));
 			}
 		}
-
+		AieHandle->createRscMgr();
 	}
 
 	/**

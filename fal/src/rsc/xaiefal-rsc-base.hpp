@@ -18,18 +18,31 @@
 #pragma once
 
 namespace xaiefal {
-	enum class XAieRscType {
-		PCOUNTER,
-		BC,
-		PCEVENT,
-		PCRANGE,
-		SSWITCHSELECT,
-		USEREVENT,
-		TRACEEVENT,
-		COMBOEVENT,
-	};
-
 	class XAieRsc;
+
+	/**
+	 * @struct XAieUserRsc
+	 * @brief Data needed to make a resource request
+	 */
+	struct XAieUserRsc {
+		/**< Location of request */
+		XAie_LocType Loc {
+                        XAie_TileLoc(XAIE_LOC_ANY, XAIE_LOC_ANY)
+                };
+                /**< Module of request */
+                XAie_ModuleType Mod {
+                        static_cast<XAie_ModuleType>(XAIE_MOD_ANY)
+                };
+                /**< Type of request */
+                XAieRscType RscType {
+                        static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)
+                };
+                /**< Id of resource */
+                uint32_t RscId {
+                        static_cast<uint32_t>(XAIE_RSC_ID_ANY)
+                };
+        };
+
 	/**
 	 * struct XAieRscState
 	 * State of each AIE resource
@@ -110,6 +123,14 @@ namespace xaiefal {
 			}
 
 			return RC;
+		}
+		/**
+		 * This function returns the preferred ID
+		 *
+		 * @return preferred Id of resource
+		 */
+		uint32_t getPreferredId() {
+			return preferredId;
 		}
 
 		/**
@@ -282,15 +303,42 @@ namespace xaiefal {
 		bool isRunning() const {
 			return State.Running;
 		}
+
 		/**
 		 * This function returns resources reserved.
 		 *
-		 * @param vRscs vector to store the reserved resources
+		 * @param vR vector to store the reserved resources
 		 */
-		void getRscs(std::vector<XAie_UserRsc> &vRscs) const {
+		void getRscs(std::vector<XAie_UserRsc> &vR) const {
 			if (State.Reserved != 0) {
-				_getRscs(vRscs);
+				_getRscs(vR);
 			}
+		}
+		/**
+		 * This function returns resources to be reserved.
+		 *
+		 * @param vR vector to store the resources
+		 * @return XAIE_OK for success, error code for failure
+		 */
+		AieRC getRscs(std::vector<XAieUserRsc> &vR) const {
+			if (State.Configured != 0) {
+				_getRscs(vR);
+				return XAIE_OK;
+			}
+			return XAIE_ERR;;
+		}
+		/**
+		 * This function sets the resources
+		 *
+		 * @param vR vector to set resources from
+		 * @return XAIE_OK for success, error code for failure
+		 */
+		AieRC setRscs(std::vector<XAieUserRsc> &vR) const {
+			if (State.Configured != 0) {
+				_setRscs(vR);
+				return XAIE_OK;
+			}
+			return XAIE_ERR;;
 		}
 		/**
 		 * This function returns resources type.
@@ -350,7 +398,8 @@ namespace xaiefal {
 	protected:
 		XAieRscState State; /**< resource state */
 		std::shared_ptr<XAieDevHandle> AieHd; /**< AI engine device instance */
-		uint32_t preferredId; /**< preferred resource Id*/
+		uint32_t preferredId; /**< preferred resource Id */
+		std::vector<XAieUserRsc> vRscs; /**< resources */
 	private:
 		/**
 		 * This function will be called by reserve(). It allows child
@@ -391,12 +440,36 @@ namespace xaiefal {
 		/**
 		 * This function returns resources reserved.
 		 *
-		 * @param vRscs vector to store the reserved resources
+		 * @param vR vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
+		virtual void _getRscs(std::vector<XAie_UserRsc> &vR) const {
 			std::string rName(typeid(*this).name());
 
-			(void)vRscs;
+			(void)vR;
+			throw std::invalid_argument("get resource not supported of rsc" +
+					rName);
+		}
+		/**
+		 * This function returns resources to be reserved
+		 *
+		 * @param vR vector to store the reserved resources
+		 */
+		virtual void _getRscs(std::vector<XAieUserRsc> &vR) const {
+			std::string rName(typeid(*this).name());
+
+			(void)vR;
+			throw std::invalid_argument("get resource not supported of rsc" +
+					rName);
+		}
+		/**
+		 * This function sets the resources to be reserved
+		 *
+		 * @param vR vector to set the resources to
+		 */
+		virtual void _setRscs(std::vector<XAieUserRsc> &vR) const {
+			std::string rName(typeid(*this).name());
+
+			(void)vR;
 			throw std::invalid_argument("get resource not supported of rsc" +
 					rName);
 		}
@@ -503,10 +576,26 @@ namespace xaiefal {
 		/**
 		 * This function returns resources reserved.
 		 *
-		 * @param vRscs vector to store the reserved resources
+		 * @param vR vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
-			vRscs.push_back(Rsc);
+		virtual void _getRscs(std::vector<XAie_UserRsc> &vR) const {
+			vR.push_back(Rsc);
+		}
+		/**
+		 * This function returns resources to be reserved.
+		 *
+		 * @param vR vector to store the reserved resources
+		 */
+		virtual void _getRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
+		}
+		/**
+		 * This function sets resources that were reserved
+		 *
+		 * @param vR vector to set the reserved resources to
+		 */
+		virtual void _setRscs(std::vector<XAieUserRsc> &vR) {
+			vRscs = vR;
 		}
 	};
 
