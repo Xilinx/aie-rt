@@ -70,7 +70,8 @@ typedef enum {
 		_Config.EnTokenIssue = (_EnTokenIssue); \
 		_Config.OutOfOrder = (_OutOfOrder); \
 	}
-
+AieRC XAie_DmaLockControl(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
+		XAie_Lock Rel, u8 AcqEn, u8 RelEn);
 AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc);
 AieRC XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel);
