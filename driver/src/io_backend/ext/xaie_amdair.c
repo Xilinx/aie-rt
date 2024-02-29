@@ -11,6 +11,7 @@
 #ifdef __linux__
 #include <pthread.h>
 #endif
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
