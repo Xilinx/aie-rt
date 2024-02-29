@@ -70,7 +70,7 @@ typedef struct {
 	u8 Mod;
 	u8 RscType;
 	u8 NumRscs;
-} __attribute__((packed, aligned(4))) XAie_UserRscStat;
+} XAIE_PACK_ATTRIBUTE XAie_UserRscStat;
 
 /************************** Function Prototypes  *****************************/
 #ifndef XAIE_FEATURE_RSC_ENABLE

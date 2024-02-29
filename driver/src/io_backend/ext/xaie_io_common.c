@@ -392,7 +392,9 @@ static AieRC _XAie_RequestBroadcastChannelRscCommon(XAie_DevInst *DevInst,
 AieRC _XAie_RequestRscCommon(XAie_DevInst *DevInst, XAie_BackendTilesRsc *Args)
 {
 	AieRC RC;
-	u32 RscArrPerTile[Args->NumRscPerTile];
+	u32 *RscArrPerTile = malloc(sizeof(u32) * Args->NumRscPerTile);
+	if (RscArrPerTile == NULL)
+		return XAIE_ERR;
 
 	if (Args->RscType == XAIE_BCAST_CHANNEL_RSC) {
 		return _XAie_RequestBroadcastChannelRscCommon(DevInst, Args);
