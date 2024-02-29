@@ -203,7 +203,7 @@ struct XAie_Backend {
 };
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_IOInit(XAie_DevInst *DevInst);
+AieRC XAie_IOInit(XAie_DevInst *DevInst, XAie_BackendType backend);
 
 #endif	/* End of protection macro */
 

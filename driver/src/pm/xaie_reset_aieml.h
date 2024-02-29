@@ -21,7 +21,7 @@
 #include "xaiegbl.h"
 
 /************************** Function Prototypes  *****************************/
-AieRC _XAieMl_RstShims(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols);
+AieRC _XAieMl_RstShims(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols);
 
 #endif /* XAIE_RESET_AIEML_H */
 /** @} */

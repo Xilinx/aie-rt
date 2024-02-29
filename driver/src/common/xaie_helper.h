@@ -96,6 +96,9 @@
 #define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
 #endif
 
+/* Suppress warning of unused parameter */
+#define UNUSED(_x) (_x = _x)
+
 /* Data structure to capture the dma status */
 typedef struct {
         u32 S2MMStatus;

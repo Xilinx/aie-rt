@@ -1756,7 +1756,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 
 		/* check memory allocation before increase Cmd vector */
 		char* tmpBuff = malloc(size);
-		if(tmpBuff == 0U) {
+		if(tmpBuff == NULL) {
 			XAIE_ERROR("Fail to malloc %d size memory for DataPtr\n", size);
 			return XAIE_ERR;
 		}
