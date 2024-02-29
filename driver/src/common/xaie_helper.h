@@ -87,15 +87,6 @@
 /* Generate value with a set bit at given Index */
 #define BIT(Index)		(1 << (Index))
 
-/*
- * __attribute is not supported for windows. remove it conditionally.
- */
-#ifdef _MSC_VER
-#define XAIE_PACK_ATTRIBUTE
-#else
-#define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
-#endif
-
 /* Suppress warning of unused parameter */
 #define UNUSED(_x) (_x = _x)
 

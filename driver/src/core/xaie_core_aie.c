@@ -21,8 +21,6 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
-#include <unistd.h>
-
 #include "xaie_core_aie.h"
 #include "xaie_events_aie.h"
 #include "xaie_feature_config.h"
