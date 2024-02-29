@@ -397,6 +397,7 @@ AieRC _XAie_RequestRscCommon(XAie_DevInst *DevInst, XAie_BackendTilesRsc *Args)
 		return XAIE_ERR;
 
 	if (Args->RscType == XAIE_BCAST_CHANNEL_RSC) {
+                free((void*)RscArrPerTile);
 		return _XAie_RequestBroadcastChannelRscCommon(DevInst, Args);
 	}
 
@@ -420,7 +421,7 @@ AieRC _XAie_RequestRscCommon(XAie_DevInst *DevInst, XAie_BackendTilesRsc *Args)
 				Args->Rscs[j].RscId = RscArrPerTile[j];
 			}
 		}
-
+                free((void*)RscArrPerTile);
 		return RC;
 	}
 
@@ -433,7 +434,7 @@ AieRC _XAie_RequestRscCommon(XAie_DevInst *DevInst, XAie_BackendTilesRsc *Args)
 			Args->Rscs[j].RscId = RscArrPerTile[j];
 		}
 	}
-
+        free((void*)RscArrPerTile);
 	return RC;
 }
 
