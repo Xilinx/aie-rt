@@ -11,10 +11,10 @@
 #ifdef __linux__
 #include <pthread.h>
 #endif
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

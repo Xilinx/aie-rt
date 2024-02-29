@@ -107,7 +107,7 @@ static AieRC XAie_DebugIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	printf("W: %p, 0x%x\n", (void *) DebugIOInst->BaseAddr + RegOff, Value);
+	printf("W: %p, 0x%x\n", (uint8_t *) DebugIOInst->BaseAddr + RegOff, Value);
 
 	return XAIE_OK;
 }
@@ -131,7 +131,7 @@ static AieRC XAie_DebugIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	*Data = 0U;
-	printf("R: %p, 0x%x\n", (void *) DebugIOInst->BaseAddr + RegOff, 0);
+	printf("R: %p, 0x%x\n", (uint8_t *) DebugIOInst->BaseAddr + RegOff, 0);
 
 	return XAIE_OK;
 }
@@ -157,7 +157,7 @@ static AieRC XAie_DebugIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	printf("MW: %p, 0x%x, 0x%x\n", (void *) DebugIOInst->BaseAddr + RegOff,
+	printf("MW: %p, 0x%x, 0x%x\n", (uint8_t *) DebugIOInst->BaseAddr + RegOff,
 			Mask, Value);
 
 	return XAIE_OK;
@@ -184,7 +184,7 @@ static AieRC XAie_DebugIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	printf("MP: %p, 0x%x, 0x%x, 0x%d\n", (void *) DebugIOInst->BaseAddr +
+	printf("MP: %p, 0x%x, 0x%x, 0x%d\n", (uint8_t *) DebugIOInst->BaseAddr +
 			RegOff, Mask, Value, TimeOutUs);
 
 	return XAIE_ERR;
@@ -301,7 +301,7 @@ static AieRC _XAie_DebugIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	printf("MP: %p, 0x%x, 0x%x, 0x%d\n", (void *) DebugIOInst->NpiBaseAddr +
+	printf("MP: %p, 0x%x, 0x%x, 0x%d\n", (uint8_t *) DebugIOInst->NpiBaseAddr +
 			RegOff, Mask, Value, TimeOutUs);
 
 	return XAIE_OK;

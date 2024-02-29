@@ -722,7 +722,7 @@ static AieRC XAie_ErrorHandlingReserveRsc(XAie_DevInst *DevInst)
 	}
 
 	for(u32 i = 0; i < ShimUserRscNum; i++) {
-		ShimRscsBc[i].Loc = (XAie_LocType)XAie_TileLoc((u8)i, 0);
+		ShimRscsBc[i].Loc = XAie_TileLoc((u8)i, 0);
 		ShimRscsBc[i].Mod = (u32)XAIE_PL_MOD;
 		ShimRscsBc[i].RscType = (u32)XAIE_BCAST_CHANNEL_RSC;
 	}

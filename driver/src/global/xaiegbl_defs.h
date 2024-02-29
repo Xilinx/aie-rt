@@ -66,6 +66,15 @@ typedef uint64_t		u64;
 
 #define __FORCE_INLINE__			__attribute__((always_inline))
 
+/*
+ * __attribute is not supported for windows. remove it conditionally.
+ */
+#ifdef _MSC_VER
+#define XAIE_PACK_ATTRIBUTE
+#else
+#define XAIE_PACK_ATTRIBUTE  __attribute__((packed, aligned(4)))
+#endif
+
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 #endif		/* end of protection macro */
