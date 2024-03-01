@@ -71,6 +71,8 @@ typedef enum {
 		_Config.OutOfOrder = (_OutOfOrder); \
 	}
 
+XAIE_AIG_EXPORT AieRC XAie_DmaLockControl(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
+		XAie_Lock Rel, u8 AcqEn, u8 RelEn);
 XAIE_AIG_EXPORT AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel);
