@@ -316,8 +316,8 @@ namespace xaiefal {
 					RscType, RscId);
 		}
 
-		virtual AieRC addRsc(std::shared_ptr<XAieRsc> R) {
-			(void)R;
+		virtual AieRC addRsc(std::shared_ptr<XAieRsc> Rsc) {
+			(void)Rsc;
 			throw std::invalid_argument("Add Rsc not supported, rsc group: " + FuncName);
 			return XAIE_ERR;
 		}
@@ -369,16 +369,16 @@ namespace xaiefal {
 				XAie_DevInst *DevInst) {
 			std::vector<XAie_LocType> vLocs(DevInst->NumCols *
 					DevInst->NumRows);
-			uint8_t C = 0, R = 0;
+			uint8_t Col = 0, Row = 0;
 
 			for (std::vector<XAie_LocType>::iterator it = vLocs.begin() ;
 				it != vLocs.end(); ++it) {
-				*it = XAie_TileLoc(C, R);
+				*it = XAie_TileLoc(Col, Row);
 
-				R++;
-				if (R == DevInst->NumRows) {
-					R = 0;
-					C++;
+				Row++;
+				if (Row == DevInst->NumRows) {
+					Row = 0;
+					Col++;
 				}
 			}
 

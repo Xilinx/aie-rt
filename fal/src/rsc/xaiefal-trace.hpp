@@ -23,8 +23,8 @@ namespace xaiefal {
 	public:
 		XAieTraceCntr() = delete;
 		XAieTraceCntr(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(DevHd, L, M, XAIE_TRACECTRL), Pkt() {
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieSingleTileRsc(DevHd, Loc, Mod, XAIE_TRACECTRL), Pkt() {
 			XAie_EventPhysicalToLogicalConv(dev(), Loc, Mod, 0,
 				&StartEvent);
 			StopEvent = StartEvent;
@@ -39,8 +39,8 @@ namespace xaiefal {
 			State.Initialized = 1;
 		}
 		XAieTraceCntr(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(Dev, L, M, XAIE_TRACECTRL), Pkt() {}
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieSingleTileRsc(Dev, Loc, Mod, XAIE_TRACECTRL), Pkt() {}
 		~XAieTraceCntr() {
 			if (State.Reserved == 1) {
 				if (StartMod != Mod) {
@@ -122,15 +122,15 @@ namespace xaiefal {
 		 * reserveTraceSlot() first before setTraceEvent().
 		 *
 		 * @param Slot trace slot for the event to configure
-		 * @param E event to configure.
+		 * @param Event event to configure.
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC setTraceEvent(uint32_t Slot, XAie_Events E) {
+		AieRC setTraceEvent(uint32_t Slot, XAie_Events Event) {
 			AieRC RC;
 
 			Logger::log(LogLevel::DEBUG) << __func__ << " " <<
 				"(" << static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ") Mod=" << Mod <<
-				" Slot=" << Slot << " E=" << E << std::endl;
+				" Slot=" << Slot << " E=" << Event << std::endl;
 			if (State.Running == 1) {
 				Logger::log(LogLevel::ERROR) << __func__ <<
 					"failed, trace started." << std::endl;
@@ -144,10 +144,10 @@ namespace xaiefal {
 					"failed, trace slot is not reserved." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				if (E == XAIE_EVENT_NONE_CORE) {
-					XAie_EventPhysicalToLogicalConv(dev(), Loc, Mod, 0, &E);
+				if (Event == XAIE_EVENT_NONE_CORE) {
+					XAie_EventPhysicalToLogicalConv(dev(), Loc, Mod, 0, &Event);
 				}
-				Events[Slot] = E;
+				Events[Slot] = Event;
 				RC = XAIE_OK;
 			}
 			changeToConfigured();
@@ -211,10 +211,10 @@ namespace xaiefal {
 		 * configured in hardware. That is it needs to be called before
 		 * start().
 		 *
-		 * @param M trace control mode
+		 * @param TraceMode trace control mode
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC setMode(XAie_TraceMode M) {
+		AieRC setMode(XAie_TraceMode TraceMode) {
 			AieRC RC;
 
 			if (State.Running == 1) {
@@ -222,7 +222,7 @@ namespace xaiefal {
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				Mode = M;
+				Mode = TraceMode;
 				changeToConfigured();
 				RC = XAIE_OK;
 			}
@@ -234,10 +234,10 @@ namespace xaiefal {
 		 * configured in hardware. That is it needs to be called before
 		 * start().
 		 *
-		 * @param P trace control packet setting
+		 * @param Packet trace control packet setting
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC setPkt(const XAie_Packet &P) {
+		AieRC setPkt(const XAie_Packet &Packet) {
 			AieRC RC;
 
 			if (State.Running == 1) {
@@ -245,7 +245,7 @@ namespace xaiefal {
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				Pkt = P;
+				Pkt = Packet;
 				changeToConfigured();
 				RC = XAIE_OK;
 			}
@@ -486,13 +486,13 @@ namespace xaiefal {
 			return RC;
 		}
 
-		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
-			vR.push_back(vRscs[0]);
+		void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
+			vOutRscs.push_back(vRscs[0]);
 			if (StartMod != Mod) {
-				StartBC->getReservedRscs(vR);
+				StartBC->getReservedRscs(vOutRscs);
 			}
 			if (StopMod != Mod) {
-				StopBC->getReservedRscs(vR);
+				StopBC->getReservedRscs(vOutRscs);
 			}
 		}
 
@@ -537,10 +537,10 @@ namespace xaiefal {
 	public:
 		XAieTraceEvent() = delete;
 		XAieTraceEvent(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M,
+			XAie_LocType Loc, XAie_ModuleType Mod,
 			std::shared_ptr<XAieTraceCntr> TCntr):
-			XAieSingleTileRsc(DevHd, L, M, XAIE_TRACEEVENT),
-			EventMod(M) {
+			XAieSingleTileRsc(DevHd, Loc, Mod, XAIE_TRACEEVENT),
+			EventMod(Mod) {
 			if (!TCntr) {
 				throw std::invalid_argument("Trace event failed, empty trace control");
 			}
@@ -553,47 +553,47 @@ namespace xaiefal {
 			vRscs.resize(1);
 		}
 		XAieTraceEvent(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(Dev, L, M, XAIE_TRACEEVENT),
-			EventMod(M) {
-			TraceCntr = Dev.tile(L).module(M).traceControl();
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieSingleTileRsc(Dev, Loc, Mod, XAIE_TRACEEVENT),
+			EventMod(Mod) {
+			TraceCntr = Dev.tile(Loc).module(Mod).traceControl();
 			State.Initialized = 1;
 		}
 		~XAieTraceEvent() {}
 		/**
 		 * This function sets event to trace.
 		 *
-		 * @param M module of the event
-		 * @param E event to trace
+		 * @param Module module of the event
+		 * @param Event event to trace
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC setEvent(XAie_ModuleType M, XAie_Events E) {
+		AieRC setEvent(XAie_ModuleType Module, XAie_Events TraceEvent) {
 			AieRC RC;
 			uint8_t HwEvent;
 
 			RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
-					M, E, &HwEvent);
+					Module, TraceEvent, &HwEvent);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
-					") Event Mod=" << M << " Event=" << E <<
+					") Event Mod=" << Module << " Event=" << TraceEvent <<
 					" invalid event" << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else if (State.Running == 1) {
 				RC = XAIE_ERR;
 				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
-					") Event Mod=" << M << " Event=" << E <<
+					") Event Mod=" << Module << " Event=" << TraceEvent <<
 					" trace event already in used" << std::endl;
-			} else if (State.Reserved == 1 && M != EventMod) {
+			} else if (State.Reserved == 1 && Module != EventMod) {
 				RC = XAIE_INVALID_ARGS;
 				Logger::log(LogLevel::ERROR) << "trace event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
-					") Event Mod=" << M << " Event=" << E <<
+					") Event Mod=" << Module << " Event=" << TraceEvent <<
 					" trace event already reserved, input event module is different to the one already set" << std::endl;
 			} else {
-				Event = E;
-				EventMod = M;
+				Event = TraceEvent;
+				EventMod = Module;
 				State.Configured = 1;
 			}
 			return RC;
@@ -602,11 +602,11 @@ namespace xaiefal {
 		 * This function returns the event to trace and its module.
 		 * If the event is not set, it will return failure.
 		 *
-		 * @param M returns the module of the event
-		 * @param E returns the event to trace
+		 * @param Module returns the module of the event
+		 * @param TraceEvent returns the event to trace
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC getEvent(XAie_ModuleType &M, XAie_Events &E) const {
+		AieRC getEvent(XAie_ModuleType &Module, XAie_Events &TraceEvent) const {
 			AieRC RC;
 
 			if (State.Configured == 0) {
@@ -616,8 +616,8 @@ namespace xaiefal {
 					" Event Mod=" << Mod << " no event specified" << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				E = Event;
-				M = EventMod;
+				TraceEvent = Event;
+				Module = EventMod;
 				RC = XAIE_OK;
 			}
 			return RC;
@@ -752,7 +752,7 @@ namespace xaiefal {
 			return RC;
 		}
 
-		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+		void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
 			XAieUserRsc Rsc;
 
 			Rsc.Loc.Col = Loc.Col;
@@ -760,10 +760,10 @@ namespace xaiefal {
 			Rsc.Mod = TraceCntr->getModule();
 			Rsc.RscType = XAIE_TRACEEVENT;
 			Rsc.RscId = Slot;
-			vR.push_back(Rsc);
+			vOutRscs.push_back(Rsc);
 
 			if (EventMod != TraceCntr->getModule()) {
-				BC->getReservedRscs(vR);
+				BC->getReservedRscs(vOutRscs);
 			}
 		}
 	protected:
@@ -783,8 +783,8 @@ namespace xaiefal {
 	public:
 		XAieTracing() = delete;
 		XAieTracing(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M, std::shared_ptr<XAieTraceCntr> TCntr):
-			XAieSingleTileRsc(DevHd, L, M) {
+			XAie_LocType Loc, XAie_ModuleType Mod, std::shared_ptr<XAieTraceCntr> TCntr):
+			XAieSingleTileRsc(DevHd, Loc, Mod) {
 			if (!TCntr) {
 				throw std::invalid_argument("Trace event failed, empty trace control");
 			}
@@ -795,10 +795,10 @@ namespace xaiefal {
 			TraceCntr = std::move(TCntr);
 			State.Initialized = 1;
 		}
-		XAieTracing(XAieDev &Dev, XAie_LocType L,
-			XAie_ModuleType M):
-			XAieSingleTileRsc(Dev, L, M) {
-			TraceCntr = Dev.tile(L).module(M).traceControl();
+		XAieTracing(XAieDev &Dev, XAie_LocType Loc,
+			XAie_ModuleType Mod):
+			XAieSingleTileRsc(Dev, Loc, Mod) {
+			TraceCntr = Dev.tile(Loc).module(Mod).traceControl();
 			State.Initialized = 1;
 		}
 		~XAieTracing() {
@@ -810,16 +810,16 @@ namespace xaiefal {
 		 * control is configured in hardware. That is it needs to
 		 * be called before start().
 		 *
-		 * @param M module of the event
-		 * @param E event to trace
+		 * @param Module module of the event
+		 * @param TraceEvent event to trace
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC addEvent(XAie_ModuleType M, XAie_Events E) {
+		AieRC addEvent(XAie_ModuleType Module, XAie_Events TraceEvent) {
 			AieRC RC;
 
 			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
-				") Mod=" << static_cast<uint32_t>(M) << " E=" << E << std::endl;
+				") Mod=" << static_cast<uint32_t>(Module) << " E=" << TraceEvent << std::endl;
 			if (Events.size() == TraceCntr->getMaxTraceEvents()) {
 				Logger::log(LogLevel::ERROR) << __func__ <<
 					"failed for tracing, exceeded max num of events." << std::endl;
@@ -831,7 +831,7 @@ namespace xaiefal {
 			} else {
 				XAieTraceEvent TraceE(AieHd, Loc, Mod, TraceCntr);
 
-				RC = TraceE.setEvent(M, E);
+				RC = TraceE.setEvent(Module, TraceEvent);
 				if (RC != XAIE_OK) {
 					Logger::log(LogLevel::ERROR) << __func__ <<
 						"failed for tracing, failed to initialize event." << std::endl;
@@ -858,16 +858,16 @@ namespace xaiefal {
 		 * This function removes an event.
 		 * It needs to be called before start().
 		 *
-		 * @param M module of the event
-		 * @param E event to remove
+		 * @param Module module of the event
+		 * @param TraceEvent event to remove
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC removeEvent(XAie_ModuleType M, XAie_Events E) {
+		AieRC removeEvent(XAie_ModuleType Module, XAie_Events TraceEvent) {
 			AieRC RC;
 
 			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
-				") Mod=" << static_cast<uint32_t>(M) << " E=" << E << std::endl;
+				") Mod=" << static_cast<uint32_t>(Module) << " E=" << TraceEvent << std::endl;
 			if (State.Running == 1) {
 				Logger::log(LogLevel::ERROR) << __func__ <<
 					"failed for tracing, resource reserved." << std::endl;
@@ -879,7 +879,7 @@ namespace xaiefal {
 					XAie_ModuleType lM;
 
 					Events[i].getEvent(lM, lE);
-					if (lM == M && E == lE) {
+					if (lM == Module && TraceEvent == lE) {
 						Events.erase(Events.begin() + i);
 						RC = XAIE_OK;
 						break;
@@ -924,16 +924,16 @@ namespace xaiefal {
 		 * configured in hardware. That is it needs to be called before
 		 * start().
 		 *
-		 * @param M trace control mode
+		 * @param TraceMode trace control mode
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC setMode(XAie_TraceMode M) {
+		AieRC setMode(XAie_TraceMode TraceMode) {
 			AieRC RC;
 
 			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
-				") M=" << M << std::endl;
-			RC = TraceCntr->setMode(M);
+				") Mode=" << TraceMode << std::endl;
+			RC = TraceCntr->setMode(TraceMode);
 			if (RC == XAIE_OK) {
 				changeToConfigured();
 			}
@@ -945,16 +945,16 @@ namespace xaiefal {
 		 * configured in hardware. That is it needs to be called before
 		 * start().
 		 *
-		 * @param P trace control packet setting
+		 * @param Packet trace control packet setting
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC setPkt(const XAie_Packet &P) {
+		AieRC setPkt(const XAie_Packet &Packet) {
 			AieRC RC;
 
 			Logger::log(LogLevel::DEBUG) << "tracing " << __func__ << " ("
 				<< static_cast<uint32_t>(TraceCntr->loc().Col) << "," << static_cast<uint32_t>(TraceCntr->loc().Row) <<
 				") Mod=" << static_cast<uint32_t>(TraceCntr->getModule()) << std::endl;
-			RC = TraceCntr->setPkt(P);
+			RC = TraceCntr->setPkt(Packet);
 			if (RC == XAIE_OK) {
 				changeToConfigured();
 			}

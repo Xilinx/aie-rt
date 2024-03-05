@@ -77,8 +77,8 @@ namespace xaiefal {
 			preferredId = XAIE_RSC_ID_ANY;
 			Type = static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY);
 		}
-		XAieRsc(std::shared_ptr<XAieDevHandle> DevHd, XAieRscType T):
-			State(), Type(T), AieHd(DevHd) {
+		XAieRsc(std::shared_ptr<XAieDevHandle> DevHd, XAieRscType Type):
+			State(), Type(Type), AieHd(DevHd) {
 			if (!DevHd) {
 				throw std::invalid_argument("aie rsc: empty device handle");
 			}
@@ -316,31 +316,31 @@ namespace xaiefal {
 		/**
 		 * This function returns resources reserved.
 		 *
-		 * @param vR vector to store the reserved resources
+		 * @param vOutRscs vector to store the reserved resources
 		 */
-		void getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+		void getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
 			if (State.Reserved != 0) {
-				_getReservedRscs(vR);
+				_getReservedRscs(vOutRscs);
 			}
 		}
 		/**
 		 * This function returns resources to be reserved.
 		 *
-		 * @param vR vector to store the resources
+		 * @param vOutRscs vector to store the resources
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getRscs(std::vector<XAieUserRsc> &vR) {
-			_getRscs(vR);
+		AieRC getRscs(std::vector<XAieUserRsc> &vOutRscs) {
+			_getRscs(vOutRscs);
 			return XAIE_OK;
 		}
 		/**
 		 * This function sets the resources
 		 *
-		 * @param vR vector to set resources from
+		 * @param vInRscs vector to set resources from
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC setRscs(std::vector<XAieUserRsc> &vR) {
-			_setRscs(vR);
+		AieRC setRscs(std::vector<XAieUserRsc> &vInRscs) {
+			_setRscs(vInRscs);
 			return XAIE_OK;
 		}
 		/**
@@ -440,30 +440,30 @@ namespace xaiefal {
 		/**
 		 * This function returns resources reserved.
 		 *
-		 * @param vR vector to store the reserved resources
+		 * @param vOutRscs vector to store the reserved resources
 		 */
-		virtual void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+		virtual void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
 			std::string rName(typeid(*this).name());
 
-			(void)vR;
+			(void)vOutRscs;
 			throw std::invalid_argument("get resource not supported of rsc" +
 					rName);
 		}
 		/**
 		 * This function returns resources to be reserved
 		 *
-		 * @param vR vector to store the reserved resources
+		 * @param vOutRscs vector to store the reserved resources
 		 */
-		virtual void _getRscs(std::vector<XAieUserRsc> &vR) {
-			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
+		virtual void _getRscs(std::vector<XAieUserRsc> &vOutRscs) {
+			vOutRscs.insert(vOutRscs.end(), vRscs.begin(), vRscs.end());
 		}
 		/**
 		 * This function sets the resources to be reserved
 		 *
-		 * @param vR vector to set the resources to
+		 * @param vInRscs vector to set the resources to
 		 */
-		virtual void _setRscs(std::vector<XAieUserRsc> &vR) {
-			vRscs = vR;
+		virtual void _setRscs(std::vector<XAieUserRsc> &vInRscs) {
+			vRscs = vInRscs;
 		}
 	};
 
@@ -475,32 +475,32 @@ namespace xaiefal {
 	public:
 		XAieSingleTileRsc() = delete;
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieRsc(DevHd), Loc(L), Mod(M) {
-			if (_XAie_CheckModule(AieHd->dev(), Loc, M) !=
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieRsc(DevHd), Loc(Loc), Mod(Mod) {
+			if (_XAie_CheckModule(AieHd->dev(), Loc, Mod) !=
 				XAIE_OK) {
 				throw std::invalid_argument("invalid module tile");
 			}
 		}
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M, XAieRscType T):
-			XAieRsc(DevHd, T), Loc(L), Mod(M) {
-			if (_XAie_CheckModule(AieHd->dev(), Loc, M) !=
+			XAie_LocType Loc, XAie_ModuleType Mod, XAieRscType Type):
+			XAieRsc(DevHd, Type), Loc(Loc), Mod(Mod) {
+			if (_XAie_CheckModule(AieHd->dev(), Loc, Mod) !=
 				XAIE_OK) {
 				throw std::invalid_argument("invalid module tile");
 			}
 		}
 		XAieSingleTileRsc(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(Dev.getDevHandle(), L, M) {}
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieSingleTileRsc(Dev.getDevHandle(), Loc, Mod) {}
 		XAieSingleTileRsc(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M, XAieRscType T):
-			XAieSingleTileRsc(Dev.getDevHandle(), L, M, T) {}
+			XAie_LocType Loc, XAie_ModuleType Mod, XAieRscType Type):
+			XAieSingleTileRsc(Dev.getDevHandle(), Loc, Mod, Type) {}
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L):
-			XAieRsc(DevHd), Loc(L) {
+			XAie_LocType Loc):
+			XAieRsc(DevHd), Loc(Loc) {
 			uint8_t TType = _XAie_GetTileTypefromLoc(
-					AieHd->dev(), L);
+					AieHd->dev(), Loc);
 			if (TType == XAIEGBL_TILE_TYPE_MAX) {
 				throw std::invalid_argument("Invalid tile");
 			}
@@ -514,10 +514,10 @@ namespace xaiefal {
 			}
 		}
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAieRscType T):
-			XAieRsc(DevHd, T), Loc(L){
+			XAie_LocType Loc, XAieRscType Type):
+			XAieRsc(DevHd, Type), Loc(Loc){
 			uint8_t TType = _XAie_GetTileTypefromLoc(
-					AieHd->dev(), L);
+					AieHd->dev(), Loc);
 			if (TType == XAIEGBL_TILE_TYPE_MAX) {
 				throw std::invalid_argument("Invalid tile");
 			}
@@ -530,10 +530,8 @@ namespace xaiefal {
 				Mod = XAIE_MEM_MOD;
 			}
 		}
-		//XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L):
-		//	XAieSingleTileRsc(Dev.getDevHandle(), L) {}
-		XAieSingleTileRsc(XAieDev &Dev, XAie_LocType L, XAieRscType T):
-			XAieSingleTileRsc(Dev.getDevHandle(), L, T) {}
+		XAieSingleTileRsc(XAieDev &Dev, XAie_LocType Loc, XAieRscType Type):
+			XAieSingleTileRsc(Dev.getDevHandle(), Loc, Type) {}
 		virtual ~XAieSingleTileRsc() {}
 		/**
 		 * This function returns tile location
@@ -554,13 +552,13 @@ namespace xaiefal {
 		/**
 		 * This function returns resource id
 		 *
-		 * @param L returns tile location
-		 * @param M returns module type
-		 * @param I returns resource ID
+		 * @param OutLoc returns tile location
+		 * @param OutMod returns module type
+		 * @param OutRscId returns resource ID
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getRscId(XAie_LocType &L, XAie_ModuleType &M,
-				uint32_t &I) {
+		AieRC getRscId(XAie_LocType &OutLoc, XAie_ModuleType &OutMod,
+				uint32_t &OutRscId) {
 			AieRC RC = XAIE_ERR;
 
 			if (State.Reserved == 0) {
@@ -571,10 +569,10 @@ namespace xaiefal {
 					" resource not reserved." << std::endl;
 			} else {
 				if (vRscs.size() > 0) {
-					M = vRscs[0].Mod;
-					I = vRscs[0].RscId;
+					OutMod = vRscs[0].Mod;
+					OutRscId = vRscs[0].RscId;
 				}
-				L = Loc;
+				OutLoc = Loc;
 				RC = XAIE_OK;
 			}
 			return RC;
@@ -598,20 +596,20 @@ namespace xaiefal {
 		/**
 		 * This function returns resources reserved.
 		 *
-		 * @param vR vector to store the reserved resources
+		 * @param vOutRscs vector to store the reserved resources
 		 */
-		virtual void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+		virtual void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
 			if (vRscs.size() > 0) {
-				vR.push_back(vRscs[0]);
+				vOutRscs.push_back(vRscs[0]);
 			}
 		}
 	};
 
 	struct XAieRscGetRscsWrapper {
 		XAieRscGetRscsWrapper() = delete;
-		XAieRscGetRscsWrapper(std::shared_ptr<XAieRsc> &R,
+		XAieRscGetRscsWrapper(std::shared_ptr<XAieRsc> &Rsc,
 				std::vector<XAieUserRsc> &Rscs) {
-			R->getReservedRscs(Rscs);
+			Rsc->getReservedRscs(Rscs);
 		}
 		~XAieRscGetRscsWrapper() {};
 	};

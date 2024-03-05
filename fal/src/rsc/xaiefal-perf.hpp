@@ -31,9 +31,9 @@ namespace xaiefal {
 	public:
 		XAiePerfCounter() = delete;
 		XAiePerfCounter(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M,
+			XAie_LocType Loc, XAie_ModuleType Mod,
 			bool CrossM = false, uint32_t Threshold = 0):
-			XAieSingleTileRsc(DevHd, L, M, XAIE_PERFCOUNT),
+			XAieSingleTileRsc(DevHd, Loc, Mod, XAIE_PERFCOUNT),
 			CrossMod(CrossM) {
 			StartMod = Mod;
 			StopMod = Mod;
@@ -43,9 +43,9 @@ namespace xaiefal {
 			EventVal = Threshold;
 		}
 		XAiePerfCounter(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M,
+			XAie_LocType Loc, XAie_ModuleType Mod,
 			bool CrossM = false):
-			XAiePerfCounter(Dev.getDevHandle(), L, M, CrossM) {}
+			XAiePerfCounter(Dev.getDevHandle(), Loc, Mod, CrossM) {}
 		~XAiePerfCounter() {
 			if (State.Reserved == 1) {
 				if (StartMod != vRscs[0].Mod) {
@@ -133,11 +133,11 @@ namespace xaiefal {
 		 * It needs to be called before counter is configured in hardware.
 		 * That is it needs to be called before start().
 		 *
-		 * @param M reset event module
-		 * @param E reset event
+		 * @param Module reset event module
+		 * @param Event reset event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC changeRstEvent(XAie_ModuleType M, XAie_Events E) {
+		AieRC changeRstEvent(XAie_ModuleType Module, XAie_Events Event) {
 			AieRC RC;
 
 			if (State.Running == 1) {
@@ -146,7 +146,7 @@ namespace xaiefal {
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use" << std::endl;
 				RC = XAIE_ERR;
-			} else if (State.Reserved == 1 && M != RstMod) {
+			} else if (State.Reserved == 1 && Module != RstMod) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
@@ -157,10 +157,10 @@ namespace xaiefal {
 				uint8_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(),
-						Loc, M, E, &HwEvent);
+						Loc, Module, Event, &HwEvent);
 				if (RC == XAIE_OK) {
-					RstEvent = E;
-					RstMod = M;
+					RstEvent = Event;
+					RstMod = Module;
 				}
 			}
 			return RC;
@@ -193,12 +193,12 @@ namespace xaiefal {
 		 * It needs to be called before counter is configured in hardware.
 		 * That is it needs to be called before start().
 		 *
-		 * @param M reset event module
+		 * @param Module reset event module
+		 * @param Event start event
 		 *
-		 * @param E start event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC changeStartEvent(XAie_ModuleType M, XAie_Events E) {
+		AieRC changeStartEvent(XAie_ModuleType Module, XAie_Events Event) {
 			AieRC RC;
 
 			if (State.Running == 1) {
@@ -207,7 +207,7 @@ namespace xaiefal {
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
-			} else if (State.Reserved == 1 && M != StartMod) {
+			} else if (State.Reserved == 1 && Module != StartMod) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
@@ -218,10 +218,10 @@ namespace xaiefal {
 				uint8_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
-						M, E, &HwEvent);
+						Module, Event, &HwEvent);
 				if (RC == XAIE_OK) {
-					StartEvent = E;
-					StartMod = M;
+					StartEvent = Event;
+					StartMod = Module;
 				}
 			}
 			return RC;
@@ -231,11 +231,11 @@ namespace xaiefal {
 		 * It needs to be called before counter is configured in hardware.
 		 * That is it needs to be called before start().
 		 *
-		 * @param M module type of the event
-		 * @param E stop event
+		 * @param Module module type of the event
+		 * @param Event stop event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC changeStopEvent(XAie_ModuleType M, XAie_Events E) {
+		AieRC changeStopEvent(XAie_ModuleType Module, XAie_Events Event) {
 			AieRC RC;
 
 			if (State.Running == 1) {
@@ -244,7 +244,7 @@ namespace xaiefal {
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
-			} else if (State.Reserved == 1 && M != StopMod) {
+			} else if (State.Reserved == 1 && Module != StopMod) {
 				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Counter Mod=" << (int)vRscs[0].Mod <<
@@ -255,10 +255,10 @@ namespace xaiefal {
 				uint8_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
-						M, E, &HwEvent);
+						Module, Event, &HwEvent);
 				if (RC == XAIE_OK) {
-					StopEvent = E;
-					StopMod = M;
+					StopEvent = Event;
+					StopMod = Module;
 				}
 			}
 			return RC;
@@ -267,10 +267,10 @@ namespace xaiefal {
 		 * This function reads the perfcounter value if counter is
 		 * in use.
 		 *
-		 * @param R counter value if counter is in use.
+		 * @param Result counter value if counter is in use.
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC readResult(uint32_t &R) {
+		AieRC readResult(uint32_t &Result) {
 			AieRC RC;
 
 			if (State.Running == 0) {
@@ -281,18 +281,18 @@ namespace xaiefal {
 				RC = XAIE_ERR;
 			} else {
 				RC = XAie_PerfCounterGet(dev(), Loc, vRscs[0].Mod,
-						vRscs[0].RscId, &R);
+						vRscs[0].RscId, &Result);
 			}
 			return RC;
 		}
 		/**
 		 * This function returns the counter event and the event module.
 		 *
-		 * @param M module of the counter
-		 * @param E counter event
+		 * @param Module module of the counter
+		 * @param Event counter event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getCounterEvent(XAie_ModuleType &M, XAie_Events &E) const {
+		AieRC getCounterEvent(XAie_ModuleType &Module, XAie_Events &Event) const {
 			AieRC RC;
 
 			if (State.Reserved == 0) {
@@ -302,9 +302,9 @@ namespace xaiefal {
 					" resource not allocated." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				M = vRscs[0].Mod;
-				XAie_PerfCounterGetEventBase(AieHd->dev(), Loc, M, &E);
-				E = static_cast<XAie_Events>(static_cast<uint32_t>(E) + vRscs[0].RscId);
+				Module = vRscs[0].Mod;
+				XAie_PerfCounterGetEventBase(AieHd->dev(), Loc, Module, &Event);
+				Event = static_cast<XAie_Events>(static_cast<uint32_t>(Event) + vRscs[0].RscId);
 				RC = XAIE_OK;
 			}
 
@@ -534,18 +534,18 @@ namespace xaiefal {
 			return RC;
 		}
 
-		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
-			vR.push_back(vRscs[0]);
+		void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
+			vOutRscs.push_back(vRscs[0]);
 			if (StartMod != vRscs[0].Mod) {
-				StartBC->getReservedRscs(vR);
+				StartBC->getReservedRscs(vOutRscs);
 			}
 			if (StopMod != vRscs[0].Mod) {
-				StopBC->getReservedRscs(vR);
+				StopBC->getReservedRscs(vOutRscs);
 			}
 			if (RstEvent != XAIE_EVENT_NONE_CORE && StopMod != vRscs[0].Mod) {
-				RstBC->getReservedRscs(vR);
+				RstBC->getReservedRscs(vOutRscs);
 			}
-			_getRscsAppend(vR);
+			_getRscsAppend(vOutRscs);
 		}
 		virtual AieRC _startPrepend() {
 			return XAIE_OK;
@@ -559,8 +559,8 @@ namespace xaiefal {
 		virtual AieRC _releaseAppend() {
 			return XAIE_OK;
 		}
-		virtual void _getRscsAppend(std::vector<XAieUserRsc> &vR) const {
-			(void)vR;
+		virtual void _getRscsAppend(std::vector<XAieUserRsc> &vOutRscs) const {
+			(void)vOutRscs;
 		}
 	};
 }

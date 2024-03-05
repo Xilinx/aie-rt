@@ -89,8 +89,8 @@ namespace xaiefal {
 		}
 
 		template<class RT>
-		AieRC addRsc(std::shared_ptr<RT> R) {
-			return RscGroup->addRsc(R);
+		AieRC addRsc(std::shared_ptr<RT> Rsc) {
+			return RscGroup->addRsc(Rsc);
 		}
 	private:
 		std::shared_ptr<XAieRscGroupBase> RscGroup ; /**< Resource Group */
@@ -265,25 +265,25 @@ namespace xaiefal {
 		/**
 		 * This function returns a tile object reference.
 		 *
-		 * @param L tile Location
+		 * @param Loc tile Location
 		 * @return tile object reference
 		 */
-		XAieTile &tile(XAie_LocType L) {
-			if (L.Col > NumCols || L.Row > NumRows) {
+		XAieTile &tile(XAie_LocType Loc) {
+			if (Loc.Col > NumCols || Loc.Row > NumRows) {
 				throw std::invalid_argument("Invalid tile location");
 			}
-			return Tiles[L.Col * NumRows + L.Row];
+			return Tiles[Loc.Col * NumRows + Loc.Row];
 		}
 
 		/**
 		 * This function returns a tile object reference.
 		 *
-		 * @param C absolute column index
-		 * @param R absolute row index, 0 is shim row
+		 * @param Col absolute column index
+		 * @param Row absolute row index, 0 is shim row
 		 * @return tile object reference
 		 */
-		XAieTile &tile(uint8_t C, uint32_t R) {
-			return tile(XAie_TileLoc(C, R));
+		XAieTile &tile(uint8_t Col, uint32_t Row) {
+			return tile(XAie_TileLoc(Col, Row));
 		}
 
 		/**
@@ -376,7 +376,7 @@ namespace xaiefal {
 		 * This function returns broadcast resource software object
 		 * within a tile.
 		 *
-		 * @param vL vector of tile locations
+		 * @param vLocs vector of tile locations
 		 * @param StartM starting module of the broadcast channel
 		 * @param EndM Ending module of the broadcast channel
 		 * @param GName resource group name
@@ -389,20 +389,20 @@ namespace xaiefal {
 		 * function of the resource class.
 		 */
 		std::shared_ptr<XAieBroadcast> broadcast(
-			std::vector<XAie_LocType> &vL, XAie_ModuleType StartM,
+			std::vector<XAie_LocType> &vLocs, XAie_ModuleType StartM,
 			XAie_ModuleType EndM,
 			XAieDevHdRscGroupWrapper &RGroup) {
-			auto BC = std::make_shared<XAieBroadcast>(*this, vL,
+			auto BC = std::make_shared<XAieBroadcast>(*this, vLocs,
 					StartM, EndM);
 			RGroup.addRsc(BC);
 			return BC;
 		}
 		std::shared_ptr<XAieBroadcast> broadcast(
-			std::vector<XAie_LocType> &vL, XAie_ModuleType StartM,
+			std::vector<XAie_LocType> &vLocs, XAie_ModuleType StartM,
 			XAie_ModuleType EndM) {
 			XAieDevHdRscGroupWrapper RGroup =
 				AieHandle->getRscGroup("Generic");
-			return broadcast(vL, StartM, EndM, RGroup);
+			return broadcast(vLocs, StartM, EndM, RGroup);
 		}
 
 		/**
@@ -469,9 +469,9 @@ namespace xaiefal {
 	class XAieMod {
 	public:
 		XAieMod() {};
-		XAieMod(XAieDev &Dev, XAie_LocType L, XAie_ModuleType M):
-			AieHandle(Dev.getDevHandle()), Loc(L), Mod(M) {
-			if (_XAie_CheckModule(AieHandle->dev(), Loc, M) !=
+		XAieMod(XAieDev &Dev, XAie_LocType Loc, XAie_ModuleType Mod):
+			AieHandle(Dev.getDevHandle()), Loc(Loc), Mod(Mod) {
+			if (_XAie_CheckModule(AieHandle->dev(), Loc, Mod) !=
 				XAIE_OK) {
 				throw std::invalid_argument("Invalid module and tile");
 			}
@@ -526,11 +526,11 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAiePerfCounter> perfCounter(
 				XAieDevHdRscGroupWrapper &RGroup) {
-			auto R = std::make_shared<XAiePerfCounter>(AieHandle,
+			auto Rsc = std::make_shared<XAiePerfCounter>(AieHandle,
 					Loc, Mod);
 
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAiePerfCounter> perfCounter() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -568,11 +568,11 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAieTraceEvent> traceEvent(
 				XAieDevHdRscGroupWrapper &RGroup) {
-			auto R = std::make_shared<XAieTraceEvent>(AieHandle,
+			auto Rsc = std::make_shared<XAieTraceEvent>(AieHandle,
 				Loc, Mod, TraceCntr);
 
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAieTraceEvent> traceEvent() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -596,10 +596,10 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAieActiveCycles> activeCycles(
 				XAieDevHdRscGroupWrapper &RGroup) {
-			auto R = std::make_shared<XAieActiveCycles>(AieHandle,
+			auto Rsc = std::make_shared<XAieActiveCycles>(AieHandle,
 					Loc);
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAieActiveCycles> activeCycles() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -624,10 +624,10 @@ namespace xaiefal {
 				XAieDevHdRscGroupWrapper &RGroup) {
 			auto StallG = groupEvent(XAIE_EVENT_GROUP_CORE_STALL_CORE);
 			auto FlowG = groupEvent(XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
-			auto R = std::make_shared<XAieStallCycles>(AieHandle,
+			auto Rsc = std::make_shared<XAieStallCycles>(AieHandle,
 					Loc, StallG, FlowG);
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAieStallCycles> stallCycles() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -651,10 +651,10 @@ namespace xaiefal {
 		std::shared_ptr<XAieStallOccurrences> stallOccurrences(
 				XAieDevHdRscGroupWrapper &RGroup) {
 			auto StallG = groupEvent(XAIE_EVENT_GROUP_CORE_STALL_CORE);
-			auto R = std::make_shared<XAieStallOccurrences>(AieHandle,
+			auto Rsc = std::make_shared<XAieStallOccurrences>(AieHandle,
 					Loc, StallG);
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAieStallOccurrences> stallOccurrences() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -676,9 +676,9 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAiePCEvent> pcEvent(
 				XAieDevHdRscGroupWrapper &RGroup) {
-			auto R = std::make_shared<XAiePCEvent>(AieHandle, Loc);
-			RGroup.addRsc(R);
-			return R;
+			auto Rsc = std::make_shared<XAiePCEvent>(AieHandle, Loc);
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAiePCEvent> pcEvent() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -700,9 +700,9 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAiePCRange> pcRange(
 				XAieDevHdRscGroupWrapper &RGroup) {
-			auto R = std::make_shared<XAiePCRange>(AieHandle, Loc);
-			RGroup.addRsc(R);
-			return R;
+			auto Rsc = std::make_shared<XAiePCRange>(AieHandle, Loc);
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAiePCRange> pcRange() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -726,11 +726,11 @@ namespace xaiefal {
 		std::shared_ptr<XAieComboEvent> comboEvent(
 				XAieDevHdRscGroupWrapper &RGroup,
 				uint32_t ENum = 2) {
-			auto R = std::make_shared<XAieComboEvent>(AieHandle,
+			auto Rsc = std::make_shared<XAieComboEvent>(AieHandle,
 								Loc, Mod,
 								ENum);
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAieComboEvent> comboEvent(uint32_t ENum = 2) {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -743,7 +743,7 @@ namespace xaiefal {
 		 * This function returns group event handle object shared pointer
 		 *
 		 * @param RGroup resource group
-		 * @E group event
+		 * @Event group event
 		 * @return group event handle software object pointer
 		 *
 		 * Please note that this function will not request hardware
@@ -753,24 +753,25 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAieGroupEventHandle> groupEvent(
 				XAieDevHdRscGroupWrapper &RGroup,
-				XAie_Events E) {
-			auto G = GroupEvents.find(E);
-			if (G != GroupEvents.end()) {
+				XAie_Events Event) {
+			auto gEvent = GroupEvents.find(Event);
+			if (gEvent != GroupEvents.end()) {
 				return std::make_shared<XAieGroupEventHandle>(
-						AieHandle, GroupEvents[E]);
+						AieHandle, GroupEvents[Event]);
 			}
-			auto gEPtr = std::make_shared<XAieGroupEvent>(AieHandle, Loc, Mod, E);
+			auto gEPtr = std::make_shared<XAieGroupEvent>(AieHandle,
+								      Loc, Mod, Event);
 			RGroup.addRsc(gEPtr);
-			GroupEvents.emplace(E, gEPtr);
+			GroupEvents.emplace(Event, gEPtr);
 			return std::make_shared<XAieGroupEventHandle>(AieHandle,
 					gEPtr);
 		}
 		std::shared_ptr<XAieGroupEventHandle> groupEvent(
-				XAie_Events E) {
+				XAie_Events Event) {
 			XAieDevHdRscGroupWrapper RGroup =
 				AieHandle->getRscGroup("Generic");
 
-			return groupEvent(RGroup, E);
+			return groupEvent(RGroup, Event);
 		}
 
 		/**
@@ -786,10 +787,10 @@ namespace xaiefal {
 		 */
 		std::shared_ptr<XAieUserEvent> userEvent(
 				XAieDevHdRscGroupWrapper &RGroup) {
-			auto R = std::make_shared<XAieUserEvent>(AieHandle,
+			auto Rsc = std::make_shared<XAieUserEvent>(AieHandle,
 								Loc, Mod);
-			RGroup.addRsc(R);
-			return R;
+			RGroup.addRsc(Rsc);
+			return Rsc;
 		}
 		std::shared_ptr<XAieUserEvent> userEvent() {
 			XAieDevHdRscGroupWrapper RGroup =
@@ -813,8 +814,8 @@ namespace xaiefal {
 	class XAieTile {
 	public:
 		XAieTile() {}
-		XAieTile(XAieDev &Dev, XAie_LocType L):
-			AieHandle(Dev.getDevHandle()), Loc(L) {
+		XAieTile(XAieDev &Dev, XAie_LocType Loc):
+			AieHandle(Dev.getDevHandle()), Loc(Loc) {
 			uint32_t TType;
 
 			TType = _XAie_GetTileTypefromLoc(Dev.dev(), Loc);
@@ -823,14 +824,14 @@ namespace xaiefal {
 				throw std::invalid_argument("Invalid tile");
 			}
 			if (TType == XAIEGBL_TILE_TYPE_AIETILE) {
-				Mods.push_back(XAieMod(Dev, L, XAIE_MEM_MOD));
-				Mods.push_back(XAieMod(Dev, L, XAIE_CORE_MOD));
+				Mods.push_back(XAieMod(Dev, Loc, XAIE_MEM_MOD));
+				Mods.push_back(XAieMod(Dev, Loc, XAIE_CORE_MOD));
 			} else {
 				if (TType == XAIEGBL_TILE_TYPE_SHIMPL ||
 					TType == XAIEGBL_TILE_TYPE_SHIMNOC) {
-					Mods.push_back(XAieMod(Dev, L, XAIE_PL_MOD));
+					Mods.push_back(XAieMod(Dev, Loc, XAIE_PL_MOD));
 				} else {
-					Mods.push_back(XAieMod(Dev, L, XAIE_MEM_MOD));
+					Mods.push_back(XAieMod(Dev, Loc, XAIE_MEM_MOD));
 				}
 			}
 			AieHandle = Dev.getDevHandle();
@@ -1034,26 +1035,26 @@ namespace xaiefal {
 	 * This function returns the estimated module type of an AI enigne
 	 * event enum value.
 	 *
-	 * @param E input event enum
+	 * @param Event input event enum
 	 * @return estimated module type
 	 *
 	 * Please note that this funciton will not check if the input event
 	 * is valid or not, it will returns the estimated module type of the
 	 * event.
 	 */
-	static inline XAie_ModuleType XAieEstimateModFromEvent(XAie_Events E)
+	static inline XAie_ModuleType XAieEstimateModFromEvent(XAie_Events Event)
 	{
-		XAie_ModuleType M;
+		XAie_ModuleType Module;
 
-		if (E < XAIE_EVENT_NONE_MEM) {
-			M = XAIE_CORE_MOD;
-		} else if (E < XAIE_EVENT_NONE_PL ||
-				(E >= XAIE_EVENT_NONE_MEM_TILE &&
-				 E <= XAIE_EVENT_USER_EVENT_1_MEM_TILE)) {
-			M = XAIE_MEM_MOD;
+		if (Event < XAIE_EVENT_NONE_MEM) {
+			Module = XAIE_CORE_MOD;
+		} else if (Event < XAIE_EVENT_NONE_PL ||
+				(Event >= XAIE_EVENT_NONE_MEM_TILE &&
+				 Event <= XAIE_EVENT_USER_EVENT_1_MEM_TILE)) {
+			Module = XAIE_MEM_MOD;
 		} else {
-			M = XAIE_PL_MOD;
+			Module = XAIE_PL_MOD;
 		}
-		return M;
+		return Module;
 	}
 }

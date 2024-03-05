@@ -32,7 +32,7 @@ namespace xaiefal {
 		 * @param  AI engine resource shared pointer
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC addRsc(std::shared_ptr<XAieRsc> R) {
+		AieRC addRsc(std::shared_ptr<XAieRsc> Rsc) {
 			bool toAdd = true;
 			std::vector<std::weak_ptr<XAieRsc>>::iterator it;
 
@@ -44,13 +44,13 @@ namespace xaiefal {
 					continue;
 				}
 				it++;
-				if (lR == R) {
+				if (lR == Rsc) {
 					toAdd = false;
 					break;
 				}
 			}
 			if (toAdd) {
-				vRefs.push_back(R);
+				vRefs.push_back(Rsc);
 			}
 			return XAIE_OK;
 		}
@@ -64,28 +64,28 @@ namespace xaiefal {
 			std::vector<XAieUserRsc> vRscs;
 
 			for (auto Ref: vRefs) {
-				auto R = Ref.lock();
+				auto Rsc = Ref.lock();
 
-				if (R == nullptr) {
+				if (Rsc == nullptr) {
 					continue;
 				}
 
 				auto RscWrapper = std::make_shared<
-					XAieRscGetRscsWrapper>(R, vRscs);
+					XAieRscGetRscsWrapper>(Rsc, vRscs);
 			}
 
-			for (auto R: vRscs) {
+			for (auto Rsc: vRscs) {
 				for (auto L: vLocs) {
-					if ((L.Col != XAIE_LOC_ANY && R.Loc.Col != L.Col) ||
-						(L.Row != XAIE_LOC_ANY && R.Loc.Row != L.Row) ||
+					if ((L.Col != XAIE_LOC_ANY && Rsc.Loc.Col != L.Col) ||
+						(L.Row != XAIE_LOC_ANY && Rsc.Loc.Row != L.Row) ||
 						(Mod != static_cast<XAie_ModuleType>(XAIE_MOD_ANY)
-						 && R.Mod != Mod) ||
+						 && Rsc.Mod != Mod) ||
 						(RscType != static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)
-						 && R.RscType != RscType) ||
-						(RscId != XAIE_RSC_ID_ANY && R.RscId != RscId)) {
+						 && Rsc.RscType != RscType) ||
+						(RscId != XAIE_RSC_ID_ANY && Rsc.RscId != RscId)) {
 						continue;
 					}
-					RscStat.addRscStat(R.Loc, R.Mod, R.RscType, 1);
+					RscStat.addRscStat(Rsc.Loc, Rsc.Mod, Rsc.RscType, 1);
 				}
 			}
 
@@ -173,11 +173,11 @@ namespace xaiefal {
 		 * go to the lower level driver to get the resource
 		 * availability.
 		 */
-		AieRC addRsc(std::shared_ptr<XAieRsc> R) {
+		AieRC addRsc(std::shared_ptr<XAieRsc> Rsc) {
 			bool toAdd = true;
 			std::vector<std::weak_ptr<XAieRsc>>::iterator it;
 
-			if (R->getRscType() != XAIE_TRACECTRL) {
+			if (Rsc->getRscType() != XAIE_TRACECTRL) {
 				throw std::invalid_argument(
 					"failed to add rsc to avail group, only trace controller is allowed");
 			}
@@ -189,13 +189,13 @@ namespace xaiefal {
 					continue;
 				}
 				it++;
-				if (lR == R) {
+				if (lR == Rsc) {
 					toAdd = false;
 					break;
 				}
 			}
 			if (toAdd) {
-				vRefs.push_back(R);
+				vRefs.push_back(Rsc);
 			}
 			return XAIE_OK;
 		}
@@ -255,33 +255,33 @@ namespace xaiefal {
 				XAie_ModuleType Mod;
 				XAieRscType ManagedRscType;
 
-				auto R = Ref.lock();
-				if (R == nullptr) {
+				auto Rsc = Ref.lock();
+				if (Rsc == nullptr) {
 					continue;
 				}
 
-				ManagedRscType = R->getManagedRscsType();
+				ManagedRscType = Rsc->getManagedRscsType();
 				if (RscType != XAIE_RSC_TYPE_ANY &&
 					ManagedRscType != RscType) {
 					continue;
 				}
-				NumRscs = R->getAvailManagedRscs();
+				NumRscs = Rsc->getAvailManagedRscs();
 				if (NumRscs == 0) {
 					continue;
 				}
 
-				Loc = std::static_pointer_cast<XAieSingleTileRsc>(R)->loc();
-				Mod = std::static_pointer_cast<XAieSingleTileRsc>(R)->mod();
-				if (RscStat.getNumRsc(Loc, Mod, R->getRscType()) == 0 &&
-					R->isReserved() == false) {
+				Loc = std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->loc();
+				Mod = std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->mod();
+				if (RscStat.getNumRsc(Loc, Mod, Rsc->getRscType()) == 0 &&
+					Rsc->isReserved() == false) {
 					// If the parent resource is occupied
 					// but not by the current app, number of
 					// AIEFAL managed child resources is not
 					// available.
 					continue;
 				}
-				RscStat.addRscStat(std::static_pointer_cast<XAieSingleTileRsc>(R)->loc(),
-						std::static_pointer_cast<XAieSingleTileRsc>(R)->mod(),
+				RscStat.addRscStat(std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->loc(),
+						std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->mod(),
 						ManagedRscType, NumRscs);
 			}
 			return RscStat;

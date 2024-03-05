@@ -30,20 +30,20 @@ namespace xaiefal {
 	public:
 		XAieBroadcast() = delete;
 		XAieBroadcast(std::shared_ptr<XAieDevHandle> DevHd,
-			const std::vector<XAie_LocType> &vL,
+			const std::vector<XAie_LocType> &vInLocs,
 			XAie_ModuleType StartM, XAie_ModuleType EndM):
 			XAieRsc(DevHd, XAIE_BROADCAST) {
 			StartMod = StartM;
 			EndMod = EndM;
-			vLocs = vL;
+			vLocs = vInLocs;
 
 			State.Initialized = 1;
 			State.Configured = 1;
 		}
 		XAieBroadcast(XAieDev &Dev,
-			const std::vector<XAie_LocType> &vL,
+			const std::vector<XAie_LocType> &vInLocs,
 			XAie_ModuleType StartM, XAie_ModuleType EndM):
-			XAieBroadcast(Dev.getDevHandle(), vL, StartM, EndM) {}
+			XAieBroadcast(Dev.getDevHandle(), vInLocs, StartM, EndM) {}
 		~XAieBroadcast() {}
 		/**
 		 * This function returns the broadcast channel ID
@@ -62,37 +62,39 @@ namespace xaiefal {
 		 * This function gets the broadcast event of the specified tile
 		 * module on the broadcast channel.
 		 *
-		 * @param L tile location
-		 * @param M module type
-		 * @param E for returning broadcast event
+		 * @param Loc tile location
+		 * @param Mod module type
+		 * @param Event for returning broadcast event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getEvent(XAie_LocType L, XAie_ModuleType M, XAie_Events &E) {
+		AieRC getEvent(XAie_LocType Loc, XAie_ModuleType Mod,
+			       XAie_Events &Event) {
 			AieRC RC = XAIE_INVALID_ARGS;
 
 			if (State.Reserved == 0) {
 				Logger::log(LogLevel::ERROR) << "broadcast object " << __func__ << " (" <<
-					static_cast<uint32_t>(L.Col) << "," << static_cast<uint32_t>(L.Row) << ")" <<
-					" Mod= " << M <<
+					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
+					" Mod= " << Mod <<
 					" resource not reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				uint8_t TileType = _XAie_GetTileTypefromLoc(AieHd->dev(), L);
+				uint8_t TileType = _XAie_GetTileTypefromLoc(AieHd->dev(), Loc);
 				for (int i = 0; i < (int)vLocs.size(); i++) {
-					if (L.Col == vLocs[i].Col && L.Row == vLocs[i].Row) {
+					if (Loc.Col == vLocs[i].Col && Loc.Row == vLocs[i].Row) {
 						RC = XAIE_OK;
 						if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
-							if (M == XAIE_MEM_MOD) {
-								E = XAIE_EVENT_BROADCAST_0_MEM;
+							if (Mod == XAIE_MEM_MOD) {
+								Event = XAIE_EVENT_BROADCAST_0_MEM;
 							} else {
-								E = XAIE_EVENT_BROADCAST_0_CORE;
+								Event = XAIE_EVENT_BROADCAST_0_CORE;
 							}
 						} else if (TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
-							E = XAIE_EVENT_BROADCAST_0_MEM_TILE;
+							Event = XAIE_EVENT_BROADCAST_0_MEM_TILE;
 						} else {
-							E = XAIE_EVENT_BROADCAST_A_0_PL;
+							Event = XAIE_EVENT_BROADCAST_A_0_PL;
 						}
-						E = static_cast<XAie_Events>((static_cast<uint32_t>(E) + vRscs[0].RscId));
+						Event = static_cast<XAie_Events>(static_cast<uint32_t>(Event) +
+										 vRscs[0].RscId);
 						break;
 					}
 				}
@@ -318,8 +320,8 @@ namespace xaiefal {
 			return RC;
 		}
 
-		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
-			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
+		void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
+			vOutRscs.insert(vOutRscs.end(), vRscs.begin(), vRscs.end());
 		}
 	private:
 		XAie_ModuleType StartMod; /**< module type of the starting module on the channel */

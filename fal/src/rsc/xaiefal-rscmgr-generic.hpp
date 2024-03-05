@@ -365,29 +365,29 @@ namespace xaiefal {
 			for (uint32_t i = 0; i < vStats.size(); i++) {
 				uint32_t StartBit, StaticOff, MaxRscId, NumRscs = 0;
 				uint32_t sBit, sIndex, rBit, rIndex;
-				XAie_ModuleType M = vStats[i].Mod;
-				XAieRscType T = vStats[i].RscType;
-				XAie_LocType L = vStats[i].Loc;
-				uint8_t TileType = _XAie_GetTileTypefromLoc(dev(), L);
+				XAie_ModuleType Mod = vStats[i].Mod;
+				XAieRscType Type = vStats[i].RscType;
+				XAie_LocType Loc = vStats[i].Loc;
+				uint8_t TileType = _XAie_GetTileTypefromLoc(dev(), Loc);
 
-				if ((_XAie_CheckModule(dev(), L, M) != XAIE_OK) ||
+				if ((_XAie_CheckModule(dev(), Loc, Mod) != XAIE_OK) ||
 						TileType >= XAIEGBL_TILE_TYPE_MAX) {
 					Logger::log(LogLevel::WARN) << __func__ <<
 						" Invalid Location/Module for stat request"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
 				}
-				if (T >= XAIE_MAXRSC) {
+				if (Type >= XAIE_MAXRSC) {
 					Logger::log(LogLevel::WARN) << __func__ <<
 						" Invalid resource type for stat request"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
 				}
 
-				MaxRscId = getMaxRsc(L, M, T);
-				StartBit = getStartBit(L, M, T);
-				StaticOff = getStaticOff(L, M, T);
-				auto Bitmap = RscMaps[TileType].Bitmaps[T];
+				MaxRscId = getMaxRsc(Loc, Mod, Type);
+				StartBit = getStartBit(Loc, Mod, Type);
+				StaticOff = getStaticOff(Loc, Mod, Type);
+				auto Bitmap = RscMaps[TileType].Bitmaps[Type];
 
 				sIndex = (StartBit + StaticOff) / 32U;
 				sBit = (StartBit + StaticOff) % 32U;
@@ -1034,22 +1034,22 @@ namespace xaiefal {
 		 * @return Module type, XAIE_ANY_MOD for failure
 		 */
 		XAie_ModuleType estimateModfromIndex(uint8_t TileType, uint32_t Index) {
-			XAie_ModuleType M;
+			XAie_ModuleType Mod;
 
 			switch(TileType) {
 			case XAIEGBL_TILE_TYPE_AIETILE:
 			{
 				if (Index == 0U) {
-					M = XAIE_MEM_MOD;
+					Mod = XAIE_MEM_MOD;
 				} else {
-					M = XAIE_CORE_MOD;
+					Mod = XAIE_CORE_MOD;
 				}
 				break;
 			}
 			case XAIEGBL_TILE_TYPE_MEMTILE:
 			{
 				if (Index == 0U) {
-					M = XAIE_MEM_MOD;
+					Mod = XAIE_MEM_MOD;
 				}
 				break;
 			}
@@ -1057,14 +1057,14 @@ namespace xaiefal {
 			case XAIEGBL_TILE_TYPE_SHIMPL:
 			{
 				if (Index == 0U) {
-					M = XAIE_PL_MOD;
+					Mod = XAIE_PL_MOD;
 				}
 				break;
 			}
 			default:
-				M = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
+				Mod = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
 			}
-			return M;
+			return Mod;
 		}
 		/**
 		 * This function rounds the value to nearest multiple of

@@ -21,13 +21,13 @@ namespace xaiefal {
 	public:
 		XAiePCEvent() = delete;
 		XAiePCEvent(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L):
-			XAieSingleTileRsc(DevHd, L, XAIE_CORE_MOD, XAIE_PCEVENT),
+			XAie_LocType Loc):
+			XAieSingleTileRsc(DevHd, Loc, XAIE_CORE_MOD, XAIE_PCEVENT),
 			PcAddr(0) {
 			State.Initialized = 1;
 		}
-		XAiePCEvent(XAieDev &Dev, XAie_LocType L):
-			XAiePCEvent(Dev.getDevHandle(), L) {};
+		XAiePCEvent(XAieDev &Dev, XAie_LocType Loc):
+			XAiePCEvent(Dev.getDevHandle(), Loc) {};
 		/**
 		 * This function updates PC address of the PC event.
 		 *
@@ -56,10 +56,10 @@ namespace xaiefal {
 		 * This function returns PC event.
 		 * It needs to be called after reserve() succeeds.
 		 *
-		 * @param E return the PC range event.
+		 * @param Event return the PC range event.
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getEvent(XAie_Events &E) const {
+		AieRC getEvent(XAie_Events &Event) const {
 			AieRC RC = XAIE_OK;
 			if (State.Reserved == 0) {
 				Logger::log(LogLevel::ERROR) << "PC Event " << __func__ << " (" <<
@@ -67,8 +67,8 @@ namespace xaiefal {
 					" resource not resesrved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				E = XAIE_EVENT_PC_0_CORE;
-				E = (XAie_Events)(static_cast<uint32_t>(E) + vRscs[0].RscId);
+				Event = XAIE_EVENT_PC_0_CORE;
+				Event = (XAie_Events)(static_cast<uint32_t>(Event) + vRscs[0].RscId);
 			}
 			return RC;
 		}
@@ -123,8 +123,8 @@ namespace xaiefal {
 	public:
 		XAiePCRange() = delete;
 		XAiePCRange(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L):
-			XAieSingleTileRsc(DevHd, L, XAIE_PCEVENT) {
+			XAie_LocType Loc):
+			XAieSingleTileRsc(DevHd, Loc, XAIE_PCEVENT) {
 			for (int i = 0;
 				i < (int)(sizeof(PcAddrs)/sizeof(PcAddrs[0]));
 				i++) {
@@ -132,8 +132,8 @@ namespace xaiefal {
 			}
 			State.Initialized = 1;
 		}
-		XAiePCRange(XAieDev &Dev, XAie_LocType L):
-			XAiePCRange(Dev.getDevHandle(), L) {};
+		XAiePCRange(XAieDev &Dev, XAie_LocType Loc):
+			XAiePCRange(Dev.getDevHandle(), Loc) {};
 		/**
 		 * This function updates PC addresses of the range.
 		 *
@@ -167,10 +167,10 @@ namespace xaiefal {
 		 * This function returns PC range event.
 		 * It needs to be called after reserve() succeeds.
 		 *
-		 * @param E return the PC range event.
+		 * @param Event return the PC range event.
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getEvent(XAie_Events &E) const {
+		AieRC getEvent(XAie_Events &Event) const {
 			AieRC RC = XAIE_OK;
 			if (State.Reserved == 0) {
 				Logger::log(LogLevel::ERROR) << "PC range " << __func__ << " (" <<
@@ -178,9 +178,9 @@ namespace xaiefal {
 					" resource not resesrved." << std::endl;
 				RC = XAIE_ERR;
 			} else if (vRscs[0].RscId == 0) {
-				E = XAIE_EVENT_PC_RANGE_0_1_CORE;
+				Event = XAIE_EVENT_PC_RANGE_0_1_CORE;
 			} else {
-				E = XAIE_EVENT_PC_RANGE_2_3_CORE;
+				Event = XAIE_EVENT_PC_RANGE_2_3_CORE;
 			}
 			return RC;
 		}
@@ -253,8 +253,8 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
-			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
+		void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
+			vOutRscs.insert(vOutRscs.end(), vRscs.begin(), vRscs.end());
 		}
 	};
 }

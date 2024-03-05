@@ -20,12 +20,12 @@ namespace xaiefal {
 	public:
 		XAieGroupEvent() = delete;
 		XAieGroupEvent(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M, XAie_Events gE):
-			XAieSingleTileRsc(DevHd, L, M, XAIE_GROUPEVENT),
-			GroupEvent(gE), GroupComposition(0) {
+			XAie_LocType Loc, XAie_ModuleType Mod, XAie_Events gEvent):
+			XAieSingleTileRsc(DevHd, Loc, Mod, XAIE_GROUPEVENT),
+			GroupEvent(gEvent), GroupComposition(0) {
 			uint32_t GroupId;
 
-			if (getGroupId(DevHd, M, gE, GroupId) != XAIE_OK) {
+			if (getGroupId(DevHd, Mod, gEvent, GroupId) != XAIE_OK) {
 				throw std::invalid_argument("Invalid group Event");
 			}
 
@@ -47,7 +47,7 @@ namespace xaiefal {
 		 * This function is to attach group event handle.
 		 *
 		 * @param Hid group event handle id
-		 * @param C composition
+		 * @param Comp composition
 		 * @return XAIE_OK for success, and error code for failure.
 		 *
 		 * If the group event is not reserved, this function will
@@ -57,7 +57,7 @@ namespace xaiefal {
 		 * group event enabling setting is the same as what's been
 		 * reserved.
 		 */
-		AieRC attachHandle(const XAieGroupEventHandle * Hid, uint32_t C) {
+		AieRC attachHandle(const XAieGroupEventHandle *Hid, uint32_t Comp) {
 			AieRC RC;
 
 			_XAIEFAL_MUTEX_ACQUIRE(mLock);
@@ -69,13 +69,13 @@ namespace xaiefal {
 				return XAIE_INVALID_ARGS;
 			}
 			if (State.Reserved == 1) {
-				if (GroupComposition != C) {
+				if (GroupComposition != Comp) {
 					Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 						" Mod=" << Mod << "(" <<
 						GroupEvent << ") is reserved with " <<
 						GroupComposition << ", request composition is " <<
-						C << "." << std::endl;
+						Comp << "." << std::endl;
 					RC = XAIE_INVALID_ARGS;
 				} else {
 					Handles.emplace(Hid, false);
@@ -84,7 +84,7 @@ namespace xaiefal {
 			} else {
 				RC = reserve();
 				if (RC == XAIE_OK) {
-					GroupComposition = C;
+					GroupComposition = Comp;
 					Handles.emplace(Hid, false);
 				}
 			}
@@ -102,7 +102,7 @@ namespace xaiefal {
 		 * it will add it to the inuse references list, if the list
 		 * was empty, it will configure the group event.
 		 */
-		AieRC startHandle(const XAieGroupEventHandle * Hid) {
+		AieRC startHandle(const XAieGroupEventHandle *Hid) {
 			AieRC RC = XAIE_OK;
 
 			auto H = Handles.find(Hid);
@@ -137,7 +137,7 @@ namespace xaiefal {
 		 * references list, if the list is empty after removal, it
 		 * will reset the group event configuration.
 		 */
-		AieRC stopHandle(const XAieGroupEventHandle * Hid) {
+		AieRC stopHandle(const XAieGroupEventHandle *Hid) {
 			AieRC RC = XAIE_OK;
 
 			auto H = Handles.find(Hid);
@@ -189,7 +189,7 @@ namespace xaiefal {
 		 * references list, if the list is empty after removal, it
 		 * will release the group event resource.
 		 */
-		AieRC removeHandle(const XAieGroupEventHandle * Hid) {
+		AieRC removeHandle(const XAieGroupEventHandle *Hid) {
 			AieRC RC = XAIE_OK;
 
 			auto H = Handles.find(Hid);
@@ -284,23 +284,23 @@ namespace xaiefal {
 		 * This function returns group ID of the group event.
 		 *
 		 * @param DevHd AI engine device handler
-		 * @param M module type
-		 * @param E group event
-		 * @param Id returns the group ID of the group event
+		 * @param Mod module type
+		 * @param Event group event
+		 * @param RscId returns the group ID of the group event
 		 * @return XAIE_OK for success, and error code for failure
 		 */
 		static AieRC getGroupId(std::shared_ptr<XAieDevHandle> DevHd,
-				XAie_ModuleType M, XAie_Events E, uint32_t &Id) {
+				XAie_ModuleType Module, XAie_Events Event, uint32_t &RscId) {
 			uint32_t i, *EIds;
 			uint32_t EIdsTotal;
 			AieRC RC;
 
-			if (M == XAIE_CORE_MOD) {
+			if (Module == XAIE_CORE_MOD) {
 				EIds = DevHd->XAieGroupEventMapCore;
 				EIdsTotal = sizeof(DevHd->XAieGroupEventMapCore)/
 					sizeof(DevHd->XAieGroupEventMapCore[0]);
-			} else if (M == XAIE_MEM_MOD) {
-				if ( E >= XAIE_EVENT_GROUP_0_MEM_TILE ) {
+			} else if (Module == XAIE_MEM_MOD) {
+				if (Event >= XAIE_EVENT_GROUP_0_MEM_TILE) {
 					EIds = DevHd->XAieGroupEventMapMemTile;
 					EIdsTotal = sizeof(DevHd->XAieGroupEventMapMemTile)/
 						sizeof(DevHd->XAieGroupEventMapMemTile[0]);
@@ -315,15 +315,15 @@ namespace xaiefal {
 					sizeof(DevHd->XAieGroupEventMapPl[0]);
 			}
 			for (i = 0; i < EIdsTotal; i++) {
-				if (E == EIds[i]) {
-					Id = i;
+				if (Event == EIds[i]) {
+					RscId = i;
 					break;
 				}
 			}
 			if (i >= EIdsTotal) {
 				RC = XAIE_INVALID_ARGS;
 				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
-					" Mod=" << M << " " << E <<
+					" Mod=" << Module << " " << Event <<
 					" invalid." << std::endl;
 			} else {
 				RC = XAIE_OK;
@@ -349,13 +349,13 @@ namespace xaiefal {
 		/**
 		 * This function is to set group event events enabling bits.
 		 *
-		 * @param C composition
+		 * @param Comp composition
 		 *
 		 * If the events bits is set, when the corresponding events
 		 * are set, the group event will set.
 		 */
-		void setGroupEvents(uint32_t C) {
-			GroupComposition = C;
+		void setGroupEvents(uint32_t Comp) {
+			GroupComposition = Comp;
 		}
 
 		/**

@@ -23,12 +23,12 @@ namespace xaiefal {
 	public:
 		XAieStreamPortSelect() = delete;
 		XAieStreamPortSelect(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L):
-			XAieSingleTileRsc(DevHd, L, XAIE_SSEVENT) {
+			XAie_LocType Loc):
+			XAieSingleTileRsc(DevHd, Loc, XAIE_SSEVENT) {
 			State.Initialized = 1;
 		}
-		XAieStreamPortSelect(XAieDev &Dev, XAie_LocType L):
-			XAieSingleTileRsc(Dev.getDevHandle(), L, XAIE_SSEVENT) {}
+		XAieStreamPortSelect(XAieDev &Dev, XAie_LocType Loc):
+			XAieSingleTileRsc(Dev.getDevHandle(), Loc, XAIE_SSEVENT) {}
 		/**
 		 * This function sets which port to select.
 		 * It needs to be called before start() which configures the hardware.
@@ -59,10 +59,10 @@ namespace xaiefal {
 		/**
 		 * This function returns stream port idle event.
 		 *
-		 * @param E store the selected stream port idle event
+		 * @param Event store the selected stream port idle event
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC getSSIdleEvent(XAie_Events &E) const {
+		AieRC getSSIdleEvent(XAie_Events &Event) const {
 			AieRC RC;
 
 			if (State.Reserved == 0) {
@@ -71,8 +71,8 @@ namespace xaiefal {
 					" resource not reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				XAie_EventGetIdlePortEventBase(AieHd->dev(), Loc, Mod, &E);
-				E = static_cast<XAie_Events>(static_cast<XAie_Events>(E) + vRscs[0].RscId * 4);
+				XAie_EventGetIdlePortEventBase(AieHd->dev(), Loc, Mod, &Event);
+				Event = static_cast<XAie_Events>(static_cast<XAie_Events>(Event) + vRscs[0].RscId * 4);
 				RC = XAIE_OK;
 			}
 			return RC;
@@ -80,45 +80,45 @@ namespace xaiefal {
 		/**
 		 * This function returns stream port running event.
 		 *
-		 * @param E store the selected stream port running event
+		 * @param Event store the selected stream port running event
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC getSSRunningEvent(XAie_Events &E) const {
+		AieRC getSSRunningEvent(XAie_Events &Event) const {
 			AieRC RC;
 
-			RC = getSSIdleEvent(E);
+			RC = getSSIdleEvent(Event);
 			if (RC == XAIE_OK) {
-				E = (XAie_Events)((uint32_t)E + 1);
+				Event = (XAie_Events)((uint32_t)Event + 1);
 			}
 			return RC;
 		}
 		/**
 		 * This function returns stream port stalled event.
 		 *
-		 * @param E store the selected stream port stalled event
+		 * @param Event store the selected stream port stalled event
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC getSSStalledEvent(XAie_Events &E) const {
+		AieRC getSSStalledEvent(XAie_Events &Event) const {
 			AieRC RC;
 
-			RC = getSSIdleEvent(E);
+			RC = getSSIdleEvent(Event);
 			if (RC == XAIE_OK) {
-				E = (XAie_Events)((uint32_t)E + 2);
+				Event = (XAie_Events)((uint32_t)Event + 2);
 			}
 			return RC;
 		}
 		/**
 		 * This function returns stream port tlast event.
 		 *
-		 * @param E store the selected stream port tlast event
+		 * @param Event store the selected stream port tlast event
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC getSSTlastEvent(XAie_Events &E) const {
+		AieRC getSSTlastEvent(XAie_Events &Event) const {
 			AieRC RC;
 
-			RC = getSSIdleEvent(E);
+			RC = getSSIdleEvent(Event);
 			if (RC == XAIE_OK) {
-				E = (XAie_Events)((uint32_t)E + 3);
+				Event = (XAie_Events)((uint32_t)Event + 3);
 			}
 			return RC;
 		}

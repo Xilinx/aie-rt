@@ -21,8 +21,8 @@ namespace xaiefal {
 	public:
 		XAieComboEvent() = delete;
 		XAieComboEvent(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M, uint32_t ENum = 2):
-			XAieSingleTileRsc(DevHd, L, M, XAIE_COMBOEVENT) {
+			XAie_LocType Loc, XAie_ModuleType Mod, uint32_t ENum = 2):
+			XAieSingleTileRsc(DevHd, Loc, Mod, XAIE_COMBOEVENT) {
 			if (ENum > 4 || ENum < 2) {
 				throw std::invalid_argument("Combo event failed, invalid input events number");
 			}
@@ -30,50 +30,50 @@ namespace xaiefal {
 			State.Initialized = 1;
 		}
 		XAieComboEvent(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M, uint32_t ENum = 2):
-			XAieComboEvent(Dev.getDevHandle(), L, M, ENum) {}
+			XAie_LocType Loc, XAie_ModuleType Mod, uint32_t ENum = 2):
+			XAieComboEvent(Dev.getDevHandle(), Loc, Mod, ENum) {}
 		/**
 		 * This function sets input events, and combo operations.
 		 *
-		 * @param vE vector of input events.Minum 2 events, maximum 4 events
-		 *	vE[0] for Event0, vE[1] for Event1,
-		 *	vE[2] for Event2, vE[3] for Event3
-		 * @param vOp vector of combo operations
-		 *	vOp[0] for combo operation for Event0 and Event1
-		 *	vOp[1] for combo operation for Event2 and Event3
-		 *	vOp[2] for combo operation for (Event0,Event1) and
+		 * @param vInEvents vector of input events.Minum 2 events, maximum 4 events
+		 *	vInEvents[0] for Event0, vInEvents[1] for Event1,
+		 *	vInEvents[2] for Event2, vInEvents[3] for Event3
+		 * @param vInOps vector of combo operations
+		 *	vInOps[0] for combo operation for Event0 and Event1
+		 *	vInOps[1] for combo operation for Event2 and Event3
+		 *	vInOps[2] for combo operation for (Event0,Event1) and
 		 *		(Event2,Event3)
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC setEvents(const std::vector<XAie_Events> &vE,
-				const std::vector<XAie_EventComboOps> &vOp) {
+		AieRC setEvents(const std::vector<XAie_Events> &vInEvents,
+				const std::vector<XAie_EventComboOps> &vInOps) {
 			AieRC RC;
-			if ((vE.size() != vEvents.size()) || (vOp.size() > 3) ||
-				(vE.size() <= 2 && vOp.size() > 1) ||
-				(vE.size() > 2 && vOp.size() < 2)) {
+			if ((vInEvents.size() != vEvents.size()) || (vInOps.size() > 3) ||
+				(vInEvents.size() <= 2 && vInOps.size() > 1) ||
+				(vInEvents.size() > 2 && vInOps.size() < 2)) {
 				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " invalid number of input events and ops." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				for (int i = 0; i < (int)vE.size(); i++) {
+				for (int i = 0; i < (int)vInEvents.size(); i++) {
 					uint8_t HwEvent;
 
 					RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
-							Mod, vE[i], &HwEvent);
+							Mod, vInEvents[i], &HwEvent);
 					if (RC != XAIE_OK) {
 						Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 							(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
-							" Mod=" << Mod <<  " invalid E=" << vE[i] << std::endl;
+							" Mod=" << Mod <<  " invalid E=" << vInEvents[i] << std::endl;
 						break;
 					} else {
-						vEvents[i] = vE[i];
+						vEvents[i] = vInEvents[i];
 					}
 				}
 				if (RC == XAIE_OK) {
 					vOps.clear();
-					for (int i = 0; i < (int)vOp.size(); i++) {
-						vOps.push_back(vOp[i]);
+					for (int i = 0; i < (int)vInOps.size(); i++) {
+						vOps.push_back(vInOps[i]);
 					}
 					State.Configured = 1;
 				}
@@ -83,17 +83,17 @@ namespace xaiefal {
 		/**
 		 * This function returns combo events for the input combination.
 		 *
-		 * @param vE combo events vector
-		 *	vE[0] for combination of input events Event0, Event1
-		 *	vE[1] for combination of input events Event2, Event3
-		 *	vE[2] for combination of input events (Event0,Event1)
+		 * @param vOutEvents combo events vector
+		 *	vOutEvents[0] for combination of input events Event0, Event1
+		 *	vOutEvents[1] for combination of input events Event2, Event3
+		 *	vOutEvents[2] for combination of input events (Event0,Event1)
 		 *		and (Event2,Event3)
 		 * @return XAIE_OK for success, error code for failure.
 		 */
-		AieRC getEvents(std::vector<XAie_Events> &vE) {
+		AieRC getEvents(std::vector<XAie_Events> &vOutEvents) {
 			AieRC RC;
 
-			(void)vE;
+			(void)vOutEvents;
 			if (State.Reserved == 0) {
 				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
@@ -102,12 +102,12 @@ namespace xaiefal {
 			} else {
 				XAie_Events BaseEvent;
 				XAie_EventGetComboEventBase(dev(), Loc, Mod, &BaseEvent);
-				vE.clear();
+				vOutEvents.clear();
 				if (vOps.size() == 1) {
-					vE.push_back((XAie_Events)((uint32_t)BaseEvent + vRscs[0].RscId));
+					vOutEvents.push_back((XAie_Events)((uint32_t)BaseEvent + vRscs[0].RscId));
 				} else {
 					for (uint32_t i = 0; i < (uint32_t)vOps.size(); i++) {
-						vE.push_back((XAie_Events)((uint32_t)BaseEvent + i));
+						vOutEvents.push_back((XAie_Events)((uint32_t)BaseEvent + i));
 					}
 				}
 				RC = XAIE_OK;
@@ -115,18 +115,18 @@ namespace xaiefal {
 			return RC;
 		}
 
-		AieRC getInputEvents(std::vector<XAie_Events> &vE,
-				std::vector<XAie_EventComboOps> &vOp) {
+		AieRC getInputEvents(std::vector<XAie_Events> &vOutEvents,
+				std::vector<XAie_EventComboOps> &vOutOps) {
 			AieRC RC;
 
 			if (State.Configured == 1) {
-				vE.clear();
+				vOutEvents.clear();
 				for (int i = 0; i < (int)vEvents.size(); i++) {
-					vE.push_back(vEvents[i]);
+					vOutEvents.push_back(vEvents[i]);
 				}
-				vOp.clear();
+				vOutOps.clear();
 				for (int i = 0; i < (int)vOps.size(); i++) {
-					vOp.push_back(vOps[i]);
+					vOutOps.push_back(vOps[i]);
 				}
 				RC = XAIE_OK;
 			} else {
@@ -223,8 +223,8 @@ namespace xaiefal {
 			}
 			return XAIE_OK;
 		}
-		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
-			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
+		void _getReservedRscs(std::vector<XAieUserRsc> &vOutRscs) const {
+			vOutRscs.insert(vOutRscs.end(), vRscs.begin(), vRscs.end());
 		}
 	};
 
@@ -236,23 +236,23 @@ namespace xaiefal {
 	public:
 		XAieUserEvent() = delete;
 		XAieUserEvent(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(DevHd, L, M, XAIE_USEREVENT) {
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieSingleTileRsc(DevHd, Loc, Mod, XAIE_USEREVENT) {
 			State.Initialized = 1;
 			State.Configured = 1;
 		}
 		XAieUserEvent(XAieDev &Dev,
-			XAie_LocType L, XAie_ModuleType M):
-			XAieUserEvent(Dev.getDevHandle(), L, M) {}
+			XAie_LocType Loc, XAie_ModuleType Mod):
+			XAieUserEvent(Dev.getDevHandle(), Loc, Mod) {}
 
 		/**
 		 * This function returns user event.
 		 * It needs to be called after reserve() succeeds.
 		 *
-		 * @param E returns user event
+		 * @param Event returns user event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC getEvent(XAie_Events &E) const {
+		AieRC getEvent(XAie_Events &Event) const {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
@@ -261,7 +261,7 @@ namespace xaiefal {
 					" resource not resesrved." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				E = _getEventFromId(vRscs[0].RscId);
+				Event = _getEventFromId(vRscs[0].RscId);
 			}
 			return RC;
 		}
@@ -302,27 +302,27 @@ namespace xaiefal {
 		/**
 		 * This function returns user event resource id from user event.
 		 *
-		 * @param E user event
+		 * @param Event user event
 		 * @return user event resource id
 		 */
-		uint32_t _getIdFromEvent(XAie_Events E) const {
+		uint32_t _getIdFromEvent(XAie_Events Event) const {
 			XAie_Events UserEventStart;
 			XAie_EventGetUserEventBase(AieHd->dev(), Loc, Mod, &UserEventStart);
 
-			return static_cast<uint32_t>(E - UserEventStart);
+			return static_cast<uint32_t>(Event - UserEventStart);
 		}
 
 		/**
 		 * This function returns user event from resource id.
 		 *
-		 * @param I resource ID
+		 * @param RscId resource ID
 		 * @return user event
 		 */
-		XAie_Events _getEventFromId(uint32_t I) const {
+		XAie_Events _getEventFromId(uint32_t RscId) const {
 			XAie_Events UserEventStart;
 			XAie_EventGetUserEventBase(AieHd->dev(), Loc, Mod, &UserEventStart);
 
-			return static_cast<XAie_Events>(static_cast<uint32_t>(UserEventStart) + I);
+			return static_cast<XAie_Events>(static_cast<uint32_t>(UserEventStart) + RscId);
 		}
 	};
 }
