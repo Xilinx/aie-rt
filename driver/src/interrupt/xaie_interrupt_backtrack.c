@@ -1,5 +1,6 @@
 /******************************************************************************
 * Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2024 AMD. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -457,7 +458,10 @@ static AieRC _XAie_LBacktrackTile(XAie_DevInst *DevInst,
 
 		ErrorsMap &= ~(1U << Index);
 
-		Buffer[(*Count)].Loc = Loc;
+		/* Adding Start column to provide absolute value of
+		Column number in buffer to Host */
+		Buffer[(*Count)].Loc.Row = Loc.Row;
+		Buffer[(*Count)].Loc.Col = Loc.Col + MData->Cols.Start;
 		Buffer[(*Count)].Module = Module;
 		Buffer[(*Count)].EventId = Event;
 		(*Count)++;
@@ -615,6 +619,7 @@ AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 		XAIE_DBG("Backtrack column range undefined. Backtracking (%d, %d).\n",
 				Cols.Start, Cols.Start + Cols.Num);
 		Cols.Num = DevInst->NumCols;
+		MData->Cols.Start = 0;
 	}
 
 	/* Reset the total error count from previous backtrack. */
