@@ -143,6 +143,8 @@ namespace xaiefal {
 			}
 
 			if (RC != XAIE_OK) {
+				Logger::log(LogLevel::WARN) << "broadcast " <<
+					__func__ << " resource not available.\n";
 				vRscs.clear();
 			}
 			return RC;

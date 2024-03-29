@@ -155,6 +155,9 @@ namespace xaiefal {
 
 			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
+				Logger::log(LogLevel::WARN) << "comboevent " << __func__ << " (" <<
+					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " resource not available.\n";
 				vRscs.clear();
 			}
 			return RC;
@@ -277,6 +280,9 @@ namespace xaiefal {
 			vRscs.push_back(Rsc);
 			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
+				Logger::log(LogLevel::WARN) << "userevent " << __func__ << " (" <<
+					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
+					" Expect Mod= " << Mod << " resource not available.\n";
 				vRscs.clear();
 			}
 			return RC;

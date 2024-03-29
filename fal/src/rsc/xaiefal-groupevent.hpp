@@ -248,7 +248,7 @@ namespace xaiefal {
 			vRscs.push_back(Rsc);
 			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::WARN) << "groupevent " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << " resource not available.\n";
 				vRscs.clear();

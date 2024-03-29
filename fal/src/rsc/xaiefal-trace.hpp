@@ -342,8 +342,8 @@ namespace xaiefal {
 			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::ERROR) << "trace control " << __func__ << " (" <<
-							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
-							") Mod=" << Mod <<" failed to reserve." << std::endl;
+						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
+						") Mod=" << Mod <<" failed to reserve." << std::endl;
 			}
 			if (RC == XAIE_OK && StartMod != Mod) {
 				std::vector<XAie_LocType> vL;

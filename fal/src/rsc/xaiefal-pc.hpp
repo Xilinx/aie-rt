@@ -93,7 +93,7 @@ namespace xaiefal {
 				vRscs.push_back(Rsc);
 				RC = AieHd->rscMgr()->request(*this);
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::WARN) << "PC event " << __func__ << " (" <<
+					Logger::log(LogLevel::WARN) << "pcevent " << __func__ << " (" <<
 						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 						" no available resource.\n";
 				}
