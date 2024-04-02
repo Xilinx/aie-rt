@@ -75,7 +75,6 @@ namespace xaiefal {
 			}
 			case XAIE_BROADCAST:
 			{
-				uint32_t NumRscs;
 				bool BcastAll;
 
 				RC = Rsc.getRscs(vRequests);
@@ -85,7 +84,18 @@ namespace xaiefal {
 
 				BcastAll = false;
 				if (vRequests.size() == 0) {
-					vRequests.resize(1);
+					uint8_t NumAieRows;
+					uint32_t NumRscs;
+
+					/*
+					 * AIE tiles have to sets of bcast channels
+					 * for memory and core module
+					 */
+					NumAieRows = dev()->NumRows - dev()->AieTileRowStart;
+					NumRscs = (dev()->NumCols * dev()->NumRows) +
+						(dev()->NumCols * NumAieRows);
+
+					vRequests.resize(NumRscs);
 					BcastAll = true;
 				}
 

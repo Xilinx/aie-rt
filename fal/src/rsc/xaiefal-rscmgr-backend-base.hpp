@@ -235,6 +235,7 @@ namespace xaiefal {
 		 */
 		virtual AieRC loadRscBitmaps(const char *MetaData, uint64_t NumBitmaps) {
 			(void)MetaData;
+			(void)NumBitmaps;
 			Logger::log(LogLevel::ERROR) << __func__ <<
 				" Not supported for selected backend " << std::endl;
 			return XAIE_ERR;
