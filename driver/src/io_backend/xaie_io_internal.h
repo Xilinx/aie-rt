@@ -25,7 +25,6 @@
 #define XAIE_IO_INTERNAL_H
 
 /***************************** Include Files *********************************/
-#include "xaie_rsc.h"
 #include "xaiegbl.h"
 #include "xaie_io.h"
 

@@ -370,21 +370,11 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_REQUEST_TILES:
 			return _XAie_PrivilegeRequestTiles(DevInst,
 					(XAie_BackendTilesArray *)Arg);
-		case XAIE_BACKEND_OP_REQUEST_RESOURCE:
-			return _XAie_RequestRscCommon(DevInst, Arg);
-		case XAIE_BACKEND_OP_RELEASE_RESOURCE:
-			return _XAie_ReleaseRscCommon(Arg);
-		case XAIE_BACKEND_OP_FREE_RESOURCE:
-			return _XAie_FreeRscCommon(Arg);
-		case XAIE_BACKEND_OP_REQUEST_ALLOCATED_RESOURCE:
-			return _XAie_RequestAllocatedRscCommon(DevInst, Arg);
 		case XAIE_BACKEND_OP_PARTITION_INITIALIZE:
 			return _XAie_PrivilegeInitPart(DevInst,
 					(XAie_PartInitOpts *)Arg);
 		case XAIE_BACKEND_OP_PARTITION_TEARDOWN:
 			return _XAie_PrivilegeTeardownPart(DevInst);
-		case XAIE_BACKEND_OP_GET_RSC_STAT:
-			return _XAie_GetRscStatCommon(DevInst, Arg);
 		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
 		{
 			XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;

@@ -30,8 +30,7 @@
 
 #if defined(XAIE_FEATURE_PRIVILEGED_ENABLE) && \
 	defined(XAIE_FEATURE_PERFCOUNT_ENABLE) && \
-	defined(XAIE_FEATURE_EVENTS_ENABLE) && \
-	defined(XAIE_FEATURE_RSC_ENABLE)
+	defined(XAIE_FEATURE_EVENTS_ENABLE)
 
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
@@ -417,4 +416,4 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 }
 
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && XAIE_FEATURE_PERFCOUNT_ENABLE &&
-	* XAIE_FEATURE_EVENTS_ENABLE && XAIE_FEATURE_RSC_ENABLE */
+	* XAIE_FEATURE_EVENTS_ENABLE */

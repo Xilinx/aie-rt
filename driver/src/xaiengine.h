@@ -20,7 +20,6 @@ extern "C" {
 #include <xaiengine/xaie_perfcnt.h>
 #include <xaiengine/xaie_plif.h>
 #include <xaiengine/xaie_reset.h>
-#include <xaiengine/xaie_rsc.h>
 #include <xaiengine/xaie_ss.h>
 #include <xaiengine/xaie_timer.h>
 #include <xaiengine/xaie_trace.h>

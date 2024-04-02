@@ -26,9 +26,7 @@
 #define XAIE_IO_H
 
 /***************************** Include Files *********************************/
-#include "xaie_rsc.h"
 #include "xaiegbl.h"
-
 /***************************** Macro Definitions *****************************/
 #define XAIE_RSC_MGR_CONTIG_FLAG	0x1U
 /****************************** Type Definitions *****************************/
@@ -45,14 +43,9 @@ typedef enum {
 	XAIE_BACKEND_OP_CONFIG_SHIMDMABD,
 	XAIE_BACKEND_OP_REQUEST_TILES,
 	XAIE_BACKEND_OP_RELEASE_TILES,
-	XAIE_BACKEND_OP_REQUEST_RESOURCE,
-	XAIE_BACKEND_OP_RELEASE_RESOURCE,
-	XAIE_BACKEND_OP_FREE_RESOURCE,
-	XAIE_BACKEND_OP_REQUEST_ALLOCATED_RESOURCE,
 	XAIE_BACKEND_OP_PARTITION_INITIALIZE,
 	XAIE_BACKEND_OP_PARTITION_TEARDOWN,
 	XAIE_BACKEND_OP_PARTITION_CLEAR_CONTEXT,
-	XAIE_BACKEND_OP_GET_RSC_STAT,
 	XAIE_BACKEND_OP_UPDATE_NPI_ADDR,
 	XAIE_BACKEND_OP_SET_COLUMN_CLOCK,
 	XAIE_BACKEND_OP_PERFORMANCE_UTILIZATION,
@@ -92,44 +85,6 @@ typedef struct XAie_BackendColumnReq {
 	u32 NumCols;
 	u8 Enable;
 } XAie_BackendColumnReq;
-
-/*
- * Typedef for structure for tiles resource
- */
-typedef struct XAie_BackendTilesRsc {
-	u32 *Bitmap;
-	u32 MaxRscVal;
-	u32 BitmapOffset;
-	u32 NumRscPerTile;
-	u32 RscId;
-	u32 StartBit;
-	u32 StaticBitmapOffset;
-	u32 *UserRscNum;
-	u32 UserRscNumInput;
-	u32 Flags;
-	u8 NumContigRscs;
-	XAie_RscType RscType;
-	XAie_LocType Loc;
-	XAie_ModuleType Mod;
-	XAie_UserRsc *Rscs;
-} XAie_BackendTilesRsc;
-
-/*
- * Typedef for enum of AIE resoure statistics type
- */
-typedef enum {
-	XAIE_BACKEND_RSC_STAT_STATIC,
-	XAIE_BACKEND_RSC_STAT_AVAIL,
-} XAie_BackendRscStatType;
-
-/*
- * Typedef for structure for resource statistics request
- */
-typedef struct XAie_BackendRscStat {
-	u32 NumRscStats;
-	XAie_BackendRscStatType RscStatType;
-	XAie_UserRscStat *RscStats;
-} XAie_BackendRscStat;
 
 /* Typedef to capture shimdma Bd arguments */
 typedef struct XAie_ShimDmaBdArgs {
