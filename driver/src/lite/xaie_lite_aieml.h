@@ -32,6 +32,7 @@
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 #include "xaie_lite_util.h"
+#include "xaie_tilectrl.h"
 
 /************************** Constant Definitions *****************************/
 
@@ -557,18 +558,24 @@ static inline void _XAie_LSetPartColShimReset(XAie_DevInst *DevInst,
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 ClearIsolation)
+static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
 {
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u64 RegAddr;
 		u32 RegVal = 0;
 
-		if (!ClearIsolation) {
+		if (IsolationFlags == XAIE_INIT_ISOLATION) {
 			if(C == 0) {
 				RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
 			} else if(C == (u8)(DevInst->NumCols - 1)) {
 				RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
 			}
+		}
+
+		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
+			RegVal |= XAIE_ISOLATE_WEST_MASK;
+		} else if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
+			RegVal |= XAIE_ISOLATE_EAST_MASK;
 		}
 
 		/* Isolate boundrary of SHIM tiles */

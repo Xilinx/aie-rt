@@ -149,20 +149,26 @@ AieRC _XAieMl_SetPartColClockAfterRst(XAie_DevInst *DevInst, u8 Enable)
 *		Internal API only.
 *
 ******************************************************************************/
-AieRC _XAieMl_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 ClearIsolation)
+AieRC _XAieMl_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
 {
 	AieRC RC = XAIE_OK;
 
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u8 Dir = 0;
 
-		if (!ClearIsolation) {
+		if (IsolationFlags == XAIE_INIT_ISOLATION) {
 			if(C == 0U) {
 				Dir = XAIE_ISOLATE_WEST_MASK;
 			} else if(C == (u8)(DevInst->NumCols - 1U)) {
 				Dir = XAIE_ISOLATE_EAST_MASK;
 			}
 		}
+		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
+			Dir |= XAIE_ISOLATE_WEST_MASK;
+		} else if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
+			Dir |= XAIE_ISOLATE_EAST_MASK;
+		}
+
 
 		for(u8 R = 0; R < DevInst->NumRows; R++) {
 			RC = _XAie_TileCtrlSetIsolation(DevInst,

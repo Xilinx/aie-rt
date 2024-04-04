@@ -65,6 +65,8 @@
 
 #define XAIE_INIT_ISOLATION				0
 #define XAIE_CLEAR_ISOLATION			1
+#define XAIE_INIT_WEST_ISOLATION		2
+#define XAIE_INIT_EAST_ISOLATION		4
 
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;

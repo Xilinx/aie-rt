@@ -314,35 +314,30 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 									XAie_DevicePartInfo *DevPartInfo)
 {
 	XAie_PartInitOpts SoftPartOpts;
-	XAie_DevInst DevPartDevInst;
 	AieRC RC;
-	const XAie_Backend *CurrBackend;
+	u8 IsolationFlags;
 
 	memset(&SoftPartOpts,0, sizeof(SoftPartOpts));
-
-	memcpy(&DevPartDevInst, DevInst, sizeof(XAie_DevInst));
 
 	if (DevPartInfo->StartCol <= DevInst->StartCol &&
 		DevPartInfo->NumCols >= DevInst->NumCols) {
 		/*Isolation for soft Partition is cleared*/
 		SoftPartOpts.InitOpts = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));
 		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
-		if (RC == XAIE_OK) {
-			/*Fix the isolation for top level partition*/
-			DevPartDevInst.StartCol = DevPartInfo->StartCol;
-			DevPartDevInst.NumCols = DevPartInfo->NumCols;
-			DevPartDevInst.BaseAddr = DevPartInfo->BaseAddr;
-			DevPartDevInst.IOInst = NULL;
-			CurrBackend = DevInst->Backend;
-			RC = CurrBackend ->Ops.Init(&DevPartDevInst);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to initialize backend \n");
-				return RC;
-			}
-			_XAie_LSetPartIsolationAfterRst(&DevPartDevInst, 0);
-
-			CurrBackend ->Ops.Finish(DevPartDevInst.IOInst);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Partition Initialization Failed \n");
+			return RC;
 		}
+
+		if(DevPartInfo->BaseAddr == DevInst->BaseAddr) {
+			IsolationFlags |= XAIE_INIT_WEST_ISOLATION;
+		}
+		if((DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, (DevInst->NumCols - 1), 0U)) ==
+			( DevPartInfo->BaseAddr + _XAie_GetTileAddr(DevInst, (DevInst->NumCols - 1), 0U))) {
+			IsolationFlags |= XAIE_INIT_EAST_ISOLATION;
+		}
+		_XAie_LSetPartIsolationAfterRst(DevInst, IsolationFlags);
+
 	}
 	else
 	{
@@ -413,7 +408,7 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0) {
-		_XAie_LSetPartIsolationAfterRst(DevInst, 0);
+		_XAie_LSetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
 	}
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0) {
@@ -624,7 +619,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
-	_XAie_LSetPartIsolationAfterRst(DevInst, 0);
+	_XAie_LSetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
 
 	RC = _XAie_LPartDataMemZeroInit(DevInst);
 	if (RC != XAIE_OK)

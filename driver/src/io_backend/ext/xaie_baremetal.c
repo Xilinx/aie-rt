@@ -67,7 +67,7 @@ static XAie_BaremetalIO BaremetalIO;
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 {
-	(void)IOInst;
+	free(IOInst);
 	return XAIE_OK;
 }
 
@@ -85,11 +85,17 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
-	XAie_BaremetalIO *IOInst = &BaremetalIO;
+	XAie_BaremetalIO *IOInst;
+
+	IOInst = (XAie_BaremetalIO *)malloc(sizeof(*IOInst));
+	if(IOInst == NULL) {
+		XAIE_ERROR("Baremetal backend init failed. failed to allocate memory\n");
+		return XAIE_ERR;
+	}
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
-	DevInst->IOInst = IOInst;
+	DevInst->IOInst = (void *)IOInst;
 
 	return XAIE_OK;
 }
