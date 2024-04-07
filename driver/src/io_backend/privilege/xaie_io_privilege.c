@@ -448,18 +448,6 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		return RC;
 	}
 
-	/*
-	 * This is a temporary workaround to unblock rel-v2023.1 and make
-	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
-	 */
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
-		if (RC != XAIE_OK) {
-			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
-			return RC;
-		}
-	}
-
 	/* Enable only the tiles requested in Opts parameter */
 	if(Opts != NULL) {
 		XAie_BackendTilesArray TilesArray;
@@ -471,6 +459,18 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		(void *)&TilesArray);
 
 		if(RC != XAIE_OK) {
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+			return RC;
+		}
+	}
+
+	/*
+	 * This is a temporary workaround to unblock rel-v2023.1 and make
+	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
+	 */
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
+		if (RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
 		}
