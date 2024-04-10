@@ -72,7 +72,7 @@ TEST(UserEvent, UserEventBasic)
 	CHECK_EQUAL(E, XAIE_EVENT_USER_EVENT_3_CORE);
 	auto UserEvent4 = Aie.tile(1,3).core().userEvent();
 	RC = UserEvent4->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	CHECK_EQUAL(RC, XAIE_ERR);
 
 	UserEvent = Aie.tile(1,3).mem().userEvent();
 	RC = UserEvent->reserve();

@@ -8,6 +8,7 @@
 #include <xaiengine.h>
 
 #include <xaiefal/rsc/xaiefal-rsc-base.hpp>
+#include <xaiefal/rsc/xaiefal-rscmgr.hpp>
 
 #pragma once
 
@@ -21,7 +22,7 @@ namespace xaiefal {
 		XAieComboEvent() = delete;
 		XAieComboEvent(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M, uint32_t ENum = 2):
-			XAieSingleTileRsc(DevHd, L, M) {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_COMBOEVENT) {
 			if (ENum > 4 || ENum < 2) {
 				throw std::invalid_argument("Combo event failed, invalid input events number");
 			}
@@ -46,11 +47,11 @@ namespace xaiefal {
 		 */
 		AieRC setEvents(const std::vector<XAie_Events> &vE,
 				const std::vector<XAie_EventComboOps> &vOp) {
-			AieRC RC = XAIE_OK;
+			AieRC RC;
 			if ((vE.size() != vEvents.size()) || (vOp.size() > 3) ||
 				(vE.size() <= 2 && vOp.size() > 1) ||
 				(vE.size() > 2 && vOp.size() < 2)) {
-				Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " invalid number of input events and ops." << std::endl;
 				RC = XAIE_INVALID_ARGS;
@@ -61,7 +62,7 @@ namespace xaiefal {
 					RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 							Mod, vE[i], &HwEvent);
 					if (RC != XAIE_OK) {
-						Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
+						Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 							(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 							" Mod=" << Mod <<  " invalid E=" << vE[i] << std::endl;
 						break;
@@ -94,7 +95,7 @@ namespace xaiefal {
 
 			(void)vE;
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " resource is not reserved." << std::endl;
 				RC = XAIE_ERR;
@@ -129,59 +130,45 @@ namespace xaiefal {
 				}
 				RC = XAIE_OK;
 			} else {
-				Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " no input events specified." << std::endl;
 				RC = XAIE_ERR;
 			}
 			return RC;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_COMBO_EVENTS_RSC);
-		}
 	protected:
 		std::vector<XAie_Events> vEvents; /**< input events */
 		std::vector<XAie_EventComboOps> vOps; /**< combo operations */
-		std::vector<XAie_UserRsc> vRscs; /**< combo events resources */
 	private:
 		AieRC _reserve() {
-			AieRC RC = XAIE_OK;
+			AieRC RC;
+			XAieUserRsc Rsc;
 
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = 0;
 			for (uint32_t i = 0; i < vEvents.size(); i++) {
-			    XAie_UserRsc tempRsc;
-				vRscs.push_back(tempRsc);
+				vRscs.push_back(Rsc);
 			}
 
-			XAie_UserRscReq Req = {Loc, Mod, static_cast<uint32_t>(vEvents.size())};
-			RC = XAie_RequestComboEvents(AieHd->dev(), 1, &Req, static_cast<uint32_t>(vEvents.size()), &vRscs[0]);
+			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
 				vRscs.clear();
-				return RC;
-			}
-
-			Rsc.Mod = vRscs[0].Mod;
-			if (vRscs.size() <= 2) {
-				// Only two input events, it can be combo0 or
-				// combo1
-				if (vRscs[0].RscId < 2) {
-					Rsc.RscId = 0;
-				} else {
-					Rsc.RscId = 1;
-				}
-			} else {
-				Rsc.RscId = 2;
 			}
 			return RC;
 		}
 		AieRC _release() {
-			XAie_ReleaseComboEvents(AieHd->dev(), static_cast<uint32_t>(vRscs.size()), &vRscs[0]);
+			AieRC RC;
+
+			RC = AieHd->rscMgr()->release(*this);
 			vRscs.clear();
-			return XAIE_OK;
+			return RC;
 		}
 		AieRC _start() {
-			AieRC RC = XAIE_OK;
-
-			XAie_EventComboId StartCId = XAIE_EVENT_COMBO0;
+			AieRC RC;
+			XAie_EventComboId StartCId;
 
 			for (uint32_t i = 0 ; i < vEvents.size(); i += 2) {
 				XAie_EventComboId ComboId;
@@ -197,7 +184,7 @@ namespace xaiefal {
 				RC = XAie_EventComboConfig(dev(), Loc, Mod,
 						ComboId, vOps[i/2], vEvents[i], vEvents[i+1]);
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
+					Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 						" Mod=" << Mod <<  " failed to config combo " << ComboId << std::endl;
 					for (XAie_EventComboId tId = StartCId;
@@ -213,7 +200,7 @@ namespace xaiefal {
 				RC = XAie_EventComboConfig(dev(), Loc, Mod,
 					XAIE_EVENT_COMBO2, vOps[2], vEvents[0], vEvents[0]);
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
+					Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 						" Mod=" << Mod <<  " failed to config combo " << XAIE_EVENT_COMBO2 << std::endl;
 				}
@@ -236,8 +223,8 @@ namespace xaiefal {
 			}
 			return XAIE_OK;
 		}
-		void _getRscs(std::vector<XAie_UserRsc> &vRs) const {
-			vRs.insert(vRs.end(), vRscs.begin(), vRscs.end());
+		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 	};
 
@@ -250,7 +237,7 @@ namespace xaiefal {
 		XAieUserEvent() = delete;
 		XAieUserEvent(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M):
-			XAieSingleTileRsc(DevHd, L, M) {
+			XAieSingleTileRsc(DevHd, L, M, XAIE_USEREVENT) {
 			State.Initialized = 1;
 			State.Configured = 1;
 		}
@@ -269,51 +256,36 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::FAL_ERROR) << "User Event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "User Event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" resource not resesrved." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				E = _getEventFromId(Rsc.RscId);
+				E = _getEventFromId(vRscs[0].RscId);
 			}
 			return RC;
-		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_USER_EVENTS_RSC);
 		}
 	private:
 		AieRC _reserve() {
 			AieRC RC;
+			XAieUserRsc Rsc;
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = preferredId;
 
-			if (preferredId == XAIE_RSC_ID_ANY) {
-				XAie_UserRscReq Req = {Loc, Mod, 1};
-
-				RC = XAie_RequestUserEvents(AieHd->dev(), 1, &Req, 1, &Rsc);
-				if (RC == XAIE_OK) {
-					Rsc.RscId = _getIdFromEvent(static_cast<XAie_Events>(Rsc.RscId));
-				}
-			} else {
-				Rsc.RscType = XAIE_USER_EVENTS_RSC;
-				Rsc.Loc.Col = Loc.Col;
-				Rsc.Loc.Row = Loc.Row;
-				Rsc.Mod = Mod;
-				Rsc.RscId = _getEventFromId(preferredId);
-				RC = XAie_RequestAllocatedUserEvents(AieHd->dev(), 1, &Rsc);
-				if (RC == XAIE_OK) {
-					Rsc.RscId = preferredId;
-				}
+			vRscs.push_back(Rsc);
+			RC = AieHd->rscMgr()->request(*this);
+			if (RC != XAIE_OK) {
+				vRscs.clear();
 			}
-
 			return RC;
 		}
 		AieRC _release() {
-			uint32_t RscId = Rsc.RscId;
 			AieRC RC;
 
-			Rsc.RscId = _getEventFromId(Rsc.RscId);
-			RC = XAie_ReleaseUserEvents(AieHd->dev(), 1, &Rsc);
-			Rsc.RscId = RscId;
-
+			RC = AieHd->rscMgr()->release(*this);
+			vRscs.clear();
 			return RC;
 		}
 		AieRC _start() {

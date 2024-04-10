@@ -41,6 +41,6 @@ XAIE_AIG_EXPORT AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 *TimerVal);
 XAIE_AIG_EXPORT AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 CycleCnt);
-XAIE_AIG_EXPORT AieRC XAie_SyncTimer(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId);
 
 #endif		/* end of protection macro */

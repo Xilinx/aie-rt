@@ -42,11 +42,6 @@ TEST(GroupEvent, GroupEventBasic)
 	auto gEvent = GroupEventHd->getEvent();
 	CHECK_EQUAL(gEvent, XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
 
-	DevInst.IsReady = 0;
-	RC = GroupEventHd->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 1;
 	RC = GroupEventHd->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 	RC = GroupEventHd->start();

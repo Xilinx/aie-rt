@@ -41,6 +41,7 @@ namespace xaiefal {
 	class XAieRscGroupRuntime;
 	class XAieRscGroupStatic;
 	class XAieRscGroupAvail;
+	class XAieRscMgr;
 
 # define XAIEDEV_DEFAULT_GROUP_STATIC "Static"
 # define XAIEDEV_DEFAULT_GROUP_AVAIL "Avail"
@@ -63,27 +64,27 @@ namespace xaiefal {
 		XAieRscStat getRscStat(XAie_LocType Loc) const {
 			return RscGroup->getRscStat(Loc);
 		}
-		XAieRscStat getRscStat(XAie_LocType Loc, uint32_t RscType) const {
+		XAieRscStat getRscStat(XAie_LocType Loc, XAieRscType RscType) const {
 			return RscGroup->getRscStat(Loc, RscType);
 		}
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod) const {
 			return RscGroup->getRscStat(Loc, Mod);
 		}
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
-			uint32_t RscType) const {
+			XAieRscType RscType) const {
 			return RscGroup->getRscStat(Loc, Mod, RscType);
 		}
 		XAieRscStat getRscStat(XAie_LocType Loc, XAie_ModuleType Mod,
-			uint32_t RscType, uint32_t RscId) const {
+			XAieRscType RscType, uint32_t RscId) const {
 			return RscGroup->getRscStat(Loc, Mod, RscType,
 					RscId);
 		}
 		XAieRscStat getRscStat(const std::vector<XAie_LocType> &vLocs,
-			uint32_t RscType) const {
+			XAieRscType RscType) const {
 			return RscGroup->getRscStat(vLocs, RscType);
 		}
 		XAieRscStat getRscStat(const std::vector<XAie_LocType> &vLocs,
-			uint32_t RscType, uint32_t RscId) const {
+			XAieRscType RscType, uint32_t RscId) const {
 			return RscGroup->getRscStat(vLocs, RscType, RscId);
 		}
 
@@ -167,6 +168,14 @@ namespace xaiefal {
 		std::shared_ptr<XAieDevHandle> getPtr() {
 			return shared_from_this();
 		}
+		/**
+		 * This function returns AIE resource manager shared pointer
+		 *
+		 * @return AI engine resource manager shared pointer
+		 */
+		std::shared_ptr<XAieRscMgr> rscMgr() {
+			return AieRscMgr;
+		}
 
 		/**
 		 * This function creates a resource group based on resource
@@ -211,6 +220,14 @@ namespace xaiefal {
 			}
 		}
 
+		/**
+		 * This function will create the resource manager and attach
+		 * it to the AieHandle
+		 */
+		void createRscMgr() {
+			AieRscMgr = std::make_shared<XAieRscMgr>(this);
+		}
+
 		// TODO: Configure group event should be moved to c driver
 		uint32_t XAieGroupEventMapCore[9];
 		uint32_t XAieGroupEventMapMem[8];
@@ -219,6 +236,7 @@ namespace xaiefal {
 	private:
 		XAie_DevInst *Dev;
 		bool FinishOnDestruct;
+		std::shared_ptr<XAieRscMgr> AieRscMgr; /**< Resource Manager */
 		std::map <std::string, XAieDevHdRscGroupWrapper> RscGroupsMap; /**< resource groups map */
 		_XAIEFAL_MUTEX_DECLARE(mLock); /**< mutex lock */
 
@@ -228,7 +246,7 @@ namespace xaiefal {
 			auto GPtr = std::make_shared<GT>(shared_from_this(),
 					GName);
 			RscGroupsMap[GName] = XAieDevHdRscGroupWrapper(GPtr);
-			Logger::log(LogLevel::FAL_INFO) << "Resource group " <<
+			Logger::log(LogLevel::INFO) << "Resource group " <<
 				GName << " is created." << std::endl;
 		}
 	};
@@ -321,6 +339,41 @@ namespace xaiefal {
 		}
 
 		/**
+                 * This function saves all runtime allocated resources
+                 * metadata to given filename
+                 *
+                 * @param File filename string
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC saveAllocatedRscsToFile(const std::string &File);
+
+                /**
+                 * This loads resource metadata into the static resource
+                 * bitmaps
+                 *
+                 * @param MetaData pointer to resource metadata
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC loadStaticRscsFromMem(const char *MetaData);
+
+                /**
+                 * This function makes a call to RscMgr Backend to reserve
+                 * resources necessary for ECC
+                 *
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC reserveEcc();
+
+                /**
+                 * This function makes a call to RscMgr Backend to reserve
+                 * resources necessary for Error Handling
+                 *
+                 * @return XAIE_OK for success, error code for failure
+                 */
+                AieRC reserveErrorHandling();
+
+
+		/**
 		 * This function returns broadcast resource software object
 		 * within a tile.
 		 *
@@ -371,7 +424,7 @@ namespace xaiefal {
 				MString = "shim";
 			} else {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+				Logger::log(LogLevel::ERROR) << __func__ <<
 					"failed. invalid module type." <<
 					std::endl;
 			}
@@ -396,15 +449,14 @@ namespace xaiefal {
 				Mod = XAIE_PL_MOD;
 			} else {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+				Logger::log(LogLevel::ERROR) << __func__ <<
 				"failed. invalid module string." << std::endl;
 			}
 			return RC;
 		}
 
 	private:
-		std::shared_ptr<XAieDevHandle> AieHandle; /**< AI engine device
-							    handle */
+		std::shared_ptr<XAieDevHandle> AieHandle; /**< AI engine device handle */
 		uint32_t NumCols; /**< number of AI engine columns */
 		uint32_t NumRows; /**< number of AI engine rows */
 		std::vector<XAieTile> Tiles;
@@ -976,7 +1028,7 @@ namespace xaiefal {
 					XAie_TileLoc(c, r)));
 			}
 		}
-
+		AieHandle->createRscMgr();
 	}
 
 	/**

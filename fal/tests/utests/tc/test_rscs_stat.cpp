@@ -92,19 +92,30 @@ TEST(RSC, RSCBasic) {
 	RC = UserEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
-	auto SPort = Aie.tile(1,1).sswitchPort();
+	auto SPort = Aie.tile(1,3).sswitchPort();
+	RC = SPort->setPortToSelect(XAIE_STRMSW_SLAVE, CORE, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
+
 	RC = SPort->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
-	auto ComboEvent= Aie.tile(1,1).core().comboEvent();
+	std::vector<XAie_Events> vE;
+	std::vector<XAie_EventComboOps> vOps;
+	vE.push_back(XAIE_EVENT_ACTIVE_CORE);
+	vE.push_back(XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
+	vOps.push_back(XAIE_EVENT_COMBO_E1_OR_E2);
+
+	auto ComboEvent = Aie.tile(1,1).core().comboEvent();
+	RC = ComboEvent->setEvents(vE, vOps);
+	CHECK_EQUAL(RC, XAIE_OK);
 	RC = ComboEvent->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	auto RscStatAll = Aie.getRscStat(XAIEDEV_DEFAULT_GROUP_GENERIC);
 	RscStatAll.show();
-	uint32_t NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,2), XAIE_CORE_MOD, XAIE_PERFCNT_RSC);
+	uint32_t NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,2), XAIE_CORE_MOD, XAIE_PERFCOUNT);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,2), XAIE_MEM_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,2), XAIE_MEM_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
 
 	auto RscStatTile = Aie.tile(1,1).getRscStat(XAIEDEV_DEFAULT_GROUP_GENERIC);
@@ -124,22 +135,22 @@ TEST(RSC, RSCBasic) {
 	hasRsc = RscStatTrace.hasRsc();
 	CHECK_EQUAL(hasRsc, true);
 	RscStatTrace.show();
-	NumRsc = RscStatTrace.getNumRsc(XAie_TileLoc(1,1), XAIE_CORE_MOD, XAIE_TRACE_EVENTS_RSC);
+	NumRsc = RscStatTrace.getNumRsc(XAie_TileLoc(1,1), XAIE_CORE_MOD, XAIE_TRACEEVENT);
 	CHECK_EQUAL(NumRsc, 2);
 
 	XAieRscStat BcStat = Aie.broadcast(vL, StartM, EndM)->getRscStat(XAIEDEV_DEFAULT_GROUP_GENERIC);
 	BcStat.show();
 	hasRsc = BcStat.hasRsc();
 	CHECK_EQUAL(hasRsc, true);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(0,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(0,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(2,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(2,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(2,0), XAIE_MEM_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(2,0), XAIE_MEM_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 0);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(3,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(3,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 0);
 
 	/* Specific resource not allocated yet */
@@ -149,7 +160,7 @@ TEST(RSC, RSCBasic) {
 	BcStat.show();
 	hasRsc = BcStat.hasRsc();
 	CHECK_EQUAL(hasRsc, false);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(0,0), XAIE_MEM_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(0,0), XAIE_MEM_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 0);
 
 	/* Specific resource is allocated */
@@ -159,13 +170,13 @@ TEST(RSC, RSCBasic) {
 	BcStat.show();
 	hasRsc = BcStat.hasRsc();
 	CHECK_EQUAL(hasRsc, true);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(0,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(0,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(2,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(2,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 1);
-	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(3,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscStatAll.getNumRsc(XAie_TileLoc(3,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(NumRsc, 0);
 
 	/* create group delete group */
@@ -186,8 +197,6 @@ TEST(RSC, RscDefaultGroups) {
 	AieRC RC;
 	std::vector<XAie_LocType> vL;
 	XAie_ModuleType StartM, EndM;
-	XAie_UserRscReq RscReq[2];
-	XAie_UserRsc ReturnRsc[XAIE_TOTAL_MODS];
 	u32 UserRscNum;
 	FILE *f;
 	long fsize;
@@ -207,12 +216,20 @@ TEST(RSC, RscDefaultGroups) {
 	XAieDev Aie(&DevInst, true);
 
 	XAie_PmRequestTiles(&DevInst, NULL, 0);
-	RscReq[0] = XAie_SetupRscRequest(XAie_TileLoc(1,1), XAIE_CORE_MOD, 1);
-	RscReq[1] = XAie_SetupRscRequest(XAie_TileLoc(1,2), XAIE_CORE_MOD, 1);
-	XAie_RequestPerfcnt(&DevInst, 2, RscReq, 2, ReturnRsc);
-	UserRscNum = XAIE_TOTAL_MODS;
-	XAie_RequestBroadcastChannel(&DevInst, &UserRscNum, ReturnRsc, 1);
-	XAie_SaveAllocatedRscsToFile(&DevInst, "./rscs.bin");
+	auto Perf0 = Aie.tile(1,1).core().perfCounter();
+	RC = Perf0->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	auto Perf1 = Aie.tile(1,2).core().perfCounter();
+	RC = Perf1->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	auto BcAll = Aie.broadcast(vL, XAIE_PL_MOD, XAIE_PL_MOD);
+	RC = BcAll->reserve();
+	CHECK_EQUAL(RC, XAIE_OK);
+
+	RC = Aie.saveAllocatedRscsToFile("./rscs.bin");
+	CHECK_EQUAL(RC, XAIE_OK);
 	f = fopen("./rscs.bin", "rb");
 	CHECK_FALSE(f == NULL);
 	fseek(f, 0, SEEK_END);
@@ -222,7 +239,8 @@ TEST(RSC, RscDefaultGroups) {
 	CHECK_FALSE(buf == NULL);
 	fread(buf, 1, fsize, f);
 	buf[fsize] = 0;
-	RC = XAie_LoadStaticRscfromMem(&DevInst, buf);
+	RC = Aie.loadStaticRscsFromMem(buf);
+	CHECK_EQUAL(RC, XAIE_OK);
 	free(buf);
 
 	//First test SHIM tiles left to right
@@ -252,13 +270,13 @@ TEST(RSC, RscDefaultGroups) {
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	auto RscsStat = Aie.getRscStat(XAIEDEV_DEFAULT_GROUP_AVAIL);
-	uint32_t NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	uint32_t NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(14, NumRsc);
-	NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,2), XAIE_CORE_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,2), XAIE_CORE_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(14, NumRsc);
-	NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,3), XAIE_CORE_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,3), XAIE_CORE_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(15, NumRsc);
-	NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,1), XAIE_CORE_MOD, XAIE_PERFCNT_RSC);
+	NumRsc = RscsStat.getNumRsc(XAie_TileLoc(1,1), XAIE_CORE_MOD, XAIE_PERFCOUNT);
 	CHECK_EQUAL(2, NumRsc);
 
 	Aie.tile(1,1).getRscStat(XAIEDEV_DEFAULT_GROUP_AVAIL).show();
@@ -266,13 +284,13 @@ TEST(RSC, RscDefaultGroups) {
 	Aie.tile(1,1).mem().traceEvent()->getRscStat(XAIEDEV_DEFAULT_GROUP_AVAIL).show();
 
 	auto RscsStatStatic = Aie.getRscStat(XAIEDEV_DEFAULT_GROUP_STATIC);
-	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,0), XAIE_PL_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(1, NumRsc);
-	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,2), XAIE_CORE_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,2), XAIE_CORE_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(1, NumRsc);
-	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,3), XAIE_CORE_MOD, XAIE_BCAST_CHANNEL_RSC);
+	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,3), XAIE_CORE_MOD, XAIE_BROADCAST);
 	CHECK_EQUAL(1, NumRsc);
-	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,1), XAIE_CORE_MOD, XAIE_PERFCNT_RSC);
+	NumRsc = RscsStatStatic.getNumRsc(XAie_TileLoc(1,1), XAIE_CORE_MOD, XAIE_PERFCOUNT);
 	CHECK_EQUAL(1, NumRsc);
 
 	Aie.tile(1,1).getRscStat(XAIEDEV_DEFAULT_GROUP_STATIC).show();

@@ -7,6 +7,7 @@
 
 #include <xaiefal/common/xaiefal-common.hpp>
 #include <xaiefal/rsc/xaiefal-rsc-base.hpp>
+#include <xaiefal/rsc/xaiefal-rscmgr.hpp>
 
 #pragma once
 
@@ -20,7 +21,7 @@ namespace xaiefal {
 		XAieGroupEvent() = delete;
 		XAieGroupEvent(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M, XAie_Events gE):
-			XAieSingleTileRsc(DevHd, L, M),
+			XAieSingleTileRsc(DevHd, L, M, XAIE_GROUPEVENT),
 			GroupEvent(gE), GroupComposition(0) {
 			uint32_t GroupId;
 
@@ -62,14 +63,14 @@ namespace xaiefal {
 			_XAIEFAL_MUTEX_ACQUIRE(mLock);
 
 			if (Hid == nullptr) {
-				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << ", empty handle." << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 			if (State.Reserved == 1) {
 				if (GroupComposition != C) {
-					Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
+					Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 						" Mod=" << Mod << "(" <<
 						GroupEvent << ") is reserved with " <<
@@ -106,7 +107,7 @@ namespace xaiefal {
 
 			auto H = Handles.find(Hid);
 			if (H == Handles.end()) {
-				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
 					" group event(" << GroupEvent <<
@@ -141,7 +142,7 @@ namespace xaiefal {
 
 			auto H = Handles.find(Hid);
 			if (H == Handles.end()) {
-				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
 					" group event(" << GroupEvent <<
@@ -193,7 +194,7 @@ namespace xaiefal {
 
 			auto H = Handles.find(Hid);
 			if (H == Handles.end()) {
-				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
 					" group event(" << GroupEvent <<
@@ -209,8 +210,25 @@ namespace xaiefal {
 			}
 			return RC;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_GROUP_EVENTS_RSC);
+
+		uint32_t getRscIdfromEvent(XAie_Events Event) {
+			uint8_t TileType;
+			const XAie_EvntMod *EvntMod;
+
+			TileType = _XAie_GetTileTypefromLoc(AieHd->dev(), Loc);
+
+			if (Mod == XAIE_PL_MOD) {
+				EvntMod = &AieHd->dev()->DevProp.DevMod[TileType].EvntMod[0U];
+			} else {
+				EvntMod = &AieHd->dev()->DevProp.DevMod[TileType].EvntMod[Mod];
+			}
+
+			for (uint8_t i = 0; i < EvntMod->NumGroupEvents; i++) {
+				if (Event == EvntMod->Group[i].GroupEvent) {
+					return EvntMod->Group[i].GroupOff;
+				}
+			}
+			return XAIE_RSC_ID_ANY;
 		}
 	private:
 		XAie_Events GroupEvent; /**< group event */
@@ -221,23 +239,28 @@ namespace xaiefal {
 	protected:
 		AieRC _reserve() {
 			AieRC RC;
+			XAieUserRsc Rsc;
 
-			Rsc.Loc.Col = Loc.Col;
-			Rsc.Loc.Row = Loc.Row;
-			Rsc.Mod = static_cast<uint32_t>(Mod);
-			Rsc.RscType = XAIE_GROUP_EVENTS_RSC;
-			Rsc.RscId = static_cast<uint32_t>(GroupEvent);
-			RC = XAie_RequestAllocatedGroupEvents(dev(), 1, &Rsc);
+			Rsc.Loc = Loc;
+			Rsc.Mod = Mod;
+			Rsc.RscType = Type;
+			Rsc.RscId = getRscIdfromEvent(GroupEvent);
+			vRscs.push_back(Rsc);
+			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::FAL_WARN) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::WARN) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << " resource not available.\n";
+				vRscs.clear();
 			}
 			return RC;
 		}
 		AieRC _release() {
-			Rsc.RscId = static_cast<uint32_t>(GroupEvent);
-			return XAie_FreeGroupEvents(dev(), 1, &Rsc);
+			AieRC RC;
+
+			RC = AieHd->rscMgr()->free(*this);
+			vRscs.clear();
+			return RC;
 		}
 		AieRC _start() {
 			uint32_t lConfig = GroupComposition;
@@ -252,9 +275,6 @@ namespace xaiefal {
 			return XAie_EventGroupReset(dev(), Loc, Mod, GroupEvent);
 		}
 
-		void _getRscs(std::vector<XAie_UserRsc> &vRscs) const {
-			vRscs.push_back(Rsc);
-		}
 	private:
 		/**
 		 * TODO: Following function will not be required.
@@ -295,14 +315,14 @@ namespace xaiefal {
 					sizeof(DevHd->XAieGroupEventMapPl[0]);
 			}
 			for (i = 0; i < EIdsTotal; i++) {
-				if (E == static_cast<XAie_Events>(EIds[i])) {
+				if (E == EIds[i]) {
 					Id = i;
 					break;
 				}
 			}
 			if (i >= EIdsTotal) {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "Group event " << __func__ << " (" <<
 					" Mod=" << M << " " << E <<
 					" invalid." << std::endl;
 			} else {

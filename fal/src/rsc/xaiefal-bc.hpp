@@ -32,7 +32,7 @@ namespace xaiefal {
 		XAieBroadcast(std::shared_ptr<XAieDevHandle> DevHd,
 			const std::vector<XAie_LocType> &vL,
 			XAie_ModuleType StartM, XAie_ModuleType EndM):
-			XAieRsc(DevHd) {
+			XAieRsc(DevHd, XAIE_BROADCAST) {
 			StartMod = StartM;
 			EndMod = EndM;
 			vLocs = vL;
@@ -51,11 +51,10 @@ namespace xaiefal {
 		 * @return broadcast channel ID if resource has been reserved, -1 otherwise.
 		 */
 		int getBc() {
-			int BC = -1;
+			int BC = XAIE_RSC_ID_ANY;
 
 			if (State.Reserved == 1) {
 				BC = vRscs[0].RscId;
-			} else {
 			}
 			return BC;
 		}
@@ -72,7 +71,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_INVALID_ARGS;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::FAL_ERROR) << "broadcast object " << __func__ << " (" <<
+				Logger::log(LogLevel::ERROR) << "broadcast object " << __func__ << " (" <<
 					static_cast<uint32_t>(L.Col) << "," << static_cast<uint32_t>(L.Row) << ")" <<
 					" Mod= " << M <<
 					" resource not reserved." << std::endl;
@@ -117,9 +116,6 @@ namespace xaiefal {
 
 			return XAIE_OK;
 		}
-		uint32_t getRscType() const {
-			return static_cast<uint32_t>(XAIE_BCAST_CHANNEL_RSC);
-		}
 		XAieRscStat getRscStat(const std::string &GName) const {
 			XAieRscStat RscStat(GName);
 			(void) GName;
@@ -134,40 +130,28 @@ namespace xaiefal {
 		}
 	private:
 		AieRC _reserve() {
-			AieRC RC = XAIE_INVALID_ARGS;
-			uint8_t broadcastAll = 1;
-			uint32_t numRscs;
+			AieRC RC = XAIE_OK;
 
-			vRscs.clear();
-
-			if (vLocs.size() == 0)  {
-				numRscs = AieHd->dev()->AieTileNumRows * AieHd->dev()->NumCols * 2
-				+ (AieHd->dev()->NumRows - AieHd->dev()->AieTileNumRows) * AieHd->dev()->NumCols;
-				XAie_UserRsc rsc;
-				for (uint32_t i = 0; i < numRscs; i++) {
-					rsc.RscType = XAIE_BCAST_CHANNEL_RSC;
-					vRscs.push_back(rsc);
-				}
-				RC = XAIE_OK;
-			} else {
+			if (vLocs.size() != 0)  {
 				RC = setRscs(AieHd, vLocs, StartMod, EndMod, vRscs);
-				numRscs = static_cast<uint32_t>(vRscs.size());
-				broadcastAll = 0;
 			}
 
 			if (RC == XAIE_OK) {
-				if (preferredId == XAIE_RSC_ID_ANY) {
-					RC = XAie_RequestBroadcastChannel(AieHd->dev(), &numRscs, &vRscs[0], broadcastAll);
-				} else {
-					RC = XAie_RequestSpecificBroadcastChannel(AieHd->dev(), preferredId, &numRscs, &vRscs[0], broadcastAll);
-				}
-				vRscs.resize(numRscs);
+				RC = AieHd->rscMgr()->request(*this);
+			}
+
+			if (RC != XAIE_OK) {
+				vRscs.clear();
 			}
 			return RC;
 
 		}
 		AieRC _release() {
-			return XAie_ReleaseBroadcastChannel(AieHd->dev(), static_cast<uint32_t>(vRscs.size()), &vRscs[0]);
+			AieRC RC;
+
+			RC = AieHd->rscMgr()->release(*this);
+			vRscs.clear();
+			return RC;
 		}
 		AieRC _start() {
 			AieRC RC = XAIE_OK;
@@ -222,22 +206,22 @@ namespace xaiefal {
 					}
 
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-									(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+									(*r).Loc, (*r).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*r).RscId,
 									XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-									(*(r+1)).Loc, static_cast<XAie_ModuleType>((*(r + 1)).Mod),
+									(*(r+1)).Loc, (*(r + 1)).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*(r + 1)).RscId,
 									XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastBlockDir(dev(),
-									(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+									(*r).Loc, (*r).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*r).RscId,
 									XAIE_EVENT_BROADCAST_ALL & (~un_block));
 					RC = XAie_EventBroadcastBlockDir(dev(),
-									(*(r + 1)).Loc, static_cast<XAie_ModuleType>((*(r+1)).Mod),
+									(*(r + 1)).Loc, (*(r+1)).Mod,
 									XAIE_EVENT_SWITCH_A,
 									(*(r + 1)).RscId,
 									XAIE_EVENT_BROADCAST_ALL & (~un_block_n));
@@ -263,23 +247,23 @@ namespace xaiefal {
 						}
 					}
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_A,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastUnblockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_B,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 					RC = XAie_EventBroadcastBlockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_A,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL & (~(un_block | XAIE_EVENT_BROADCAST_EAST)));
 
 					RC = XAie_EventBroadcastBlockDir(dev(),
-						(*r).Loc, static_cast<XAie_ModuleType>((*r).Mod),
+						(*r).Loc, (*r).Mod,
 						XAIE_EVENT_SWITCH_B,
 						(*r).RscId,
 						XAIE_EVENT_BROADCAST_ALL & (~(un_block | XAIE_EVENT_BROADCAST_WEST)));
@@ -292,7 +276,7 @@ namespace xaiefal {
 				i++;
 			}
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::FAL_ERROR) << "BC: " <<
+				Logger::log(LogLevel::ERROR) << "BC: " <<
 					" failed to stop." << std::endl;
 			}
 			return RC;
@@ -310,22 +294,22 @@ namespace xaiefal {
 				if (r.Loc.Row == 0) {
 					// Unblock SHIM tile switch A and B
 					iRC |= XAie_EventBroadcastUnblockDir(dev(),
-						r.Loc, static_cast<XAie_ModuleType>(r.Mod),
+						r.Loc, r.Mod,
 						XAIE_EVENT_SWITCH_A, r.RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 					iRC |= XAie_EventBroadcastUnblockDir(dev(),
-						r.Loc, static_cast<XAie_ModuleType>(r.Mod),
+						r.Loc, r.Mod,
 						XAIE_EVENT_SWITCH_B, r.RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 				} else {
 					iRC |= XAie_EventBroadcastUnblockDir(dev(),
-						r.Loc, static_cast<XAie_ModuleType>(r.Mod),
+						r.Loc, r.Mod,
 						XAIE_EVENT_SWITCH_A, r.RscId,
 						XAIE_EVENT_BROADCAST_ALL);
 				}
 			}
 			if (iRC != (int)XAIE_OK) {
-				Logger::log(LogLevel::FAL_ERROR) << "BC: " <<
+				Logger::log(LogLevel::ERROR) << "BC: " <<
 					" failed to stop." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -334,14 +318,13 @@ namespace xaiefal {
 			return RC;
 		}
 
-		void _getRscs(std::vector<XAie_UserRsc> &vRs) const {
-			vRs.insert(vRs.end(), vRscs.begin(), vRscs.end());
+		void _getReservedRscs(std::vector<XAieUserRsc> &vR) const {
+			vR.insert(vR.end(), vRscs.begin(), vRscs.end());
 		}
 	private:
 		XAie_ModuleType StartMod; /**< module type of the starting module on the channel */
 		XAie_ModuleType EndMod; /**< module type of the ending modile on the channel */
 		std::vector<XAie_LocType> vLocs; /**< tiles on the channel */
-		std::vector<XAie_UserRsc> vRscs; /**< broadcast channel allocated resources */
 	private:
 		/**
 		 * TODO: Following function will not be required.
@@ -350,27 +333,27 @@ namespace xaiefal {
 		static AieRC setRscs(std::shared_ptr<XAieDevHandle> Dev,
 				const std::vector<XAie_LocType> &vL,
 				XAie_ModuleType startM, XAie_ModuleType endM,
-				std::vector<XAie_UserRsc> &vR) {
+				std::vector<XAieUserRsc> &vR) {
 
 			if ((vL[0].Row == 0 && startM != XAIE_PL_MOD) ||
 			    (vL.back().Row == 0 && endM != XAIE_PL_MOD) ||
 			    (vL[0].Row != 0 && startM == XAIE_PL_MOD) ||
 			    (vL.back().Row != 0 && endM == XAIE_PL_MOD)) {
-				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+				Logger::log(LogLevel::ERROR) << __func__ <<
 					"BC: invalid tiles and modules combination." << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 
 			for (size_t i = 0; i < vL.size(); i++) {
-				XAie_UserRsc R;
+				XAieUserRsc R;
 				uint32_t TType;
 
-				R.RscType = XAIE_BCAST_CHANNEL_RSC;
+				R.RscType = XAIE_BROADCAST;
 
 				TType = _XAie_GetTileTypefromLoc(Dev->dev(),
 						vL[i]);
 				if (TType == XAIEGBL_TILE_TYPE_MAX) {
-					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+					Logger::log(LogLevel::ERROR) << __func__ <<
 						"BC: invalid tile (" << vL[i].Col <<
 						"," << vL[i].Row <<")" <<
 						std::endl;
@@ -396,7 +379,7 @@ namespace xaiefal {
 				if (i != vL.size() - 1) {
 					if (vL[i+1].Row == vL[i].Row &&
 						vL[i+1].Col == vL[i].Col) {
-						Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+						Logger::log(LogLevel::ERROR) << __func__ <<
 							"BC: duplicated tiles in the vector." <<
 							std::endl;
 						return XAIE_INVALID_ARGS;
@@ -407,7 +390,7 @@ namespace xaiefal {
 							 (vL[i+1].Row - vL[i].Row) > 1) ||
 							(vL[i+1].Row < vL[i].Row &&
 							 (vL[i].Row - vL[i+1].Row) > 1)) {
-							Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+							Logger::log(LogLevel::ERROR) << __func__ <<
 								"BC: discontinuous input tiles." <<
 								std::endl;
 							return XAIE_INVALID_ARGS;
@@ -417,7 +400,7 @@ namespace xaiefal {
 						     (vL[i+1].Col - vL[i].Col) > 1) ||
 						    (vL[i+1].Col < vL[i].Col &&
 						     (vL[i].Col - vL[i+1].Col) > 1)) {
-							Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+							Logger::log(LogLevel::ERROR) << __func__ <<
 								"BC: discontinuous input tiles." <<
 								std::endl;
 							return XAIE_INVALID_ARGS;

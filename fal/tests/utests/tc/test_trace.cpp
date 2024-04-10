@@ -321,13 +321,6 @@ TEST(Tracing, TraceNegative)
 	RC = Tracing->setTraceEvent(8, XAIE_EVENT_TRUE_CORE);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
 
-	DevInst.IsReady = 0;
-
-	RC = Tracing->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 1;
-
 	RC = Tracing->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
 
@@ -384,13 +377,6 @@ TEST(Tracing, TraceNegative)
 
 	int TraceBc = TraceE->getBc();
 	CHECK_EQUAL(TracingStartBc, -EINVAL);
-
-	DevInst.IsReady = 0;
-
-	RC = Tracing->release();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 1;
 
 	RC = Tracing->release();
 	CHECK_EQUAL(RC, XAIE_OK);
@@ -458,11 +444,11 @@ TEST(Tracing, TraceNegative)
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = Tracing->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	CHECK_EQUAL(RC, XAIE_ERR);
 
 	BC16->release();
 	RC = Tracing->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	CHECK_EQUAL(RC, XAIE_ERR);
 }
 
 TEST(Tracing, TraceNegativeBCOverflow)
@@ -549,7 +535,7 @@ TEST(Tracing, TraceNegativeBCOverflow)
 
 	BC16->release();
 	RC = Tracing->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	CHECK_EQUAL(RC, XAIE_ERR);
 }
 
 TEST(Tracing, TraceNegativeMemEvent)
@@ -578,13 +564,6 @@ TEST(Tracing, TraceNegativeMemEvent)
 
 	RC = Tracing->setTraceEvent(8, XAIE_EVENT_TRUE_CORE);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 0;
-
-	RC = Tracing->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 1;
 
 	RC = Tracing->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);
@@ -725,13 +704,6 @@ TEST(Tracing, TraceNegative3)
 
 	RC = Tracing->setTraceEvent(8, XAIE_EVENT_TRUE_CORE);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 0;
-
-	RC = Tracing->reserve();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-	DevInst.IsReady = 1;
 
 	RC = Tracing->reserve();
 	CHECK_EQUAL(RC, XAIE_OK);

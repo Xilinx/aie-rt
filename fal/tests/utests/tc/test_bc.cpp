@@ -85,7 +85,7 @@ TEST(Broadcast, BroadcstError)
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = BC->release();
-	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	CHECK_EQUAL(RC, XAIE_OK);
 
 	DevInst.IsReady = 1;
 
@@ -209,8 +209,11 @@ TEST(Broadcast, BroadcstError)
 
 	auto BC16 = Aie.broadcast(vL, StartM, EndM);
 	RC = BC16->reserve();
-	CHECK_EQUAL(RC, XAIE_ERR);
+	CHECK_EQUAL(RC, XAIE_OK);
 
+	auto BC17 = Aie.broadcast(vL, StartM, EndM);
+	RC = BC17->reserve();
+	CHECK_EQUAL(RC, XAIE_ERR);
 }
 
 /* This test selects a list of tiles to broadcast to */
