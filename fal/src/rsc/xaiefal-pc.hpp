@@ -96,6 +96,8 @@ namespace xaiefal {
 					Logger::log(LogLevel::WARN) << "pcevent " << __func__ << " (" <<
 						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 						" no available resource.\n";
+				} else {
+					reservedId = vRscs[0].RscId;
 				}
 			}
 			return RC;
@@ -212,6 +214,8 @@ namespace xaiefal {
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" resource not availalble." << std::endl;
 				vRscs.clear();
+			} else {
+				reservedId = vRscs[0].RscId;
 			}
 			return RC;
 		}

@@ -417,6 +417,7 @@ namespace xaiefal {
 					" Expect Mod= " << Mod << " resource not available.\n";
 				vRscs.clear();
 			} else {
+				reservedId = vRscs[0].RscId;
 				RC = _reserveAppend();
 			}
 			return RC;

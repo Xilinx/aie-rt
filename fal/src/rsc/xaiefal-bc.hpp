@@ -146,6 +146,8 @@ namespace xaiefal {
 				Logger::log(LogLevel::WARN) << "broadcast " <<
 					__func__ << " resource not available.\n";
 				vRscs.clear();
+			} else {
+				reservedId = vRscs[0].RscId;
 			}
 			return RC;
 

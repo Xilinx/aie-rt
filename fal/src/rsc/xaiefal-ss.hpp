@@ -143,6 +143,8 @@ namespace xaiefal {
 					" (" << static_cast<int>(Loc.Col) << "," <<
 					static_cast<int>(Loc.Row) << ")" << " resource not available.\n";
 				vRscs.clear();
+			} else {
+				reservedId = vRscs[0].RscId;
 			}
 			return RC;
 		}
