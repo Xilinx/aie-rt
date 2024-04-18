@@ -92,6 +92,7 @@ typedef enum {
 	XAIE_IO_BACKEND_DEBUG, /* IO debug backend */
 	XAIE_IO_BACKEND_LINUX, /* Linux kernel backend */
 	XAIE_IO_BACKEND_SOCKET, /* Socket backend */
+	XAIE_IO_BACKEND_AMDAIR, /* Use with amdair driver */
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 
@@ -182,6 +183,7 @@ typedef struct {
 	u8 AieTileRowStart;
 	u8 AieTileNumRows;
 	XAie_PartitionProp PartProp;
+	XAie_BackendType Backend;
 } XAie_Config;
 
 /*
@@ -763,7 +765,7 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 *		more memory from the user application for resource management.
 *
 *******************************************************************************/
-#define XAie_InstDeclare(Inst, ConfigPtr) XAie_DevInst Inst = { 0 }
+#define XAie_InstDeclare(Inst, ConfigPtr) XAie_DevInst Inst = {}
 
 /*****************************************************************************/
 /**
