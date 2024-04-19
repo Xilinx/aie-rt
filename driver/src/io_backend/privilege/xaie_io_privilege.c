@@ -474,6 +474,16 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
 		}
+
+		for(u32 C = 0; C < DevInst->NumCols; C++) {
+			XAie_LocType Loc;
+			u32 ColClockStatus;
+
+			Loc = XAie_TileLoc(C, 1);
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				       ColClockStatus, DevInst->NumRows - 1);
+		}
 	}
 
 	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
