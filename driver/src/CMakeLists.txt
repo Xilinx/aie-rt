@@ -138,15 +138,6 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/pm/xaie_reset_aieml.h"
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/pm/xaie_tilectrl.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/pm/xaie_tilectrl.h")
 
-#rsc
-collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc.c")
-collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc_bcast.c")
-collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc_events.c")
-collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc_perfcnt.c")
-collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc_trace.c")
-collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc.h")
-collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/rsc/xaie_rsc_internal.h")
-
 #stream_switch
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss.h")
