@@ -538,7 +538,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 {
 	AieRC RC;
-	u32 StartBit, EndBit;
+	u32 TileStatus, NumTiles;
 
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
 
@@ -562,20 +562,19 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 		}
 	}
 
-	StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
-			 XAie_TileLoc((u8)Args->StartCol, 0));
-	EndBit = _XAie_GetTileBitPosFromLoc(DevInst,
-			 XAie_TileLoc((u8)(Args->StartCol + Args->NumCols), 0));
+	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
+			 XAie_TileLoc((u8)Args->StartCol, 1));
+	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
 
 	if(Args->Enable) {
 		/*
 		 * Set bitmap from start column to Start+Number of columns
 		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				StartBit, EndBit);
+				TileStatus, NumTiles);
 	} else {
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				StartBit, EndBit);
+				TileStatus, NumTiles);
 	}
 
 	return XAIE_OK;

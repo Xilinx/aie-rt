@@ -363,7 +363,7 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 ******************************************************************************/
 u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
-	return (u32)(Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U);
+	return (u32)((Loc.Col + DevInst->StartCol) * (DevInst->NumRows - 1U) + Loc.Row - 1U);
 }
 
 /*****************************************************************************/
