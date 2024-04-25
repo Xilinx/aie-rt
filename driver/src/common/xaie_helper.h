@@ -34,6 +34,7 @@
 
 /***************************** Include Files *********************************/
 #include <limits.h>
+#include <stddef.h>
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
 #include "xaie_core.h"
@@ -41,6 +42,10 @@
 #include "xaie_locks.h"
 
 /***************************** Macro Definitions *****************************/
+#define container_of(ptr, type, member)	({					\
+		void *__ptr = ptr;						\
+		__ptr == NULL ? NULL : (type *)(__ptr - offsetof(type, member));	\
+	})
 #define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
 				(u32)(1U << (u64)(pos) % (sizeof((bitmap)[0]) * 8U)))
 

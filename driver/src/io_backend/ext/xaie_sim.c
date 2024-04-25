@@ -41,9 +41,21 @@
 #include "xaie_npi.h"
 
 /****************************** Type Definitions *****************************/
+struct XAie_DevMem {
+	ssize_t Size;
+	struct XAie_DevMem *Next;
+	struct XAie_DevMem *Prev;
+	uint8_t Free : 1;
+	XAie_MemInst MemInst;
+};
+
 typedef struct {
 	u64 BaseAddr;
 	u64 NpiBaseAddr;
+	XAie_DevInst *DevInst;
+	const XAie_CoreMod *OrigCoreMod;
+	XAie_CoreMod CoreModOverride;
+	struct XAie_DevMem DevMem;
 } XAie_SimIO;
 
 /************************** Function Definitions *****************************/
@@ -64,6 +76,18 @@ typedef struct {
 *******************************************************************************/
 static AieRC XAie_SimIO_Finish(void *IOInst)
 {
+	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	struct XAie_DevMem *Pos;
+
+	SimIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = SimIOInst->OrigCoreMod;
+	Pos = &SimIOInst->DevMem;
+	while (Pos) {
+		if (!Pos->Free) {
+			XAIE_ERROR("Freeing SimIO while MemInst not freed!\n");
+			return XAIE_OK;
+		}
+		Pos = Pos->Next;
+	}
 	free(IOInst);
 	return XAIE_OK;
 }
@@ -83,8 +107,9 @@ static AieRC XAie_SimIO_Finish(void *IOInst)
 static AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 {
 	XAie_SimIO *IOInst;
+	struct XAie_DevMem *Head;
 
-	IOInst = (XAie_SimIO *)malloc(sizeof(*IOInst));
+	IOInst = (XAie_SimIO *)calloc(1, sizeof(*IOInst));
 	if(IOInst == NULL) {
 		XAIE_ERROR("Memory allocation failed\n");
 		return XAIE_ERR;
@@ -94,6 +119,12 @@ static AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	DevInst->IOInst = IOInst;
 
+	Head = &IOInst->DevMem;
+	Head->Free = 1;
+	/* 3GB MEM SIZE
+	 * 0xfffffffc appears to be max
+	 */
+	Head->Size = 0xc0000000;
 	return XAIE_OK;
 }
 
@@ -438,6 +469,184 @@ static u64 XAie_SimIOGetTid(void)
 		return (u64)pthread_self();
 }
 
+static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	XAie_SimIO *IOInst = DevInst->IOInst;
+	struct XAie_DevMem *Head = &IOInst->DevMem;
+	struct XAie_DevMem *Pos;
+	u64 Align = Size % 4;
+	struct XAie_DevMem *Node;
+
+	if (Align) {
+		Size = Size + (4 - Align);
+	}
+
+	Pos = Head;
+	while (Pos) {
+		if (Pos->Free && Pos->Size > Size) {
+			struct XAie_DevMem *Node = calloc(1, sizeof(*Node));
+			struct XAie_DevMem *Next = Pos->Next;
+			XAie_MemInst *MemInst;
+
+			if (!Node)
+				return NULL;
+			MemInst = &Node->MemInst;
+			MemInst->VAddr = malloc(Size);
+			if (!MemInst->VAddr) {
+				free(Node);
+				return NULL;
+			}
+			MemInst->Size = Size;
+			Pos->Size -= Size;
+			MemInst->DevAddr = Pos->MemInst.DevAddr + Pos->Size;
+			MemInst->Cache = Cache;
+			MemInst->DevInst = DevInst;
+			Node->Size = Size;
+			Node->Prev = Pos;
+			Node->Next = Next;
+			Pos->Next = Node;
+			if (Next) {
+				Next->Prev = Node;
+			}
+			return MemInst;
+		} else if (Pos->Free && Pos->Size == Size) {
+			XAie_MemInst *MemInst = &Pos->MemInst;
+
+			Pos->Free = 0;
+			MemInst->VAddr = malloc(Size);
+			if (!MemInst->VAddr) {
+				Pos->Free = 1;
+				return NULL;
+			}
+			MemInst->Size = Size;
+			MemInst->Cache = Cache;
+			MemInst->DevInst = DevInst;
+			return MemInst;
+		}
+		Pos = Pos->Next;
+	}
+	return NULL;
+}
+
+ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
+{
+	XAie_SimIO *IOInst = DevInst->IOInst;
+	struct XAie_DevMem *DevMem = &IOInst->DevMem;
+	struct XAie_DevMem *Pos;
+	ssize_t Free = 0;
+
+	Pos = DevMem;
+
+	while (Pos) {
+		if (Pos->Free)
+			Free += Pos->Size;
+		Pos = Pos->Next;
+	}
+
+	return Free;
+}
+
+ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
+{
+	XAie_SimIO *IOInst = DevInst->IOInst;
+	struct XAie_DevMem *DevMem = &IOInst->DevMem;
+	struct XAie_DevMem *Pos;
+	ssize_t use = 0;
+
+	Pos = DevMem;
+
+	while (Pos) {
+		if (!Pos->Free)
+			use += Pos->Size;
+		Pos = Pos->Next;
+	}
+
+	return use;
+
+}
+
+void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
+{
+	XAie_SimIO *IOInst = DevInst->IOInst;
+	struct XAie_DevMem *DevMem = &IOInst->DevMem;
+	struct XAie_DevMem *Pos;
+	ssize_t Free = 0, use = 0;
+	int i = 0;
+
+	Pos = DevMem;
+
+	while (Pos) {
+		if (Pos->Free)
+			Free += Pos->Size;
+		else
+			use += Pos->Size;
+		XAIE_DBG("[%d]: free: %d size: 0x%llx\n", i, Pos->Free, Pos->Size);
+		Pos = Pos->Next;
+		i++;
+	}
+	XAIE_DBG("Total Free: 0x%llx, total use: 0x%llx\n", Free, use);
+	return;
+}
+
+static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
+{
+	struct XAie_DevMem *Node, *Next, *Prev;
+
+	if (!MemInst)
+		return XAIE_OK;
+	Node = container_of(MemInst, struct XAie_DevMem, MemInst);
+	Next = Node->Next;
+	Prev = Node->Prev;
+
+	Node->Free = 1;
+	free(Node->MemInst.VAddr);
+	Node->MemInst.VAddr = NULL;
+	if (Next && Next->Free) {
+		Node->Size += Next->Size;
+		Node->Next = Next->Next;
+		if (Next->Next)
+			Next->Next->Prev = Node;
+		free(Next);
+		Next = Node->Next;
+	}
+	if (Prev && Prev->Free) {
+		Prev->Size += Node->Size;
+		Prev->Next = Next;
+		if (Next) {
+			Next->Prev = Prev;
+		}
+		free(Node);
+	}
+	return XAIE_OK;
+}
+
+static AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	uint32_t *va = MemInst->VAddr;
+	uint32_t *pa = MemInst->DevAddr;
+	int i;
+
+	for (i = 0; i < MemInst->Size >> 2; i++) {
+		va[i] = ess_Read32(&pa[i]);
+	}
+
+	return XAIE_OK;
+}
+
+static AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
+{
+	uint32_t *pa = MemInst->DevAddr;
+	uint32_t *va = MemInst->VAddr;
+	int i;
+
+	for (i = 0; i < MemInst->Size >> 2; i++) {
+		ess_Write32(&pa[i], va[i]);
+	}
+
+	return XAIE_OK;
+}
+
 #else
 
 static AieRC XAie_SimIO_Finish(void *IOInst)
@@ -552,8 +761,6 @@ static u64 XAie_SimIOGetTid(void)
 		return 0;
 }
 
-#endif /* __AIESIM__ */
-
 static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
@@ -561,6 +768,23 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	(void)Size;
 	(void)Cache;
 	return NULL;
+}
+
+ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
+	return 0;
+}
+
+ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
+	return 0;
+}
+
+void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
 }
 
 static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
@@ -580,6 +804,9 @@ static AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
 	(void)MemInst;
 	return XAIE_ERR;
 }
+
+#endif /* __AIESIM__ */
+
 
 static AieRC XAie_SimMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
