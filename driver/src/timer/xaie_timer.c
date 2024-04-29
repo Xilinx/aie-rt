@@ -724,7 +724,9 @@ static void _XAie_ClearBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 * This API synchronizes timer for all tiles for all modules in the partition.
 *
 * @param	DevInst - Device Instance.
-* @param	BcastChannelId - Broadcast channel id for timer sync.
+* @param	BcastChannelId - Starting broadcast channel ID used for timer
+* 				 sync. This API will use this channel as well
+* 				 as the next broadcast channel for the sync.
 *
 * @return	XAIE_OK on success
 * 		XAIE_INVALID_ARGS if any argument is invalid
@@ -765,13 +767,17 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	}
 
 	ShimBcastEvent = _XAie_GetBroadcastEventfromRscId(DevInst,
-			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId);
+			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId + 1);
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
 		XAie_LocType Loc = XAie_TileLoc(i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId, ShimBcastEvent);
+		if (i == 0) {
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
+					BcastChannelId + 1, ShimBcastEvent);
+		}
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Unable to configure shim broadcast event for timer sync\n");
 			free(Locs);
