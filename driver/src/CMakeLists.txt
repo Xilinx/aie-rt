@@ -12,9 +12,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
-# Define a custom option to control whether the library is built as a shared or static library
-option(XAIENGINE_BUILD_SHARED "Build xaiengine as a shared library" OFF)
-
 file(
   GLOB_RECURSE
   SRCS
@@ -33,45 +30,12 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xaiengine.h DESTINATION ${CMAKE_CURRENT_BI
 
 file(COPY ${HDRS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME})
 
-if(XAIENGINE_BUILD_SHARED)
-  # Build the library as a shared library
-  add_library(
-    ${PROJECT_NAME}
-    SHARED
-    ${SRCS}
+# Build the library as a shared library
+add_library(
+  ${PROJECT_NAME}
+  SHARED
+  ${SRCS}
   )
-else()
-  # Build the library as a static library
-  add_library(
-    ${PROJECT_NAME}
-    STATIC
-    ${SRCS}
-  )
-endif()
-
-
-target_compile_options(${PROJECT_NAME} PRIVATE
-   /wd4018
-   /wd4024
-   /wd4047
-   /wd4061
-   /wd4100
-   /wd4206
-   /wd4242
-   /wd4244
-   /wd4267
-   /wd4388
-   /wd4431
-   /wd4668
-   /wd4701
-   /wd4710
-   /wd4711
-   /wd4716
-   /wd4820
-   /wd5045
-   )
-
-
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE
@@ -101,6 +65,10 @@ if (DEBUG_BACKEND)
 endif (DEBUG_BACKEND)
 
 if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE
+   /wd4018 /wd4024 /wd4047 /wd4061 /wd4100 /wd4206 /wd4242 /wd4244  /wd4267 /wd4388 /wd4431 /wd4668 /wd4701 /wd4710 /wd4711 /wd4716
+   /wd4820 /wd5045
+   )
   target_compile_options(${PROJECT_NAME} PRIVATE /Wall -DXAIE_FEATURE_MSVC ${IO_BACKEND})
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra ${IO_BACKEND})
