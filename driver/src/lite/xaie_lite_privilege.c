@@ -315,7 +315,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 {
 	XAie_PartInitOpts SoftPartOpts;
 	AieRC RC;
-	u8 IsolationFlags;
+	u8 IsolationFlags = XAIE_CLEAR_ISOLATION;
 
 	memset(&SoftPartOpts,0, sizeof(SoftPartOpts));
 
@@ -332,8 +332,8 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 		if(DevPartInfo->BaseAddr == DevInst->BaseAddr) {
 			IsolationFlags |= XAIE_INIT_WEST_ISOLATION;
 		}
-		if((DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, (DevInst->NumCols - 1), 0U)) ==
-			( DevPartInfo->BaseAddr + _XAie_GetTileAddr(DevInst, (DevInst->NumCols - 1), 0U))) {
+		if((DevInst->BaseAddr + _XAie_GetTileAddr(DevInst, 0U, (DevInst->NumCols - 1))) ==
+			( DevPartInfo->BaseAddr + _XAie_GetTileAddr(DevInst, 0U, (DevInst->NumCols - 1)))) {
 			IsolationFlags |= XAIE_INIT_EAST_ISOLATION;
 		}
 		_XAie_LSetPartIsolationAfterRst(DevInst, IsolationFlags);
