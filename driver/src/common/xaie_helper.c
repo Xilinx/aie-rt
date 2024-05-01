@@ -1583,38 +1583,15 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 	const XAie_Backend *Backend = DevInst->Backend;
 
 	if(DevInst->TxnList.Next != NULL) {
-		Tid = Backend->Ops.GetTid();
-		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
-		if(TxnInst == NULL) {
-			XAIE_DBG("Could not find transaction instance "
-					"associated with thread. Writing cmd "
-					"to register\n");
-			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-					Command, CmdWd0, CmdWd1, CmdStr);
-		}
-
-		if(((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) &&
-				(TxnInst->NumCmds > 0U)) {
-			/* Flush command buffer */
-			XAIE_DBG("Auto flushing contents of the transaction "
-					"buffer.\n");
-			RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to flush cmd buffer\n");
-				return RC;
-			}
-
-			TxnInst->NumCmds = 0;
-			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-					Command, CmdWd0, CmdWd1, CmdStr);
-		} else if(TxnInst->NumCmds == 0U) {
-			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-					Command, CmdWd0, CmdWd1, CmdStr);
-		} else {
-			XAIE_ERROR("Cmd Write operation is not supported "
-					"when auto flush is disabled\n");
-			return XAIE_ERR;
-		}
+		/**
+		 * This function is only used in XAie_LoadElf() on AIESIM platform.
+		 * In the past the elf loading was done via XCLBIN (PDI) but not
+		 * via TXN binary. Hence this unwanted TXN implementation did not have
+		 * any side effects. But when elf loading is attempted via TXN flow 
+		 * this needs to be made a NOOP else it fails. Hence Making 
+		 * XAIe_CmdWrite no-op for transaction mode.
+		 **/
+		return XAIE_OK;
 	}
 	return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
 			Command, CmdWd0, CmdWd1, CmdStr);
