@@ -1583,7 +1583,14 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 	const XAie_Backend *Backend = DevInst->Backend;
 
 	if(DevInst->TxnList.Next != NULL) {
-		/* Making XAIe_CmdWrite no-op for transaction mode */
+		/**
+		 * This function is only used in XAie_LoadElf() on AIESIM platform.
+		 * In the past the elf loading was done via XCLBIN (PDI) but not
+		 * via TXN binary. Hence this unwanted TXN implementation did not have
+		 * any side effects. But when elf loading is attempted via TXN flow 
+		 * this needs to be made a NOOP else it fails. Hence Making 
+		 * XAIe_CmdWrite no-op for transaction mode.
+		 **/
 		return XAIE_OK;
 	}
 	return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
