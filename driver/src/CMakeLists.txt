@@ -12,6 +12,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
+# Define a custom option to control whether the library is built as a shared or static library
+option(XAIENGINE_BUILD_SHARED "Build xaiengine as a shared library" ON)
+
 file(
   GLOB_RECURSE
   SRCS
@@ -30,12 +33,22 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xaiengine.h DESTINATION ${CMAKE_CURRENT_BI
 
 file(COPY ${HDRS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME})
 
-# Build the library as a shared library
-add_library(
-  ${PROJECT_NAME}
-  SHARED
-  ${SRCS}
+if(XAIENGINE_BUILD_SHARED)
+  # Build the library as a shared library
+  add_library(
+    ${PROJECT_NAME}
+    SHARED
+    ${SRCS}
   )
+else()
+  # Build the library as a static library
+  add_library(
+    ${PROJECT_NAME}
+    STATIC
+    ${SRCS}
+  )
+endif()
+
 target_include_directories(
   ${PROJECT_NAME}
   PRIVATE

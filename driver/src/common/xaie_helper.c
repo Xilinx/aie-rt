@@ -1577,9 +1577,6 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr)
 {
-	AieRC RC;
-	u64 Tid;
-	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
 
 	if(DevInst->TxnList.Next != NULL) {
