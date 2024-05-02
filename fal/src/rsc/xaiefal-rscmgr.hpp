@@ -5,13 +5,9 @@
 #include <vector>
 #include <xaiengine.h>
 
-#ifdef FAL_LINUX
-#define BACKEND	XAieRscMgrLinux
-#include <xaiefal/rsc/xaiefal-rscmgr-linux.hpp>
-#else
+
 #define BACKEND	XAieRscMgrGeneric
 #include <xaiefal/rsc/xaiefal-rscmgr-generic.hpp>
-#endif /* FAL_LINUX */
 
 #define XAIE_ERROR_BCAST_ID	0U
 #define XAIE_ECC_BCAST_ID	6U

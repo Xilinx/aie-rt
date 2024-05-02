@@ -51,9 +51,6 @@ set_target_properties(
   ${PROJECT_VERSION_MAJOR}
   )
 
-if (LINUX_BACKEND)
-	list(APPEND IO_BACKEND -D__AIELINUX__)
-endif (LINUX_BACKEND)
 if (METAL_BACKEND)
 	list(APPEND IO_BACKEND -D__AIEMETAL__)
 endif (METAL_BACKEND)

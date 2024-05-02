@@ -693,7 +693,7 @@ static AieRC _XAie_FindNextNoCTile(XAie_DevInst *DevInst, XAie_LocType Loc,
  *                       * Broadcast channel #0 in AIE array tiles.
  *                       * Switch A L1 IRQ 16.
  *                       * NPI interrupt line #5.
- *               Currently, this API only supports Linux UIO, CDO, and debug
+ *               Currently, this API only supports Metal, CDO, and debug
  *               backends.
  *
  *               This function is internal only.
@@ -949,7 +949,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
  *                       * Switch A L1 IRQ 16. For AIE1&2
  *                       * NPI interrupt line #5 for AIE1 and 2
  *                       * NPI interrupt line #5, 6, 7, 8. for AIE2PS.
- *               Currently, this API only supports Linux UIO, CDO, and debug
+ *               Currently, this API only supports Metal, CDO, and debug
  *               backends.
  ******************************************************************************/
 AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)

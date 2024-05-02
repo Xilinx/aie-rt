@@ -39,30 +39,29 @@ TEST(InterruptApis, InterruptSuccesses)
 
 	XAie_LocType TileLoc = XAie_TileLoc(2, 0);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		RC = XAie_IntrCtrlL1Disable(&DevInst, TileLoc, XAIE_EVENT_SWITCH_A, 1);
-		CHECK_EQUAL(RC, XAIE_OK);
+	
+	RC = XAie_IntrCtrlL1Disable(&DevInst, TileLoc, XAIE_EVENT_SWITCH_A, 1);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_IntrCtrlL1BroadcastBlock(&DevInst, TileLoc,
-				XAIE_EVENT_SWITCH_A, 5);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_IntrCtrlL1BroadcastBlock(&DevInst, TileLoc,
+			XAIE_EVENT_SWITCH_A, 5);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_IntrCtrlL1BroadcastUnblock(&DevInst, TileLoc,
-				XAIE_EVENT_SWITCH_A, 5);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_IntrCtrlL1BroadcastUnblock(&DevInst, TileLoc,
+			XAIE_EVENT_SWITCH_A, 5);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_IntrCtrlL2Disable(&DevInst, TileLoc, 5);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_IntrCtrlL2Disable(&DevInst, TileLoc, 5);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-	/*
-	 * TODO: remove below macro guard based on device generation once
-	 * interrupt apis are validated for the device.
-	 */
+/*
+	* TODO: remove below macro guard based on device generation once
+	* interrupt apis are validated for the device.
+	*/
 #if AIE_GEN == 1 || AIE_GEN == 2
-		RC = XAie_ErrorHandlingInit(&DevInst);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_ErrorHandlingInit(&DevInst);
+	CHECK_EQUAL(RC, XAIE_OK);
 #endif
-	}
 }
 
 TEST_GROUP(InvalidInterrupts){

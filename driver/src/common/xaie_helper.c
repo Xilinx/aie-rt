@@ -1617,36 +1617,9 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 		if (Op == XAIE_BACKEND_OP_CONFIG_SHIMDMABD) {
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
-			if (Backend->Type == XAIE_IO_BACKEND_LINUX) {
-				if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
-					RC = _XAie_ReallocCmdBuf(TxnInst);
-					if (RC != XAIE_OK) {
-						return RC;
-					}
-				}
-
-				Buf = Backend->Ops.GetShimDmaBdConfig(Arg);
-				if (Buf == XAIE_NULL) {
-					XAIE_ERROR("Could not get SHIM DMA structure\n");
-					return XAIE_ERR;
-				}
-
-				if (BdArgs->MemInst == XAIE_NULL) {
-					TxnInst->CmdBuf[TxnInst->NumCmds].Opcode =
-							XAIE_CONFIG_SHIMDMA_BD;
-				} else {
-					TxnInst->CmdBuf[TxnInst->NumCmds].Opcode =
-							XAIE_CONFIG_SHIMDMA_DMABUF_BD;
-				}
-
-				TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr =
-								(u64)(uintptr_t)Buf;
-				TxnInst->NumCmds++;
-			} else {
 				XAie_BlockWrite32(DevInst,
 						     BdArgs->Addr, BdArgs->BdWords,
 						     BdArgs->NumBdWords);
-			}
 			return XAIE_OK;
 		}
 
@@ -1661,10 +1634,9 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 			TxnInst->NumCmds = 0;
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else if((TxnInst->NumCmds == 0U) ||
-					(((Op == XAIE_BACKEND_OP_REQUEST_RESOURCE) ||
+					((Op == XAIE_BACKEND_OP_REQUEST_RESOURCE) ||
 					(Op == XAIE_BACKEND_OP_RELEASE_RESOURCE) ||
-					(Op == XAIE_BACKEND_OP_FREE_RESOURCE)) &&
-					(Backend->Type != XAIE_IO_BACKEND_LINUX))){
+					(Op == XAIE_BACKEND_OP_FREE_RESOURCE))){
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else {
 			XAIE_ERROR("Run Op operation is not supported "

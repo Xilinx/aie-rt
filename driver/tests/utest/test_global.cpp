@@ -41,18 +41,17 @@ TEST(GlobalApis, PositiveTests)
 
 	RC = XAie_SetIOBackend(&DevInst, XAIE_IO_BACKEND_MAX);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	
+	TestMemory = XAie_MemAllocate(&DevInst, 5,
+			XAIE_MEM_NONCACHEABLE);
+	CHECK(TestMemory != NULL);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		TestMemory = XAie_MemAllocate(&DevInst, 5,
-				XAIE_MEM_NONCACHEABLE);
-		CHECK(TestMemory != NULL);
+	RC = XAie_MemSyncForCPU(TestMemory);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_MemSyncForCPU(TestMemory);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_MemSyncForDev(TestMemory);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_MemSyncForDev(TestMemory);
-		CHECK_EQUAL(RC, XAIE_OK);
-	}
 #if AIE_GEN < 3
 	RC = XAie_TurnEccOff(&DevInst);
 	CHECK_EQUAL(RC, XAIE_OK);
@@ -60,20 +59,18 @@ TEST(GlobalApis, PositiveTests)
 	RC = XAie_TurnEccOn(&DevInst);
 	CHECK_EQUAL(RC, XAIE_OK);
 #endif
+	
+	RC = XAie_MemAttach(&DevInst, TestMemory,
+			(u64)XAie_MemGetVAddr(TestMemory),
+			XAie_MemGetDevAddr(TestMemory), 4,
+			XAIE_MEM_CACHEABLE, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		RC = XAie_MemAttach(&DevInst, TestMemory,
-				(u64)XAie_MemGetVAddr(TestMemory),
-				XAie_MemGetDevAddr(TestMemory), 4,
-				XAIE_MEM_CACHEABLE, 0);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_MemDetach(TestMemory);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_MemDetach(TestMemory);
-		CHECK_EQUAL(RC, XAIE_OK);
-
-		RC = XAie_MemFree(TestMemory);
-		CHECK_EQUAL(RC, XAIE_OK);
-	}
+	RC = XAie_MemFree(TestMemory);
+	CHECK_EQUAL(RC, XAIE_OK);
 }
 
 TEST(GlobalApis, InvalidDevInst){
@@ -145,18 +142,16 @@ TEST(GlobalApis, InvalidApis){
 	RC = XAie_TurnEccOn(NULL);
 	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
 #endif
+	
+	TestMemory = XAie_MemAllocate(&DevInst, 5, XAIE_MEM_NONCACHEABLE);
+	RC = XAie_MemAttach(NULL, TestMemory, 0x4000, 0x6000, 4,
+			XAIE_MEM_CACHEABLE, 0);
+	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
 
-	if (DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		TestMemory = XAie_MemAllocate(&DevInst, 5, XAIE_MEM_NONCACHEABLE);
-		RC = XAie_MemAttach(NULL, TestMemory, 0x4000, 0x6000, 4,
-				XAIE_MEM_CACHEABLE, 0);
-		CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-
-		TestMemory->DevInst->IsReady = 0;
-		RC = XAie_MemDetach(TestMemory);
-		CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
-		TestMemory->DevInst->IsReady = 1;
-	}
+	TestMemory->DevInst->IsReady = 0;
+	RC = XAie_MemDetach(TestMemory);
+	CHECK_EQUAL(RC, XAIE_INVALID_ARGS);
+	TestMemory->DevInst->IsReady = 1;
 
 	DevInst.IsReady = 0;
 

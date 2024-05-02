@@ -597,7 +597,7 @@ static AieRC XAie_MetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	}
 
 	if (RC == XAIE_FEATURE_NOT_SUPPORTED) {
-		XAIE_ERROR("Linux UIO backend doesn't support operation %u.\n",
+		XAIE_ERROR("Metal backend doesn't support operation %u.\n",
 				Op);
 	}
 	return RC;

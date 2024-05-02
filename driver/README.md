@@ -15,14 +15,14 @@ The user space library is supports both AIE, AIEML and AIE2IPU
 
 The userspace library can be compiled with various IO backends. The library
 can execute the low level register IO operations for the following backends:
-1. Linux Kernel(-D__AIELINUX__): IO operations are executed by linux kernel.
-2. Simulation (-D__AIESIM__): IO operation are executed by simulation functions
+
+1. Simulation (-D__AIESIM__): IO operation are executed by simulation functions
 			      provided by aie-tools.
-3. CDO generator(-D__AIECDO__): IO operations are executed by cdo functions
+2. CDO generator(-D__AIECDO__): IO operations are executed by cdo functions
 			      provided by aie-tools.
-4. Baremetal(-D_AIEBAREMETAL__): IO operations are executed by baremetal
+3. Baremetal(-D_AIEBAREMETAL__): IO operations are executed by baremetal
 				 functions.
-5. Libmetal (-D__AIEMETAL__): IO operations are executed by libmetal library.
+4. Libmetal (-D__AIEMETAL__): IO operations are executed by libmetal library.
 			      Libmetal backend uses UIO based kernel driver.
 			      For linux platforms, AIEML device is supported
 			      with libmetal backend only.
@@ -45,7 +45,6 @@ PDF doc will be available at ./tmp/latex/refman.pdf
 	cmake --build ./build --parallel
 
 ### Backend for Cmake
-	-DLINUX_BACKEND=on
 	-DMETAL_BACKEND=on
 	-DSOCKET_BACKEND=on
 	-DDEBUG_BACKEND=on
@@ -67,4 +66,4 @@ in the end of the build, you can use CMake option `-DWITH_TESTS_EXEC=ON`.
 Example:
 	cd aie-rt/driver
 	mkdir build; cd build
-	cmake ../ -DWITH_TESTS=on -DLINUX_BACKEND=on -DCPPUTEST_DIR=/path/to/cpputest
+	cmake ../ -DWITH_TESTS=on -DDEBUG_BACKEND=on -DCPPUTEST_DIR=/path/to/cpputest

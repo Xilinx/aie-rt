@@ -111,13 +111,11 @@ TEST(DmaApis, BdApis)
 	RC = XAie_DmaUpdateBdAddr(&DevInst, TileLoc, 0x6000, 7);
 	CHECK_EQUAL(RC, XAIE_OK);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		RC = XAie_DmaDescInit(&DevInst, &DmaDesc, XAie_TileLoc(2, 0));
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaDescInit(&DevInst, &DmaDesc, XAie_TileLoc(2, 0));
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaWriteBd(&DevInst, &DmaDesc, XAie_TileLoc(2, 0), 7);
-		CHECK_EQUAL(RC, XAIE_OK);
-	}
+	RC = XAie_DmaWriteBd(&DevInst, &DmaDesc, XAie_TileLoc(2, 0), 7);
+	CHECK_EQUAL(RC, XAIE_OK);
 }
 
 TEST(DmaApis, ChannelApis)
@@ -202,23 +200,21 @@ TEST(DmaApis, ShimDmaApis)
 
 	RC = XAie_DmaSetAxi(&DmaDesc, 0, 4, 0, 0, 0);
 	CHECK_EQUAL(RC, XAIE_OK);
+	
+	RC = XAie_DmaWriteBd(&DevInst, &DmaDesc, TileLoc, 7);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		RC = XAie_DmaWriteBd(&DevInst, &DmaDesc, TileLoc, 7);
-		CHECK_EQUAL(RC, XAIE_OK);
-
-		u32 Len;
-		RC = XAie_DmaGetBdLen(&DevInst, TileLoc, &Len,7);
-		CHECK_EQUAL(RC, XAIE_OK);
+	u32 Len;
+	RC = XAie_DmaGetBdLen(&DevInst, TileLoc, &Len,7);
+	CHECK_EQUAL(RC, XAIE_OK);
 
 #if AIE_GEN >= 2
-		RC = XAie_DmaUpdateBdLen(&DevInst, TileLoc, 256, 7);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaUpdateBdLen(&DevInst, TileLoc, 256, 7);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaUpdateBdAddr(&DevInst, TileLoc, 0x6000, 7);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaUpdateBdAddr(&DevInst, TileLoc, 0x6000, 7);
+	CHECK_EQUAL(RC, XAIE_OK);
 #endif
-	}
 }
 
 TEST_GROUP(DmaStatusApis)
@@ -354,69 +350,67 @@ TEST(DmaStatusApis, ShimDmaStatusApis)
 
 	RC = XAie_DmaEnableBd(&DmaDesc);
 	CHECK_EQUAL(RC, XAIE_OK);
+	
+	u8 Bd = 5;
+	RC = XAie_DmaWriteBd(&DevInst, &DmaDesc, TileLoc, Bd);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		u8 Bd = 5;
-		RC = XAie_DmaWriteBd(&DevInst, &DmaDesc, TileLoc, Bd);
-		CHECK_EQUAL(RC, XAIE_OK);
+	/* MM2S Channel 1 */
+	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 1, DMA_MM2S, Bd);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		/* MM2S Channel 1 */
-		RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 1, DMA_MM2S, Bd);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 1, DMA_MM2S);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 1, DMA_MM2S);
-		CHECK_EQUAL(RC, XAIE_OK);
+	u8 BdCount = 0;
+	RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 1, DMA_MM2S,
+			&BdCount);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		u8 BdCount = 0;
-		RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 1, DMA_MM2S,
-				&BdCount);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 1, DMA_MM2S, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 1, DMA_MM2S, 0);
-		CHECK_EQUAL(RC, XAIE_OK);
+	/* MM2S Channel 0 */
+	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 0, DMA_MM2S, Bd);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		/* MM2S Channel 0 */
-		RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 0, DMA_MM2S, Bd);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 0, DMA_MM2S);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 0, DMA_MM2S);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 0, DMA_MM2S,
+			&BdCount);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 0, DMA_MM2S,
-				&BdCount);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 0, DMA_MM2S, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 0, DMA_MM2S, 0);
-		CHECK_EQUAL(RC, XAIE_OK);
+	/* S2MM Channel 1 */
+	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 1, DMA_S2MM, Bd);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		/* S2MM Channel 1 */
-		RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 1, DMA_S2MM, Bd);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 1, DMA_S2MM);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 1, DMA_S2MM);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 1, DMA_S2MM,
+			&BdCount);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 1, DMA_S2MM,
-				&BdCount);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 1, DMA_S2MM, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 1, DMA_S2MM, 0);
-		CHECK_EQUAL(RC, XAIE_OK);
+	/* S2MM Channel 0 */
+	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 0, DMA_S2MM, Bd);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		/* S2MM Channel 0 */
-		RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 0, DMA_S2MM, Bd);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 0, DMA_S2MM);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaChannelEnable(&DevInst, TileLoc, 0, DMA_S2MM);
-		CHECK_EQUAL(RC, XAIE_OK);
+	RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 0, DMA_S2MM,
+			&BdCount);
+	CHECK_EQUAL(RC, XAIE_OK);
 
-		RC = XAie_DmaGetPendingBdCount(&DevInst, TileLoc, 0, DMA_S2MM,
-				&BdCount);
-		CHECK_EQUAL(RC, XAIE_OK);
-
-		RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 0, DMA_S2MM, 0);
-		CHECK_EQUAL(RC, XAIE_OK);
-	}
+	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 0, DMA_S2MM, 0);
+	CHECK_EQUAL(RC, XAIE_OK);
 }
 
 TEST_GROUP(DmaInvalidApis)

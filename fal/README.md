@@ -24,7 +24,7 @@ For Linux to run on target:
 ```
 mkdir build
 cd build
-cmake ../ -DCMAKE_TOOLCHAIN_FILE=versal-linux -DWITH_BUILD_XAIEDRV=on
+cmake ../ -DWITH_BUILD_XAIEDRV=on
 ```
 
 After running `cmake` to configure the build, can go to the build directory to
@@ -41,7 +41,7 @@ For Linux to run on target:
 ```
 mkdir build
 cd build
-cmake ../ -DCMAKE_TOOLCHAIN_FILE=versal-linux -DCMAKE_LIBRARY_PATH=<DIR_TO_XAIENGINE_LIB> -DCMAKE_INCLUDE_PATH=<DIR_TO_XAIENGINE_HEADER>
+cmake ../ -DCMAKE_LIBRARY_PATH=<DIR_TO_XAIENGINE_LIB> -DCMAKE_INCLUDE_PATH=<DIR_TO_XAIENGINE_HEADER>
 ```
 
 After running `cmake` to configure the build, can go to the build directory to

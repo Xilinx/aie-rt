@@ -48,10 +48,10 @@ TEST(PmApis, PmAllTiles)
 	RC = XAie_PmRequestTiles(&DevInst, TilesToRequest, 2);
 	CHECK_EQUAL(XAIE_OK, RC);
 
-	if(DevInst.Backend->Type != XAIE_IO_BACKEND_LINUX) {
-		RC = XAie_ResetPartition(&DevInst);
-		CHECK_EQUAL(XAIE_OK, RC);
-	}
+	
+	RC = XAie_ResetPartition(&DevInst);
+	CHECK_EQUAL(XAIE_OK, RC);
+	
 
 	RC = XAie_ClearPartitionMems(&DevInst);
 	CHECK_EQUAL(XAIE_OK, RC);
