@@ -142,7 +142,14 @@ static AieRC _XAie_PrivilegeRstPartShims(XAie_DevInst *DevInst)
 		return RC;
 	}
 
-	return _XAie_NpiSetShimReset(DevInst, XAIE_DISABLE);
+	RC = _XAie_NpiSetShimReset(DevInst, XAIE_DISABLE);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	RC = DevInst->DevOps->SetPartColShimReset(DevInst, XAIE_DISABLE);
+
+	return RC;
 }
 
 /*****************************************************************************/
