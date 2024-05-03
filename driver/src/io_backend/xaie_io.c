@@ -31,9 +31,7 @@
 #include "xaie_io_internal.h"
 
 /************************** Constant Definitions *****************************/
-#if defined (__AIEMETAL__)
-	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_METAL
-#elif defined (__AIESIM__)
+#if defined (__AIESIM__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SIM
 #elif defined (__AIECDO__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CDO
@@ -50,11 +48,6 @@
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
 #endif
 
-#if defined (__AIEMETAL__)
-	#define METALBACKEND &MetalBackend
-#else
-	#define METALBACKEND NULL
-#endif
 #if defined (__AIESIM__) || defined (__AIEDEBUG__)
 	#define SIMBACKEND &SimBackend
 #else
@@ -92,7 +85,6 @@
 #endif
 
 /************************** Variable Definitions *****************************/
-extern const XAie_Backend MetalBackend;
 extern const XAie_Backend SimBackend;
 extern const XAie_Backend CdoBackend;
 extern const XAie_Backend BaremetalBackend;
@@ -103,7 +95,6 @@ extern const XAie_Backend ControlCodeBackend;
 
 static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
-	METALBACKEND,
 	SIMBACKEND,
 	CDOBACKEND,
 	BAREMETALBACKEND,
@@ -118,7 +109,7 @@ static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 /**
 *
 * This is the api initialize global IO instance. The default IO backend is
-* libmetal.
+* debug backend.
 *
 * @param	DevInst - Device instance pointer.
 *

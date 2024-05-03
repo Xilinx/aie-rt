@@ -22,11 +22,7 @@ can execute the low level register IO operations for the following backends:
 			      provided by aie-tools.
 3. Baremetal(-D_AIEBAREMETAL__): IO operations are executed by baremetal
 				 functions.
-4. Libmetal (-D__AIEMETAL__): IO operations are executed by libmetal library.
-			      Libmetal backend uses UIO based kernel driver.
-			      For linux platforms, AIEML device is supported
-			      with libmetal backend only.
-6. Debug: This is the default backend when other flags are not passed. The
+4. Debug: This is the default backend when other flags are not passed. The
 	  debug backend prints the register address and corresponding values to
 	  stdout.
 
@@ -45,7 +41,6 @@ PDF doc will be available at ./tmp/latex/refman.pdf
 	cmake --build ./build --parallel
 
 ### Backend for Cmake
-	-DMETAL_BACKEND=on
 	-DSOCKET_BACKEND=on
 	-DDEBUG_BACKEND=on
 

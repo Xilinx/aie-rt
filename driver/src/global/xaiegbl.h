@@ -87,7 +87,6 @@ typedef struct XAie_DevProp {
  * This typedef captures all the IO Backends supported by the driver
  */
 typedef enum {
-	XAIE_IO_BACKEND_METAL, /* Metal backend. Default backend of driver. */
 	XAIE_IO_BACKEND_SIM,   /* Ess simulation backend */
 	XAIE_IO_BACKEND_CDO,   /* Cdo generation backend */
 	XAIE_IO_BACKEND_BAREMETAL, /* Baremetal backend */

@@ -66,13 +66,6 @@ ifeq ($(MAKECMDGOALS) ,cdo)
 	$(CC) $(CFLAGS_cdo) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
-libmetal: include lib$(NAME).so
-CFLAGS_libmetal += -Wall -Wextra --std=c11 -D__AIEMETAL__
-ifeq ($(MAKECMDGOALS), libmetal)
-%.o: %.c include
-	$(CC) $(CFLAGS_libmetal) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
-endif
-
 controlcode: include lib$(NAME).so
 CFLAGS_controlcode += -Wall -Wextra --std=c11 -D__AIECONTROLCODE__
 ifeq ($(MAKECMDGOALS) ,controlcode)
