@@ -431,8 +431,8 @@ static AieRC _XAie_LBacktrackTile(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData, XAie_LocType Loc,
 		XAie_ModuleType Module)
 {
-	XAie_ErrorPayload *Buffer = MData->Payload;
-	u32 *Count = &(MData->ErrorCount);
+	XAie_ErrorPayload *Buffer = MData->ErrInfo->Payload;
+	u32 *Count = &(MData->ErrInfo->ErrorCount);
 	u32 Size = MData->ArraySize - (*Count);
 	u32 Value, Index, ErrorsMap;
 	u8 GroupEvent, Event;
@@ -469,9 +469,7 @@ static AieRC _XAie_LBacktrackTile(XAie_DevInst *DevInst,
 		if (--Size == 0U) {
 			_XAie_LGroupErrorControl(DevInst, Loc, Module,
 					ErrorsMap);
-			MData->NextTile = Loc;
-			MData->NextModule = Module;
-			MData->IsNextInfoValid = 1;
+			MData->ErrInfo->ReturnCode = XAIE_INSUFFICIENT_BUFFER_SIZE;
 			return XAIE_INSUFFICIENT_BUFFER_SIZE;
 		}
 	}
@@ -484,6 +482,7 @@ static AieRC _XAie_LBacktrackTile(XAie_DevInst *DevInst,
 	 * backtracked and disabled.
 	 */
 	_XAie_LEventClearStatus(DevInst, Loc, Module, GroupEvent);
+	MData->ErrInfo->ReturnCode = XAIE_OK;
 
 	return XAIE_OK;
 }
@@ -513,9 +512,7 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 	Status = _XAie_LIntrCtrlL1Status(DevInst, Loc, Switch);
 
 	/* Backtrack shim's internal events */
-	if ((Status & XAIE_ERROR_SHIM_INTR_MASK) || (MData->IsNextInfoValid &&
-					MData->NextModule == XAIE_PL_MOD &&
-					MData->NextTile.Row == Loc.Row)) {
+	if (Status & XAIE_ERROR_SHIM_INTR_MASK) {
 		_XAie_LIntrCtrlL1Ack(DevInst, Loc, Switch,
 				XAIE_ERROR_SHIM_INTR_MASK);
 
@@ -525,9 +522,7 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 	}
 
 	/* Backtrack array tile's internal events. */
-	if (!((Status & XAIE_ERROR_BROADCAST_MASK) || (MData->IsNextInfoValid &&
-		MData->NextModule != XAIE_PL_MOD &&
-		MData->NextTile.Row >= Loc.Row)))
+	if (!(Status & XAIE_ERROR_BROADCAST_MASK))
 		return XAIE_OK;
 
 	_XAie_LIntrCtrlL1Ack(DevInst, Loc, Switch, XAIE_ERROR_BROADCAST_MASK);
@@ -540,8 +535,10 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 			continue;
 
 		RC = _XAie_LBacktrackTile(DevInst, MData, Loc, XAIE_MEM_MOD);
-		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE)
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			MData->ErrInfo->ReturnCode = XAIE_INSUFFICIENT_BUFFER_SIZE;
 			return RC;
+		}
 
 		/*
 		 * TODO: In SystemC model, incoming broadcast status bit
@@ -579,10 +576,7 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 		 * Skip backtracking above array tiles if no broadcast signal
 		 * was received and the last backtrack operation was successful.
 		 */
-		if (!(_XAie_LEventReadStatus(DevInst, Loc, Module, Event) ||
-			(MData->IsNextInfoValid &&
-			 MData->NextModule == Module &&
-			 MData->NextTile.Row > Loc.Row))) {
+		if (!(_XAie_LEventReadStatus(DevInst, Loc, Module, Event) )) {
 			return XAIE_OK;
 		}
 
@@ -623,7 +617,7 @@ AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 	}
 
 	/* Reset the total error count from previous backtrack. */
-	MData->ErrorCount = 0U;
+	MData->ErrInfo->ErrorCount = 0U;
 	for (col = 0; col < Cols.Num; col++) {
 		XAie_LocType loc;
 
@@ -646,8 +640,7 @@ AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 
 	}
 
-	/* Invalidate next info upon successful backtrack. */
-	MData->IsNextInfoValid = 0;
+	/* Return success upon successful backtrack. */
 	return XAIE_OK;
 }
 
@@ -718,7 +711,7 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 	XAie_LocType L1 = XAie_TileLoc(Cols.Start, XAIE_SHIM_ROW);
 
 	/* Reset the total error count from previous backtrack. */
-	MData->ErrorCount = 0U;
+	MData->ErrInfo->ErrorCount = 0U;
 
 	if (_XAie_LGetTTypefromLoc(DevInst, L2) != XAIEGBL_TILE_TYPE_SHIMNOC)
 		L2 = XAie_LPartGetNextNocTile(DevInst, L2);
@@ -753,9 +746,7 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		_XAie_LIntrCtrlL2Enable(DevInst, L2, Enable);
 	}
 
-	/* Invalidate next info upon successful backtrack. */
-	MData->IsNextInfoValid = 0;
-
+	/* Return success upon successful backtrack. */
 	return XAIE_OK;
 }
 

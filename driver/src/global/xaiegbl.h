@@ -485,24 +485,28 @@ typedef struct {
 } XAie_ErrorPayload;
 
 /*
+ * Data structure to provide Error information to Host
+ * ErrorCount: Total Number of valid payloads returned.
+ * ReturnCode: Return success or Insufficient Buffer error to host.
+ * Payload: Array of Error Payload Structure.
+ */
+typedef struct {
+	u32 ErrorCount;
+	u32 ReturnCode;
+	XAie_ErrorPayload Payload[];
+} XAie_ErrorInfo;
+
+
+/*
  * Data structure to capture metadata required for backtracking errors.
- * IsNextInfoValid: Set when error backtracking was discontinued due to limited
- *		    size of Payload buffer.
- * NextTile: Location of tile where backtracking was discontinued.
- * NextModule: Module of tile where backtracking was discontinued.
- * Payload: Pointer to buffer capturing array of error payloads.
+ * ErrInfo: Pointer to buffer capturing array of error payloads and .
  * ArraySize: Array size of payload buffer. Value corresponds to total number of
  *	      XAie_ErrorPayload structs.
- * ErrorCount: total number of valid payloads returned.
  * Cols: Range of columns to be backtracked.
  */
 typedef struct {
-	u8 IsNextInfoValid;
-	XAie_LocType NextTile;
-	XAie_ModuleType NextModule;
-	XAie_ErrorPayload *Payload;
+	XAie_ErrorInfo *ErrInfo;
 	u32 ArraySize;
-	u32 ErrorCount;
 	XAie_Range Cols;
 } XAie_ErrorMetaData;
 
@@ -846,12 +850,8 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 *******************************************************************************/
 #define XAie_ErrorMetadataInit(Mdata, _Buffer, _Size)			\
 	XAie_ErrorMetaData Mdata = {					\
-		.IsNextInfoValid = 0,					\
-		.NextTile = {0, 0},					\
-		.NextModule = 0,					\
-		.Payload = (XAie_ErrorPayload *) (_Buffer),		\
-		.ArraySize = (_Size) / sizeof(XAie_ErrorPayload),	\
-		.ErrorCount = 0U,					\
+		.ErrInfo = (XAie_ErrorInfo *) (_Buffer),		\
+		.ArraySize = (_Size - sizeof(XAie_ErrorInfo))/ sizeof(XAie_ErrorPayload), \
 		.Cols = {0, 0},						\
 	}
 
