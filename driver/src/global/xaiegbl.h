@@ -493,7 +493,7 @@ typedef struct {
 typedef struct {
 	u32 ErrorCount;
 	u32 ReturnCode;
-	XAie_ErrorPayload Payload[];
+	XAie_ErrorPayload *Payload;
 } XAie_ErrorInfo;
 
 
@@ -851,6 +851,7 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 #define XAie_ErrorMetadataInit(Mdata, _Buffer, _Size)			\
 	XAie_ErrorMetaData Mdata = {					\
 		.ErrInfo = (XAie_ErrorInfo *) (_Buffer),		\
+		.ErrInfo->Payload = (XAie_ErrorPayload *) (_Buffer + (sizeof(XAie_ErrorInfo)),  \
 		.ArraySize = (_Size - sizeof(XAie_ErrorInfo))/ sizeof(XAie_ErrorPayload), \
 		.Cols = {0, 0},						\
 	}
