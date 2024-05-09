@@ -57,7 +57,6 @@ TEST(DmaApis, AxiBurstLenCheck)
 	RC = XAie_DmaSetAxi(&DmaDesc, 16U, 32U, 0U, 0U, 0U);
 	switch (DevInst.DevProp.DevGen) {
 	case XAIE_DEV_GEN_AIE2P:
-	case XAIE_DEV_GEN_AIE2PS:
 	case XAIE_DEV_GEN_AIE2P_STRIX_A0:
 	case XAIE_DEV_GEN_AIE2P_STRIX_B0:
 		CHECK_EQUAL(RC, XAIE_OK);
