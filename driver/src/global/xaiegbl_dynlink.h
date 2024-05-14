@@ -1,3 +1,8 @@
+/******************************************************************************
+* Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All Rights Reserved.
+* SPDX-License-Identifier: MIT
+******************************************************************************/
+
 #ifndef xaie_dynlink_h
 #define xaie_dynlink_h
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)

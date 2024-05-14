@@ -1,7 +1,7 @@
-/* SPDX-License-Identifier: Apache License 2.0 */
-/*
- * Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
- */
+/******************************************************************************
+* Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All Rights Reserved.
+* SPDX-License-Identifier: MIT
+******************************************************************************/
 
 #ifndef _ISA_STUBS_H_
 #define _ISA_STUBS_H_
