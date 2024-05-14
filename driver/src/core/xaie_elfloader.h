@@ -55,7 +55,8 @@ typedef struct {
 #ifdef _WIN32
 /*
  *  * Typedef for ELF related struct, Taken from GNU version of elf.h
- *   */
+	* https://github.com/lattera/glibc/blob/master/elf/elf.h
+ *  */
 /* These constants are for the segment types stored in the image headers */
 #define PT_NULL    0
 #define PT_LOAD    1
