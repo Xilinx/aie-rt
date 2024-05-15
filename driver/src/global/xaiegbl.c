@@ -184,13 +184,14 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
-	InstPtr->EccStatus = XAIE_ENABLE;
+	//InstPtr->EccStatus = XAIE_ENABLE;
+	InstPtr->EccStatus = XAIE_DISABLE; // IPU
 	InstPtr->TxnList.Next = NULL;
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
 
-	RC = XAie_IOInit(InstPtr);
+	RC = XAie_IOInit(InstPtr, ConfigPtr->Backend);
 	if(RC != XAIE_OK) {
 		return RC;
 	}
@@ -1025,7 +1026,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 		PartRange.Num = DevInst->NumCols;
 		XAIE_DBG("Start Col: %d\tnum: %d\n", PartRange.Start, PartRange.Num);
 		PerfInst->Range = &PartRange;
-	} else if (PerfInst->Range->Num <= 0U ||
+	} else if (PerfInst->Range->Num == 0U ||
 			PerfInst->Range->Num > DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!\n");
 		return XAIE_INVALID_ARGS;

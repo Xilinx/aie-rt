@@ -39,7 +39,8 @@ typedef enum {
 	XAIE_IO_CUSTOM_OP_TCT = XAIE_IO_CUSTOM_OP_BEGIN,
 	XAIE_IO_CUSTOM_OP_DDR_PATCH,
 	XAIE_IO_CUSTOM_OP_NEXT,
-	XAIE_IO_CUSTOM_OP_MAX = UCHAR_MAX,
+	/* add new op here */
+	XAIE_IO_CUSTOM_OP_MAX
 } XAie_TxnOpcode;
 
 struct XAie_TxnCmd {

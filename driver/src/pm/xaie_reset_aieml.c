@@ -45,7 +45,7 @@
 *		 * Disable protect registers
 *
 ******************************************************************************/
-AieRC _XAieMl_RstShims(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols)
+AieRC _XAieMl_RstShims(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols)
 {
 	XAie_NpiProtRegReq ProtRegReq;
 

@@ -242,7 +242,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * memory out of Progsec will not result in a segmentation
 	 * fault.
 	 */
-	return XAie_BlockWrite32(DevInst, Addr, (u32 *)SectionPtr,
+	return XAie_BlockWrite32(DevInst, Addr, (const u32 *)SectionPtr,
 			(Phdr->p_memsz + 4U - 1U) / 4U);
 }
 
@@ -594,7 +594,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	Fd = fopen(ElfPtr, "r");
+	Fd = fopen(ElfPtr, "rb");
 	if(Fd == XAIE_NULL) {
 		XAIE_ERROR("Unable to open elf file, %d: %s\n",
 			errno, strerror(errno));

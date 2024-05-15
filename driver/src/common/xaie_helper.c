@@ -1506,7 +1506,7 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 			return XAIE_ERR;
 		}
 
-		Buf = memcpy((void *)Buf, (void *)Data, sizeof(u32) * Size);
+		Buf = memcpy((void *)Buf, (const void *)Data, sizeof(u32) * Size);
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_BLOCKWRITE;
 		TxnInst->CmdBuf[TxnInst->NumCmds].RegOff = RegOff;
 		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)(uintptr_t)Buf;

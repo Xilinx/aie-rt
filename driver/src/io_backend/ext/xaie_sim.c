@@ -22,12 +22,18 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
-#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+#ifdef __AIESIM__
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
+#endif
 
 #ifdef __AIESIM__ /* AIE simulator */
 
@@ -435,7 +441,11 @@ static AieRC XAie_SimIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 
 static u64 XAie_SimIOGetTid(void)
 {
-		return (u64)pthread_self();
+#ifdef _WIN32
+	return GetCurrentThreadId();
+#else
+	return (u64)pthread_self();
+#endif
 }
 
 #else
