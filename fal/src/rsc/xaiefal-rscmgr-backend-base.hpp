@@ -1,3 +1,8 @@
+/******************************************************************************
+* Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All Rights Reserved.
+* SPDX-License-Identifier: MIT
+******************************************************************************/
+
 #pragma once
 
 #include <iostream>

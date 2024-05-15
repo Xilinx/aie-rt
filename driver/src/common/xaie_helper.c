@@ -1597,7 +1597,6 @@ AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 {
 	AieRC RC;
-	void *Buf;
 	u64 Tid;
 	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
