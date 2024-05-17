@@ -607,6 +607,20 @@ AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 	AieRC RC;
 	XAie_Range Cols = MData->Cols;
 	int col;
+	u32 Size = MData->ArraySize;
+
+	/*
+	 * Checking the boundry condition for Size. If passed buffer size is
+	 * less then the required Error payload to be stored,
+	 * just return error to avoid further processing.
+	*/
+        if(Size < ((sizeof(XAie_ErrorInfo)) + sizeof(XAie_ErrorPayload))) {
+                MData->ErrInfo->ReturnCode = XAIE_INSUFFICIENT_BUFFER_SIZE;
+                return XAIE_INSUFFICIENT_BUFFER_SIZE;
+        }
+        else {
+                MData->ArraySize = ((Size - (sizeof(XAie_ErrorInfo)))/sizeof(XAie_ErrorPayload));
+        }
 
 	/* Backward compatibility to support single channel interrupts */
 	if (Cols.Num == 0) {
