@@ -500,12 +500,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 	/*
 	 * TBD: EVENT list have to be revisited and if possible redunat event should be removed.
 	 */
-	if(DevInst->DevProp.DevGen ==  XAIE_DEV_GEN_AIE2PS) {
-        GroupEvent = (u32)XAIE_EVENT_PL_GROUP_ERRORS;
-	} else {
         GroupEvent = (u32)XAIE_EVENT_GROUP_ERRORS_PL;
-	}
-
 
 	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
 		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
@@ -945,10 +940,8 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
  *               it is the user's responsibility to make sure none of the below
  *               channels are being used.
  *                       * Broadcast channel #0 in AIE1&2 array tiles.
- *                       * Broadcast channel #0,1,2 in AIE2PS.
  *                       * Switch A L1 IRQ 16. For AIE1&2
  *                       * NPI interrupt line #5 for AIE1 and 2
- *                       * NPI interrupt line #5, 6, 7, 8. for AIE2PS.
  *               Currently, this API only supports CDO, and debug
  *               backends.
  ******************************************************************************/

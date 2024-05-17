@@ -241,50 +241,6 @@
 #define XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS     6
 #define XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS    4
 
-#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2PS
-
-#ifdef __AIEIPU__
-#include <platform-hw-config.h>
-#include <com_io_generic.h>
-#endif
-
-#ifndef XAIE_BASE_ADDR
-#define XAIE_BASE_ADDR			IPU_AIE_BASEADDR
-#endif
-
-#ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		IPU_AIE_NPI_ADDR
-#endif
-
-#ifndef XAIE_NUM_ROWS
-#define XAIE_NUM_ROWS			8
-#endif
-
-#ifndef XAIE_NUM_COLS
-#define XAIE_NUM_COLS			20
-#endif
-
-#define XAIE_TILE_NUM_LOCKS		16
-#define XAIE_MEM_TILE_NUM_LOCKS		64
-#define XAIE_SHIM_NUM_LOCKS		16
-
-#define XAIE_TILE_DMA_NUM_CH		2U
-#define XAIE_MEM_TILE_DMA_NUM_CH	6U
-#define XAIE_SHIM_DMA_NUM_CH		2U
-
-#define XAIE_COL_SHIFT			25
-#define XAIE_ROW_SHIFT			20
-#define XAIE_SHIM_ROW			0
-#define XAIE_SHIM_NUM_ROWS		1
-#define XAIE_MEM_TILE_ROW_START		1
-#define XAIE_MEM_TILE_NUM_ROWS		4
-#define XAIE_AIE_TILE_ROW_START		5
-#define XAIE_AIE_TILE_NUM_ROWS		8
-
-#define XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS    4
-#define XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS     6
-#define XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS    8
-
 #else
 #include <xaie_custom_device.h>
 #endif
