@@ -856,6 +856,35 @@ XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
+* This API copies an existing transaction instance and returns a copy of the
+* instance with all the commands for users to save the commands and use them
+* at a later point.
+*
+* @param	DevInst: Device instance pointer.
+* @param	NumConsumers: Number of consumers for the generated
+*		transactions (Unused for now)
+* @param	Flags: Flags (Unused for now)
+*
+* @return	Pointer to copy of transaction instance on success and NULL
+*		on error.
+*
+******************************************************************************/
+u8* XAie_ExportSerializedTransaction_opt(XAie_DevInst *DevInst,
+		u8 NumConsumers, u32 Flags)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return NULL;
+	}
+
+    return _XAie_TxnExportSerialized_opt(DevInst, NumConsumers, Flags);
+}
+
+
+/*****************************************************************************/
+/**
+*
 * This API releases the memory resources used by exported transaction instance.
 *
 * @param	TxnInst: Existing Transaction instance

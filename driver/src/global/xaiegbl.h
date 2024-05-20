@@ -517,6 +517,7 @@ typedef struct {
 	uint8_t NumRows;
 	uint8_t NumCols;
 	uint8_t NumMemTileRows;
+	uint16_t padding;
 	uint32_t NumOps;
 	uint32_t TxnSize;
 } XAie_TxnHeader;
@@ -562,6 +563,76 @@ typedef struct {
 	XAie_OpHdr OpHdr;
 	uint32_t Size;
 } XAie_CustomOpHdr;
+
+
+typedef struct{
+	uint8_t Op;
+	uint8_t padding[3];
+} XAie_OpHdr_opt;
+
+typedef struct {
+	XAie_OpHdr_opt OpHdr;
+	uint32_t RegOff;
+	uint32_t Value;
+} XAie_Write32Hdr_opt;
+
+typedef struct {
+	XAie_OpHdr_opt OpHdr;
+	uint32_t RegOff;
+	uint32_t Value;
+	uint32_t Mask;
+} XAie_MaskWrite32Hdr_opt;
+
+typedef struct {
+	XAie_OpHdr_opt OpHdr;
+	uint32_t RegOff;
+	uint32_t Value;
+	uint32_t Mask;
+} XAie_MaskPoll32Hdr_opt;
+
+typedef struct {
+	XAie_OpHdr_opt OpHdr;
+	uint32_t RegOff;
+	uint32_t Size;
+} XAie_BlockWrite32Hdr_opt;
+
+typedef struct {
+	XAie_OpHdr_opt OpHdr;
+	uint32_t Size;
+} XAie_CustomOpHdr_opt;
+
+typedef struct {
+    uint32_t regaddr; // regaddr to patch
+    uint8_t argidx;  // kernel arg idx to get value to write at regaddr
+    uint8_t padding[3];
+    uint64_t argplus; // value to add to what's passed @ argidx (e.g., offset to shim addr)
+} patch_op_opt_t;
+
+typedef struct {
+    uint32_t word;
+    uint32_t config;
+} tct_op_opt_t;
+
+/*
+ * Structs for reading registers
+ */
+
+typedef struct {
+    uint64_t address;
+} register_data_opt_t;
+
+typedef struct {
+    uint32_t count;
+    uint32_t padding;
+    register_data_opt_t data[1]; // variable size
+} read_register_op_opt_t;
+
+/*
+ * Struct for record timer identifier
+ */
+typedef struct {
+    uint32_t id;
+} record_timer_op_opt_t;
 
 /*
  * Typedef for enum of AIE backend attribute type
@@ -617,6 +688,8 @@ XAIE_AIG_EXPORT AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);
 XAIE_AIG_EXPORT AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
+		u8 NumConsumers, u32 Flags);
+XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction_opt(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
 XAIE_AIG_EXPORT AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
 XAIE_AIG_EXPORT AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);

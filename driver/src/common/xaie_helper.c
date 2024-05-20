@@ -43,7 +43,6 @@
 /************************** Constant Definitions *****************************/
 #define XAIE_DEFAULT_NUM_CMDS 1024U
 #define XAIE_DEFAULT_TXN_BUFFER_SIZE (1024 * 4)
-
 #define XAIE_TXN_INSTANCE_EXPORTED	0b10U
 #define XAIE_TXN_INST_EXPORTED_MASK XAIE_TXN_INSTANCE_EXPORTED
 #define XAIE_TXN_AUTO_FLUSH_MASK XAIE_TRANSACTION_ENABLE_AUTO_FLUSH
@@ -52,6 +51,8 @@
 /************************** Variable Definitions *****************************/
 const u8 TransactionHeaderVersion_Major = 0;
 const u8 TransactionHeaderVersion_Minor = 1;
+const u8 TransactionHeaderVersion_Major_opt = 1;
+const u8 TransactionHeaderVersion_Minor_opt = 0;
 
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
@@ -1008,12 +1009,108 @@ static inline void _XAie_AppendCustomOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr);
 	XAie_CustomOpHdr *Hdr = (XAie_CustomOpHdr*)TxnPtr;
 
-	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u8);
+	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
 	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
 
 	for (u32 i = 0U; i < Cmd->Size; ++i, ++Payload) {
 		*(Payload) = *((u8*)Cmd->DataPtr + i);
 	}
+}
+
+static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
+		XAie_TxnHeader *Header)
+{
+	Header->Major = TransactionHeaderVersion_Major_opt;
+	Header->Minor = TransactionHeaderVersion_Minor_opt;
+	Header->DevGen = DevInst->DevProp.DevGen;
+	Header->NumRows = DevInst->NumRows;
+	Header->NumCols = DevInst->NumCols;
+	Header->NumMemTileRows = DevInst->MemTileNumRows;
+	XAIE_DBG("Header version %d.%d\n", Header->Major, Header->Minor);
+	XAIE_DBG("Device Generation: %d\n", Header->DevGen);
+	XAIE_DBG("Cols, Rows, MemTile rows : (%d, %d, %d)\n", Header->NumCols,
+			Header->NumRows, Header->NumMemTileRows);
+}
+
+static inline void _XAie_AppendWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_Write32Hdr_opt *Hdr = (XAie_Write32Hdr_opt*)TxnPtr;
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Value = Cmd->Value;
+	Hdr->OpHdr.Op = (u8)XAIE_IO_WRITE;
+}
+
+static inline void _XAie_AppendMaskWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_MaskWrite32Hdr_opt *Hdr = (XAie_MaskWrite32Hdr_opt*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Mask = Cmd->Mask;
+	Hdr->Value = Cmd->Value;
+	Hdr->OpHdr.Op = (u8)XAIE_IO_MASKWRITE;
+}
+
+static inline void _XAie_AppendMaskPoll32_opt(XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
+{
+	XAie_MaskPoll32Hdr_opt *Hdr = (XAie_MaskPoll32Hdr_opt*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Mask = Cmd->Mask;
+	Hdr->Value = Cmd->Value;
+	Hdr->OpHdr.Op = (u8)XAIE_IO_MASKPOLL;
+}
+
+static inline void _XAie_AppendBlockWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u32 *Payload = (void*)(TxnPtr + sizeof(XAie_BlockWrite32Hdr_opt));
+	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)TxnPtr;
+
+	Hdr->RegOff = (u32)Cmd->RegOff;
+	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
+	Hdr->OpHdr.Op = (u8)XAIE_IO_BLOCKWRITE;
+
+	memcpy((void *)Payload, (void *)Cmd->DataPtr,
+			Cmd->Size * sizeof(u32));
+}
+
+static inline void _XAie_AppendBlockSet32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_BlockWrite32Hdr_opt);
+	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)TxnPtr;
+
+	Hdr->RegOff = (u32)Cmd->RegOff;
+	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
+	Hdr->OpHdr.Op = (u8)XAIE_IO_BLOCKWRITE;
+
+	for (u32 i = 0U; i < Cmd->Size; i++) {
+		*((u32 *)Payload) = Cmd->Value;
+		Payload += 4;
+	}
+}
+
+static inline void _XAie_AppendCustomOp_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr_opt);
+	XAie_CustomOpHdr_opt *Hdr = (XAie_CustomOpHdr_opt*)TxnPtr;
+
+	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
+	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
+
+	for (u32 i = 0U; i < Cmd->Size; ++i, ++Payload) {
+		*(Payload) = *((u8*)Cmd->DataPtr + i);
+	}
+}
+
+static u8* _XAie_ReallocTxnBuf_opt(u8 *TxnPtr, u32 NewSize, u32 Buffsize)
+{
+	u8 *Tmp;
+	Tmp =  (u8*)realloc((void*)TxnPtr, NewSize);
+	if(Tmp == NULL) {
+		XAIE_ERROR("Reallocation failed for txn buffer\n");
+		return NULL;
+	}
+        memset(Tmp + Buffsize,0,(NewSize  - Buffsize));
+	return Tmp;
 }
 
 static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
@@ -1194,20 +1291,191 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 	}
 
-	BuffSize = ((BuffSize % 4U) != 0U) ? (BuffSize / 4U + 1U) : BuffSize;
+	u32 four_byte_aligned_BuffSize = ((BuffSize % 4U) != 0U) ? ((BuffSize / 4U + 1U)*4) : BuffSize;
 	XAIE_DBG("Size of the Txn Hdr being exported: %u bytes\n",
 			sizeof(XAie_TxnHeader));
 	XAIE_DBG("Size of the transaction buffer being exported: %u bytes\n",
-			BuffSize);
+			four_byte_aligned_BuffSize);
 	XAIE_DBG("Num of Operations in the transaction buffer: %u\n",
 			TmpInst->NumCmds);
 
 
 	/* Adjust pointer and reallocate to the right size */
-	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, BuffSize);
+	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
 	((XAie_TxnHeader *)TxnPtr)->NumOps =  NumOps;
-	((XAie_TxnHeader *)TxnPtr)->TxnSize =  BuffSize;
+	((XAie_TxnHeader *)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
 
+	return (u8 *)TxnPtr;
+}
+
+u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
+		u32 Flags)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+	XAie_TxnInst *TmpInst;
+	u8 *TxnPtr;
+	u32 BuffSize = 0U, NumOps = 0;
+	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
+	(void)NumConsumers;
+	(void)Flags;
+
+	TmpInst = _XAie_GetTxnInst(DevInst, Backend->Ops.GetTid());
+	if(TmpInst == NULL) {
+		XAIE_ERROR("Failed to get the correct transaction instance "
+				"from internal list\n");
+		return NULL;
+	}
+
+
+	TxnPtr = calloc(AllocatedBuffSize,1);
+
+	if(TxnPtr == NULL) {
+		XAIE_ERROR("Calloc failed\n");
+		return NULL;
+	}
+
+	_XAie_CreateTxnHeader_opt(DevInst, (XAie_TxnHeader*)TxnPtr);
+	BuffSize += (u32)sizeof(XAie_TxnHeader);
+	TxnPtr += sizeof(XAie_TxnHeader);
+	XAIE_DBG("number of cmd %d\n", TmpInst->NumCmds);
+
+
+	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
+		NumOps++;
+		XAie_TxnCmd *Cmd = &TmpInst->CmdBuf[i];
+		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
+			if((BuffSize + sizeof(XAie_Write32Hdr_opt)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL){
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendWrite32_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_Write32Hdr_opt);
+			BuffSize += (u32)sizeof(XAie_Write32Hdr_opt);
+			continue;
+		}
+		else if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
+			if((BuffSize + sizeof(XAie_MaskWrite32Hdr_opt)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendMaskWrite32_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_MaskWrite32Hdr_opt);
+			BuffSize += (u32)sizeof(XAie_MaskWrite32Hdr_opt);
+			continue;
+		}
+		else if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
+			if((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendMaskPoll32_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_MaskPoll32Hdr_opt);
+			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr_opt);
+			continue;
+		}
+		else if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
+			if((BuffSize + sizeof(XAie_BlockWrite32Hdr_opt) +
+						Cmd->Size * sizeof(u32)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendBlockWrite32_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_BlockWrite32Hdr_opt) +
+				Cmd->Size * sizeof(u32);
+			BuffSize += (u32)sizeof(XAie_BlockWrite32Hdr_opt) +
+				Cmd->Size * (u32)sizeof(u32);
+			continue;
+		}
+		else if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
+			/*
+			 * Blockset gets converted to blockwrite. so check for
+			 * blockwrite size
+			 */
+			if((BuffSize + sizeof(XAie_BlockWrite32Hdr_opt) +
+						Cmd->Size * sizeof(u32)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendBlockSet32_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_BlockWrite32Hdr_opt) +
+				Cmd->Size * sizeof(u32);
+			BuffSize += (u32)sizeof(XAie_BlockWrite32Hdr_opt) +
+				Cmd->Size * (u32)sizeof(u32);
+			continue;
+		}
+		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+			if (TX_DUMP_ENABLE) {
+				TxnCmdDump(Cmd);
+			}
+
+			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
+
+			if((BuffSize + sizeof(XAie_CustomOpHdr_opt) +
+						Cmd->Size) > AllocatedBuffSize) {
+				printf("lmn\n");
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			
+			_XAie_AppendCustomOp_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_CustomOpHdr_opt) +
+				Cmd->Size * sizeof(u8);
+			BuffSize += (u32)sizeof(XAie_CustomOpHdr_opt) +
+				Cmd->Size * (u32)sizeof(u8);
+			continue;
+		}
+	}
+    
+	u32 four_byte_aligned_BuffSize = ((BuffSize % 4U) != 0U) ? ((BuffSize / 4U + 1U)*4) : BuffSize;
+	XAIE_DBG("Size of the Txn Hdr being exported: %u bytes\n",
+			sizeof(XAie_TxnHeader));
+	XAIE_DBG("Size of the transaction buffer being exported: %u bytes\n",
+			four_byte_aligned_BuffSize);
+	XAIE_DBG("Num of Operations in the transaction buffer: %u\n",
+			TmpInst->NumCmds);
+
+
+	/* Adjust pointer and reallocate to the right size */
+	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
+
+	
+	((XAie_TxnHeader *)TxnPtr)->NumOps =  NumOps;
+	((XAie_TxnHeader *)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
 	return (u8 *)TxnPtr;
 }
 

@@ -186,6 +186,8 @@ static inline u32 first_set_bit(u64 Value)
 void BuffHexDump(char* buff,u32 size);
 u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		u32 Flags);
+u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
+		u32 Flags);
 u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
 u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
