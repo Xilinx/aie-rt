@@ -333,6 +333,11 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u32 ColClockStatus;
 
+		if(Args->Locs[i].Col >= DevInst->NumCols || Args->Locs[i].Row >= DevInst->NumRows) {
+			XAIE_ERROR("Invalid Tile Location \n");
+			return XAIE_INVALID_TILE;
+		}
+
 		/*
 		 * Shim rows are enabled by default, skip shim row
 		 */

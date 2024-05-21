@@ -402,6 +402,11 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		for(u32 i = 0; i < Opts->NumUseTiles; i++)
 		{
 
+			if(Opts->Locs[i].Col >= DevInst->NumCols || Opts->Locs[i].Row >= DevInst->NumRows) {
+				XAIE_ERROR("Invalid Tile Location\n");
+				return XAIE_INVALID_TILE;
+			}
+
 			if(Opts->Locs[i].Row == 0) {
 				continue;
 			}

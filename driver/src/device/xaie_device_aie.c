@@ -453,6 +453,10 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u8 flag = 0;
+		if(Args->Locs[i].Col >= DevInst->NumCols || Args->Locs[i].Row >= DevInst->NumRows) {
+			XAIE_ERROR("Invalid Tile Location \n");
+			return XAIE_INVALID_TILE;
+		}
 
 		if (Args->Locs[i].Row == 0U) {
 			continue;
