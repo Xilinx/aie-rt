@@ -62,3 +62,8 @@ Example:
 	cd aie-rt/driver
 	mkdir build; cd build
 	cmake ../ -DWITH_TESTS=on -DDEBUG_BACKEND=on -DCPPUTEST_DIR=/path/to/cpputest
+
+
+## License
+Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+SPDX-License-Identifier: MIT
