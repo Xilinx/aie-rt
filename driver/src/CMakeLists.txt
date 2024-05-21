@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 ###############################################################################
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.16.3)
 project(xaiengine LANGUAGES C VERSION 3.5)
 
 set(CMAKE_C_STANDARD 11)
