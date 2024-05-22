@@ -6,10 +6,9 @@ The userspace library for ai-engine provides APIs to configure AIE registers.
 
 The user space library is supports both AIE, AIEML and AIE2IPU
 
-| BRANCH     	| DEVICE         		|
-|------------	|------------------------	|
-| master     	| AIE, AIE ML and AIE2IPU	|
-| master-aie 	| AIE only       		|
+| BRANCH                | DEVICE                 |
+|-----------------------|------------------------|
+| release/main_aig      | AIE, AIE ML and AIE2IPU|
 
 ## IO Backends
 
@@ -21,7 +20,7 @@ can execute the low level register IO operations for the following backends:
 2. CDO generator(-D__AIECDO__): IO operations are executed by cdo functions
 			      provided by aie-tools.
 3. Baremetal(-D_AIEBAREMETAL__): IO operations are executed by baremetal
-				 functions.
+                                functions.
 4. Debug: This is the default backend when other flags are not passed. The
 	  debug backend prints the register address and corresponding values to
 	  stdout.
