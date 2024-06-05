@@ -51,7 +51,7 @@ endif()
 
 target_include_directories(
   ${PROJECT_NAME}
-  PRIVATE
+  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>
   $<INSTALL_INTERFACE:include>
