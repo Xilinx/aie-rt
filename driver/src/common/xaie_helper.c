@@ -1224,7 +1224,13 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
-			if((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
+			/**
+			 * In case of Block Write and Block Set, it is possible
+			 * that the new allocated buffer size may not be sufficient.
+			 * In that case we should keep reallocating till the new
+			 * buffer size if big enough to hold existing + current opcode.
+			 */
+			while((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
 						Cmd->Size * sizeof(u32)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
@@ -1243,11 +1249,16 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
-			/*
+			/**
+			 * In case of Block Write and Block Set, it is possible
+			 * that the new allocated buffer size may not be sufficient
+			 * In that case we should keep reallocating till the new
+			 * buffer size if big enough to hold existing + current opcode.
+			 *
 			 * Blockset gets converted to blockwrite. so check for
 			 * blockwrite size
 			 */
-			if((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
+			while((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
 						Cmd->Size * sizeof(u32)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
@@ -1302,6 +1313,10 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 	/* Adjust pointer and reallocate to the right size */
 	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
+	if(TxnPtr == NULL) {
+		XAIE_ERROR("TxnPtr realloc failed\n");
+		return NULL;
+	}
 	((XAie_TxnHeader *)TxnPtr)->NumOps =  NumOps;
 	((XAie_TxnHeader *)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
 
@@ -1472,7 +1487,10 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 
 	/* Adjust pointer and reallocate to the right size */
 	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
-
+        if(TxnPtr == NULL) {
+                XAIE_ERROR("TxnPtr realloc failed\n");
+                return NULL;
+        }
 	
 	((XAie_TxnHeader *)TxnPtr)->NumOps =  NumOps;
 	((XAie_TxnHeader *)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
