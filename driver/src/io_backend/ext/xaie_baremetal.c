@@ -43,6 +43,7 @@
 #include "xaie_io_common.h"
 #include "xaie_io_privilege.h"
 #include "xaie_npi.h"
+#include "btree4.h"
 
 #ifdef __AIEBAREMETAL__
 
@@ -50,9 +51,27 @@
 typedef struct {
 	u64 BaseAddr;
 	u64 NpiBaseAddr;
+	struct btree4 btree;
 } XAie_BaremetalIO;
 
 /************************** Function Definitions *****************************/
+
+static int XAie_BaremetalIO_MemInst_Compare(void *a, void *b)
+{
+	XAie_MemInst *MemA = (XAie_MemInst *)a;
+	XAie_MemInst *MemB = (XAie_MemInst *)b;
+	uint64_t VAddrA = (uint64_t)MemA->VAddr;
+	uint64_t VAddrB = (uint64_t)MemB->VAddr;
+	uint64_t VAddrBEnd = VAddrB + MemB->Size;
+
+	if (VAddrA < VAddrB) {
+		return -1;
+	} else if (VAddrA >= VAddrBEnd) {
+		return 1;
+	}
+	return 0;
+}
+
 /*****************************************************************************/
 /**
 *
@@ -68,6 +87,12 @@ typedef struct {
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 {
+	XAie_BaremetalIO *Baremetal_IOInst = (XAie_BaremetalIO *)IOInst;
+
+	if (Baremetal_IOInst->btree.root) {
+		XAIE_ERROR("Trying to free IOInst while Meminsts exists.\n");
+		return XAIE_ERR;
+	}
 	free(IOInst);
 	return XAIE_OK;
 }
@@ -100,6 +125,7 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
+	BTREE4_INIT(&IOInst->btree, XAie_BaremetalIO_MemInst_Compare);
 	DevInst->IOInst = (void *)IOInst;
 
 #if defined(XAIE_PROD)
@@ -347,6 +373,8 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
 	XAie_MemInst *MemInst;
+	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)DevInst->IOInst;
+	int Ret;
 
 	(void)Cache;
 	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
@@ -364,8 +392,20 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	MemInst->DevAddr = (u64)(uintptr_t)MemInst->VAddr;
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
+	Ret = btree4_insert(&IOInst->btree, MemInst);
+	if (Ret)
+		goto free_meminst;
+	/*
+	 * TODO: Cache is not handled at the moment for baremetal. The allocated
+	 * memory is always cached.
+	 */
 
 	return MemInst;
+
+free_meminst:
+	free(MemInst->VAddr);
+	free(MemInst);
+	return NULL;
 }
 
 /*****************************************************************************/
@@ -382,10 +422,25 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 *******************************************************************************/
 static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 {
+	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)MemInst->DevInst->IOInst;
+	btree4_delete(&IOInst->btree, MemInst);
 	free(MemInst->VAddr);
 	free(MemInst);
 
 	return XAIE_OK;
+}
+
+static AieRC XAie_BaremetalMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
+{
+	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)DevInst->IOInst;
+	XAie_MemInst MemInst;
+	XAie_MemInst *Node;
+
+	MemInst.VAddr = VAddr;
+	MemInst.Size = 0;
+
+	Node = btree4_search(&IOInst->btree, &MemInst);
+	return XAie_MemFree(Node);
 }
 
 /*****************************************************************************/
@@ -404,6 +459,15 @@ static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	Xil_DCacheInvalidateRange((intptr_t)MemInst->VAddr,
 			(intptr_t)MemInst->Size);
+
+	return XAIE_OK;
+}
+
+static AieRC XAie_BaremetalMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
+					      uint64_t Size)
+{
+	(void)DevInst;
+	Xil_DCacheInvalidateRange((intptr_t)VAddr, (intptr_t)Size);
 
 	return XAIE_OK;
 }
@@ -428,6 +492,15 @@ static AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+static AieRC XAie_BaremetalMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
+					 uint64_t Size)
+{
+	(void)DevInst;
+	Xil_DCacheFlushRange((intptr_t)VAddr, (intptr_t)Size);
+
+	return XAIE_OK;
+}
+
 static AieRC XAie_BaremetalMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
 	(void)MemInst;
@@ -438,6 +511,15 @@ static AieRC XAie_BaremetalMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static AieRC XAie_BaremetalMemDetach(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
+	return XAIE_OK;
+}
+
+static AieRC XAie_BaremetalMemGetDevAddrFromVAddr(XAie_DevInst *DevInst,
+						  void *VAddr,
+						  uint64_t *DevAddr)
+{
+	(void)DevInst;
+	*DevAddr = (uint64_t)VAddr;
 	return XAIE_OK;
 }
 
@@ -1037,15 +1119,40 @@ static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
+static AieRC XAie_BaremetalMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
+{
+	(void)DevInst;
+	(void)VAddr;
+	return XAIE_ERR;
+}
+
 static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
 	return XAIE_ERR;
 }
 
+static AieRC XAie_BaremetalMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
+					      uint64_t Size)
+{
+	(void)DevInst;
+	(void)VAddr;
+	(void)Size;
+	return XAIE_ERR;
+}
+
 static AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_BaremetalMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
+					      uint64_t Size)
+{
+	(void)DevInst;
+	(void)VAddr;
+	(void)Size;
 	return XAIE_ERR;
 }
 
@@ -1059,6 +1166,16 @@ static AieRC XAie_BaremetalMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static AieRC XAie_BaremetalMemDetach(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_BaremetalMemGetDevAddrFromVAddr(XAie_DevInst *DevInst,
+						  void *VAddr,
+						  uint64_t *DevAddr)
+{
+	(void)DevInst;
+	(void)VAddr;
+	(void)DevAddr;
 	return XAIE_ERR;
 }
 
@@ -1114,8 +1231,12 @@ const XAie_Backend BaremetalBackend =
 	.Ops.RunOp = XAie_BaremetalIO_RunOp,
 	.Ops.MemAllocate = XAie_BaremetalMemAllocate,
 	.Ops.MemFree = XAie_BaremetalMemFree,
+	.Ops.MemFreeVAddr = XAie_BaremetalMemFreeVAddr,
 	.Ops.MemSyncForCPU = XAie_BaremetalMemSyncForCPU,
+	.Ops.MemSyncForCPUVAddr = XAie_BaremetalMemSyncForCPUVAddr,
 	.Ops.MemSyncForDev = XAie_BaremetalMemSyncForDev,
+	.Ops.MemSyncForDevVAddr = XAie_BaremetalMemSyncForDevVAddr,
+	.Ops.MemGetDevAddrFromVAddr = XAie_BaremetalMemGetDevAddrFromVAddr,
 	.Ops.MemAttach = XAie_BaremetalMemAttach,
 	.Ops.MemDetach = XAie_BaremetalMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
