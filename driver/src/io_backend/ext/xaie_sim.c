@@ -44,6 +44,10 @@
 
 static AieRC XAie_SimMemFree(XAie_MemInst *MemInst);
 
+#include "btree4.h"
+
+static AieRC XAie_SimMemFree(XAie_MemInst *MemInst);
+
 /****************************** Type Definitions *****************************/
 struct XAie_DevMem {
 	ssize_t Size;
@@ -553,6 +557,10 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			MemInst->Size = Size;
 			MemInst->Cache = Cache;
 			MemInst->DevInst = DevInst;
+			if (Ret) {
+				XAie_SimMemFree(MemInst);
+				return NULL;
+			}
 			return MemInst;
 		}
 		Pos = Pos->Next;

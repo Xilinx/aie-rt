@@ -67,7 +67,7 @@ if (DEBUG_BACKEND)
         list(APPEND IO_BACKEND -D__AIEDEBUG__)
 endif (DEBUG_BACKEND)
 if (SIM_BACKEND)
-        list(APPEND IO_BACKEND -D__AIESIM__)
+	list(APPEND IO_BACKEND -D__AIESIM__)
 endif (SIM_BACKEND)
 
 if(MSVC)
