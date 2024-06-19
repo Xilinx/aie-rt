@@ -633,6 +633,35 @@ AieRC XAie_MemFree(XAie_MemInst *MemInst)
 /*****************************************************************************/
 /**
 *
+* This is the memory function to free the memory
+*
+* @param	DevInst: Device instance pointer.
+* @param	VAddr: Virtual address to free.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+*******************************************************************************/
+AieRC XAie_MemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
+{
+	const XAie_Backend *Backend;
+	AieRC RC;
+
+	if(DevInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_ERR;
+	}
+
+	Backend = DevInst->Backend;
+	RC = Backend->Ops.MemFreeVAddr ?
+		Backend->Ops.MemFreeVAddr(DevInst, VAddr) :
+		XAIE_FEATURE_NOT_SUPPORTED;
+
+	return RC;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the memory function to sync the memory for CPU
 *
 * @param	MemInst: Memory instance pointer.
@@ -657,6 +686,36 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 /*****************************************************************************/
 /**
 *
+* This is the memory function to sync the memory for CPU
+*
+* @param	DevInst: Device instance pointer.
+* @param	VAddr: Virtual address to sync.
+* @param	size: size in bytes to sync.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+*******************************************************************************/
+AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
+{
+	const XAie_Backend *Backend;
+	AieRC RC;
+
+	if(DevInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_ERR;
+	}
+
+	Backend = DevInst->Backend;
+	RC = Backend->Ops.MemSyncForCPUVAddr ?
+		Backend->Ops.MemSyncForCPUVAddr(DevInst, VAddr, size) :
+		XAIE_FEATURE_NOT_SUPPORTED;
+
+	return RC;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the memory function to sync the memory for device
 *
 * @param	MemInst: Memory instance pointer.
@@ -676,6 +735,66 @@ AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 	Backend = MemInst->DevInst->Backend;
 
 	return Backend->Ops.MemSyncForDev(MemInst);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to sync the memory for device
+*
+* @param	DevInst: Device instance pointer.
+* @param	VAddr: Virtual address to sync.
+* @param	size: size in bytes to sync.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+*******************************************************************************/
+AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
+{
+	const XAie_Backend *Backend;
+	AieRC RC;
+
+	if(DevInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_ERR;
+	}
+
+	Backend = DevInst->Backend;
+	RC = Backend->Ops.MemSyncForDevVAddr ?
+		Backend->Ops.MemSyncForDevVAddr(DevInst, VAddr, size) :
+		XAIE_FEATURE_NOT_SUPPORTED;
+
+	return RC;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory function to get DevAddr from VAddr
+*
+* @param	DevInst: Device instance pointer.
+* @param	VAddr: Virtual address.
+* @param	DevAddr: DevAddr pointer where the result is writen to.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+*******************************************************************************/
+AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr)
+{
+	const XAie_Backend *Backend;
+	AieRC RC;
+
+	if(DevInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid device instance\n");
+		return XAIE_ERR;
+	}
+
+	Backend = DevInst->Backend;
+	RC = Backend->Ops.MemGetDevAddrFromVAddr ?
+		Backend->Ops.MemGetDevAddrFromVAddr(DevInst, VAddr, DevAddr) :
+		XAIE_FEATURE_NOT_SUPPORTED;
+
+	return RC;
 }
 
 /*****************************************************************************/

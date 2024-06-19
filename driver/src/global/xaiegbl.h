@@ -640,12 +640,16 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
 XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache);
 AieRC XAie_MemFree(XAie_MemInst *MemInst);
+AieRC XAie_MemFreeVAddr(XAie_DevInst *DevInst, void *VAddr);
 AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
+AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
+AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
 u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
-AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DAddr,
-		u64 VAddr, u64 Size, XAie_MemCacheProp Cache, u64 MemHandle);
+AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
+AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
+                u64 VAddr, u64 Size, XAie_MemCacheProp Cache, u64 MemHandle);
 AieRC XAie_MemDetach(XAie_MemInst *MemInst);
 AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
 AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);

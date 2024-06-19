@@ -40,6 +40,10 @@
 #include "xaie_io_common.h"
 #include "xaie_npi.h"
 
+#include "btree4.h"
+
+static AieRC XAie_SimMemFree(XAie_MemInst *MemInst);
+
 /****************************** Type Definitions *****************************/
 struct XAie_DevMem {
 	ssize_t Size;
@@ -56,10 +60,27 @@ typedef struct {
 	const XAie_CoreMod *OrigCoreMod;
 	XAie_CoreMod CoreModOverride;
 	struct XAie_DevMem DevMem;
+	struct btree4 btree;
 } XAie_SimIO;
 
 /************************** Function Definitions *****************************/
 #ifdef __AIESIM__
+
+static int XAie_SimIO_MemInst_Compare(void *a, void *b)
+{
+	XAie_MemInst *MemA = (XAie_MemInst *)a;
+	XAie_MemInst *MemB = (XAie_MemInst *)b;
+	uint64_t VAddrA = (uint64_t)MemA->VAddr;
+	uint64_t VAddrB = (uint64_t)MemB->VAddr;
+	uint64_t VAddrBEnd = VAddrB + MemB->Size;
+
+	if (VAddrA < VAddrB) {
+		return -1;
+	} else if (VAddrA >= VAddrBEnd) {
+		return 1;
+	}
+	return 0;
+}
 
 /*****************************************************************************/
 /**
@@ -117,6 +138,11 @@ static AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
+	IOInst->OrigCoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	IOInst->CoreModOverride = *IOInst->OrigCoreMod;
+	BTREE4_INIT(&IOInst->btree, XAie_SimIO_MemInst_Compare);
+	DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = &IOInst->CoreModOverride;
+	IOInst->DevInst = DevInst;
 	DevInst->IOInst = IOInst;
 
 	Head = &IOInst->DevMem;
@@ -477,6 +503,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	struct XAie_DevMem *Pos;
 	u64 Align = Size % 4;
 	struct XAie_DevMem *Node;
+	int Ret;
 
 	if (Align) {
 		Size = Size + (4 - Align);
@@ -509,6 +536,11 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			if (Next) {
 				Next->Prev = Node;
 			}
+			Ret = btree4_insert(&IOInst->btree, MemInst);
+			if (Ret) {
+				XAie_SimMemFree(MemInst);
+				return NULL;
+			}
 			return MemInst;
 		} else if (Pos->Free && Pos->Size == Size) {
 			XAie_MemInst *MemInst = &Pos->MemInst;
@@ -522,6 +554,10 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			MemInst->Size = Size;
 			MemInst->Cache = Cache;
 			MemInst->DevInst = DevInst;
+			if (Ret) {
+				XAie_SimMemFree(MemInst);
+				return NULL;
+			}
 			return MemInst;
 		}
 		Pos = Pos->Next;
@@ -592,6 +628,7 @@ void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
 static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 {
 	struct XAie_DevMem *Node, *Next, *Prev;
+	XAie_SimIO *IOInst;
 
 	if (!MemInst)
 		return XAIE_OK;
@@ -599,6 +636,8 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	Next = Node->Next;
 	Prev = Node->Prev;
 
+	IOInst = (XAie_SimIO *)MemInst->DevInst->IOInst;
+	btree4_delete(&IOInst->btree, MemInst);
 	Node->Free = 1;
 	free(Node->MemInst.VAddr);
 	Node->MemInst.VAddr = NULL;
@@ -621,6 +660,58 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+static AieRC XAie_SimMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
+{
+	XAie_SimIO *IOInst = (XAie_SimIO *)DevInst->IOInst;
+	XAie_MemInst MemInst;
+	XAie_MemInst *Node;
+
+	MemInst.VAddr = VAddr;
+	MemInst.Size = 0;
+
+	Node = btree4_search(&IOInst->btree, &MemInst);
+	return XAie_MemFree(Node);
+}
+
+AieRC XAie_SimMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
+					uint64_t Size)
+{
+	XAie_SimIO *IOInst = (XAie_SimIO *)DevInst->IOInst;
+	XAie_MemInst MemInst;
+	XAie_MemInst *Node;
+	uint64_t VAddrStart = (uint64_t)VAddr;
+	uint64_t VAddrEnd = VAddrStart + Size;
+	uint64_t NodeStart, NodeEnd;
+	uint64_t Offset;
+	uint32_t *pa;
+	uint32_t *va = (uint32_t *)VAddr;
+	uint64_t i;
+
+	if (Size % 4) {
+		return XAIE_INVALID_RANGE;
+	}
+	MemInst.VAddr = VAddr;
+	MemInst.Size = Size;
+
+	Node = btree4_search(&IOInst->btree, &MemInst);
+	if (!Node) {
+		XAIE_ERROR("Requested Address not found\n");
+		return XAIE_INVALID_ADDRESS;
+	}
+	NodeStart = (uint64_t)Node->VAddr;
+	NodeEnd = NodeStart + Node->Size;
+	if (!((VAddrStart >= NodeStart) &&
+		(VAddrEnd <= NodeEnd)))
+		return XAIE_INVALID_RANGE;
+	Offset = VAddrStart - NodeStart;
+	pa = (uint32_t *)(Node->DevAddr + Offset);
+	for (i = 0; i < (Size >> 2); i++) {
+		va[i] = ess_Read32(&pa[i]);
+	}
+
+	return 0;
+}
+
 static AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	uint32_t *va = MemInst->VAddr;
@@ -634,6 +725,47 @@ static AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
+AieRC XAie_SimMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
+					uint64_t Size)
+{
+	XAie_SimIO *IOInst = (XAie_SimIO *)DevInst->IOInst;
+	XAie_MemInst MemInst;
+	XAie_MemInst *Node;
+	uint64_t VAddrStart = (uint64_t)VAddr;
+	uint64_t VAddrEnd = VAddrStart + Size;
+	uint64_t NodeStart, NodeEnd;
+	uint64_t Offset;
+	uint32_t *pa;
+	uint32_t *va = (uint32_t *)VAddr;
+	uint64_t i;
+
+	if (Size % 4) {
+		return XAIE_INVALID_RANGE;
+	}
+
+	MemInst.VAddr = VAddr;
+	MemInst.Size = Size;
+
+	Node = btree4_search(&IOInst->btree, &MemInst);
+	if (!Node) {
+		XAIE_ERROR("Requested Address not found\n");
+		return XAIE_INVALID_ADDRESS;
+	}
+	NodeStart = (uint64_t)Node->VAddr;
+	NodeEnd = NodeStart + Node->Size;
+	if (!((VAddrStart >= NodeStart) &&
+		(VAddrEnd <= NodeEnd)))
+		return XAIE_INVALID_RANGE;
+	Offset = VAddrStart - NodeStart;
+	pa = (uint32_t *)(Node->DevAddr + Offset);
+	for (i = 0; i < (Size >> 2); i++) {
+		ess_Write32(&pa[i], va[i]);
+	}
+
+	return 0;
+}
+
+
 static AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
 {
 	uint32_t *pa = MemInst->DevAddr;
@@ -644,6 +776,31 @@ static AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
 		ess_Write32(&pa[i], va[i]);
 	}
 
+	return XAIE_OK;
+}
+
+static AieRC XAie_SimMemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr,
+				   uint64_t *DevAddr)
+{
+	XAie_SimIO *IOInst = (XAie_SimIO *)DevInst->IOInst;
+	XAie_MemInst MemInst;
+	XAie_MemInst *Node;
+	uint64_t VAddrStart = (uint64_t)VAddr;
+	uint64_t NodeStart;
+	uint64_t Offset;
+
+	*DevAddr = 0;
+	MemInst.VAddr = VAddr;
+	MemInst.Size = 0;
+
+	Node = btree4_search(&IOInst->btree, &MemInst);
+	if (!Node) {
+//		XAIE_ERROR("Requested Address not found\n");
+		return XAIE_INVALID_ADDRESS;
+	}
+	NodeStart = (uint64_t)Node->VAddr;
+	Offset = VAddrStart - NodeStart;
+	*DevAddr = (Node->DevAddr + Offset);
 	return XAIE_OK;
 }
 
@@ -793,9 +950,24 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
+static AieRC XAie_SimMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
+{
+	(void)DevInst;
+	return XAIE_ERR;
+}
+
 static AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_SimMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
+					uint64_t size)
+{
+	(void)DevInst;
+	(void)VAddr;
+	(void)size;
 	return XAIE_ERR;
 }
 
@@ -803,6 +975,23 @@ static AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
 	return XAIE_ERR;
+}
+
+static AieRC XAie_SimMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
+					uint64_t size)
+{
+	(void)DevInst;
+	(void)VAddr;
+	(void)size;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_SimMemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr,
+				   uint64_t *DevAddr)
+{
+	(void)DevInst;
+	(void)VAddr;
+	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
 #endif /* __AIESIM__ */
@@ -836,8 +1025,12 @@ const XAie_Backend SimBackend =
 	.Ops.RunOp = XAie_SimIO_RunOp,
 	.Ops.MemAllocate = XAie_SimMemAllocate,
 	.Ops.MemFree = XAie_SimMemFree,
+	.Ops.MemFreeVAddr = XAie_SimMemFreeVAddr,
 	.Ops.MemSyncForCPU = XAie_SimMemSyncForCPU,
+	.Ops.MemSyncForCPUVAddr = XAie_SimMemSyncForCPUVAddr,
 	.Ops.MemSyncForDev = XAie_SimMemSyncForDev,
+	.Ops.MemSyncForDevVAddr = XAie_SimMemSyncForDevVAddr,
+	.Ops.MemGetDevAddrFromVAddr = XAie_SimMemGetDevAddrFromVAddr,
 	.Ops.MemAttach = XAie_SimMemAttach,
 	.Ops.MemDetach = XAie_SimMemDetach,
 	.Ops.GetTid = XAie_SimIOGetTid,

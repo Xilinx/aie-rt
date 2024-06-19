@@ -144,8 +144,12 @@ typedef struct XAie_BackendOps {
 	XAie_MemInst* (*MemAllocate)(XAie_DevInst *DevInst, u64 Size,
 			XAie_MemCacheProp Cache);
 	AieRC (*MemFree)(XAie_MemInst *MemInst);
+	AieRC (*MemFreeVAddr)(XAie_DevInst *DevInst, void *VAddr);
 	AieRC (*MemSyncForCPU)(XAie_MemInst *MemInst);
+	AieRC (*MemSyncForCPUVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 	AieRC (*MemSyncForDev)(XAie_MemInst *MemInst);
+	AieRC (*MemSyncForDevVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
+	AieRC (*MemGetDevAddrFromVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
 	AieRC (*MemAttach)(XAie_MemInst *MemInst, u64 MemHandle);
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
 	u64 (*GetTid)(void);
