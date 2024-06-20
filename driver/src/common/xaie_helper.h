@@ -191,10 +191,6 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
 u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
-		XAie_LocType *Locs);
-u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
-u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit, u32 NumSetBit);
 void _XAie_ClrBitInBitmap(u32 *Bitmap, u32 StartSetBit, u32 NumSetBit);
 void _XAie_FreeTxnPtr(void *Ptr);
@@ -213,6 +209,10 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAIE_AIG_EXPORT u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
+XAIE_AIG_EXPORT AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+		XAie_LocType *Locs);
+XAIE_AIG_EXPORT u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
+XAIE_AIG_EXPORT u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 
 /*Public functions. Need to by discussed why it should be public */
 AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
