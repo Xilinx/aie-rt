@@ -58,8 +58,8 @@ XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType
 		u32 ChannelBitMap);
 XAIE_AIG_EXPORT AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT void XAie_DisableErrorInterrupts(u8 IrqId);
-
+XAIE_AIG_EXPORT void XAie_ClearErrorInterrupts(u8 IrqId);
+XAIE_AIG_EXPORT u32 XAie_LIntrCtrlL2Status(XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData);
-
 #endif		/* end of protection macro */

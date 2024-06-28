@@ -40,13 +40,17 @@
 *
 * @return	Status: Status second-level interrupt controller.
 *
-* @note		Internal only.
-*
 ******************************************************************************/
-static inline u32 _XAie_LIntrCtrlL2Status(XAie_LocType Loc)
+u32 XAie_LIntrCtrlL2Status(XAie_LocType Loc)
 {
-	u64 RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
-				XAIE_NOC_MOD_INTR_L2_STATUS;
+	u64 RegAddr;
+
+	if (!IS_TILE_NOC_TILE(Loc)) {
+		UPDT_NEXT_NOC_TILE_LOC(Loc);
+	}
+
+	RegAddr = _XAie_LGetTileAddr(Loc.Row, Loc.Col) +
+                                XAIE_NOC_MOD_INTR_L2_STATUS;
 	return _XAie_LRead32(RegAddr);
 }
 
@@ -121,15 +125,45 @@ void XAie_DisableErrorInterrupts(u8 IrqId)
 	while (Loc.Col < Cols.Start + Cols.Num) {
 		u32 Status;
 
-		Status = _XAie_LIntrCtrlL2Status(Loc);
+		Status = XAie_LIntrCtrlL2Status(Loc);
 
 		/* Only disable L2s that are reporting errors. */
 		if (Status) {
 			_XAie_LIntrCtrlL2Disable(Loc, Status);
-			_XAie_LIntrCtrlL2Ack(Loc, Status);
 		}
 
 		UPDT_NEXT_NOC_TILE_LOC(Loc);
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API Clears all second-level interrupt controllers reporting errors.
+*
+* @param	IrqId: Zero indexed IRQ ID. Valid values corresponds to the
+*		       number of AIE IRQs mapped to the processor.
+*
+* @return	None.
+*
+* @note		None.
+*
+******************************************************************************/
+void XAie_ClearErrorInterrupts(u8 ColNum)
+{
+	XAie_LocType Loc = XAie_TileLoc(ColNum, XAIE_SHIM_ROW);
+
+	if (!IS_TILE_NOC_TILE(Loc)) {
+		UPDT_NEXT_NOC_TILE_LOC(Loc);
+	}
+
+	u32 Status;
+
+	Status = XAie_LIntrCtrlL2Status(Loc);
+
+	/* Only Clear L2s that are reporting errors. */
+	if (Status) {
+		_XAie_LIntrCtrlL2Ack(Loc, Status);
 	}
 }
 
