@@ -64,6 +64,15 @@
 		XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR | \
 		XAIE_PART_INIT_OPT_ISOLATE)
 
+/* Migrated from AIE-CONTROLLER */
+#define OP_LIST(OP) \
+        OP(TRANSACTION_OP) \
+        OP(WAIT_OP) \
+        OP(PENDINGBDCOUNT_OP) \
+        OP(DBGPRINT_OP) \
+        OP(PATCHBD_OP) \
+        OP(TRANSACTION_V2_OP)
+#define GENERATE_ENUM(ENUM) e_##ENUM,
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
 typedef struct XAie_DeviceOps XAie_DeviceOps;
@@ -564,7 +573,52 @@ typedef struct {
 	uint32_t Size;
 } XAie_CustomOpHdr;
 
+/* Migrated from Aie-controller */
 
+enum op_types {
+    OP_LIST(GENERATE_ENUM)
+};
+
+typedef struct{
+    enum op_types type;
+    unsigned int size_in_bytes;
+} op_base;
+
+typedef struct {
+    uint32_t word;
+    uint32_t config;
+} tct_op_t;
+
+typedef struct {
+    op_base b;
+    u32 action;
+    u64 regaddr; // regaddr to patch
+    u64 argidx;  // kernel arg idx to get value to write at regaddr
+    u64 argplus; // value to add to what's passed @ argidx (e.g., offset to shim addr)
+} patch_op_t;
+
+/*
+ * Structs for reading registers
+ */
+typedef struct {
+    uint64_t address;
+} register_data_t;
+
+typedef struct {
+    uint32_t count;
+    register_data_t data[1]; // variable size
+} read_register_op_t;
+
+/*
+ * Struct for record timer identifier
+ */
+typedef struct {
+    uint32_t id;
+} record_timer_op_t;
+
+
+
+/* Optimized Txn structs start from here */
 typedef struct{
 	uint8_t Op;
 	uint8_t padding[3];
