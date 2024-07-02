@@ -229,6 +229,7 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr);
+AieRC XAie_Txn_NoOp(XAie_DevInst *DevInst, uint32_t Count);
 
 /* Public Functions. Later this should be moved to xaiegbl.h. Also functions should be moved to xaiegbl.c */
 XAIE_AIG_EXPORT int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);

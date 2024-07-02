@@ -573,8 +573,13 @@ typedef struct {
 	uint32_t Size;
 } XAie_CustomOpHdr;
 
-/* Migrated from Aie-controller */
+typedef struct {
+	uint8_t Op;
+	uint8_t padding[3];
+} XAie_NoOpHdr;
 
+
+/* Migrated from Aie-controller */
 enum op_types {
     OP_LIST(GENERATE_ENUM)
 };

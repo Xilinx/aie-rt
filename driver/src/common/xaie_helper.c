@@ -1017,6 +1017,13 @@ static inline void _XAie_AppendCustomOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	}
 }
 
+static inline void _XAie_AppendNoOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_NoOpHdr *Hdr = ( XAie_NoOpHdr*)TxnPtr;
+
+	Hdr->Op = (u8)Cmd->Opcode;
+}
+
 static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
 		XAie_TxnHeader *Header)
 {
@@ -1191,7 +1198,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			BuffSize += (u32)sizeof(XAie_Write32Hdr);
 			continue;
 		}
-		if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
+		else if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
 			if((BuffSize + sizeof(XAie_MaskWrite32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
@@ -1207,7 +1214,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			BuffSize += (u32)sizeof(XAie_MaskWrite32Hdr);
 			continue;
 		}
-		if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
+		else if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
 			if((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
@@ -1223,7 +1230,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr);
 			continue;
 		}
-		if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
+		else if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
 			/**
 			 * In case of Block Write and Block Set, it is possible
 			 * that the new allocated buffer size may not be sufficient.
@@ -1248,7 +1255,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				Cmd->Size * (u32)sizeof(u32);
 			continue;
 		}
-		if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
+		else if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
 			/**
 			 * In case of Block Write and Block Set, it is possible
 			 * that the new allocated buffer size may not be sufficient
@@ -1276,7 +1283,27 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				Cmd->Size * (u32)sizeof(u32);
 			continue;
 		}
-		if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+
+		else if(Cmd->Opcode == XAIE_IO_NOOP)
+		{
+			if( (BuffSize + sizeof(XAie_NoOpHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+
+			}
+			_XAie_AppendNoOp(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_NoOpHdr);
+			BuffSize += (u32)sizeof(XAie_NoOpHdr);
+			continue;
+		}
+
+		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
 			if (TX_DUMP_ENABLE) {
 				TxnCmdDump(Cmd);
 			}
@@ -1448,6 +1475,26 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				Cmd->Size * (u32)sizeof(u32);
 			continue;
 		}
+
+		else if(Cmd->Opcode == XAIE_IO_NOOP)
+		{
+			if( (BuffSize + sizeof(XAie_NoOpHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+
+			}
+			_XAie_AppendNoOp(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_NoOpHdr);
+			BuffSize += (u32)sizeof(XAie_NoOpHdr);
+			continue;
+		}
+
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
 			if (TX_DUMP_ENABLE) {
 				TxnCmdDump(Cmd);
@@ -2059,6 +2106,60 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		}
 
 		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API register NO_OP that can be added to the transaction buffer count times.
+* @param    DevInst - Global AIE device instance pointer. 
+* @param    Count - Number of time NO-OP needs to be added to transaction buffer
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_NoOp(XAie_DevInst *DevInst, uint32_t Count)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL) 
+	{
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
+			return XAIE_ERR;
+		}
+		for( uint32_t loop=0; loop<Count; loop++)
+		{
+
+			if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+					RC = _XAie_ReallocCmdBuf(TxnInst);
+					if (RC != XAIE_OK) {
+				 		return RC;
+					}
+
+			}
+			TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_NOOP;
+
+			if (TX_DUMP_ENABLE) {
+				TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+			}
+
+			TxnInst->NumCmds++;
+		}
 
 		return XAIE_OK;
 	}
