@@ -578,6 +578,21 @@ typedef struct {
 	uint8_t padding[3];
 } XAie_NoOpHdr;
 
+typedef enum {
+	NOOP,
+	MEM_TILE,
+	AIE_TILE,
+	AIE_REGISTERS,
+	INVALID
+} XAie_Preempt_level;
+
+typedef struct {
+	uint8_t Op;
+	uint8_t Preempt_level;
+	uint16_t Reserved;
+} XAie_PreemptHdr;
+
+/* Txn Optimizaed structs start from here*/
 
 /* Migrated from Aie-controller */
 enum op_types {
