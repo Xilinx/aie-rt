@@ -49,6 +49,12 @@ else()
   )
 endif()
 
+target_compile_options(${PROJECT_NAME} PRIVATE
+  /wd4200
+  /wd4389
+  /wd4996
+  )
+
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC
