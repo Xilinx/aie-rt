@@ -2005,10 +2005,7 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 				}
 			TxnInst->NumCmds = 0;
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
-		} else if((TxnInst->NumCmds == 0U) ||
-					((Op == XAIE_BACKEND_OP_REQUEST_RESOURCE) ||
-					(Op == XAIE_BACKEND_OP_RELEASE_RESOURCE) ||
-					(Op == XAIE_BACKEND_OP_FREE_RESOURCE))){
+		} else if(TxnInst->NumCmds == 0U){
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else {
 			XAIE_ERROR("Run Op operation is not supported "

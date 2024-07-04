@@ -144,7 +144,6 @@ typedef struct {
 	u8 IsReady;
 	u8 EccStatus;		/* Ecc On/Off status of the partition */
 	const XAie_Backend *Backend; /* Backend IO properties */
-	XAie_ResourceManager *RscMapping;
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
 				     setup to AIE prop during intialization*/

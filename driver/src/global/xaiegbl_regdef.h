@@ -895,13 +895,6 @@ typedef struct XAie_MemCtrlMod{
 } XAie_MemCtrlMod;
 
 /*
- * This structure captures all attributes related to resource manager.
- */
-struct XAie_ResourceManager {
-	u32 **Bitmaps;
-};
-
-/*
  * This typedef contains all the modules for a Tile type
  */
 struct XAie_TileMod {
