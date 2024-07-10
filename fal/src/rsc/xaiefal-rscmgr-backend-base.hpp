@@ -41,7 +41,7 @@ namespace xaiefal {
 		 */
 		virtual AieRC request(XAieUserRsc& RscReq) {
 			(void)RscReq;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -77,7 +77,7 @@ namespace xaiefal {
 		 */
 		virtual AieRC requestAllocated(XAieUserRsc& RscReq) {
 			(void)RscReq;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -114,7 +114,7 @@ namespace xaiefal {
 		 */
 		virtual AieRC requestContiguous(std::vector<XAieUserRsc>& RscReq) {
 			(void)RscReq;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -131,7 +131,7 @@ namespace xaiefal {
 		virtual AieRC requestBc(std::vector<XAieUserRsc>& RscReq, bool isBcAll) {
 			(void)RscReq;
 			(void)isBcAll;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -146,7 +146,7 @@ namespace xaiefal {
 		 */
 		virtual AieRC release(XAieUserRsc& RscRel) {
 			(void)RscRel;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -174,7 +174,7 @@ namespace xaiefal {
 		 */
 		virtual AieRC free(XAieUserRsc& RscFree) {
 			(void)RscFree;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -206,7 +206,7 @@ namespace xaiefal {
 				XAieRscBitmapType BType) {
 			(void)vStats;
 			(void)BType;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for base backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -224,7 +224,7 @@ namespace xaiefal {
 		virtual AieRC writeRscBitmaps(std::ofstream &Fs, uint64_t &NumRscs) {
 			(void)Fs;
 			(void)NumRscs;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for selected backend " << std::endl;
 			return XAIE_ERR;
 		}
@@ -240,7 +240,8 @@ namespace xaiefal {
 		 */
 		virtual AieRC loadRscBitmaps(const char *MetaData, uint64_t NumBitmaps) {
 			(void)MetaData;
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			(void)NumBitmaps;
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				" Not supported for selected backend " << std::endl;
 			return XAIE_ERR;
 		}

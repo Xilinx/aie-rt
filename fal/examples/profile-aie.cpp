@@ -90,7 +90,7 @@ public:
 		return XAIE_OK;
 	}
 	void printResult() {
-		Logger::log(LogLevel::INFO) << " === Profile results. ==== " << std::endl;
+		Logger::log(LogLevel::FAL_INFO) << " === Profile results. ==== " << std::endl;
 		for (auto R: vActive) {
 			uint32_t Result;
 

@@ -51,7 +51,7 @@ namespace xaiefal {
 			if ((vE.size() != vEvents.size()) || (vOp.size() > 3) ||
 				(vE.size() <= 2 && vOp.size() > 1) ||
 				(vE.size() > 2 && vOp.size() < 2)) {
-				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " invalid number of input events and ops." << std::endl;
 				RC = XAIE_INVALID_ARGS;
@@ -62,7 +62,7 @@ namespace xaiefal {
 					RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 							Mod, vE[i], &HwEvent);
 					if (RC != XAIE_OK) {
-						Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
+						Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 							(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 							" Mod=" << Mod <<  " invalid E=" << vE[i] << std::endl;
 						break;
@@ -95,7 +95,7 @@ namespace xaiefal {
 
 			(void)vE;
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " resource is not reserved." << std::endl;
 				RC = XAIE_ERR;
@@ -130,7 +130,7 @@ namespace xaiefal {
 				}
 				RC = XAIE_OK;
 			} else {
-				Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 					" Mod=" << Mod <<  " no input events specified." << std::endl;
 				RC = XAIE_ERR;
@@ -184,7 +184,7 @@ namespace xaiefal {
 				RC = XAie_EventComboConfig(dev(), Loc, Mod,
 						ComboId, vOps[i/2], vEvents[i], vEvents[i+1]);
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 						" Mod=" << Mod <<  " failed to config combo " << ComboId << std::endl;
 					for (XAie_EventComboId tId = StartCId;
@@ -200,7 +200,7 @@ namespace xaiefal {
 				RC = XAie_EventComboConfig(dev(), Loc, Mod,
 					XAIE_EVENT_COMBO2, vOps[2], vEvents[0], vEvents[0]);
 				if (RC != XAIE_OK) {
-					Logger::log(LogLevel::ERROR) << "combo event " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
 						" Mod=" << Mod <<  " failed to config combo " << XAIE_EVENT_COMBO2 << std::endl;
 				}
@@ -256,7 +256,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "User Event " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "User Event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" resource not resesrved." << std::endl;
 				RC = XAIE_INVALID_ARGS;

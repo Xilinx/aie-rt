@@ -78,7 +78,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Reserved == 1) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " resource reserved." << std::endl;
 				return XAIE_ERR;
@@ -107,7 +107,7 @@ namespace xaiefal {
 					State.Initialized = 1;
 					State.Configured = 1;
 				} else {
-					Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+					Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 						" Expect Mod= " << Mod <<
 						" StartEvent=" <<StartM << "," << StartE << " " <<
@@ -141,13 +141,13 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use" << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1 && M != RstMod) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is reserved, event module type cannot change." <<
@@ -177,7 +177,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
@@ -202,13 +202,13 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1 && M != StartMod) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is reserved, event module type cannot change." <<
@@ -239,13 +239,13 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
 			} else if (State.Reserved == 1 && M != StopMod) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Counter Mod=" << (int)vRscs[0].Mod <<
 					" resource is reserved, event module type cannot change." <<
@@ -274,7 +274,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 0) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
 					" resource not in use." << std::endl;
@@ -296,7 +296,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
 					" resource not allocated." << std::endl;
@@ -412,7 +412,7 @@ namespace xaiefal {
 				}
 			}
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_WARN) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " resource not available.\n";
 				vRscs.clear();
@@ -488,7 +488,7 @@ namespace xaiefal {
 			}
 
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(int)Loc.Col << "," << (int)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" failed to start." << std::endl;
@@ -523,7 +523,7 @@ namespace xaiefal {
 				iRC |= RstBC->stop();
 			}
 			if (iRC != (int)XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "perfcount " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << (int)Mod << " Actual Mod=" << (int)vRscs[0].Mod <<
 					" failed to stop." << std::endl;

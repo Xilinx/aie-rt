@@ -94,7 +94,7 @@ namespace xaiefal {
 
 			if ((_XAie_CheckModule(dev(), RscReq.Loc, RscReq.Mod) != XAIE_OK) ||
 					TileType >= XAIEGBL_TILE_TYPE_MAX) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid Location/Module for request" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -140,13 +140,13 @@ namespace xaiefal {
 
 			if ((_XAie_CheckModule(dev(), RscReq.Loc, RscReq.Mod) != XAIE_OK) ||
 					TileType >= XAIEGBL_TILE_TYPE_MAX) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid Location/Module for request" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 
 			if (RscReq.RscId > getMaxRsc(RscReq.Loc, RscReq.Mod, RscReq.RscType)) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid resource id for request" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -187,7 +187,7 @@ namespace xaiefal {
 			TileType = _XAie_GetTileTypefromLoc(dev(), RscReq[0].Loc);
 			if ((_XAie_CheckModule(dev(), RscReq[0].Loc, RscReq[0].Mod) != XAIE_OK) ||
 					TileType >= XAIEGBL_TILE_TYPE_MAX) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid Location/Module for request" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -195,7 +195,7 @@ namespace xaiefal {
 			StaticOff = getStaticOff(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			StartBit = getStartBit(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			MaxRscId = getMaxRsc(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
-			NumContigRscs = RscReq.size();
+			NumContigRscs = (uint32_t) RscReq.size();
 			auto Bitmap = RscMaps[TileType].Bitmaps[RscReq[0].RscType];
 
 			for (uint32_t i = 0; i < MaxRscId; i++) {
@@ -256,14 +256,14 @@ namespace xaiefal {
 			MaxRscId = getMaxRsc(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			if ((preferredId != XAIE_RSC_ID_ANY) &&
 					(preferredId >= MaxRscId)) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid resource id for request" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 
 			CommonId = getCommonRscId(RscReq);
 			if (CommonId == XAIE_RSC_ID_ANY) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Unable to find common broadcast channel"
 					<< std::endl;
 				return XAIE_ERR;
@@ -299,13 +299,13 @@ namespace xaiefal {
 
 			if ((_XAie_CheckModule(dev(), RscRel.Loc, RscRel.Mod) != XAIE_OK) ||
 					TileType >= XAIEGBL_TILE_TYPE_MAX) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid Location/Module for release" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 
 			if (RscRel.RscId >= getMaxRsc(RscRel.Loc, RscRel.Mod, RscRel.RscType)) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid resource id for release" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -338,13 +338,13 @@ namespace xaiefal {
 
 			if ((_XAie_CheckModule(dev(), RscFree.Loc, RscFree.Mod) != XAIE_OK) ||
 					TileType >= XAIEGBL_TILE_TYPE_MAX) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid Location/Module for free" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
 
 			if (RscFree.RscId >= getMaxRsc(RscFree.Loc, RscFree.Mod, RscFree.RscType)) {
-				Logger::log(LogLevel::WARN) << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << __func__ <<
 					" Invalid resource id for free" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -377,13 +377,13 @@ namespace xaiefal {
 
 				if ((_XAie_CheckModule(dev(), L, M) != XAIE_OK) ||
 						TileType >= XAIEGBL_TILE_TYPE_MAX) {
-					Logger::log(LogLevel::WARN) << __func__ <<
+					Logger::log(LogLevel::FAL_WARN) << __func__ <<
 						" Invalid Location/Module for stat request"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
 				}
 				if (T >= XAIE_MAXRSC) {
-					Logger::log(LogLevel::WARN) << __func__ <<
+					Logger::log(LogLevel::FAL_WARN) << __func__ <<
 						" Invalid resource type for stat request"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
@@ -540,7 +540,7 @@ namespace xaiefal {
 						& XAIE_RSC_HEADER_SIZE_MASK;
 
 				if (RscSize == 0U) {
-					Logger::log(LogLevel::ERROR) <<
+					Logger::log(LogLevel::FAL_ERROR) <<
 						"Invalid resource length in bitmap"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
@@ -548,7 +548,7 @@ namespace xaiefal {
 
 				if (TileType == XAIEGBL_TILE_TYPE_SHIMNOC ||
 						TileType >= XAIEGBL_TILE_TYPE_MAX) {
-					Logger::log(LogLevel::ERROR) <<
+					Logger::log(LogLevel::FAL_ERROR) <<
 						"Invalid tile type in bitmap"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
@@ -560,7 +560,7 @@ namespace xaiefal {
 				Bitmap64Size = roundUp(BitmapSize, 64U) / 64U;
 
 				if (RscSize != Bitmap64Size) {
-					Logger::log(LogLevel::ERROR) <<
+					Logger::log(LogLevel::FAL_ERROR) <<
 						"Invalid resource length in bitmap"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
@@ -768,14 +768,14 @@ namespace xaiefal {
 
 				if ((_XAie_CheckModule(dev(), rsc.Loc, rsc.Mod) != XAIE_OK) ||
 						TType >= XAIEGBL_TILE_TYPE_MAX) {
-					Logger::log(LogLevel::WARN) << __func__ <<
+					Logger::log(LogLevel::FAL_WARN) << __func__ <<
 						" Invalid Location/Module for request" << std::endl;
 					return XAIE_RSC_ID_ANY;
 				}
 
 				MaxRscId = getMaxRsc(rsc.Loc, rsc.Mod, rsc.RscType);
 				if (MaxRscId > 32U) {
-					Logger::log(LogLevel::ERROR) << __func__ <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 						" Max resource ID larger than bitmap size"
 						<< std::endl;
 					return XAIE_RSC_ID_ANY;
@@ -803,7 +803,7 @@ namespace xaiefal {
 					Mask = (1 << remBits) - 1 ;
 					Temp |= Bitmap->at(sIndex + 1);
 					Temp &= Mask;
-					Temp << (MaxRscId - remBits);
+					Temp = Temp << (MaxRscId - remBits);
 					RscStatus |= Temp;
 				}
 				if ((rBit + MaxRscId) > 32U) {
@@ -813,7 +813,7 @@ namespace xaiefal {
 					Mask = (1 << remBits) - 1 ;
 					Temp |= Bitmap->at(rIndex + 1);
 					Temp &= Mask;
-					Temp << (MaxRscId - remBits);
+					Temp = Temp << (MaxRscId - remBits);
 					RscStatus |= Temp;
 				}
 			}
@@ -852,7 +852,7 @@ namespace xaiefal {
 			RC = _XAie_GetUngatedLocsInPartition(dev(),
 					&NumTiles, Locs.data());
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) <<
+				Logger::log(LogLevel::FAL_WARN) <<
 					"Unable to get ungated locs" <<
 					std::endl;
 				return RC;

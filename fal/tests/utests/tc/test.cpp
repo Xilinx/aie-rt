@@ -10,6 +10,6 @@ using namespace xaiefal;
 int main(int ac, char** av)
 {
 
-	Logger::log(LogLevel::INFO) << "xaiefal cpputests." << std::endl;
+	Logger::log(LogLevel::FAL_INFO) << "xaiefal cpputests." << std::endl;
 	return CommandLineTestRunner::RunAllTests(ac, av);
 }

@@ -4,6 +4,8 @@
 #
 ###############################################################################
 
+cmake_minimum_required (VERSION 3.0)
+
 file(GLOB_RECURSE _sources *.cpp)
 file(GLOB_RECURSE _headers *.hpp)
 
