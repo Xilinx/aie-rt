@@ -561,7 +561,8 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 *		3. XAIE_LOAD_ELF_DATA (loads initialized symbols)
 *		4. XAIE_LOAD_ELF_ALL (loads all sections)
 *		Above flags can be passed individually or ORed together.
-*
+* @param	LoadSym: Load symbols from .map file. This argument is valid
+* 		when __AIESIM__ is defined.
 * @return	XAIE_OK on success and error code for failure.
 *
 * @note		The user is responsible to pass valid section pointers and
@@ -570,7 +571,7 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 *
 *******************************************************************************/
 AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const char* ElfPtr, u8 Sections)
+		const char* ElfPtr, u8 Sections, u8 LoadSym)
 {
 	FILE *Fd;
 	int Ret;
@@ -580,7 +581,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -595,11 +596,58 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAIE_ERROR("Invalid ElfPtr\n");
 		return XAIE_INVALID_ARGS;
 	}
+#ifdef __AIESIM__
+	/*
+	 * The code under this macro guard is used in simulation mode only.
+	 * According to our understanding from tools team, this is critical for
+	 * profiling an simulation. This code is retained as is from v1 except
+	 * minor changes to priting error message.
+	 */
+	AieRC Status;
+	char *MapPath;
+	const char *MapPathSuffix = ".map";
+	XAieSim_StackSz StackSz;
+
+	/* Get the stack range */
+	MapPath = malloc(strlen(ElfPtr) + strlen(MapPathSuffix) + 1);
+	if (MapPath == NULL) {
+		XAIE_ERROR("failed to malloc for .map file path.\n");
+		return XAIE_ERR;
+	}
+	strcpy(MapPath, ElfPtr);
+	strcat(MapPath, MapPathSuffix);
+	Status = XAieSim_GetStackRange(MapPath, &StackSz);
+	free(MapPath);
+	XAIE_DBG("Stack start:%08x, end:%08x\n", StackSz.start,
+			StackSz.end);
+	if(Status != XAIE_OK) {
+		XAIE_ERROR("Stack range definition failed\n");
+		return Status;
+	}
+
+	/* Send the stack range set command */
+	RC = XAie_CmdWrite(DevInst, DevInst->StartCol + Loc.Col, Loc.Row,
+			XAIESIM_CMDIO_CMD_SETSTACK, StackSz.start, StackSz.end,
+			XAIE_NULL);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	/* Load symbols if enabled */
+	if(LoadSym == XAIE_ENABLE) {
+		RC = XAie_CmdWrite(DevInst, DevInst->StartCol + Loc.Col,
+				Loc.Row, XAIESIM_CMDIO_CMD_LOADSYM, 0, 0,
+				ElfPtr);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
+	}
+#endif
 
 	Fd = fopen(ElfPtr, "rb");
 	if(Fd == XAIE_NULL) {
 		XAIE_ERROR("Unable to open elf file, %d: %s\n",
-			errno, strerror(errno));
+				errno, strerror(errno));
 		return XAIE_INVALID_ELF;
 	}
 
@@ -607,7 +655,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Ret = fseek(Fd, 0L, SEEK_END);
 	if(Ret != 0) {
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
-			errno, strerror(errno));
+				errno, strerror(errno));
 		fclose(Fd);
 		return XAIE_INVALID_ELF;
 	}
@@ -661,7 +709,6 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 		u8 LoadSym)
 {
 	u8 TileType;
-	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -680,57 +727,8 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 		return XAIE_INVALID_ARGS;
 	}
 
-#ifdef __AIESIM__
-	/*
-	 * The code under this macro guard is used in simulation mode only.
-	 * According to our understanding from tools team, this is critical for
-	 * profiling an simulation. This code is retained as is from v1 except
-	 * minor changes to priting error message.
-	 */
-	AieRC Status;
-	char *MapPath;
-	const char *MapPathSuffix = ".map";
-	XAieSim_StackSz StackSz;
 
-	/* Get the stack range */
-	MapPath = malloc(strlen(ElfPtr) + strlen(MapPathSuffix) + 1);
-	if (MapPath == NULL) {
-		XAIE_ERROR("failed to malloc for .map file path.\n");
-		return XAIE_ERR;
-	}
-	strcpy(MapPath, ElfPtr);
-	strcat(MapPath, MapPathSuffix);
-	Status = XAieSim_GetStackRange(MapPath, &StackSz);
-	free(MapPath);
-	XAIE_DBG("Stack start:%08x, end:%08x\n", StackSz.start,
-			StackSz.end);
-	if(Status != XAIE_OK) {
-		XAIE_ERROR("Stack range definition failed\n");
-		return Status;
-	}
-
-	/* Send the stack range set command */
-	RC = XAie_CmdWrite(DevInst, DevInst->StartCol + Loc.Col, Loc.Row,
-			XAIESIM_CMDIO_CMD_SETSTACK, StackSz.start, StackSz.end,
-			XAIE_NULL);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-
-	/* Load symbols if enabled */
-	if(LoadSym == XAIE_ENABLE) {
-		RC = XAie_CmdWrite(DevInst, DevInst->StartCol + Loc.Col,
-				Loc.Row, XAIESIM_CMDIO_CMD_LOADSYM, 0, 0,
-				ElfPtr);
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-	}
-#endif
-	(void)LoadSym;
-	(void)RC;
-
-	return XAie_LoadElfPartial(DevInst, Loc, ElfPtr, XAIE_LOAD_ELF_ALL);
+	return XAie_LoadElfPartial(DevInst, Loc, ElfPtr, XAIE_LOAD_ELF_ALL, LoadSym);
 }
 
 /*****************************************************************************/
