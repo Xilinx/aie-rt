@@ -1940,33 +1940,33 @@ static const XAie_StrmSwPortMap AieMlMemTileStrmSwSlavePortMap[] =
 	},
 	{
 		/* PhyPort 11 */
-		.PortType = NORTH,
-		.PortNum = 0,
+		.PortType = SOUTH,
+		.PortNum = 4,
 	},
 	{
 		/* PhyPort 12 */
-		.PortType = NORTH,
-		.PortNum = 1,
+		.PortType = SOUTH,
+		.PortNum = 5,
 	},
 	{
 		/* PhyPort 13 */
 		.PortType = NORTH,
-		.PortNum = 2,
+		.PortNum = 0,
 	},
 	{
 		/* PhyPort 14 */
 		.PortType = NORTH,
-		.PortNum = 3,
+		.PortNum = 1,
 	},
 	{
 		/* PhyPort 15 */
 		.PortType = NORTH,
-		.PortNum = 4,
+		.PortNum = 2,
 	},
 	{
 		/* PhyPort 16 */
 		.PortType = NORTH,
-		.PortNum = 5,
+		.PortNum = 3,
 	},
 	{
 		/* PhyPort 17 */
