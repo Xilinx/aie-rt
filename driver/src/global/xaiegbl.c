@@ -217,6 +217,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->TxnList.Next = NULL;
 
 	if ((InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P) ||
 		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
 		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0)) {
 		InstPtr->EccStatus = XAIE_DISABLE;
@@ -735,6 +736,7 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 	}
 
 	if ((DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
+		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P) ||
 		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
 		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0)) {
 		XAIE_ERROR("ECC feature not supported\n");
