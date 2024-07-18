@@ -39,6 +39,9 @@
 #include "xaiegbl.h"
 #include "xaie_lite_util.h"
 
+/* AIE core registers step size */
+#define AIE_CORE_REGS_STEP              0x10
+
 /************************** Constant Definitions *****************************/
 /************************** Function Prototypes  *****************************/
 #if defined(XAIE_FEATURE_LITE_UTIL)
@@ -937,7 +940,100 @@ static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
 
 	}
 }
+
 #endif /* GEN == AIE || AIEML || AIE2IPU */
+
+/*****************************************************************************/
+/**
+ *
+ * This API runs loop through all start and end of core registers
+ *
+ * @param	DevInst: Device Instance
+ *		soff   : Start Address of Core Register
+ *		eoff   : End Address of Core Register
+ *		Row   :  Row number of Tile
+ *		Col   :  Column Number
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_WriteCoreReg(XAie_DevInst *DevInst, u32 soff, u32 eoff,
+				      u8 Row, u8 Col, u8 width)
+{
+	u32 RegAddr;
+	u8 j;
+	for(u32 reg = soff; reg <= eoff; reg+= AIE_CORE_REGS_STEP) {
+		for(j = 0; j < width; j++) {
+			RegAddr = reg + _XAie_LGetTileAddr(Row, Col);
+			_XAie_LPartWrite32(DevInst, (RegAddr + j * 4), 0);
+		}
+	}
+}
+
+/*****************************************************************************/
+/**
+ *
+ * This API Clears Core register as a part of Clear context.
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_ClearCoreReg(XAie_DevInst *DevInst)
+{
+	u32 soff, eoff;
+	u8 Row, Col;
+
+	for(Row = XAIE_AIE_TILE_ROW_START; Row < DevInst->NumRows; Row++) {
+		for(Col = DevInst->StartCol; Col < DevInst->NumCols; Col++) {
+
+                        /* Below registers are 128-bit. So need to write in 4 cycles */
+			soff = XAIE_AIE_TILE_CORE_LL_REGOFF;
+			eoff = XAIE_AIE_TILE_CORE_HH_REGOFF;
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+			soff = XAIE_CORE_MODULE_CORE_WL0_PART1_REGOFF;
+			eoff = XAIE_CORE_MODULE_CORE_WH11_PART2_REGOFF;
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+#if ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) || \
+        (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0) || \
+        (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0))
+
+			soff = XAIE_CORE_MODULE_CORE_Q0_REGOFF;
+			eoff = XAIE_CORE_MODULE_CORE_LDFIFOH1_PART4_REGOFF;
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+			soff = XAIE_CORE_MODULE_CORE_E0_REGOFF;
+			eoff = XAIE_CORE_MODULE_CORE_E11_REGOFF;
+			/* Below registers are 64-bit. So need to write in 2 cycles */
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 2);
+
+#else
+                        soff = XAIE_CORE_MODULE_CORE_Q0_REGOFF;
+                        eoff = XAIE_CORE_MODULE_CORE_Q3_REGOFF;
+                        /* Below registers are 128-bit. So need to write in 4 cycles */
+                        _XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+#endif
+                        soff = XAIE_CORE_MODULE_CORE_R0_REGOFF;
+                        eoff = XAIE_CORE_MODULE_CORE_S3_REGOFF;
+                        /* Below registers are 32-bit. So need to write in 1 cycles */
+                        _XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 1);
+	
+                        soff = XAIE_CORE_MODULE_CORE_PC_START_REGOFF;
+                        eoff = XAIE_CORE_MODULE_CORE_PC_END_REGOFF;
+                        /* Below registers are 32-bit. So need to write in 1 cycles */
+                        _XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 1);
+
+		}
+	}
+}
 
 #endif		/* end of protection macro */
 /** @} */

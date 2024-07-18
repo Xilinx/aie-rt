@@ -316,5 +316,21 @@ static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
 {
 }
 
+/*****************************************************************************/
+/**
+ *
+ * This API Clears Core register as a part of Clear context.
+ *
+ * @param       DevInst: Device Instance
+ *
+ * @return      None.
+ *
+ * @note        None.
+ *
+ *****************************************************************************/
+static inline void _XAie_ClearCoreReg(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
+}
 #endif		/* end of protection macro */
 /** @} */

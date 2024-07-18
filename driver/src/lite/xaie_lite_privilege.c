@@ -444,6 +444,9 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 		XAIE_INVALID_ARGS,
 		XAIE_ERROR_MSG("Partition teardown failed, invalid partition instance\n"));
 
+        /* Clearing core registers before disabling clock */
+        XAie_ClearCoreReg(DevInst);
+
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
@@ -541,6 +544,9 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 {
 	AieRC RC;
 
+	/* Clearing core registers before disabling clock */
+	XAie_ClearCoreReg(DevInst);
+
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
@@ -564,6 +570,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
 
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
+
 
 	return XAIE_OK;
 }

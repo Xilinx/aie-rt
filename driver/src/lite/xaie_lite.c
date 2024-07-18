@@ -58,5 +58,13 @@ AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range)
 	return XAIE_OK;
 }
 
+AieRC XAie_ClearCoreReg(XAie_DevInst *DevInst)
+{
+	/* Based on the Architecture corresponding API will be
+	   called*/
+	_XAie_ClearCoreReg(DevInst);
+	return XAIE_OK;
+}
+
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && XAIE_FEATURE_LITE */
 /** @} */
