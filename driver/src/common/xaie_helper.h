@@ -215,7 +215,6 @@ XAIE_AIG_EXPORT u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
 XAIE_AIG_EXPORT u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 
 /*Public functions. Need to by discussed why it should be public */
-AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
 AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data);
 AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value);
 AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
@@ -233,6 +232,7 @@ AieRC XAie_Txn_NoOp(XAie_DevInst *DevInst, uint32_t Count);
 AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt);
 
 /* Public Functions. Later this should be moved to xaiegbl.h. Also functions should be moved to xaiegbl.c */
+XAIE_AIG_EXPORT AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
 XAIE_AIG_EXPORT int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
 #endif		/* end of protection macro */
