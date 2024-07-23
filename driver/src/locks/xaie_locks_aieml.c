@@ -73,7 +73,7 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		(((u8)Lock.LockVal & XAIEML_LOCK_VALUE_MASK) <<
 		 XAIEML_LOCK_VALUE_SHIFT);
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
 	if(XAie_MaskPoll(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
 				(XAIEML_LOCK_RESULT_SUCCESS <<
@@ -120,7 +120,7 @@ AieRC _XAieMl_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 					XAIEML_LOCK_VALUE_MASK) <<
 				XAIEML_LOCK_VALUE_SHIFT);
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
 	if(XAie_MaskPoll(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
 				(XAIEML_LOCK_RESULT_SUCCESS <<
@@ -155,7 +155,7 @@ AieRC _XAieMl_LockSetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	RegAddr = (u64)(LockMod->LockSetValBase +
 		LockMod->LockSetValOff * Lock.LockId) +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	RegVal = XAie_SetField(Lock.LockVal, LockMod->LockInit->Lsb,
 			LockMod->LockInit->Mask);
@@ -187,7 +187,7 @@ AieRC _XAieMl_LockGetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	RegAddr = Lock.LockId * LockMod->LockSetValOff +
 		LockMod->LockSetValBase +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	RC = XAie_Read32(DevInst, RegAddr, LockVal);
 	if (RC != XAIE_OK) {

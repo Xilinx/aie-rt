@@ -248,8 +248,8 @@ static AieRC _XAie_StreamSwitchConfigureCct(XAie_DevInst *DevInst,
 	}
 
 	/* Compute absolute address and write to register */
-	MstrAddr = MstrOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	SlvAddr = SlvOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	MstrAddr = MstrOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	SlvAddr = SlvOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	RC = XAie_Write32(DevInst, MstrAddr, MstrVal);
 	if(RC != XAIE_OK) {
@@ -375,7 +375,7 @@ static AieRC _XAie_StrmSlavePortConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
-	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
 	return XAie_Write32(DevInst, Addr, RegVal);
 }
@@ -515,7 +515,7 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	Addr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
 	return XAie_Write32(DevInst, Addr, RegVal);
 }
@@ -635,7 +635,7 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		StrmMod->SlvSlotConfig[Slave].PortBaseAddr +
 		SlvPortNum * StrmMod->SlotOffsetPerPort +
 		SlotNum * StrmMod->SlotOffset;
@@ -904,7 +904,7 @@ AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
 
 	RegAddr = (u64)(StrmMod->DetMerge->ConfigBase +
 		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	if(Position > 1U) {
 		RegAddr += 0x4U;
 	}
@@ -978,7 +978,7 @@ static AieRC _XAie_StrmSwDeterministicMergeCtrl(XAie_DevInst *DevInst,
 
 	RegAddr = (u64)(StrmMod->DetMerge->EnableBase +
 		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	RegVal = XAie_SetField(Enable, StrmMod->DetMerge->Enable.Lsb,
 			StrmMod->DetMerge->Enable.Mask);
 

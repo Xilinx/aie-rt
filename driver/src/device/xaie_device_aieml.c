@@ -208,7 +208,7 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 			MCtrlMod = DevInst->DevProp.DevMod[TileType].MemCtrlMod;
 			for (u8 M = 0; M < NumMods; M++) {
 				RegAddr = MCtrlMod[M].MemCtrlRegOff +
-					_XAie_GetTileAddr(DevInst, R, C);
+					XAie_GetTileAddr(DevInst, R, C);
 				FldVal = XAie_SetField(XAIE_ENABLE,
 					MCtrlMod[M].MemZeroisation.Lsb,
 					MCtrlMod[M].MemZeroisation.Mask);
@@ -224,7 +224,7 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 						(R == DevInst->NumRows - 1U) &&
 						(M == NumMods - 1U)) {
 					RegAddr = MCtrlMod[M].MemCtrlRegOff +
-						_XAie_GetTileAddr(DevInst,
+						XAie_GetTileAddr(DevInst,
 								Loc.Row,
 								Loc.Col);
 					return XAie_MaskPoll(DevInst, RegAddr,
@@ -271,7 +271,7 @@ static AieRC _XAieMl_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 	ClkBufCntr = PlIfMod->ClkBufCntr;
 
 	RegAddr = ClkBufCntr->RegOff +
-			_XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
 	FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
 			ClkBufCntr->ClkBufEnable.Mask);
 
@@ -408,7 +408,7 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 	ModClkCntr1 = PlIfMod->ModClkCntr1;
 
 	RegAddr = ModClkCntr0->RegOff +
-			_XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
 	FldVal = XAie_SetField(Enable, ModClkCntr0->StrmSwClkEnable.Lsb,
 			ModClkCntr0->StrmSwClkEnable.Mask);
 	FldVal |= XAie_SetField(Enable, ModClkCntr0->PlIntClkEnable.Lsb,
@@ -424,7 +424,7 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 	}
 
 	RegAddr = ModClkCntr1->RegOff +
-			_XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
 	FldVal = XAie_SetField(Enable, ModClkCntr1->NocModClkEnable.Lsb,
 			ModClkCntr1->NocModClkEnable.Mask);
 

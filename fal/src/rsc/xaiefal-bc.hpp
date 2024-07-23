@@ -77,7 +77,7 @@ namespace xaiefal {
 					" resource not reserved." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				uint8_t TileType = _XAie_GetTileTypefromLoc(AieHd->dev(), L);
+				uint8_t TileType = XAie_GetTileTypefromLoc(AieHd->dev(), L);
 				for (int i = 0; i < (int)vLocs.size(); i++) {
 					if (L.Col == vLocs[i].Col && L.Row == vLocs[i].Row) {
 						RC = XAIE_OK;
@@ -162,7 +162,7 @@ namespace xaiefal {
 				uint8_t un_block = 0;
 				uint8_t un_block_n = 0;
 
-				TType = _XAie_GetTileTypefromLoc(dev(), (*r).Loc);
+				TType = XAie_GetTileTypefromLoc(dev(), (*r).Loc);
 				if (TType == XAIEGBL_TILE_TYPE_AIETILE) {
 					if (r != vRscs.begin()) {
 						if  ((*(r - 1)).Loc.Col < ((*r).Loc.Col ))  {
@@ -350,7 +350,7 @@ namespace xaiefal {
 
 				R.RscType = XAIE_BROADCAST;
 
-				TType = _XAie_GetTileTypefromLoc(Dev->dev(),
+				TType = XAie_GetTileTypefromLoc(Dev->dev(),
 						vL[i]);
 				if (TType == XAIEGBL_TILE_TYPE_MAX) {
 					Logger::log(LogLevel::FAL_ERROR) << __func__ <<

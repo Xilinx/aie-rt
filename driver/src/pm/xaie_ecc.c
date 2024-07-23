@@ -139,7 +139,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_MEM_MOD];
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			MemMod->EccEvntRegOff;
 	/*
 	 * The performance counter 0 event is broadcasted from core module to
@@ -247,7 +247,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			CoreMod->EccEvntRegOff;
 	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT_0_CORE -
 			EvntMod->EventMin];
@@ -302,7 +302,7 @@ void _XAie_EccEvntResetPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			CoreMod->EccEvntRegOff;
 	XAie_Write32(DevInst, RegAddr, 0U);
 }
@@ -396,7 +396,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
 	EvntMod = DevInst->DevProp.DevMod[TileType].EvntMod;
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			MemMod->EccEvntRegOff;
 	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
 			XAIE_ECC_PERFCOUNTER_ID - EvntMod->EventMin];

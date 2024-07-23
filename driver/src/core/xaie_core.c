@@ -85,7 +85,7 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 
 	RegAddr = CoreMod->CoreSts->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
 			XAIE_OK) {
@@ -136,7 +136,7 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
 	Value = (u32)(0U << CoreMod->CoreCtrl->CtrlEn.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
@@ -216,7 +216,7 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
 	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlRst.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
@@ -260,7 +260,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
 	Value = (u32)(0U << CoreMod->CoreCtrl->CtrlRst.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
@@ -380,7 +380,7 @@ static AieRC _XAie_CoreDebugCtrlHalt(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	RegAddr = CoreMod->CoreDebug->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr,
 			CoreMod->CoreDebug->DebugHalt.Mask, Enable);
@@ -460,7 +460,7 @@ AieRC XAie_CoreGetDebugHaltStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	RegAddr = CoreMod->CoreDebugStatus->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	RC = XAie_Read32(DevInst, RegAddr, DebugStatus);
 	if(RC != XAIE_OK) {
@@ -513,7 +513,7 @@ AieRC XAie_CoreGetPCValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	RegAddr = CoreMod->CorePCOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return  XAie_Read32(DevInst, RegAddr, PCValue);
 }
@@ -552,7 +552,7 @@ AieRC XAie_CoreGetSPValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	RegAddr = CoreMod->CoreSPOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return  XAie_Read32(DevInst, RegAddr, SPValue);
 }
@@ -591,7 +591,7 @@ AieRC XAie_CoreGetLRValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	RegAddr = CoreMod->CoreLROff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return  XAie_Read32(DevInst, RegAddr, LRValue);
 }
@@ -760,7 +760,7 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 				CoreMod->CoreDebug->DebugResumeCoreEvent.Mask);
 
 	RegAddr = CoreMod->CoreDebug->DebugCtrl1Offset +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Write32(DevInst, RegAddr, RegVal);
 }
@@ -800,7 +800,7 @@ AieRC XAie_CoreClearDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	RegAddr = CoreMod->CoreDebug->DebugCtrl1Offset +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Write32(DevInst, RegAddr, 0U);
 }
@@ -858,7 +858,7 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegAddr = CoreMod->CoreEvent->EnableEventOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	Mask = CoreMod->CoreEvent->EnableEvent.Mask |
 		CoreMod->CoreEvent->DisableEventOccurred.Mask |
@@ -904,7 +904,7 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		EvntMod->ErrorHaltRegOff;
 
 	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, XAIE_CORE_MOD,
@@ -1006,7 +1006,7 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 	}
 
 	RegAddr = AccumCtrl->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/*
 	 * Here is the directions in the enum sequence:
@@ -1060,7 +1060,7 @@ AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	RegAddr = CoreMod->CoreEvent->EnableEventOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask;
 	Value = (u32)(1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb);
@@ -1115,7 +1115,7 @@ static AieRC _XAie_CoreProcessorBusConfig(XAie_DevInst *DevInst,
 	RegMask = ProcBusCtrl->CtrlEn.Mask;
 	RegVal = XAie_SetField(Enable, ProcBusCtrl->CtrlEn.Lsb, RegMask);
 	RegAddr = ProcBusCtrl->RegOff +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, RegMask, RegVal);
 }

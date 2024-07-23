@@ -79,7 +79,7 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -105,7 +105,7 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
         }
 
         /* Compute register address without offset */
-        CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+        CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
                                                 PerfMod->PerfCounterBaseAddr;
 
         for (u8 C = 0; C < NumCounter; C++) {
@@ -157,7 +157,7 @@ AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -176,7 +176,7 @@ AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 
 	/* Compute perf counter offest address */
-	CounterBaseAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	CounterBaseAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 						PerfMod->PerfCounterBaseAddr;
 	*Offset = CounterBaseAddr + (Counter * PerfMod->PerfCounterOffsetAdd);
 
@@ -227,7 +227,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -283,7 +283,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		PerfMod->Stop.Mask << (PerfMod->StartStopShift * (Counter % 2U)));
 
 	/* Compute absolute address and write to register */
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 }
@@ -331,7 +331,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -380,7 +380,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		PerfMod->Reset.Mask << (PerfMod->ResetShift * Counter));
 
 	/* Compute absolute address and write to register */
-	ResetRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	ResetRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		ResetRegOffset;
 
 	return XAie_MaskWrite32(DevInst, ResetRegAddr, ResetFldMask,
@@ -429,7 +429,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -451,7 +451,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 					((Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
-	CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
+	CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
 		CounterRegOffset;
 
 	return XAie_Write32(DevInst, CounterRegAddr, CounterVal);
@@ -496,7 +496,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -518,7 +518,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 				((Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
-	CounterRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		CounterRegOffset;
 
 	return XAie_Write32(DevInst, CounterRegAddr, EventVal);
@@ -609,7 +609,7 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -670,7 +670,7 @@ AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -740,7 +740,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -760,7 +760,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Compute absolute address and read the start stop event register */
 	StartStopRegOffset = PerfMod->PerfCtrlBaseAddr +
 			(Counter / 2U * PerfMod->PerfCtrlOffsetAdd);
-	StartStopRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	StartStopRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 				StartStopRegOffset;
 	RC = XAie_Read32(DevInst, StartStopRegAddr, &StartStopEvent);
 	if(RC != XAIE_OK) {
@@ -788,7 +788,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Compute absolute address and read the reset event register */
 	ResetRegOffset = PerfMod->PerfCtrlResetBaseAddr;
-	ResetRegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	ResetRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			ResetRegOffset;
 	RC = XAie_Read32(DevInst, ResetRegAddr, &RegEvent);
 	if(RC != XAIE_OK) {
@@ -842,7 +842,7 @@ AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}

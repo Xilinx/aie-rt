@@ -52,7 +52,7 @@ static void _XAie_RstSetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	ShimTileRst = PlIfMod->ShimTileRst;
 
 	RegAddr = ShimTileRst->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	FldVal = XAie_SetField(RstEnable,
 			ShimTileRst->RstCntr.Lsb,
 			ShimTileRst->RstCntr.Mask);

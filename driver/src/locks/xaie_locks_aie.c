@@ -77,7 +77,7 @@ AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 			((u8)Lock.LockVal * LockMod->LockValOff);
 	}
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
 	if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 				(XAIE_LOCK_RESULT_SUCCESS <<
@@ -130,7 +130,7 @@ AieRC _XAie_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 			((u8)Lock.LockVal * LockMod->LockValOff);
 	}
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
 	if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 				(XAIE_LOCK_RESULT_SUCCESS <<

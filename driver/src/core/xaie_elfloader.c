@@ -233,7 +233,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	Addr = (u64)(CoreMod->ProgMemHostOffset + Phdr->p_paddr) +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/*
 	 * The program memory sections in the elf can end at 32bit
@@ -811,7 +811,7 @@ AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	Addr = CoreMod->ProgMemHostOffset + TgtAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_BlockWrite32(DevInst, Addr, (const u32 *)SectionPtr,
 			(Size + 4U - 1U) / 4U);

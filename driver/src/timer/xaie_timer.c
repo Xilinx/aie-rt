@@ -89,7 +89,7 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -103,7 +103,7 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Set up Timer low event value */
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
 		TimerMod->TrigEventLowValOff;
 	RC = XAie_Write32(DevInst, RegAddr, LowEventValue);
 	if(RC != XAIE_OK) {
@@ -111,7 +111,7 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Set up Timer high event value */
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
 		TimerMod->TrigEventHighValOff;
 	return XAie_Write32(DevInst, RegAddr, HighEventValue);
 }
@@ -156,7 +156,7 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -169,7 +169,7 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
 	}
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->CtrlOff;
 	Mask = TimerMod->CtrlReset.Mask;
 	RegVal = XAie_SetField(XAIE_RESETENABLE, TimerMod->CtrlReset.Lsb, Mask);
@@ -228,7 +228,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -267,7 +267,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegVal |= XAie_SetField(Reset, TimerMod->CtrlReset.Lsb,
 			TimerMod->CtrlReset.Mask);
 
-	RegAddr = _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->CtrlOff;
 
 	return XAie_Write32(DevInst, RegAddr, RegVal);
@@ -314,7 +314,7 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
         if(RC != XAIE_OK) {
                 return XAIE_INVALID_ARGS;
 	}
@@ -328,13 +328,13 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Read the timer high and low values before wait */
-	RC = XAie_Read32(DevInst, _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RC = XAie_Read32(DevInst, XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			TimerMod->LowOff, &CurValLow);
 	if(RC != XAIE_OK) {
 		return RC;
 	}
 
-	RC = XAie_Read32(DevInst, _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RC = XAie_Read32(DevInst, XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			TimerMod->HighOff, &CurValHigh);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -389,7 +389,7 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* check for module and tiletype combination */
-	RC = _XAie_CheckModule(DevInst, Loc, Module);
+	RC = XAie_CheckModule(DevInst, Loc, Module);
 	if(RC != XAIE_OK) {
 		return XAIE_INVALID_ARGS;
 	}
@@ -406,13 +406,13 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Read the timer high and low values before wait */
-	RC = XAie_Read32(DevInst, _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RC = XAie_Read32(DevInst, XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			TimerMod->LowOff, &CurLow);
 	if(RC != XAIE_OK) {
 		return RC;
 	}
 
-	RC = XAie_Read32(DevInst, _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	RC = XAie_Read32(DevInst, XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			TimerMod->HighOff, &CurHigh);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -424,14 +424,14 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 	while(CurVal < EndVal) {
 		/* Read the timer high and low values */
 		RC = XAie_Read32(DevInst,
-				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 				TimerMod->LowOff, &CurLow);
 		if(RC != XAIE_OK) {
 			return RC;
 		}
 
 		RC = XAie_Read32(DevInst,
-				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 				TimerMod->HighOff, &CurHigh);
 		if(RC != XAIE_OK) {
 			return RC;
@@ -774,7 +774,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 		return XAIE_ERR;
 	}
 
-	RC = _XAie_GetUngatedLocsInPartition(DevInst, &NumTiles, Locs);
+	RC = XAie_GetUngatedLocsInPartition(DevInst, &NumTiles, Locs);
 	if(RC != XAIE_OK) {
 		free(Locs);
 		return RC;

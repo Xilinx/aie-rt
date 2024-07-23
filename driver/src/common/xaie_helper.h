@@ -148,10 +148,17 @@ typedef struct {
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
+static inline u64 XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
 {
 	return (((u64)R & 0xFFU) << DevInst->DevProp.RowShift) |
 		(((u64)C & 0xFFU) << DevInst->DevProp.ColShift);
+}
+
+
+
+static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
+{
+	return XAie_GetTileAddr(DevInst, R, C);
 }
 
 /*****************************************************************************/
@@ -206,6 +213,15 @@ AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags);
 AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 
 /* Private Functions used by Public Headers. Need to be discussed as not to export Private API's  */
+XAIE_AIG_EXPORT u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
+XAIE_AIG_EXPORT AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+		XAie_LocType *Locs);
+XAIE_AIG_EXPORT u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
+XAIE_AIG_EXPORT u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
+
+/* this below  Functions will be removed , once other teams migrate to above listed functions  */
 XAIE_AIG_EXPORT u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);

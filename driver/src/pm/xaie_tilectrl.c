@@ -70,7 +70,7 @@ AieRC _XAie_TileCtrlSetIsolation(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TCtrlMod = DevInst->DevProp.DevMod[TileType].TileCtrlMod;
 	RegAddr = TCtrlMod->TileCtrlRegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	Mask = TCtrlMod->IsolateEast.Mask | TCtrlMod->IsolateNorth.Mask |
 		TCtrlMod->IsolateWest.Mask | TCtrlMod->IsolateSouth.Mask;
 	/*

@@ -477,7 +477,7 @@ namespace xaiefal {
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M):
 			XAieRsc(DevHd), Loc(L), Mod(M) {
-			if (_XAie_CheckModule(AieHd->dev(), Loc, M) !=
+			if (XAie_CheckModule(AieHd->dev(), Loc, M) !=
 				XAIE_OK) {
 				throw std::invalid_argument("invalid module tile");
 			}
@@ -485,7 +485,7 @@ namespace xaiefal {
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAie_ModuleType M, XAieRscType T):
 			XAieRsc(DevHd, T), Loc(L), Mod(M) {
-			if (_XAie_CheckModule(AieHd->dev(), Loc, M) !=
+			if (XAie_CheckModule(AieHd->dev(), Loc, M) !=
 				XAIE_OK) {
 				throw std::invalid_argument("invalid module tile");
 			}
@@ -499,7 +499,7 @@ namespace xaiefal {
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L):
 			XAieRsc(DevHd), Loc(L) {
-			uint8_t TType = _XAie_GetTileTypefromLoc(
+			uint8_t TType = XAie_GetTileTypefromLoc(
 					AieHd->dev(), L);
 			if (TType == XAIEGBL_TILE_TYPE_MAX) {
 				throw std::invalid_argument("Invalid tile");
@@ -516,7 +516,7 @@ namespace xaiefal {
 		XAieSingleTileRsc(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType L, XAieRscType T):
 			XAieRsc(DevHd, T), Loc(L){
-			uint8_t TType = _XAie_GetTileTypefromLoc(
+			uint8_t TType = XAie_GetTileTypefromLoc(
 					AieHd->dev(), L);
 			if (TType == XAIEGBL_TILE_TYPE_MAX) {
 				throw std::invalid_argument("Invalid tile");

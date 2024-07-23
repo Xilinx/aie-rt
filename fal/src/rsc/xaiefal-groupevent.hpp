@@ -215,7 +215,7 @@ namespace xaiefal {
 			uint8_t TileType;
 			const XAie_EvntMod *EvntMod;
 
-			TileType = _XAie_GetTileTypefromLoc(AieHd->dev(), Loc);
+			TileType = XAie_GetTileTypefromLoc(AieHd->dev(), Loc);
 
 			if (Mod == XAIE_PL_MOD) {
 				EvntMod = &AieHd->dev()->DevProp.DevMod[TileType].EvntMod[0U];

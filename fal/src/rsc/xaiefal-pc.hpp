@@ -78,7 +78,7 @@ namespace xaiefal {
 		AieRC _reserve() {
 			AieRC RC;
 
-			if (_XAie_GetTileTypefromLoc(dev(), Loc) != XAIEGBL_TILE_TYPE_AIETILE) {
+			if (XAie_GetTileTypefromLoc(dev(), Loc) != XAIEGBL_TILE_TYPE_AIETILE) {
 				Logger::log(LogLevel::FAL_ERROR) << "PC event " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" tile is not core tile." << std::endl;
@@ -190,7 +190,7 @@ namespace xaiefal {
 		AieRC _reserve() {
 			AieRC RC;
 
-			if (_XAie_GetTileTypefromLoc(dev(), Loc) != XAIEGBL_TILE_TYPE_AIETILE) {
+			if (XAie_GetTileTypefromLoc(dev(), Loc) != XAIEGBL_TILE_TYPE_AIETILE) {
 				Logger::log(LogLevel::FAL_ERROR) << "PC range " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" not core tile." << std::endl;

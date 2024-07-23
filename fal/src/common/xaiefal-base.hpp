@@ -472,7 +472,7 @@ namespace xaiefal {
 		XAieMod() {};
 		XAieMod(XAieDev &Dev, XAie_LocType L, XAie_ModuleType M):
 			AieHandle(Dev.getDevHandle()), Loc(L), Mod(M) {
-			if (_XAie_CheckModule(AieHandle->dev(), Loc, M) !=
+			if (XAie_CheckModule(AieHandle->dev(), Loc, M) !=
 				XAIE_OK) {
 				throw std::invalid_argument("Invalid module and tile");
 			}
@@ -818,7 +818,7 @@ namespace xaiefal {
 			AieHandle(Dev.getDevHandle()), Loc(L) {
 			uint32_t TType;
 
-			TType = _XAie_GetTileTypefromLoc(Dev.dev(), Loc);
+			TType = XAie_GetTileTypefromLoc(Dev.dev(), Loc);
 
 			if (TType == XAIEGBL_TILE_TYPE_MAX) {
 				throw std::invalid_argument("Invalid tile");
@@ -854,7 +854,7 @@ namespace xaiefal {
 		 * @return module reference
 		 */
 		XAieMod &module (XAie_ModuleType Mod) {
-			if (_XAie_CheckModule(AieHandle->dev(), Loc, Mod) !=
+			if (XAie_CheckModule(AieHandle->dev(), Loc, Mod) !=
 				XAIE_OK) {
 				std::string str = "module " +
 					std::to_string(Mod) + " not in tile.";
@@ -925,11 +925,11 @@ namespace xaiefal {
 			XAie_ModuleType StartM, EndM;
 
 			vL.push_back(Loc);
-			if (_XAie_CheckModule(AieHandle->dev(), Loc, XAIE_CORE_MOD)
+			if (XAie_CheckModule(AieHandle->dev(), Loc, XAIE_CORE_MOD)
 				== XAIE_OK) {
 				StartM = XAIE_CORE_MOD;
 				EndM = XAIE_MEM_MOD;
-			} else if (_XAie_CheckModule(AieHandle->dev(), Loc,
+			} else if (XAie_CheckModule(AieHandle->dev(), Loc,
 				XAIE_PL_MOD) == XAIE_OK) {
 				StartM = XAIE_PL_MOD;
 				EndM = XAIE_PL_MOD;

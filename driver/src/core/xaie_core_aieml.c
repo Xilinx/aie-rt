@@ -76,7 +76,7 @@ AieRC _XAieMl_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
 	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlEn.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
@@ -109,7 +109,7 @@ AieRC _XAieMl_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Value = (u32)(1U << CoreMod->CoreSts->Done.Lsb);
 
 	RegAddr = CoreMod->CoreSts->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
 			XAIE_OK) {
@@ -144,7 +144,7 @@ AieRC _XAieMl_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 Data;
 
 	RegAddr = CoreMod->CoreSts->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	RC = XAie_Read32(DevInst, RegAddr, &Data);
 	if(RC != XAIE_OK) {
@@ -180,7 +180,7 @@ AieRC _XAieMl_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Read core status register */
 	RegAddr = CoreMod->CoreSts->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
 	if(RC != XAIE_OK) {
 		return RC;

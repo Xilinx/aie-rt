@@ -56,7 +56,7 @@ const u8 TransactionHeaderVersion_Minor_opt = 0;
 
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
-/*****************************************************************************/
+/******************************************************************************/
 /**
 *
 * This is the function used to get the tile type for a given device instance
@@ -70,7 +70,7 @@ const u8 TransactionHeaderVersion_Minor_opt = 0;
 * @note		Internal API only.
 *
 ******************************************************************************/
-u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
+u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
 	u8 ColType;
 
@@ -104,6 +104,27 @@ u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 /*****************************************************************************/
 /**
+*
+* This is the function used to get the tile type for a given device instance
+* and tile location. This function will be removed once other teams migrate
+* to the new global function
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @return	TileType (AIETILE/MEMTILE/SHIMPL/SHIMNOC on success and MAX on
+*		error)
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+
+u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	return XAie_GetTileTypefromLoc(DevInst, Loc);
+}
+
+/*******************************************************************************/
+/**
 * This function is used to check for module and tiletype combination.
 *
 * @param        DevInst: Device Instance
@@ -118,7 +139,8 @@ u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 * @note         Internal API only.
 *
 *******************************************************************************/
-AieRC _XAie_CheckModule(XAie_DevInst *DevInst,
+
+AieRC XAie_CheckModule(XAie_DevInst *DevInst,
 		XAie_LocType Loc, XAie_ModuleType Module)
 {
 	u8 TileType;
@@ -146,6 +168,29 @@ AieRC _XAie_CheckModule(XAie_DevInst *DevInst,
 
 /*****************************************************************************/
 /**
+* This function is used to check for module and tiletype combination.
+* This function will be removed once other teams migrate to the new global function
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of the AIE tile.
+* @param	Module:	XAIE_MEM_MOD - memory module
+* 			XAIE_CORE_MOD - core module
+* 			XAIE_PL_MOD - pl module
+* @return       XAIE_OK for correct combination of Module and tile type
+* 		XAIE_INVALID_ARGS for incorrect combination of module and tile
+* 		type
+*
+* @note         Internal API only.
+*
+*******************************************************************************/
+AieRC _XAie_CheckModule(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module)
+{
+	return XAie_CheckModule(DevInst, Loc, Module);
+}
+
+/*******************************************************************************/
+/**
 * This function is used to get no. of rows for the given tiletype.
 *
 * @param        DevInst: Device Instance
@@ -156,7 +201,7 @@ AieRC _XAie_CheckModule(XAie_DevInst *DevInst,
 * @note         Internal API only.
 *
 *******************************************************************************/
-u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType)
+u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType)
 {
 	u32 NumRows;
 
@@ -186,6 +231,25 @@ u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType)
 
 /*****************************************************************************/
 /**
+* This function is used to get no. of rows for the given tiletype.
+* This function will be removed once other teams migrate to the new global function
+*
+* @param        DevInst: Device Instance
+* @param        TileType: Type of tile
+*
+* @return       BitmapNumRows: Number of rows for given tiletype
+*
+* @note         Internal API only.
+*
+*******************************************************************************/
+u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType)
+{
+	return XAie_GetNumRows(DevInst, TileType);
+}
+
+
+/*******************************************************************************/
+/**
 * This function is used to get start row for the given tiletype.
 *
 * @param        DevInst: Device Instance
@@ -196,7 +260,7 @@ u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType)
 * @note         Internal API only.
 *
 *******************************************************************************/
-u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType)
+u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType)
 {
 	u32 StartRow;
 
@@ -224,6 +288,24 @@ u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType)
 	}
 
 	return StartRow;
+}
+
+/*****************************************************************************/
+/**
+* This function is used to get start row for the given tiletype.
+* This function will be removed once other teams migrate to the new global function
+*
+* @param        DevInst: Device Instance
+* @param        TileType: Type of tile
+*
+* @return       StartRow: Start row for given tiletype
+*
+* @note         Internal API only.
+*
+*******************************************************************************/
+u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType)
+{
+	return XAie_GetStartRow(DevInst, TileType);
 }
 
 /*****************************************************************************/
@@ -367,7 +449,7 @@ u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 	return (u32)(Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U);
 }
 
-/*****************************************************************************/
+/*******************************************************************************/
 /**
  * This API populates ungated tiles of partition to Locs list.
  *
@@ -380,7 +462,7 @@ u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
  *               indicate the return locs list size.
  *
  *******************************************************************************/
-AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
 		XAie_LocType *Locs)
 {
 	u32 Index = 0;
@@ -406,6 +488,26 @@ AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
 	/* Update NumTiles to size equal to ungated tiles in partition */
 	*NumTiles = Index;
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+ * This API populates ungated tiles of partition to Locs list.
+* This function will be removed once other teams migrate to the new global function
+ *
+ * @param        DevInst: Device Instance
+ * @param        NumTiles: Size of Locs array.
+ * @param        Locs: Pointer to tile locations list
+ *
+ * @note         NumTiles pointer is used to indicate the size of Locs as input
+ *               when passed by the caller. The same pointer gets updated to
+ *               indicate the return locs list size.
+ *
+ *******************************************************************************/
+AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+		XAie_LocType *Locs)
+{
+	return XAie_GetUngatedLocsInPartition(DevInst, NumTiles, Locs);
 }
 
 /*****************************************************************************/

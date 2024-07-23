@@ -343,7 +343,7 @@ namespace xaiefal {
 	private:
 		AieRC _reserve() {
 			AieRC RC;
-			uint32_t TType = _XAie_GetTileTypefromLoc(dev(), Loc);
+			uint32_t TType = XAie_GetTileTypefromLoc(dev(), Loc);
 			XAieUserRsc Rsc;
 
 			Rsc.Loc = Loc;

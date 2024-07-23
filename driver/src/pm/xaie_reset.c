@@ -53,7 +53,7 @@ static void  _XAie_RstSetColumnReset(XAie_DevInst *DevInst,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	RegAddr = PlIfMod->ColRstOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	FldVal = XAie_SetField(RstEnable,
 			PlIfMod->ColRst.Lsb,
 			PlIfMod->ColRst.Mask);
@@ -115,7 +115,7 @@ static void _XAie_RstSetBlockShimNocAxiMmNsuErr(XAie_DevInst *DevInst,
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	ShimNocAxiMM = PlIfMod->ShimNocAxiMM;
 	RegAddr = ShimNocAxiMM->RegOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	FldVal = XAie_SetField(Enable,
 			ShimNocAxiMM->NsuSlvErr.Lsb,
 			ShimNocAxiMM->NsuSlvErr.Mask);
@@ -273,7 +273,7 @@ static void _XAie_ClearDataMem(XAie_DevInst *DevInst, XAie_LocType Loc)
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
 	RegAddr = MemMod->MemAddr +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	XAie_BlockSet32(DevInst, RegAddr, 0, MemMod->Size / 4U);
 }
 
@@ -295,7 +295,7 @@ static void _XAie_ClearProgMem(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	RegAddr = CoreMod->ProgMemHostOffset +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	XAie_BlockSet32(DevInst, RegAddr, 0, CoreMod->ProgMemSize / 4U);
 }
 

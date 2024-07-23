@@ -108,7 +108,7 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Compute register address */
 	RegAddr = PlIfMod->DownSzrByPassOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
 }
@@ -163,7 +163,7 @@ static AieRC _XAie_PlIfDownSzrPortEnableReg(XAie_DevInst *DevInst,
 
 	/* Compute register address */
 	RegAddr = PlIfMod->DownSzrEnOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
 }
@@ -253,7 +253,7 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOff = PlIfMod->UpSzrOff;
 
-	RegAddr = RegOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	RegAddr = RegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Mask write to the upsizer register */
 	return XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
@@ -372,7 +372,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOff = PlIfMod->DownSzrOff;
 
-	RegAddr = RegOff + _XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	RegAddr = RegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	/* Mask write to the downsizer register */
 	RC = XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
 	if(RC != XAIE_OK) {
@@ -381,7 +381,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Mast write to downsizer enable register */
 	DwnSzrEnRegAddr = PlIfMod->DownSzrEnOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_MaskWrite32(DevInst, DwnSzrEnRegAddr, DwnSzrEnMask,
 			DwnSzrEnVal);
@@ -637,7 +637,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 	FldMask = PlIfMod->ShimNocMux[PortNum].Mask;
 
 	RegAddr = PlIfMod->ShimNocMuxOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Mask write to the Mux register */
 	return XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);
@@ -698,7 +698,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 	FldMask = PlIfMod->ShimNocDeMux[PortNum].Mask;
 
 	RegAddr = PlIfMod->ShimNocDeMuxOff +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Mask write to the Mux register */
 	return XAie_MaskWrite32(DevInst, RegAddr, FldMask, FldVal);

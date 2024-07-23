@@ -78,7 +78,7 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegAddr = (u64)(MemMod->MemAddr + Addr) +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Write32(DevInst, RegAddr, Data);
 }
@@ -126,7 +126,7 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegAddr = (u64)(MemMod->MemAddr + Addr) +
-		_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Read32(DevInst, RegAddr, Data);
 }
@@ -186,11 +186,11 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
 	DmAddrRoundDown =  (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
-				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
 	DmAddrRoundUp = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
-				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Unaligned start bytes */
 	if(FirstWriteOffset) {
@@ -297,11 +297,11 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
 	DmAddrRoundDown = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
-			_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
 	DmAddrRoundUp = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
-				_XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* First unaligned byte read into destination block */
 	if(FirstReadOffset) {
