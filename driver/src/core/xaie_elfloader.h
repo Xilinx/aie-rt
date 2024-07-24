@@ -110,7 +110,7 @@ XAIE_AIG_EXPORT AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Lo
 XAIE_AIG_EXPORT AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const unsigned char* SectionPtr, u64 TgtAddr, u32 Size);
 XAIE_AIG_EXPORT AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const char* ElfPtr, u8 Sections);
+		const char* ElfPtr, u8 Sections, u8 LoadSym);
 void _XAie_PrintElfHdr(const Elf32_Ehdr *Ehdr);
 void _XAie_PrintProgSectHdr(const Elf32_Phdr *Phdr);
 
