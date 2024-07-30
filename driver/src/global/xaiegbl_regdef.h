@@ -576,7 +576,7 @@ struct XAie_DmaMod {
 			XAie_DmaDirection Dir, u8 *PendingBd);
 	AieRC (*WaitforDone)(XAie_DevInst *DevINst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
-			XAie_DmaDirection Dir, u32 TimeOutUs);
+			XAie_DmaDirection Dir, u32 TimeOutUs, u8 BusyPoll);
 	AieRC (*WaitforBdTaskQueue)(XAie_DevInst *DevINst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
 			XAie_DmaDirection Dir, u32 TimeOutUs);
@@ -703,7 +703,7 @@ struct XAie_LockMod {
 	const XAie_RegFldAttr *LockInit; /* Lock intialization reg attributes */
 	AieRC (*Acquire)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
-			XAie_Lock Lock, u32 TimeOut);
+			XAie_Lock Lock, u32 TimeOut, u8 BusyPoll);
 	AieRC (*Release)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
 			XAie_Lock Lock, u32 TimeOut);

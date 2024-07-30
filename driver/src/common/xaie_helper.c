@@ -814,6 +814,7 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 			}
 			break;
 		case XAIE_IO_MASKPOLL:
+		case XAIE_IO_MASKPOLL_BUSY:
 			/* Force timeout to default value */
 			RC = Backend->Ops.MaskPoll((void*)DevInst->IOInst,
 							Cmd->RegOff, Cmd->Mask,
@@ -1072,6 +1073,20 @@ static inline void _XAie_AppendMaskPoll32(XAie_DevInst *DevInst,
 	Hdr->OpHdr.Op = (u8)XAIE_IO_MASKPOLL;
 }
 
+static inline void _XAie_AppendMaskPollBusy32(XAie_DevInst *DevInst,
+		XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
+{
+	XAie_MaskPoll32Hdr *Hdr = (XAie_MaskPoll32Hdr*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Mask = Cmd->Mask;
+	Hdr->Value = Cmd->Value;
+	Hdr->Size = (u32)sizeof(*Hdr);
+	Hdr->OpHdr.Col = _XAie_GetColfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Row = _XAie_GetRowfromRegOff(DevInst,Cmd->RegOff);
+	Hdr->OpHdr.Op = (u8)XAIE_IO_MASKPOLL_BUSY;
+}
+
 static inline void _XAie_AppendBlockWrite32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
@@ -1178,6 +1193,15 @@ static inline void _XAie_AppendMaskPoll32_opt(XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
 	Hdr->OpHdr.Op = (u8)XAIE_IO_MASKPOLL;
 }
 
+static inline void _XAie_AppendMaskPollBusy32_opt(XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
+{
+	XAie_MaskPoll32Hdr_opt *Hdr = (XAie_MaskPoll32Hdr_opt*)TxnPtr;
+
+	Hdr->RegOff = Cmd->RegOff;
+	Hdr->Mask = Cmd->Mask;
+	Hdr->Value = Cmd->Value;
+	Hdr->OpHdr.Op = (u8)XAIE_IO_MASKPOLL_BUSY;
+}
 static inline void _XAie_AppendBlockWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u32 *Payload = (void*)(TxnPtr + sizeof(XAie_BlockWrite32Hdr_opt));
@@ -1337,6 +1361,22 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr += BuffSize;
 			}
 			_XAie_AppendMaskPoll32(DevInst, Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_MaskPoll32Hdr);
+			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr);
+			continue;
+		}
+		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
+			if((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendMaskPollBusy32(DevInst, Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_MaskPoll32Hdr);
 			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr);
 			continue;
@@ -1556,6 +1596,22 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr += BuffSize;
 			}
 			_XAie_AppendMaskPoll32_opt(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_MaskPoll32Hdr_opt);
+			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr_opt);
+			continue;
+		}
+		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
+			if((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
+					AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendMaskPollBusy32_opt(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_MaskPoll32Hdr_opt);
 			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr_opt);
 			continue;
@@ -1922,6 +1978,60 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 
 			}
 			TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_MASKPOLL;
+			TxnInst->CmdBuf[TxnInst->NumCmds].RegOff = RegOff;
+			TxnInst->CmdBuf[TxnInst->NumCmds].Mask = Mask;
+			TxnInst->CmdBuf[TxnInst->NumCmds].Value = Value;
+			TxnInst->NumCmds++;
+
+			return XAIE_OK;
+		}
+	}
+	return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
+			Value, TimeOutUs);
+}
+
+AieRC XAie_MaskPollBusy(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
+		u32 TimeOutUs)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL) {
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_DBG("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
+			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
+					Value, TimeOutUs);
+		}
+
+		if(((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) &&
+				(TxnInst->NumCmds > 0U)) {
+			/* Flush command buffer */
+			XAIE_DBG("Auto flushing contents of the transaction "
+					"buffer.\n");
+			RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to flush cmd buffer\n");
+				return RC;
+			}
+
+			TxnInst->NumCmds = 0;
+			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
+					Value, TimeOutUs);
+		} else {
+			if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+					 return RC;
+				}
+
+			}
+			TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_MASKPOLL_BUSY;
 			TxnInst->CmdBuf[TxnInst->NumCmds].RegOff = RegOff;
 			TxnInst->CmdBuf[TxnInst->NumCmds].Mask = Mask;
 			TxnInst->CmdBuf[TxnInst->NumCmds].Value = Value;

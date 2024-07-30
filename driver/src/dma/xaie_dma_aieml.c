@@ -1190,7 +1190,7 @@ AieRC _XAieMl_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
-		u32 TimeOutUs)
+		u32 TimeOutUs, u8 BusyPoll)
 {
 	u64 Addr;
 	u32 Mask, Value;
@@ -1210,10 +1210,18 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Value = (u32)(XAIEML_DMA_STATUS_CHANNEL_NOT_RUNNING <<
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.ChannelRunning.Lsb);
 
-	if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
-			XAIE_OK) {
-		XAIE_DBG("Wait for done timed out\n");
-		return XAIE_ERR;
+    if (BusyPoll == XAIE_ENABLE) {
+	    if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
+			    XAIE_OK) {
+		    XAIE_DBG("Wait for done timed out\n");
+		    return XAIE_ERR;
+	    }
+	} else {
+	    if(XAie_MaskPollBusy(DevInst, Addr, Mask, Value, TimeOutUs) !=
+			    XAIE_OK) {
+		    XAIE_DBG("Wait for done timed out\n");
+		    return XAIE_ERR;
+	    }
 	}
 
 	return XAIE_OK;

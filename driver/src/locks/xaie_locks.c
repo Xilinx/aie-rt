@@ -54,7 +54,7 @@
 *
 ******************************************************************************/
 AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
-		u32 TimeOut)
+		u32 TimeOut, u8 BusyPoll)
 {
 	u8  TileType;
 	const XAie_LockMod *LockMod;
@@ -84,7 +84,7 @@ AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 		return XAIE_INVALID_LOCK_VALUE;
 	}
 
-	return LockMod->Acquire(DevInst, LockMod, Loc, Lock, TimeOut);
+	return LockMod->Acquire(DevInst, LockMod, Loc, Lock, TimeOut, BusyPoll);
 }
 
 /*****************************************************************************/

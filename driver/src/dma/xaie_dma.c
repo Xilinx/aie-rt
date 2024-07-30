@@ -1432,7 +1432,7 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
-		XAie_DmaDirection Dir, u32 TimeOutUs)
+		XAie_DmaDirection Dir, u32 TimeOutUs, u8 BusyPoll)
 {
 	u8 TileType;
 	const XAie_DmaMod *DmaMod;
@@ -1464,7 +1464,7 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
 	}
 
-	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs);
+	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs, BusyPoll);
 }
 
 /*****************************************************************************/

@@ -63,7 +63,7 @@
 *
 ******************************************************************************/
 AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
-		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut)
+		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut, u8 BusyPoll)
 {
 	u64 RegAddr;
 	u32 RegOff;
@@ -79,11 +79,18 @@ AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
-				(XAIE_LOCK_RESULT_SUCCESS <<
-				 XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-
-		return XAIE_LOCK_RESULT_FAILED;
+	if (BusyPoll == XAIE_ENABLE) {
+		if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
+		  		(XAIE_LOCK_RESULT_SUCCESS <<
+		    	XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+            return XAIE_LOCK_RESULT_FAILED;
+	    }
+	} else {
+		if(XAie_MaskPollBusy(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
+		  		(XAIE_LOCK_RESULT_SUCCESS <<
+		    	XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+            return XAIE_LOCK_RESULT_FAILED;
+	    }
 	}
 
 	return XAIE_OK;
