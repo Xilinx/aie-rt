@@ -209,7 +209,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 RegOffset, FldVal, FldMask;
 	u64 RegAddr;
-	u8 TileType, IntStartEvent, IntStopEvent;
+	u8 TileType;
+	u16 IntStartEvent, IntStopEvent;
 	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
@@ -313,7 +314,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 ResetRegOffset, ResetFldVal, ResetFldMask;
 	u64 ResetRegAddr;
-	u8 TileType, IntResetEvent;
+	u8 TileType;
+	u16 IntResetEvent;
 	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;

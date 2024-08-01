@@ -57,7 +57,8 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask;
-	u8 TileType, MappedEvent, EventRegOffId;
+	u8 TileType, EventRegOffId;
+	u16 MappedEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -139,7 +140,8 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask;
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -214,7 +216,8 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask;
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -555,7 +558,8 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegVal;
-	u8 TileType, MappedStartEvent, MappedStopEvent;
+	u8 TileType;
+	u16 MappedStartEvent, MappedStopEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 

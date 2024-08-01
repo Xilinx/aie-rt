@@ -206,7 +206,8 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 RegVal;
 	u64 RegAddr;
-	u8 TileType, IntEvent, RC;
+	u8 TileType, RC;
+	u16 IntEvent;
 	const XAie_TimerMod *TimerMod;
 	const XAie_EvntMod *EvntMod;
 

@@ -54,7 +54,8 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 	int CharsWritten = 0, Ret;
 	XAie_Events Flag = 0;
 	u32 FlagVal;
-	u8 MappedEvent, CommaNeeded;
+	u16 MappedEvent;
+	u8 CommaNeeded;
 
 	const XAie_EvntMod *EvntMod;
 	const char** XAie_EvntStrings = NULL;

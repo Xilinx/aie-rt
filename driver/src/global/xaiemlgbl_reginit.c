@@ -2516,7 +2516,7 @@ static const  XAie_LockMod AieMlMemTileLockMod =
 
 #ifdef XAIE_FEATURE_EVENTS_ENABLE
 /* Enum to event number mapping of all events of AIEML Core Mod of aie tile */
-static const u8 AieMlCoreModEventMapping[] =
+static const u16 AieMlCoreModEventMapping[] =
 {
 	XAIEML_EVENTS_CORE_NONE,
 	XAIEML_EVENTS_CORE_TRUE,
@@ -2654,7 +2654,7 @@ static const u8 AieMlCoreModEventMapping[] =
 };
 
 /* Enum to event number mapping of all events of AIEML Mem Mod of aie tile */
-static const u8 AieMlMemModEventMapping[] =
+static const u16 AieMlMemModEventMapping[] =
 {
 	XAIEML_EVENTS_MEM_NONE,
 	XAIEML_EVENTS_MEM_TRUE,
@@ -2821,7 +2821,7 @@ static const u8 AieMlMemModEventMapping[] =
 };
 
 /* Enum to event number mapping of all events of AIEML NOC tile */
-static const u8 AieMlNocModEventMapping[] =
+static const u16 AieMlNocModEventMapping[] =
 {
 	XAIEML_EVENTS_PL_NONE,
 	XAIEML_EVENTS_PL_TRUE,
@@ -2999,7 +2999,7 @@ static const u8 AieMlNocModEventMapping[] =
 };
 
 /* Enum to event number mapping of all events of AIEML PL Module */
-static const u8 AieMlPlModEventMapping[] =
+static const u16 AieMlPlModEventMapping[] =
 {
 	XAIEML_EVENTS_PL_NONE,
 	XAIEML_EVENTS_PL_TRUE,
@@ -3177,7 +3177,7 @@ static const u8 AieMlPlModEventMapping[] =
 };
 
 /* Enum to event number mapping of all events of AIEML Mem Tile Module */
-static const u8 AieMlMemTileModEventMapping[] =
+static const u16 AieMlMemTileModEventMapping[] =
 {
 	XAIEML_EVENTS_MEM_TILE_NONE,
 	XAIEML_EVENTS_MEM_TILE_TRUE,

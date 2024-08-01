@@ -216,7 +216,8 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	u32 RegOffset, EventMask, FldVal;
 	u32 EventVal;
-	u8 TileType, EventLsb, MappedEvent;
+	u8 TileType, EventLsb;
+	u16 MappedEvent;
 	const XAie_L1IntrMod *L1IntrMod;
 	const XAie_EvntMod *EvntMod;
 

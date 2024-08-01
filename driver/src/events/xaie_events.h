@@ -37,7 +37,7 @@
 #include "xaiegbl.h"
 
 /***************************** Macro Definitions *****************************/
-#define XAIE_EVENT_INVALID		255U
+#define XAIE_EVENT_INVALID		0xFFFF
 
 /**************************** Type Definitions *******************************/
 /*
@@ -768,9 +768,9 @@ XAIE_AIG_EXPORT AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Lo
 XAIE_AIG_EXPORT AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId);
 XAIE_AIG_EXPORT AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 HwEvent, XAie_Events *EnumEvent);
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent);
 XAIE_AIG_EXPORT AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events Event, u8 *HwEvent);
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent);
 XAIE_AIG_EXPORT AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Events, u8 *Status);
 XAIE_AIG_EXPORT AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
