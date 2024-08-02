@@ -191,26 +191,6 @@ static inline u32 first_set_bit(u64 Value)
 
 /* Private Functions (can be called by AIE Internal Driver Only */
 void BuffHexDump(char* buff,u32 size);
-u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
-		u32 Flags);
-u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
-		u32 Flags);
-u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module);
-u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
-void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit, u32 NumSetBit);
-void _XAie_ClrBitInBitmap(u32 *Bitmap, u32 StartSetBit, u32 NumSetBit);
-void _XAie_FreeTxnPtr(void *Ptr);
-void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
-AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
-		u8 PortNum, u8 *SlaveIdx);
-AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
-		u8 PortNum, u8 *MasterIdx);
-XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst);
-AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst);
-AieRC _XAie_TxnFree(XAie_TxnInst *Inst);
-AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags);
-AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 
 /* Private Functions used by Public Headers. Need to be discussed as not to export Private API's  */
 XAIE_AIG_EXPORT u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);

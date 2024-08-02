@@ -37,6 +37,7 @@
 #include <string.h>
 
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_reset_aie.h"
 #include "xaie_txn.h"
 

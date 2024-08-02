@@ -26,6 +26,7 @@
 #include "xaie_ecc.h"
 #include "xaie_events.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_perfcnt.h"
 
 #if defined(XAIE_FEATURE_PRIVILEGED_ENABLE) && \
