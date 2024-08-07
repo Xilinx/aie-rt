@@ -107,19 +107,10 @@ static void _XAie_PrivilegeSetPartColClkBuf(XAie_DevInst *DevInst,
 *
 * @return       XAIE_OK
 ******************************************************************************/
-AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols, u8 Enable)
-{
-	u32 PartEndCol = DevInst->StartCol + DevInst->NumCols -1;
-
-	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
-	   ((StartCol + NumCols - 1) > PartEndCol) ) {
-
-		XAIE_ERROR_MSG("Invalid Start Column/Numcols \n");
-		return XAIE_ERR;
-	   }
-
+AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u8 Enable)
+{	
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
-	for(u32 C = StartCol; C < (StartCol + NumCols); C++) {
+	for(u32 C = 0; C < DevInst->NumCols; C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 
 		//This modifies column clk which affects all the aie and mem tile in the column.
