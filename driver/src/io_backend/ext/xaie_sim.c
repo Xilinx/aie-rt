@@ -1036,6 +1036,9 @@ const XAie_Backend SimBackend =
 	.Ops.GetTid = XAie_SimIOGetTid,
 	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
+	.Ops.GetAttr = XAie_SimIOGetAttr,
+	.Ops.SetAttr = XAie_SimIOSetAttr,
+	.Ops.AddressPatching = NULL,
 };
 
 /** @} */

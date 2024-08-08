@@ -543,6 +543,7 @@ const XAie_Backend DebugBackend =
 	.Ops.GetTid = XAie_DebugGetTid,
 	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
+	.Ops.AddressPatching = NULL,
 };
 
 /** @} */
