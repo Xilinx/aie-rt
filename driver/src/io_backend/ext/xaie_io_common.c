@@ -28,6 +28,7 @@
 #include "xaie_feature_config.h"
 #include "xaie_io.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
 #define XAIE_BROADCAST_CHANNEL_MASK     0xFFFFU

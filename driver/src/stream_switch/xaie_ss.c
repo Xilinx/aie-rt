@@ -36,6 +36,7 @@
 #include "xaie_events.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_ss.h"
 
 #ifdef XAIE_FEATURE_SS_ENABLE

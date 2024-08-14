@@ -1726,7 +1726,7 @@ static const XAie_DmaMod AieShimDmaMod =
 
 #ifdef XAIE_FEATURE_EVENTS_ENABLE
 /* Enum to Event Number mapping of all events of AIE Core module */
-static const u8 AieTileCoreModEventMapping[] =
+static const u16 AieTileCoreModEventMapping[] =
 {
 	XAIE_EVENTS_CORE_NONE,
 	XAIE_EVENTS_CORE_TRUE,
@@ -1863,7 +1863,7 @@ static const u8 AieTileCoreModEventMapping[] =
 	XAIE_EVENT_INVALID,
 };
 /* Enum to Event Number mapping of all events of AIE Mem module */
-static const u8 AieTileMemModEventMapping[] =
+static const u16 AieTileMemModEventMapping[] =
 {
 	XAIE_EVENTS_MEM_NONE,
 	XAIE_EVENTS_MEM_TRUE,
@@ -2030,7 +2030,7 @@ static const u8 AieTileMemModEventMapping[] =
 };
 
 /* Enum to Event Number mapping of all events of AIE NOC tile */
-static const u8 AieTileNocModEventMapping[] =
+static const u16 AieTileNocModEventMapping[] =
 {
 	XAIE_EVENTS_PL_NONE,
 	XAIE_EVENTS_PL_TRUE,
@@ -2208,7 +2208,7 @@ static const u8 AieTileNocModEventMapping[] =
 };
 
 /* Enum to Event Number mapping of all events of AIE PL module */
-static const u8 AieTilePlModEventMapping[] =
+static const u16 AieTilePlModEventMapping[] =
 {
 	XAIE_EVENTS_PL_NONE,
 	XAIE_EVENTS_PL_TRUE,

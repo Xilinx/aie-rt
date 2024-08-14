@@ -692,7 +692,8 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event0, XAie_Events Event1,
 		XAie_Events SingleStepEvent, XAie_Events ResumeCoreEvent)
 {
-	u8 TileType, MEvent1, MEvent0, MSStepEvent, MResumeCoreEvent;
+	u8 TileType;
+	u16 MEvent1, MEvent0, MSStepEvent, MResumeCoreEvent;
 	u32 RegVal, Event0Val, Event1Val, SingleStepEventVal, ResumeCoreEventVal;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
@@ -823,7 +824,8 @@ AieRC XAie_CoreClearDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc)
 AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event)
 {
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	u32 Mask, Value, EventVal;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
@@ -887,7 +889,8 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 RegAddr;
 	const XAie_EvntMod *EvntMod;
-	u8 HwEvent, TileType;
+	u16 HwEvent;
+	u8 TileType;
 	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||

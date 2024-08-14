@@ -35,6 +35,7 @@
 #include <stdlib.h>
 
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_io.h"
 #include "xaie_io_internal.h"
 #include "xaiegbl.h"

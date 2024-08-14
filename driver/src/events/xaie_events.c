@@ -31,6 +31,7 @@
 #include "xaie_events.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_EVENTS_ENABLE
 
@@ -63,7 +64,8 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask, EventVal;
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_EvntMod *EvntMod;
 
 	EventVal = (u32)Event;
@@ -147,7 +149,8 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask, Event1Mask, Event2Mask;
 	u32 Event1Val, Event2Val;
-	u8 TileType, Event1Lsb, Event2Lsb, MappedEvent1, MappedEvent2;
+	u8 TileType, Event1Lsb, Event2Lsb;
+	u16 MappedEvent1, MappedEvent2;
 	const XAie_EvntMod *EvntMod;
 
 	Event1Val = (u32)Event1;
@@ -769,7 +772,8 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, EventVal;
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_EvntMod *EvntMod;
 
 	EventVal = (u32)Event;
@@ -1358,7 +1362,8 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u32 FldVal, EventVal;
 	u64 RegAddr;
-	u8 TileType, HwEvent;
+	u8 TileType;
+	u16 HwEvent;
 	const XAie_EvntMod *EvntMod;
 
 	EventVal = (u32)Event;
@@ -1603,7 +1608,7 @@ AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 *
 ******************************************************************************/
 AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events Event, u8 *HwEvent)
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent)
 {
 	AieRC RC;
 	u8 TileType;
@@ -1664,7 +1669,7 @@ AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 HwEvent, XAie_Events *EnumEvent)
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent)
 {
 	AieRC RC;
 	u8 TileType;
@@ -1728,7 +1733,8 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOff, RegVal;
-	u8 TileType, PhyEvent;
+	u8 TileType;
+	u16 PhyEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((Status == XAIE_NULL) || (DevInst == XAIE_NULL) ||

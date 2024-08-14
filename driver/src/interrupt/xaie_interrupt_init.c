@@ -33,6 +33,7 @@
 #include "xaie_reset_aie.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_interrupt.h"
 #include "xaie_npi.h"
 
@@ -216,7 +217,8 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	u32 RegOffset, EventMask, FldVal;
 	u32 EventVal;
-	u8 TileType, EventLsb, MappedEvent;
+	u8 TileType, EventLsb;
+	u16 MappedEvent;
 	const XAie_L1IntrMod *L1IntrMod;
 	const XAie_EvntMod *EvntMod;
 
