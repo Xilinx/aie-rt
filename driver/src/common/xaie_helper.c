@@ -1369,8 +1369,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
 			if((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
 					AllocatedBuffSize) {
-				TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize,
-						AllocatedBuffSize * 2U);
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
 					return NULL;
 				}

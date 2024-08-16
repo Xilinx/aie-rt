@@ -68,6 +68,7 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
+	AieRC Status = XAIE_OK;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
@@ -87,21 +88,17 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	if (BusyPoll != XAIE_ENABLE){
-		if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
-				XAIE_OK) {
-			XAIE_DBG("Status poll time out\n");
-			return XAIE_CORE_STATUS_TIMEOUT;
-		}
+		Status = XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut);
 	} else {
-		if(XAie_MaskPollBusy(DevInst, RegAddr, Mask, Value, TimeOut) !=
-				XAIE_OK) {
-			XAIE_DBG("Status poll time out\n");
-			return XAIE_CORE_STATUS_TIMEOUT;
-		}
+		Status = XAie_MaskPollBusy(DevInst, RegAddr, Mask, Value, TimeOut);
 	}
 
-	return XAIE_OK;
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Status poll time out\n");
+		return XAIE_OK;
+	}
 
+	return Status;
 }
 
 /*****************************************************************************/

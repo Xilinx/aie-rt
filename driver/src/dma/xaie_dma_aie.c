@@ -812,6 +812,7 @@ AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 Addr;
 	u32 Mask, Value;
+	AieRC Status = XAIE_OK;
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChStatusBase + (u32)Dir * DmaMod->ChStatusOffset;
@@ -824,21 +825,17 @@ AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Lsb);
 
 	if (BusyPoll != XAIE_ENABLE){
-		if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
-		    	XAIE_OK) {
-			XAIE_DBG("Wait for done timed out\n");
-			return XAIE_ERR;
-		}
+		Status = XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs);
 	} else {
-	    if(XAie_MaskPollBusy(DevInst, Addr, Mask, Value, TimeOutUs) !=
-		    	XAIE_OK) {
-		    XAIE_DBG("Wait for done timed out\n");
-		    return XAIE_ERR;
-	    }
+		Status = XAie_MaskPollBusy(DevInst, Addr, Mask, Value, TimeOutUs);
 	}
 
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Dma Wait Done Status poll time out\n");
+		return XAIE_OK;
+	}
 
-	return XAIE_OK;
+	return Status;
 }
 
 /*****************************************************************************/
