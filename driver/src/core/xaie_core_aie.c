@@ -130,7 +130,7 @@ AieRC _XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC _XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut, const struct XAie_CoreMod *CoreMod)
+		u32 TimeOut, const struct XAie_CoreMod *CoreMod, u8 BusyPoll)
 {
 	u32 Mask, Value;
 	u64 EventRegAddr;
@@ -140,10 +140,18 @@ AieRC _XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	EventRegAddr = CoreMod->CoreEvent->EnableEventOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	if(XAie_MaskPoll(DevInst, EventRegAddr, Mask, Value, TimeOut) !=
-			XAIE_OK) {
-		XAIE_DBG("Status poll time out\n");
-		return XAIE_CORE_STATUS_TIMEOUT;
+	if (BusyPoll != XAIE_ENABLE){
+		if(XAie_MaskPoll(DevInst, EventRegAddr, Mask, Value, TimeOut) !=
+				XAIE_OK) {
+			XAIE_DBG("Status poll time out\n");
+			return XAIE_CORE_STATUS_TIMEOUT;
+		}
+	} else {
+		if(XAie_MaskPollBusy(DevInst, EventRegAddr, Mask, Value, TimeOut) !=
+				XAIE_OK) {
+			XAIE_DBG("Status poll time out\n");
+			return XAIE_CORE_STATUS_TIMEOUT;
+		}
 	}
 
 	return XAIE_OK;

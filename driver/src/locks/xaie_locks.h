@@ -30,8 +30,12 @@
 /**************************** Type Definitions *******************************/
 /************************** Function Prototypes  *****************************/
 XAIE_AIG_EXPORT AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
-		u32 TimeOut, u8 BusyPoll);
+		u32 TimeOut);
+XAIE_AIG_EXPORT AieRC XAie_LockAcquireBusy(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
+		u32 TimeOut);
 XAIE_AIG_EXPORT AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
+		u32 TimeOut);
+XAIE_AIG_EXPORT AieRC XAie_LockReleaseBusy(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 		u32 TimeOut);
 XAIE_AIG_EXPORT AieRC XAie_LockSetValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Lock Lock);

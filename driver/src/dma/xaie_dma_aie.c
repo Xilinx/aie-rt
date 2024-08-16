@@ -823,14 +823,14 @@ AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Value = (u32)(XAIE_DMA_STATUS_IDLE <<
 		DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.Status.Lsb);
 
-	if (BusyPoll == XAIE_ENABLE){
+	if (BusyPoll != XAIE_ENABLE){
 		if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
 		    	XAIE_OK) {
 		    XAIE_DBG("Wait for done timed out\n");
 		    return XAIE_ERR;
     	}
 	} else {
-	    if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
+	    if(XAie_MaskPollBusy(DevInst, Addr, Mask, Value, TimeOutUs) !=
 		    	XAIE_OK) {
 		    XAIE_DBG("Wait for done timed out\n");
 		    return XAIE_ERR;

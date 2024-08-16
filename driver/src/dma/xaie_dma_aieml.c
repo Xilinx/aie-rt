@@ -1210,7 +1210,7 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Value = (u32)(XAIEML_DMA_STATUS_CHANNEL_NOT_RUNNING <<
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.ChannelRunning.Lsb);
 
-    if (BusyPoll == XAIE_ENABLE) {
+    if (BusyPoll != XAIE_ENABLE) {
 	    if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
 			    XAIE_OK) {
 		    XAIE_DBG("Wait for done timed out\n");
@@ -1247,7 +1247,7 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC _XAieMl_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
-		u32 TimeOutUs)
+		u32 TimeOutUs, u8 BusyPoll)
 {
 	u64 Addr;
 
@@ -1257,11 +1257,20 @@ AieRC _XAieMl_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Poll for the MSB bit of Task_queue_size bits to ensure
 	 * queue is not full*/
-	if(XAie_MaskPoll(DevInst, Addr, XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB,
+    if (BusyPoll != XAIE_ENABLE) {
+	    if(XAie_MaskPoll(DevInst, Addr, XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB,
 			0, TimeOutUs) !=
 			XAIE_OK) {
-		XAIE_DBG("Wait for task queue timed out\n");
-		return XAIE_ERR;
+		    XAIE_DBG("Wait for task queue timed out\n");
+		    return XAIE_ERR;
+	    }
+	} else {
+	    if(XAie_MaskPollBusy(DevInst, Addr, XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB,
+			0, TimeOutUs) !=
+			XAIE_OK) {
+		    XAIE_DBG("Wait for task queue timed out\n");
+		    return XAIE_ERR;
+	    }
 	}
 
 	return XAIE_OK;

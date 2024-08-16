@@ -118,8 +118,12 @@ XAIE_AIG_EXPORT AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType 
 XAIE_AIG_EXPORT AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
 XAIE_AIG_EXPORT AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
-		XAie_DmaDirection Dir, u32 TimeOutUs, u8 BusyPoll);
+		XAie_DmaDirection Dir, u32 TimeOutUs);
+XAIE_AIG_EXPORT AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, u32 TimeOutUs);
 XAIE_AIG_EXPORT AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs);
+XAIE_AIG_EXPORT AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs);
 XAIE_AIG_EXPORT AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 *PendingBd);
