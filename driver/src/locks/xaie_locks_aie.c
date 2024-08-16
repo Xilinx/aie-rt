@@ -83,13 +83,13 @@ AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 		  		(XAIE_LOCK_RESULT_SUCCESS <<
 		    	XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-            return XAIE_LOCK_RESULT_FAILED;
+			return XAIE_LOCK_RESULT_FAILED;
 	    }
 	} else {
 		if(XAie_MaskPollBusy(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 		  		(XAIE_LOCK_RESULT_SUCCESS <<
 		    	XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-            return XAIE_LOCK_RESULT_FAILED;
+			return XAIE_LOCK_RESULT_FAILED;
 	    }
 	}
 
@@ -143,14 +143,14 @@ AieRC _XAie_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		if(XAie_MaskPoll(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
 		  		(XAIE_LOCK_RESULT_SUCCESS <<
 		    	XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-            return XAIE_LOCK_RESULT_FAILED;
+			return XAIE_LOCK_RESULT_FAILED;
 	    }
 	} else {
 		if(XAie_MaskPollBusy(DevInst, RegAddr, XAIE_LOCK_RESULT_MASK,
-		  		(XAIE_LOCK_RESULT_SUCCESS <<
-		    	XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-            return XAIE_LOCK_RESULT_FAILED;
-	    }
+				(XAIE_LOCK_RESULT_SUCCESS <<
+				XAIE_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+			return XAIE_LOCK_RESULT_FAILED;
+		}
 	}
 
 	return XAIE_OK;

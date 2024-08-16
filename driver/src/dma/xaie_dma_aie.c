@@ -826,9 +826,9 @@ AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if (BusyPoll != XAIE_ENABLE){
 		if(XAie_MaskPoll(DevInst, Addr, Mask, Value, TimeOutUs) !=
 		    	XAIE_OK) {
-		    XAIE_DBG("Wait for done timed out\n");
-		    return XAIE_ERR;
-    	}
+			XAIE_DBG("Wait for done timed out\n");
+			return XAIE_ERR;
+		}
 	} else {
 	    if(XAie_MaskPollBusy(DevInst, Addr, Mask, Value, TimeOutUs) !=
 		    	XAIE_OK) {

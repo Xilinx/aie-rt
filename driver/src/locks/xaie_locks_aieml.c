@@ -82,11 +82,11 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 			return XAIE_LOCK_RESULT_FAILED;
 		}
 	} else {
-        if(XAie_MaskPollBusy(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
-                    (XAIEML_LOCK_RESULT_SUCCESS <<
-                     XAIEML_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-            return XAIE_LOCK_RESULT_FAILED;
-        }
+		if(XAie_MaskPollBusy(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
+					(XAIEML_LOCK_RESULT_SUCCESS <<
+					 XAIEML_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+			return XAIE_LOCK_RESULT_FAILED;
+		}
 	}
 	return XAIE_OK;
 }
@@ -135,11 +135,11 @@ AieRC _XAieMl_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 			return XAIE_LOCK_RESULT_FAILED;
 		}
 	} else {
-        if(XAie_MaskPollBusy(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
-                    (XAIEML_LOCK_RESULT_SUCCESS <<
-                     XAIEML_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
-            return XAIE_LOCK_RESULT_FAILED;
-        }
+		if(XAie_MaskPollBusy(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
+					(XAIEML_LOCK_RESULT_SUCCESS <<
+					 XAIEML_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+			return XAIE_LOCK_RESULT_FAILED;
+		}
 	}
 
 	return XAIE_OK;

@@ -1604,7 +1604,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
 			if((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
 					AllocatedBuffSize) {
-				TxnPtr = _XAie_ReallocTxnBuf_opt(TxnPtr - BuffSize,
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
 					return NULL;
@@ -2030,7 +2030,6 @@ AieRC XAie_MaskPollBusy(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 				if (RC != XAIE_OK) {
 					 return RC;
 				}
-
 			}
 			TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_MASKPOLL_BUSY;
 			TxnInst->CmdBuf[TxnInst->NumCmds].RegOff = RegOff;

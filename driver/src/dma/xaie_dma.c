@@ -1429,7 +1429,7 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This APi in context of TXN flow will be a yeilded wait.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
@@ -1482,7 +1482,7 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This APi in context of TXN flow will be a busy wait.
+* @note		This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
@@ -1536,7 +1536,7 @@ AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note     This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -1595,7 +1595,7 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note     This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,

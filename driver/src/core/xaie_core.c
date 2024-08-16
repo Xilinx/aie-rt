@@ -285,7 +285,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This APi in context of TXN flow will be a yeilded wait.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
@@ -329,7 +329,7 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This APi in context of TXN flow will be a busy wait.
+* @note		This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
@@ -373,7 +373,7 @@ AieRC XAie_CoreWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Time
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This APi in context of TXN flow will be a yeilded wait.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -409,7 +409,7 @@ AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This APi in context of TXN flow will be a busy wait.
+* @note		This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDisableBusy(XAie_DevInst *DevInst, XAie_LocType Loc,

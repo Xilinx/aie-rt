@@ -50,7 +50,7 @@
 *
 * @return	XAIE_OK if Lock Acquired, else XAIE_LOCK_RESULT_FAILED.
 *
-* @note		This APi in context of TXN flow will be a yeilded wait.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
@@ -107,7 +107,7 @@ AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 *
 * @return	XAIE_OK if Lock Acquired, else XAIE_LOCK_RESULT_FAILED.
 *
-* @note		This APi in context of TXN flow will be a Busy wait.
+* @note		This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
 AieRC XAie_LockAcquireBusy(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
@@ -164,7 +164,7 @@ AieRC XAie_LockAcquireBusy(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lo
 *
 * @return	XAIE_OK if Lock Release, else XAIE_LOCK_RESULT_FAILED.
 *
-* @note		This APi in context of TXN flow will be a yeilded wait.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
@@ -221,7 +221,7 @@ AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 *
 * @return	XAIE_OK if Lock Release, else XAIE_LOCK_RESULT_FAILED.
 *
-* @note		This APi in context of TXN flow will be a busy wait.
+* @note		This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
 AieRC XAie_LockReleaseBusy(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
