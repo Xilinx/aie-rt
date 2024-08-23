@@ -105,7 +105,11 @@ XAIE_AIG_EXPORT AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
+XAIE_AIG_EXPORT AieRC XAie_CoreWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 TimeOut);
 XAIE_AIG_EXPORT AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 TimeOut);
+XAIE_AIG_EXPORT AieRC XAie_CoreWaitForDisableBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 TimeOut);
 XAIE_AIG_EXPORT AieRC XAie_CoreDebugHalt(XAie_DevInst *DevInst, XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_CoreDebugUnhalt(XAie_DevInst *DevInst, XAie_LocType Loc);

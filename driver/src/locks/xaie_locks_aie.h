@@ -32,9 +32,9 @@
 
 /************************** Function Prototypes  *****************************/
 AieRC _XAie_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
-		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut);
+		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut, u8 BusyPoll);
 AieRC _XAie_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
-		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut);
+		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut, u8 BusyPoll);
 AieRC _XAie_LockSetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 		XAie_LocType Loc, XAie_Lock Lock);
 AieRC _XAie_LockGetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,

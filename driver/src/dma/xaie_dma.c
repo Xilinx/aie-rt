@@ -1415,6 +1415,7 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	return DmaMod->GetChannelStatus(DevInst, Loc, DmaMod, ChNum,
 			Dir, Status);
 }
+
 /*****************************************************************************/
 /**
 *
@@ -1428,7 +1429,7 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
@@ -1464,7 +1465,61 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
 	}
 
-	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs);
+	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs,
+		XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on Shim DMA channel to be completed.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param        TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, u32 TimeOutUs)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAIE_ERROR("Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if(TimeOutUs == 0U) {
+		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
+	}
+
+	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs,
+		XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -1481,7 +1536,7 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note     This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -1518,12 +1573,73 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if (DmaMod->WaitforBdTaskQueue) {
-		return DmaMod->WaitforBdTaskQueue(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs);
+		return DmaMod->WaitforBdTaskQueue(DevInst, Loc, DmaMod, ChNum, Dir,
+			TimeOutUs, XAIE_DISABLE);
 	} else {
 		XAIE_ERROR("WaitForBdTaskQueue is not supported/implemented\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 }
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on DMA channel task queue till its free with atleast
+* one task or till the timeout.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param    TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note     This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAIE_ERROR("Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if(TimeOutUs == 0U) {
+		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
+	}
+
+	if (DmaMod->WaitforBdTaskQueue) {
+		return DmaMod->WaitforBdTaskQueue(DevInst, Loc, DmaMod, ChNum, Dir,
+			TimeOutUs, XAIE_ENABLE);
+	} else {
+		XAIE_ERROR("WaitForBdTaskQueue is not supported/implemented\n");
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+}
+
 /*****************************************************************************/
 /**
 *

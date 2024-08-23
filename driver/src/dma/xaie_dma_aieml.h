@@ -51,10 +51,10 @@ AieRC _XAieMl_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *PendingBd);
 AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
-		u32 TimeOutUs);
+		u32 TimeOutUs, u8 BusyPoll);
 AieRC _XAieMl_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
-		u32 TimeOutUs);
+		u32 TimeOutUs, u8 BusyPoll);
 AieRC _XAieMl_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
 		u32 *Status);

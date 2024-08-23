@@ -62,12 +62,13 @@
 *
 ******************************************************************************/
 static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut, u32 Mask, u32 Value)
+		u32 TimeOut, u32 Mask, u32 Value, u8 BusyPoll)
 {
 
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
+	AieRC Status = XAIE_OK;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
@@ -83,18 +84,21 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}
 
-
 	RegAddr = CoreMod->CoreSts->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
-			XAIE_OK) {
-		XAIE_DBG("Status poll time out\n");
-		return XAIE_CORE_STATUS_TIMEOUT;
+	if (BusyPoll != XAIE_ENABLE){
+		Status = XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut);
+	} else {
+		Status = XAie_MaskPollBusy(DevInst, RegAddr, Mask, Value, TimeOut);
 	}
 
-	return XAIE_OK;
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Status poll time out\n");
+		return XAIE_OK;
+	}
 
+	return Status;
 }
 
 /*****************************************************************************/
@@ -278,7 +282,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
@@ -306,7 +310,51 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}
 
-	return CoreMod->WaitForDone(DevInst, Loc, TimeOut, CoreMod);
+	return CoreMod->WaitForDone(DevInst, Loc, TimeOut, CoreMod, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/*
+*
+* This API implements a blocking wait function to check the core to be in
+* done state for a AIE tile. API comes out of the loop when core status
+* changes to done or the timeout elapses, whichever happens first.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
+*		be set to 500us. The TimeOut value passed is per tile.
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_CoreWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
+{
+	u8 TileType;
+	const XAie_CoreMod *CoreMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+
+	/* TimeOut passed by the user is per Core */
+	if(TimeOut == 0U) {
+		/* Set timeout to default value */
+		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
+	}
+
+	return CoreMod->WaitForDone(DevInst, Loc, TimeOut, CoreMod, XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -322,7 +370,7 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -341,7 +389,44 @@ AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreSts->En.Mask;
 	Value = (u32)(0U << CoreMod->CoreSts->En.Lsb);
-	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value);
+	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value,
+				XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/*
+*
+* This API implements a blocking wait function to check the core to be in
+* disable state for a AIE tile. API comes out of the loop when core status
+* changes to disable or the timeout elapses, whichever happens first.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
+*		be set to 500us. The TimeOut value passed is per tile.
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_CoreWaitForDisableBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 TimeOut)
+{
+	const XAie_CoreMod *CoreMod;
+	u32 Mask;
+	u32 Value;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	Mask = CoreMod->CoreSts->En.Mask;
+	Value = (u32)(0U << CoreMod->CoreSts->En.Lsb);
+	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value,
+				XAIE_ENABLE);
 }
 
 /*****************************************************************************/
