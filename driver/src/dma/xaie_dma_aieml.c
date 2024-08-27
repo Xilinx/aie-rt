@@ -1219,7 +1219,7 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Dma Wait Done Status poll time out\n");
-		return XAIE_OK;
+		return XAIE_ERR;
 	}
 
 	return Status;
@@ -1266,7 +1266,7 @@ AieRC _XAieMl_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Wait for task queue timed out\n");
-		return XAIE_OK;
+		return XAIE_ERR;
 	}
 
 	return Status;

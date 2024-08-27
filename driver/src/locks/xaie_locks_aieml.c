@@ -88,7 +88,7 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Wait for lock release timed out\n");
-		return XAIE_OK;
+		return XAIE_LOCK_RESULT_FAILED;
 	}
 
 	return Status;
@@ -144,7 +144,7 @@ AieRC _XAieMl_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Wait for lock acquire timed out\n");
-		return XAIE_OK;
+		return XAIE_LOCK_RESULT_FAILED;
 	}
 
 	return Status;

@@ -120,7 +120,7 @@ AieRC _XAieMl_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Core Wait Done poll time out\n");
-		return XAIE_OK;
+		return XAIE_CORE_STATUS_TIMEOUT;
 	}
 
 	return Status;

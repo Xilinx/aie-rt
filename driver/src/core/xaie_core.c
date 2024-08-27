@@ -95,7 +95,7 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Status poll time out\n");
-		return XAIE_OK;
+		return XAIE_CORE_STATUS_TIMEOUT;
 	}
 
 	return Status;
