@@ -642,6 +642,8 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 			return RC;
 		}
 	}
+#else
+	(void)LoadSym;
 #endif
 
 	Fd = fopen(ElfPtr, "rb");

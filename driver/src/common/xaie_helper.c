@@ -2477,6 +2477,123 @@ AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt)
 	return XAIE_ERR;
 }
 
+/*****************************************************************************/
+/**
+*
+* This API register XAIE_IO_CUSTOM_OP_MERGE_SYNC that can be added to the
+* transaction buffer.
+* @param    DevInst - Global AIE device instance pointer.
+* @param    Preempt - Preempt struct that needs to be filled in by the caller
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+    if (num_cols > DevInst->NumCols) {
+		XAIE_ERROR("Invalid argument num_cols > max columns reserved for partition\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(DevInst->TxnList.Next != NULL)
+	{
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
+			return XAIE_ERR;
+		}
+		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+					return RC;
+				}
+		}
+
+		u32* tctDataBuff = (u32 *)calloc(sizeof(tct_op_t), 1);
+		tctDataBuff[0] = ((0x000000FF & num_tokens) || (0x0000FF00 & (num_cols << 8)));
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CUSTOM_OP_MERGE_SYNC;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Size = (u32)sizeof(tct_op_t);
+		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)tctDataBuff;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API register XAIE_IO_CUSTOM_OP_DDR_PATCH that can be added to the
+* transaction buffer.
+* @param    DevInst - Global AIE device instance pointer.
+* @param    Preempt - Preempt struct that needs to be filled in by the caller
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_DdrAddressPatch(XAie_DevInst *DevInst, u64 regaddr, u64 argidx,
+                               u64 argplus)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL)
+	{
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
+			return XAIE_ERR;
+		}
+		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+					return RC;
+				}
+		}
+
+		patch_op_t* patchDataBuff = (patch_op_t *)calloc(sizeof(patch_op_t), 1);
+		patchDataBuff->regaddr = regaddr;
+		patchDataBuff->argidx = argidx;
+		patchDataBuff->argplus = argplus;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CUSTOM_OP_DDR_PATCH;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Size = (u32)sizeof(patch_op_t);
+		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)patchDataBuff;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
 
 /*****************************************************************************/
 /**
