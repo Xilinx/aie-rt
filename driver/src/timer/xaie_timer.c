@@ -609,13 +609,6 @@ static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 					DevInst, Locs[i], XAIE_MEM_MOD,
 					BcastId);
 			RC = XAie_SetTimerResetEvent(DevInst, Locs[i],
-					XAIE_CORE_MOD, BcastEvent,
-					XAIE_RESETDISABLE);
-		} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
-			BcastEvent = _XAie_GetBroadcastEventfromRscId(
-					DevInst, Locs[i], XAIE_MEM_MOD,
-					BcastId);
-			RC = XAie_SetTimerResetEvent(DevInst, Locs[i],
 					XAIE_MEM_MOD, BcastEvent,
 					XAIE_RESETDISABLE);
 		} else {
