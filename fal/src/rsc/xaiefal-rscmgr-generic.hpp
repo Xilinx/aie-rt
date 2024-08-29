@@ -759,7 +759,7 @@ namespace xaiefal {
 		 */
 		uint32_t getCommonRscId(std::vector<XAieUserRsc> vRscs) {
 			std::bitset<32> RscStatus;
-			uint32_t MaxRscId;
+			uint32_t MaxRscId = XAIE_RSC_ID_ANY;
 
 			for (auto rsc : vRscs) {
 				uint8_t TType = XAie_GetTileTypefromLoc(dev(), rsc.Loc);
@@ -1039,7 +1039,7 @@ namespace xaiefal {
 		 * @return Module type, XAIE_ANY_MOD for failure
 		 */
 		XAie_ModuleType estimateModfromIndex(uint8_t TileType, uint32_t Index) {
-			XAie_ModuleType M;
+			XAie_ModuleType M = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
 
 			switch(TileType) {
 			case XAIEGBL_TILE_TYPE_AIETILE:

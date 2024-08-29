@@ -165,7 +165,9 @@ namespace xaiefal {
 		 * @return XAIE_OK for success, error code for failure
 		 */
 		AieRC setCntrEvent(XAie_Events StartE, XAie_Events StopE) {
-			XAie_ModuleType StartM, StopM;
+			XAie_ModuleType StartM = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
+			XAie_ModuleType StopM = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
+
 			AieRC RC;
 
 			Logger::log(LogLevel::FAL_DEBUG) << __func__ << " " <<
