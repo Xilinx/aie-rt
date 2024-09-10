@@ -226,8 +226,6 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr);
-AieRC XAie_Txn_NoOp(XAie_DevInst *DevInst, uint32_t Count);
-AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt);
 
 /* Public Functions. Later this should be moved to xaiegbl.h. Also functions should be moved to xaiegbl.c */
 XAIE_AIG_EXPORT AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
@@ -235,5 +233,7 @@ XAIE_AIG_EXPORT int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
 XAIE_AIG_EXPORT AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols);
 XAIE_AIG_EXPORT AieRC XAie_Txn_DdrAddressPatch(XAie_DevInst *DevInst, u64 regaddr, u64 argidx, u64 argplus);
+XAIE_AIG_EXPORT AieRC XAie_Txn_NoOp(XAie_DevInst *DevInst, uint32_t Count);
+XAIE_AIG_EXPORT AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt);
 #endif		/* end of protection macro */
 /** @} */
