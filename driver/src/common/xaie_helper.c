@@ -1150,6 +1150,15 @@ static inline void _XAie_AppendPreempt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	Hdr->Preempt_level = (u8)Cmd->Preempt_level;
 }
 
+static inline void _XAie_AppendLoadPdi(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_LoadPdiHdr *Hdr = ( XAie_LoadPdiHdr*)((void*)TxnPtr);
+
+	Hdr->Op = (u8)Cmd->Opcode;
+	Hdr->PdiId = Cmd->PdiId;
+	Hdr->PdiSize = 0;
+	Hdr->PdiAddress = 0;
+}
 
 static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
 		XAie_TxnHeader *Header)
@@ -1471,6 +1480,24 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			BuffSize += (u32)sizeof(XAie_PreemptHdr);
 			continue;
 		}
+		else if(Cmd->Opcode == XAIE_IO_LOADPDI)
+		{
+			if( (BuffSize + sizeof(XAie_LoadPdiHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+
+			}
+			_XAie_AppendLoadPdi(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_LoadPdiHdr);
+			BuffSize += (u32)sizeof(XAie_LoadPdiHdr);
+			continue;
+		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
 			if (TX_DUMP_ENABLE) {
 				TxnCmdDump(Cmd);
@@ -1695,6 +1722,24 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			_XAie_AppendPreempt(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_PreemptHdr);
 			BuffSize += (u32)sizeof(XAie_PreemptHdr);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_LOADPDI)
+		{
+			if( (BuffSize + sizeof(XAie_LoadPdiHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+
+			}
+			_XAie_AppendLoadPdi(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_LoadPdiHdr);
+			BuffSize += (u32)sizeof(XAie_LoadPdiHdr);
 			continue;
 		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
@@ -2464,6 +2509,55 @@ AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt)
 		}
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_PREEMPT;
 		TxnInst->CmdBuf[TxnInst->NumCmds].Preempt_level = p_level;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API registers XAIE_IO_LOADPDI that can be added to the transaction buffer.
+* @param    DevInst - Global AIE device instance pointer. 
+* @param    PdiId - Unique id of the pdi.
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_LoadPdi(XAie_DevInst *DevInst, u16 PdiId)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL) 
+	{
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance associated with thread. Polling from register\n");
+			return XAIE_ERR;
+		}
+		if( (TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+				 	return RC;
+				}
+
+		}
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_LOADPDI;
+		TxnInst->CmdBuf[TxnInst->NumCmds].PdiId = PdiId;
 
 		if (TX_DUMP_ENABLE) {
 			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);

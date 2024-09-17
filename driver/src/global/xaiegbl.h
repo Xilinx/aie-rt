@@ -592,7 +592,13 @@ typedef struct {
 	uint16_t Reserved;
 } XAie_PreemptHdr;
 
-/* Txn Optimizaed structs start from here*/
+typedef struct {
+	uint8_t Op;
+	uint8_t Padding;
+	uint16_t PdiId;
+	uint32_t PdiSize;
+	uint64_t PdiAddress;
+} XAie_LoadPdiHdr;
 
 /* Migrated from Aie-controller */
 enum op_types {
