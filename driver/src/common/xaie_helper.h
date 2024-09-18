@@ -235,6 +235,9 @@ XAIE_AIG_EXPORT AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, vo
 XAIE_AIG_EXPORT AieRC XAie_Txn_DdrAddressPatch(XAie_DevInst *DevInst, u64 regaddr, u64 argidx, u64 argplus);
 XAIE_AIG_EXPORT AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols);
 
+XAIE_AIG_EXPORT AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u8 Arg_Offset, u8 Num_BDs);
+XAIE_AIG_EXPORT AieRC XAie_WaitTct(XAie_DevInst *DevInst, uint16_t Column, uint16_t Row, uint32_t Channel, uint8_t NumTokens);
+
 XAIE_AIG_EXPORT AieRC XAie_Txn_NoOp(XAie_DevInst *DevInst, uint32_t Count);
 XAIE_AIG_EXPORT AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt);
 XAIE_AIG_EXPORT AieRC XAie_Txn_LoadPdi(XAie_DevInst *DevInst, u16 PdiId);
