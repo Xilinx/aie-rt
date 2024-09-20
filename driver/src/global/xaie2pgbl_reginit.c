@@ -4209,7 +4209,7 @@ static const XAie_L1IntrMod Aie2PPlL1IntrMod =
 	.NumIrqEvents = 4U,
 	.IrqEventOff = 8U,
 	.NumBroadcastIds = 16U,
-	.MaxErrorBcIdsRvd = 4U,
+	.MaxErrorBcIdsRvd = 6U,
 #ifdef XAIE_FEATURE_INTR_INIT_ENABLE
 	.IntrCtrlL1IrqId = &_XAieMl_IntrCtrlL1IrqId,
 #else
