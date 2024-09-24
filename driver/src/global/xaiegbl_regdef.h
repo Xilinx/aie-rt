@@ -565,7 +565,7 @@ struct XAie_DmaMod {
 	AieRC (*SetIntrleave) (XAie_DmaDesc *Desc, u8 DoubleBuff,
 			u8 IntrleaveCount, u16 IntrleaveCurr);
 	AieRC (*SetMultiDim) (XAie_DmaDesc *Desc, XAie_DmaTensor *Tensor);
-	AieRC (*SetBdIter) (XAie_DmaDesc *Desc, u32 StepSize, u8 Wrap,
+	AieRC (*SetBdIter) (XAie_DmaDesc *Desc, u32 StepSize, u16 Wrap,
 			u8 IterCurr);
 	AieRC (*WriteBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
 			XAie_LocType Loc, u8 BdNum);
@@ -582,9 +582,9 @@ struct XAie_DmaMod {
 			XAie_DmaDirection Dir, u32 TimeOutUs, u8 BusyPoll);
 	AieRC (*BdChValidity)(u8 BdNum, u8 ChNum);
 	AieRC (*UpdateBdLen)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-			XAie_LocType Loc, u32 Len, u8 BdNum);
+			XAie_LocType Loc, u32 Len, u16 BdNum);
 	AieRC (*UpdateBdAddr)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-			XAie_LocType Loc, u64 Addr, u8 BdNum);
+			XAie_LocType Loc, u64 Addr, u16 BdNum);
 	AieRC (*GetChannelStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
 			XAie_DmaDirection Dir, u32 *Status);

@@ -798,7 +798,7 @@ XAIE_AIG_EXPORT AieRC XAie_ConfigMemTilesMemInterleaving(XAie_DevInst *DevInst,
 * @note		None.
 *
 ******************************************************************************/
-static inline XAie_Lock XAie_LockInit(u8 Id, s8 Value)
+static inline XAie_Lock XAie_LockInit(u16 Id, s8 Value)
 {
 	XAie_Lock Lock = {Id, Value};
 	return Lock;

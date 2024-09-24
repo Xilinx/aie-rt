@@ -1342,7 +1342,7 @@ AieRC _XAieMl_MemTileDmaCheckBdChValidity(u8 BdNum, u8 ChNum)
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAieMl_DmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-		XAie_LocType Loc, u32 Len, u8 BdNum)
+		XAie_LocType Loc, u32 Len, u16 BdNum)
 {
 	u64 RegAddr;
 	u32 RegVal, Mask;
@@ -1374,7 +1374,7 @@ AieRC _XAieMl_DmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAieMl_ShimDmaUpdateBdLen(XAie_DevInst *DevInst,
-		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u32 Len, u8 BdNum)
+		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u32 Len, u16 BdNum)
 {
 	u64 RegAddr;
 	u32 RegVal;
@@ -1408,7 +1408,7 @@ AieRC _XAieMl_ShimDmaUpdateBdLen(XAie_DevInst *DevInst,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAieMl_DmaUpdateBdAddr(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-		XAie_LocType Loc, u64 Addr, u8 BdNum)
+		XAie_LocType Loc, u64 Addr, u16 BdNum)
 {
 	u64 RegAddr;
 	u32 RegVal, Mask;
@@ -1441,7 +1441,7 @@ AieRC _XAieMl_DmaUpdateBdAddr(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAieMl_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
-		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u64 Addr, u8 BdNum)
+		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u64 Addr, u16 BdNum)
 {
 	AieRC RC;
 	u64 RegAddr;
@@ -1493,7 +1493,7 @@ AieRC _XAieMl_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 *		hardware.
 *
 ******************************************************************************/
-AieRC _XAieMl_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u8 Wrap,
+AieRC _XAieMl_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr)
 {
 	const XAie_DmaBdProp *BdProp = DmaDesc->DmaMod->BdProp;

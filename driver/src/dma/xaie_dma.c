@@ -500,7 +500,7 @@ AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 *		hardware.
 *
 ******************************************************************************/
-AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u8 Wrap,
+AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr)
 {
 	const XAie_DmaMod *DmaMod;
@@ -645,7 +645,7 @@ AieRC XAie_DmaGetNumBds(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds)
 *		configure the buffer descriptor field in the hardware.
 *
 ******************************************************************************/
-AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u8 NextBd, u8 EnableNextBd)
+AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 {
 	const XAie_DmaMod *DmaMod;
 
@@ -836,7 +836,7 @@ AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 *
 ******************************************************************************/
 AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum)
+		XAie_LocType Loc, u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
 
@@ -877,7 +877,7 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 *
 ******************************************************************************/
 AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum)
+		XAie_LocType Loc, u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
 	u8 TileType;
@@ -1172,7 +1172,7 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 *
 ******************************************************************************/
 AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 BdNum)
+		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
 {
 	AieRC RC;
 	u8 TileType;
@@ -1698,7 +1698,7 @@ AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 BdNum, u32 RepeatCount,
+		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue)
 {
 	XAie_DmaDeclareQueueConfig(DmaQueueDesc, BdNum, RepeatCount,
@@ -2304,7 +2304,7 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 *
 ******************************************************************************/
 AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
-		u8 BdNum)
+		u16 BdNum)
 {
 	u8 TileType;
 	u64 RegAddr;
@@ -2376,7 +2376,7 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 *		on software descriptor.
 ******************************************************************************/
 AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
-		u8 BdNum)
+		u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
 	u32 AdjustedLen;
@@ -2423,7 +2423,7 @@ AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 *		on software descriptor.
 ******************************************************************************/
 AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
-		u8 BdNum)
+		u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
 	u8 TileType;
