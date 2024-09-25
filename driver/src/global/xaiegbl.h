@@ -465,7 +465,7 @@ typedef enum {
 
 /* Data structure to capture lock id and value */
 typedef struct {
-	u8 LockId;
+	u16 LockId;
 	s8 LockVal;
 } XAie_Lock;
 
