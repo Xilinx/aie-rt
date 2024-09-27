@@ -797,17 +797,18 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 	u64 RegAddr;
 	int Ret;
 
-	for(u8 C = 0; C < DevInst->NumCols; C++) {
-		for (u8 R = XAIE_MEM_TILE_ROW_START;
-			R < XAIE_AIE_TILE_ROW_START; R++) {
-			RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
-			_XAie_LPartMaskWrite32(DevInst, RegAddr,
-				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK,
-				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK);
+	if(DevInst->L2PreserveMem == 0) {
+		for(u8 C = 0; C < DevInst->NumCols; C++) {
+			for (u8 R = XAIE_MEM_TILE_ROW_START;
+					R < XAIE_AIE_TILE_ROW_START; R++) {
+				RegAddr = _XAie_LGetTileAddr(R, C) +
+					XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
+				_XAie_LPartMaskWrite32(DevInst, RegAddr,
+						XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK,
+						XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK);
+			}
 		}
 	}
-
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		for (u8 R = XAIE_AIE_TILE_ROW_START;
 			R < XAIE_NUM_ROWS; R++) {
@@ -831,13 +832,15 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 				XAIE_MEM_MOD_MEM_CNTR_ZEROISATION_MASK, 0, 800);
 		if (Ret < 0)
 			return XAIE_ERR;
-
-		RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1, C) +
+		
+		if(DevInst->L2PreserveMem == 0) {
+			RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1, C) +
 				XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
-		Ret = _XAie_LPartPoll32(DevInst, RegAddr,
-				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
-		if (Ret < 0)
-			return XAIE_ERR;
+			Ret = _XAie_LPartPoll32(DevInst, RegAddr,
+					XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
+			if (Ret < 0)
+				return XAIE_ERR;
+		}
 	}
 	return XAIE_OK;
 }

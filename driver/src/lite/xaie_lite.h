@@ -35,6 +35,7 @@
 		.StartCol = (_StartCol), \
 		.NumCols = (_NumCols), \
 		.NumRows = (XAIE_NUM_ROWS), \
+		.L2PreserveMem = 0, \
 	}
 
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE

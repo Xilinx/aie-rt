@@ -144,6 +144,7 @@ typedef struct {
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
 	u8 EccStatus;		/* Ecc On/Off status of the partition */
+	u8 L2PreserveMem;    /*Set or Clear to preserve L2 Memory Data */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
