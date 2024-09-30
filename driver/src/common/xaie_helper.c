@@ -1277,6 +1277,65 @@ static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
 	return Tmp;
 }
 
+static inline void Append_BW_To_Blockwrite_Buff(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd, u8 First_blockwrite_processed, u32* Blockwrite_buffer)
+{
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)Blockwrite_buffer;
+	u32* Payload;
+	u32 memcpy_size = Cmd->Size * (u32)sizeof(u32);
+	if(First_blockwrite_processed == 0)
+	{
+		Payload = (void *)(Blockwrite_buffer + (sizeof(XAie_BlockWrite32Hdr) / 4));
+		Hdr->RegOff = (u32)Cmd->RegOff;
+		Hdr->Size = (u32)sizeof(XAie_BlockWrite32Hdr) + Cmd->Size * (u32)sizeof(u32);
+		Hdr->OpHdr.Col = _XAie_GetColfromRegOff(DevInst,Cmd->RegOff);
+		Hdr->OpHdr.Row = _XAie_GetRowfromRegOff(DevInst,Cmd->RegOff);
+		Hdr->OpHdr.Op = (u8)XAIE_IO_BLOCKWRITE;
+
+		memcpy((void*)Payload, (void*)Cmd->DataPtr, memcpy_size);
+	}
+	else
+	{
+		Payload = (void *)(Blockwrite_buffer + (Hdr->Size / 4));
+		memcpy((void*)Payload, (void*)Cmd->DataPtr, memcpy_size);
+		Hdr->Size +=Cmd->Size * (u32)sizeof(u32);
+	}
+}
+
+static inline u32 Append_BW_To_Txn_Buff(u32* Blockwrite_buffer,u8* TxnPtr, u32 Patch_cmd_count)
+{
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)Blockwrite_buffer;
+	u32 Size = 0,patch_cmd_size=0;
+	u8* temp_ptr;
+
+	if(Patch_cmd_count != 0){
+
+		patch_cmd_size = (Patch_cmd_count) * ( sizeof(patch_op_t) + sizeof(XAie_CustomOpHdr) );
+
+		temp_ptr = calloc(patch_cmd_size,1);
+		if(temp_ptr == NULL) {
+			XAIE_ERROR("Calloc failed\n");
+			return 0;
+		}
+	
+		TxnPtr -= patch_cmd_size;
+		memcpy(temp_ptr, TxnPtr, patch_cmd_size);
+		memset(TxnPtr, 0, patch_cmd_size);
+	}
+
+	memcpy(TxnPtr, Blockwrite_buffer, Hdr->Size);
+	Size = Hdr->Size;
+	memset(Blockwrite_buffer, 0, Size);
+
+	if(Patch_cmd_count != 0)
+	{
+		TxnPtr += Size;
+    	memcpy(TxnPtr, temp_ptr, patch_cmd_size);
+    	free(temp_ptr);
+	}
+
+    return Size;
+}
+
 /*****************************************************************************/
 /**
 *
@@ -1301,7 +1360,11 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	const XAie_Backend *Backend = DevInst->Backend;
 	XAie_TxnInst *TmpInst;
 	u8 *TxnPtr;
-	u32 BuffSize = 0U, NumOps = 0;
+	u32 BuffSize = 0U, NumOps = 0, patch_cmd_count = 0;
+	u64 RegOff_last_blockwrite = 0;
+	u8 first_blockwrite_processed = 0;
+	u32* blockwrite_buffer;
+
 	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
 	(void)NumConsumers;
 	(void)Flags;
@@ -1313,9 +1376,16 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		return NULL;
 	}
 
+	blockwrite_buffer = calloc(AllocatedBuffSize,1);
+	if(blockwrite_buffer == NULL) {
+		XAIE_ERROR("Calloc failed\n");
+		return NULL;
+	}
+
 	TxnPtr = calloc(AllocatedBuffSize,1);
 	if(TxnPtr == NULL) {
-		XAIE_ERROR("Malloc failed\n");
+		XAIE_ERROR("Calloc failed\n");
+		free(blockwrite_buffer);
 		return NULL;
 	}
 
@@ -1327,6 +1397,28 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
 		NumOps++;
 		XAie_TxnCmd *Cmd = &TmpInst->CmdBuf[i];
+
+		if( (Cmd->Opcode != XAIE_IO_BLOCKWRITE) &&
+		    (Cmd->Opcode != XAIE_IO_CUSTOM_OP_BEGIN + 1) &&
+		    (first_blockwrite_processed != 0) )
+		{
+			XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)blockwrite_buffer;
+			while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+				(AllocatedBuffSize) * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					printf("Realloc Failed\n");
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			BuffSize += Hdr->Size;
+			TxnPtr += Append_BW_To_Txn_Buff(blockwrite_buffer,TxnPtr,patch_cmd_count);
+			patch_cmd_count = 0;
+			first_blockwrite_processed = 0;
+		}
+		
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
 			if((BuffSize + sizeof(XAie_Write32Hdr)) >
 					AllocatedBuffSize) {
@@ -1398,23 +1490,35 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			 * In that case we should keep reallocating till the new
 			 * buffer size if big enough to hold existing + current opcode.
 			 */
-			while((BuffSize + sizeof(XAie_BlockWrite32Hdr) +
-						Cmd->Size * sizeof(u32)) >
-					AllocatedBuffSize) {
-				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
-						AllocatedBuffSize * 2U, BuffSize);
-				if(TxnPtr == NULL) {
-					return NULL;
+			if(first_blockwrite_processed != 0)
+			{
+				XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)blockwrite_buffer;
+			 	if ( Cmd->RegOff != RegOff_last_blockwrite)
+			 	{
+					while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
+						printf("Realloc Blockwrite\n");
+						TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						(AllocatedBuffSize) * 2U, BuffSize);
+						if(TxnPtr == NULL) {
+							printf("Realloc Failed\n");
+							return NULL;
+						}
+						AllocatedBuffSize *= 2U;
+						TxnPtr += BuffSize;
+					}
+					BuffSize += Hdr->Size;
+					TxnPtr += Append_BW_To_Txn_Buff(blockwrite_buffer,TxnPtr,patch_cmd_count);
+					patch_cmd_count = 0;
+					first_blockwrite_processed = 0;
 				}
-				AllocatedBuffSize *= 2U;
-				TxnPtr += BuffSize;
+				else
+				{
+					NumOps--;
+				}
 			}
-			_XAie_AppendBlockWrite32(DevInst, Cmd, TxnPtr);
-			TxnPtr += sizeof(XAie_BlockWrite32Hdr) +
-				Cmd->Size * sizeof(u32);
-			BuffSize += (u32)sizeof(XAie_BlockWrite32Hdr) +
-				Cmd->Size * (u32)sizeof(u32);
-			continue;
+			RegOff_last_blockwrite = (u64) ( Cmd->RegOff + (Cmd->Size*4) );
+			Append_BW_To_Blockwrite_Buff(DevInst, Cmd,first_blockwrite_processed,blockwrite_buffer);
+			first_blockwrite_processed = 1;
 		}
 		else if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
 			/**
@@ -1499,6 +1603,11 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+
+			if(Cmd->Opcode == XAIE_IO_CUSTOM_OP_BEGIN + 1)
+			{
+				++patch_cmd_count;
+			}
 			if (TX_DUMP_ENABLE) {
 				TxnCmdDump(Cmd);
 			}
@@ -1523,6 +1632,24 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 	}
+	if(first_blockwrite_processed != 0)
+	{	
+		XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)blockwrite_buffer;
+				while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
+					TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+					(AllocatedBuffSize) * 2U, BuffSize);
+					if(TxnPtr == NULL) {
+						printf("Realloc Failed\n");
+						return NULL;
+					}
+					AllocatedBuffSize *= 2U;
+					TxnPtr += BuffSize;
+				}
+		BuffSize += Hdr->Size;
+		TxnPtr += Append_BW_To_Txn_Buff(blockwrite_buffer,TxnPtr,patch_cmd_count);
+	}
+
+	free(blockwrite_buffer);
 
 	u32 four_byte_aligned_BuffSize = ((BuffSize % 4U) != 0U) ? ((BuffSize / 4U + 1U)*4) : BuffSize;
 	XAIE_DBG("Size of the Txn Hdr being exported: %u bytes\n",
