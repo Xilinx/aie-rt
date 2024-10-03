@@ -586,7 +586,7 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Idx * 4U;
 
 	Mask = DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Mask;
-	RegVal = XAie_SetField(Addr,
+	RegVal = XAie_SetField(Addr >> DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Lsb,
 			DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Lsb, Mask);
 
 	/* Addrlow maps to a single register without other fields. */
@@ -601,7 +601,7 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Idx * 4U;
 
 	Mask = DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Mask;
-	RegVal = XAie_SetField(Addr,
+	RegVal = XAie_SetField(Addr >> 32U,
 			DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Lsb, Mask);
 
 	/* Addrhigh bite 30_46 mapping. */
