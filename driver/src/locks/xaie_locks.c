@@ -255,7 +255,7 @@ AieRC XAie_LockReleaseBusy(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lo
 		return XAIE_INVALID_LOCK_VALUE;
 	}
 
-	return LockMod->Release(DevInst, LockMod, Loc, Lock, TimeOut, XAIE_DISABLE);
+	return LockMod->Release(DevInst, LockMod, Loc, Lock, TimeOut, XAIE_ENABLE);
 }
 
 /*****************************************************************************/
