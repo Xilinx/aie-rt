@@ -1360,12 +1360,13 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	const XAie_Backend *Backend = DevInst->Backend;
 	XAie_TxnInst *TmpInst;
 	u8 *TxnPtr;
-	u32 BuffSize = 0U, NumOps = 0, patch_cmd_count = 0;
+	u32 BuffSize = 0U, NumOps = 0, patch_cmd_count = 0,BW_Buff_Size = 0;
 	u64 RegOff_last_blockwrite = 0;
 	u8 first_blockwrite_processed = 0;
 	u32* blockwrite_buffer;
 
 	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
+	u32 BW_Buff_AllocatedSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
 	(void)NumConsumers;
 	(void)Flags;
 
@@ -1490,12 +1491,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			 * In that case we should keep reallocating till the new
 			 * buffer size if big enough to hold existing + current opcode.
 			 */
+			BW_Buff_Size = ((XAie_BlockWrite32Hdr*)blockwrite_buffer)->Size;
 			if(first_blockwrite_processed != 0)
 			{
-				XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)blockwrite_buffer;
 			 	if ( Cmd->RegOff != RegOff_last_blockwrite)
 			 	{
-					while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
+					while((BuffSize + BW_Buff_Size) > AllocatedBuffSize) {
 						printf("Realloc Blockwrite\n");
 						TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						(AllocatedBuffSize) * 2U, BuffSize);
@@ -1506,7 +1507,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 						AllocatedBuffSize *= 2U;
 						TxnPtr += BuffSize;
 					}
-					BuffSize += Hdr->Size;
+					BuffSize += BW_Buff_Size;
 					TxnPtr += Append_BW_To_Txn_Buff(blockwrite_buffer,TxnPtr,patch_cmd_count);
 					patch_cmd_count = 0;
 					first_blockwrite_processed = 0;
@@ -1515,6 +1516,16 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				{
 					NumOps--;
 				}
+			}
+			while( (Cmd->Size * 4) + BW_Buff_Size > BW_Buff_AllocatedSize)
+			{
+				blockwrite_buffer = (u32*) ( _XAie_ReallocTxnBuf_MemInit((u8 *)blockwrite_buffer,
+									(BW_Buff_AllocatedSize) * 2U, BW_Buff_Size) );
+				if(blockwrite_buffer == NULL) {
+							printf("Realloc Failed\n");
+							return NULL;
+						}
+				BW_Buff_AllocatedSize *= 2U;
 			}
 			RegOff_last_blockwrite = (u64) ( Cmd->RegOff + (Cmd->Size*4) );
 			Append_BW_To_Blockwrite_Buff(DevInst, Cmd,first_blockwrite_processed,blockwrite_buffer);
