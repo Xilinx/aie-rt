@@ -37,6 +37,7 @@ collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aie.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aie.h")
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aieml.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aieml.h")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aie2ps.h")
 
 #events
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/events/xaie_events.c")
