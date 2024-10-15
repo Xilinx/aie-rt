@@ -1305,7 +1305,7 @@ static inline u32 Append_BW_To_Txn_Buff(u32* Blockwrite_buffer,u8* TxnPtr, u32 P
 {
 	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)Blockwrite_buffer;
 	u32 Size = 0,patch_cmd_size=0;
-	u8* temp_ptr;
+	u8* temp_ptr = NULL;
 
 	if(Patch_cmd_count != 0){
 
@@ -1358,12 +1358,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		u32 Flags)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
-	XAie_TxnInst *TmpInst;
-	u8 *TxnPtr;
+	XAie_TxnInst *TmpInst = NULL;
+	u8 *TxnPtr = NULL;
 	u32 BuffSize = 0U, NumOps = 0, patch_cmd_count = 0,BW_Buff_Size = 0;
 	u64 RegOff_last_blockwrite = 0;
 	u8 first_blockwrite_processed = 0;
-	u32* blockwrite_buffer;
+	u32* blockwrite_buffer = NULL;
 
 	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
 	u32 BW_Buff_AllocatedSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
