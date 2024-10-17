@@ -1305,7 +1305,7 @@ static inline u32 Append_BW_To_Txn_Buff(u32* Blockwrite_buffer,u8* TxnPtr, u32 P
 {
 	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)Blockwrite_buffer;
 	u32 Size = 0,patch_cmd_size=0;
-	u8* temp_ptr;
+	u8* temp_ptr = NULL;
 
 	if(Patch_cmd_count != 0){
 
