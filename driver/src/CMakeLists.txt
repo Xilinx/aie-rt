@@ -23,12 +23,16 @@ collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_core_aieml.c
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_core_aieml.h")
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_elfloader.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_elfloader.h")
+collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_uc.c")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/core/xaie_uc.h")
 
 #device
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/device/xaie_device_aie.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/device/xaie_device_aie.h")
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/device/xaie_device_aieml.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/device/xaie_device_aieml.h")
+collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/device/xaie_device_aie2ps.c")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/device/xaie_device_aie2ps.h")
 
 #dma
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma.c")
@@ -38,12 +42,14 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aie.h")
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aieml.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aieml.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aie2ps.h")
+collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/dma/xaie_dma_aie2ps.c")
 
 #events
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/events/xaie_events.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/events/xaie_events.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/events/xaie_events_aie.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/events/xaie_events_aieml.h")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/events/xaie_events_aie2ps.h")
 
 
 #global
@@ -56,6 +62,8 @@ collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/global/xaiegbl_reginit
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/global/xaiemlgbl_reginit.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/global/xaiegbl_regdef.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/global/xaie_feature_config.h")
+collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/global/xaie2psgbl_reginit.c")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/global/xaie2psgbl_params.h")
 
 #interrupt
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aie.c")
@@ -66,6 +74,8 @@ collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interru
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aie.h")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aieml.h")
+collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aie2ps.c")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/interrupt/xaie_interrupt_aie2ps.h")
 
 
 #io_backend
@@ -147,6 +157,8 @@ collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss_
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss_aie.h")
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss_aieml.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss_aieml.h")
+collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss_aie2ps.c")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/stream_switch/xaie_ss_aie2ps.h")
 
 #timer
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/timer/xaie_timer.c")
@@ -165,6 +177,7 @@ collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/util/xaie_util_status.
 #routing
 collect (PROJECT_LIB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/routing/xaie_routing.c")
 collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/routing/xaie_routing.h")
+collect (PROJECT_LIB_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/routing/xaie_routing_internal.h")
 
 collector_list (_sources PROJECT_LIB_SOURCES)
 collector_list (_headers PROJECT_LIB_HEADERS)
