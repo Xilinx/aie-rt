@@ -862,7 +862,7 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
  *
  * ******************************************************************************/
 AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		UcDmaDir Dir, u8 Pause)
+		UcDmaDir_enum Dir, u8 Pause)
 {
 	u64 RegAddr;
 	AieRC RC = XAIE_OK;
