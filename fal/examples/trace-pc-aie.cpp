@@ -75,7 +75,7 @@ public:
 		if (vPcRange.size() != 0) {
 			RC = XAIE_OK;
 		} else {
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				"failed, no PC range is specified." << endl;
 			return XAIE_ERR;
 		}
@@ -254,7 +254,7 @@ int main(void)
 	vL.push_back(XAie_TileLoc(1,1));
 	vL.push_back(XAie_TileLoc(1,2));
 
-	//Logger::get().setLogLevel(LogLevel::DEBUG);
+	//Logger::get().setLogLevel(LogLevel::FAL_DEBUG);
 	AiePtr = std::make_shared<XAieDev>(&DevInst, true);
 	XAieTracePcRange TracePcRange(AiePtr);
 	TracePcRange.addTile(vL);

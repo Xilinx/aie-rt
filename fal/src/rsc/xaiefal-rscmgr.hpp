@@ -229,7 +229,7 @@ namespace xaiefal {
 
 			Fs.open(File);
 			if (!Fs.is_open()){
-				Logger::log(LogLevel::ERROR) <<
+				Logger::log(LogLevel::FAL_ERROR) <<
 					"Could not open file " << File
 					<< std::endl;
 				return XAIE_ERR;
@@ -240,7 +240,7 @@ namespace xaiefal {
 			Fs.write(reinterpret_cast<char *>(&FirstBitmapOffset),
 					sizeof(FirstBitmapOffset));
 			if (Fs.fail()) {
-				Logger::log(LogLevel::ERROR) <<
+				Logger::log(LogLevel::FAL_ERROR) <<
 					"Failed to write rscs to file " << File
 					<< std::endl;
 				Fs.close();
@@ -249,7 +249,7 @@ namespace xaiefal {
 
 			RC = Backend->writeRscBitmaps(Fs, NumRscsInFile);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) <<
+				Logger::log(LogLevel::FAL_ERROR) <<
 					"Failed to write rscs to file " << File
 					<< std::endl;
 				Fs.close();
@@ -260,7 +260,7 @@ namespace xaiefal {
 			Fs.write(reinterpret_cast<char *>(&NumRscsInFile),
 					sizeof(NumRscsInFile));
 			if (Fs.fail()) {
-				Logger::log(LogLevel::ERROR) <<
+				Logger::log(LogLevel::FAL_ERROR) <<
 					"Failed to write rscs to file " << File
 					<< std::endl;
 				Fs.close();
@@ -276,7 +276,7 @@ namespace xaiefal {
 			uint64_t NumBitmaps, FirstBitmapOffset;
 
 			if (MetaHeader == NULL) {
-				Logger::log(LogLevel::ERROR) <<
+				Logger::log(LogLevel::FAL_ERROR) <<
 					"Invalid resource metadata" << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -286,7 +286,7 @@ namespace xaiefal {
 
 			if (FirstBitmapOffset < (sizeof(uint64_t) * 2U) ||
 				NumBitmaps == 0U) {
-					Logger::log(LogLevel::ERROR) <<
+					Logger::log(LogLevel::FAL_ERROR) <<
 						"Invalid metadata header"
 						<< std::endl;
 					return XAIE_INVALID_ARGS;
@@ -315,7 +315,7 @@ namespace xaiefal {
 			vBcastRscs[0].RscId = XAIE_ECC_BCAST_ID;
 			RC = Backend->requestBc(vBcastRscs, true);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Unable to reserve " <<
+				Logger::log(LogLevel::FAL_WARN) << "Unable to reserve " <<
 					"broadcast resources for ECC" << std::endl;
 				return RC;
 			}
@@ -324,7 +324,7 @@ namespace xaiefal {
 			vLocs.resize(NumTiles);
 			RC = XAie_GetUngatedLocsInPartition(dev(), &NumTiles, vLocs.data());
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Unable to reserve " <<
+				Logger::log(LogLevel::FAL_WARN) << "Unable to reserve " <<
 					"resources for ECC, get ungated tiles failed"
 					<< std::endl;
 				return RC;
@@ -344,7 +344,7 @@ namespace xaiefal {
 
 					RC = Backend->requestAllocated(Rsc);
 					if (RC != XAIE_OK) {
-						Logger::log(LogLevel::WARN) <<
+						Logger::log(LogLevel::FAL_WARN) <<
 							"Unable to reserve " <<
 							"perfcounter resources for ECC"
 							<< std::endl;
@@ -378,7 +378,7 @@ namespace xaiefal {
 			vRscs[0].RscId = XAIE_ERROR_BCAST_ID;
 			RC = Backend->requestBc(vRscs, true);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Unable to reserve " <<
+				Logger::log(LogLevel::FAL_WARN) << "Unable to reserve " <<
 					"broadcast resources for Error Handling"
 					<< std::endl;
 				return RC;
@@ -397,7 +397,7 @@ namespace xaiefal {
 			}
 			RC = Backend->requestAllocated(vShimRscs);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Unable to reserve " <<
+				Logger::log(LogLevel::FAL_WARN) << "Unable to reserve " <<
 					"shim broadcast resources for Error Handling"
 					<< std::endl;
 				return RC;

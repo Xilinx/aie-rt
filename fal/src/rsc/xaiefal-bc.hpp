@@ -72,7 +72,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_INVALID_ARGS;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "broadcast object " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "broadcast object " << __func__ << " (" <<
 					static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) << ")" <<
 					" Mod= " << Mod <<
 					" resource not reserved." << std::endl;
@@ -143,7 +143,7 @@ namespace xaiefal {
 			}
 
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "broadcast " <<
+				Logger::log(LogLevel::FAL_WARN) << "broadcast " <<
 					__func__ << " resource not available.\n";
 				vRscs.clear();
 			} else {
@@ -282,7 +282,7 @@ namespace xaiefal {
 				i++;
 			}
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "BC: " <<
+				Logger::log(LogLevel::FAL_ERROR) << "BC: " <<
 					" failed to stop." << std::endl;
 			}
 			return RC;
@@ -315,7 +315,7 @@ namespace xaiefal {
 				}
 			}
 			if (iRC != (int)XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "BC: " <<
+				Logger::log(LogLevel::FAL_ERROR) << "BC: " <<
 					" failed to stop." << std::endl;
 				RC = XAIE_ERR;
 			} else {
@@ -341,7 +341,7 @@ namespace xaiefal {
 			    (vL.back().Row == 0 && endM != XAIE_PL_MOD) ||
 			    (vL[0].Row != 0 && startM == XAIE_PL_MOD) ||
 			    (vL.back().Row != 0 && endM == XAIE_PL_MOD)) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"BC: invalid tiles and modules combination." << std::endl;
 				return XAIE_INVALID_ARGS;
 			}
@@ -355,7 +355,7 @@ namespace xaiefal {
 				TType = XAie_GetTileTypefromLoc(Dev->dev(),
 						vL[i]);
 				if (TType == XAIEGBL_TILE_TYPE_MAX) {
-					Logger::log(LogLevel::ERROR) << __func__ <<
+					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 						"BC: invalid tile (" << vL[i].Col <<
 						"," << vL[i].Row <<")" <<
 						std::endl;
@@ -381,7 +381,7 @@ namespace xaiefal {
 				if (i != vL.size() - 1) {
 					if (vL[i+1].Row == vL[i].Row &&
 						vL[i+1].Col == vL[i].Col) {
-						Logger::log(LogLevel::ERROR) << __func__ <<
+						Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 							"BC: duplicated tiles in the vector." <<
 							std::endl;
 						return XAIE_INVALID_ARGS;
@@ -392,7 +392,7 @@ namespace xaiefal {
 							 (vL[i+1].Row - vL[i].Row) > 1) ||
 							(vL[i+1].Row < vL[i].Row &&
 							 (vL[i].Row - vL[i+1].Row) > 1)) {
-							Logger::log(LogLevel::ERROR) << __func__ <<
+							Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 								"BC: discontinuous input tiles." <<
 								std::endl;
 							return XAIE_INVALID_ARGS;
@@ -402,7 +402,7 @@ namespace xaiefal {
 						     (vL[i+1].Col - vL[i].Col) > 1) ||
 						    (vL[i+1].Col < vL[i].Col &&
 						     (vL[i].Col - vL[i+1].Col) > 1)) {
-							Logger::log(LogLevel::ERROR) << __func__ <<
+							Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 								"BC: discontinuous input tiles." <<
 								std::endl;
 							return XAIE_INVALID_ARGS;

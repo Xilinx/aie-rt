@@ -61,7 +61,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "StallCycles " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "StallCycles " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
 					" resource not allocated." << std::endl;
@@ -83,7 +83,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "StallCycles " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "StallCycles " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
 					" resource not allocated." << std::endl;
@@ -173,7 +173,7 @@ namespace xaiefal {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "StallCycles " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "StallCycles " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod <<
 					" resource not allocated." << std::endl;

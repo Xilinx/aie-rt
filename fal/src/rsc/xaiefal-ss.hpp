@@ -43,7 +43,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Running == 1) {
-				Logger::log(LogLevel::ERROR) << "Stream port select " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Stream port select " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" resource is in use." << std::endl;
 				RC = XAIE_ERR;
@@ -66,7 +66,7 @@ namespace xaiefal {
 			AieRC RC;
 
 			if (State.Reserved == 0) {
-				Logger::log(LogLevel::ERROR) << "Stream port select " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Stream port select " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" resource not reserved." << std::endl;
 				RC = XAIE_ERR;
@@ -139,7 +139,7 @@ namespace xaiefal {
 			vRscs.push_back(Rsc);
 			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::WARN) << "Stream port select " << __func__ <<
+				Logger::log(LogLevel::FAL_WARN) << "Stream port select " << __func__ <<
 					" (" << static_cast<int>(Loc.Col) << "," <<
 					static_cast<int>(Loc.Row) << ")" << " resource not available.\n";
 				vRscs.clear();
@@ -161,7 +161,7 @@ namespace xaiefal {
 			RC = XAie_EventSelectStrmPort(dev(), Loc, vRscs[0].RscId,
 					PortIntf, PortType, PortNum);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "Stream port select " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Stream port select " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" failed to start." << std::endl;
 			}
@@ -172,7 +172,7 @@ namespace xaiefal {
 
 			RC = XAie_EventSelectStrmPortReset(dev(), Loc, vRscs[0].RscId);
 			if (RC != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "Stream port select " << __func__ << " (" <<
+				Logger::log(LogLevel::FAL_ERROR) << "Stream port select " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" failed to stop." << std::endl;
 			}

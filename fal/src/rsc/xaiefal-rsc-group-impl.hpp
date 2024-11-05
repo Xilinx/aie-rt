@@ -136,7 +136,7 @@ namespace xaiefal {
 			}
 
 			if (AieHdPtr->rscMgr()->getStaticRscs(RscStats) != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "failed to get static resource stat." << std::endl;
+				Logger::log(LogLevel::FAL_ERROR) << "failed to get static resource stat." << std::endl;
 			} else {
 				for (auto S: RscStats) {
 					if (S.NumRscs != 0) {
@@ -238,7 +238,7 @@ namespace xaiefal {
 			}
 
 			if (AieHdPtr->rscMgr()->getAvailRscs(RscStats) != XAIE_OK) {
-				Logger::log(LogLevel::ERROR) << "failed to get avail resource stat." << std::endl;
+				Logger::log(LogLevel::FAL_ERROR) << "failed to get avail resource stat." << std::endl;
 			} else {
 				for (auto S: RscStats) {
 					if (S.NumRscs == 0) {

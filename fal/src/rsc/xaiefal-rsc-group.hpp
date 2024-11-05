@@ -133,7 +133,7 @@ namespace xaiefal {
 		 * This function shows the resources information of this resource group
 		 */
 		void show() const {
-			Logger::log(LogLevel::INFO) << GroupName << ":" << std::endl;
+			Logger::log(LogLevel::FAL_INFO) << GroupName << ":" << std::endl;
 			for (auto const& r : Rscs) {
 				std::string Str = "\t(" +
 					std::to_string(static_cast<uint32_t>(std::get<0>(r.first))) +

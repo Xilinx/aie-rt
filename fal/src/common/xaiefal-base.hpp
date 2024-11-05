@@ -245,7 +245,7 @@ namespace xaiefal {
 			auto GPtr = std::make_shared<GT>(shared_from_this(),
 					GName);
 			RscGroupsMap[GName] = XAieDevHdRscGroupWrapper(GPtr);
-			Logger::log(LogLevel::INFO) << "Resource group " <<
+			Logger::log(LogLevel::FAL_INFO) << "Resource group " <<
 				GName << " is created." << std::endl;
 		}
 	};
@@ -423,7 +423,7 @@ namespace xaiefal {
 				MString = "shim";
 			} else {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed. invalid module type." <<
 					std::endl;
 			}
@@ -448,7 +448,7 @@ namespace xaiefal {
 				Mod = XAIE_PL_MOD;
 			} else {
 				RC = XAIE_INVALID_ARGS;
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				"failed. invalid module string." << std::endl;
 			}
 			return RC;

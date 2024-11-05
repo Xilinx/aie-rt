@@ -36,7 +36,7 @@ public:
 		AieRC RC;
 
 		if (sL.Row != 0 || eL.Row != 0) {
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				"failed set IO ports, not SHIM Tiles." << endl;
 			RC = XAIE_INVALID_ARGS;
 		} else {
@@ -77,7 +77,7 @@ public:
 		AieRC RC;
 
 		if (vProfilers.size() == 0) {
-			Logger::log(LogLevel::ERROR) << __func__ <<
+			Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 				"failed to reserve, no IO path configure." << endl;
 			RC = XAIE_ERR;
 		} else {
@@ -87,7 +87,7 @@ public:
 				for (auto R: vSSelects) {
 					RC = R->reserve();
 					if (RC != XAIE_OK) {
-						Logger::log(LogLevel::ERROR) << __func__ <<
+						Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 							"failed to reserve SS" << endl;
 						BCRsc->release();
 						return RC;
@@ -103,7 +103,7 @@ public:
 				for (auto R: vProfilers) {
 					RC = R->reserve();
 					if (RC != XAIE_OK) {
-						Logger::log(LogLevel::ERROR) << __func__ <<
+						Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 							"failed to reserve Profilers" << endl;
 						for (auto sR: vSSelects) {
 							sR->release();
@@ -130,7 +130,7 @@ public:
 
 		for (auto R: vProfilers) {
 			if (!R->isReserved()) {
-				Logger::log(LogLevel::ERROR) << __func__ <<
+				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed to start, resource not reserved." << endl;
 				RC = XAIE_ERR;
 				break;
@@ -173,7 +173,7 @@ public:
 		return XAIE_OK;
 	}
 	void printResult() {
-		Logger::log(LogLevel::INFO) << " === Profile results. ==== " << std::endl;
+		Logger::log(LogLevel::FAL_INFO) << " === Profile results. ==== " << std::endl;
 		if (vProfilers[0]->isRunning() && vProfilers[1]->isRunning()) {
 			uint32_t Result;
 
@@ -221,7 +221,7 @@ int main(void)
 		return -1;
 	}
 
-	Logger::get().setLogLevel(LogLevel::DEBUG);
+	Logger::get().setLogLevel(LogLevel::FAL_DEBUG);
 	AiePtr = std::make_shared<XAieDev>(&DevInst, true);
 	XAieProfileIO ProfileIO(AiePtr);
 	ProfileIO.setIOPorts(XAie_TileLoc(6,0), XAIE_STRMSW_SLAVE, SOUTH, 0,
