@@ -343,7 +343,7 @@ static AieRC _XAie_PrivilegeSetPartProtectedRegs(XAie_DevInst *DevInst,
 {
 	AieRC RC;
 	XAie_NpiProtRegReq NpiProtReq = {0};
-
+	NpiProtReq.StartCol = DevInst->StartCol;
 	NpiProtReq.NumCols = DevInst->NumCols;
 	NpiProtReq.Enable = Enable;
 	RC = _XAie_NpiSetProtectedRegEnable(DevInst, &NpiProtReq);
