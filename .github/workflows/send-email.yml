@@ -251,6 +251,16 @@ jobs:
         # Extract Pull Request Description
         PR_DESCRIPTION=$(echo "$PR_DETAILS" | jq -r '.body')
         echo "Pull Request Description: $PR_DESCRIPTION"
+
+        ABOVE=$(echo "$PR_DESCRIPTION" | awk '/---/{exit} {print}')
+        ABOVE=$(echo "$ABOVE" | tr -d '\n')
+        ABOVE=$(echo "$ABOVE" | sed 's/^[ \t\n]*//;s/[ \t\n]*$//')
+
+        BELOW=$(echo "$PR_DESCRIPTION" | awk '/---*/{flag=1} flag')
+
+        ABOVE=$(echo "$ABOVE" | fold -s -w 80)
+
+        FORMATTED_DESCRIPTION=$(echo "$ABOVE" | sed ':a;N;$!ba;s/\n*$//')
         
         # Extract source repository URL and source branch name
         SOURCE_REPO_URL=$(echo "$PR_DETAILS" | jq --raw-output .head.repo.clone_url)
@@ -325,8 +335,25 @@ jobs:
         # Modify PR Patch with additional details
         # Insert PR Description at the top of the patch
         echo -e "From: ${SUBMITTER_NAME}  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
-        echo -e "PR Description:\n$PR_DESCRIPTION\n\n" >> pr.patch
-        echo -e "---\nBRANCH: ${TARGET_BRANCH}\n---\n$ID_INFOS\n---\n$SIGN_OFF\n---\nPR URL: $PULL_REQ_URL\n---\n" >> pr.patch
+        echo -e "PR Description:\n$FORMATTED_DESCRIPTION\n$SIGN_OFF\n" >> pr.patch
+                
+        FOOTER="---\n"
+
+        if [ -n "$TARGET_BRANCH" ]; then
+          FOOTER+="BRANCH: $TARGET_BRANCH\n"
+        fi
+
+        if [ -n "$ID_INFOS" ]; then
+          FOOTER+="$ID_INFOS\n"
+        fi
+
+        if [ -n "$PULL_REQ_URL" ]; then
+          FOOTER+="PR URL: $PULL_REQ_URL\n"
+        fi
+
+        FOOTER+="---\n"
+
+        echo -e "$FOOTER" >> pr.patch
 
         cat diff-summary.txt >> pr.patch  # Write the contents of diff-summary.txt to pr.patch
         echo -e "\n" >> pr.patch  # Append a newline to pr.patch
