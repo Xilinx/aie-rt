@@ -49,7 +49,7 @@
 #include "xaie_npi.h"
 
 /***************************** Macro Definitions *****************************/
-#define XAIE_128BIT_ALIGN_MASK 0xFF
+#define XAIE_128BIT_ALIGN_MASK 0xF
 #define XAIE_DEVICE_FILE "/dev/aie0"
 
 #ifdef __AIELINUX__
@@ -761,7 +761,7 @@ static void _XAie_CopyDataToMem(u32 *Dest, const u32 *Src, u32 Size)
 	}
 
 	if(StartExtraWrds > 0) {
-		for(u8 i = 0; i < StartExtraWrds && Size > 0;  i++) {
+		for(u32 i = 0; i < StartExtraWrds && Size > 0;  i++) {
 			*Dest = *Src;
 			Dest++;
 			Src++;
@@ -774,7 +774,9 @@ static void _XAie_CopyDataToMem(u32 *Dest, const u32 *Src, u32 Size)
 				XAIE_128BIT_ALIGN_MASK) / 4;
 	}
 
-	if(Size >= (XAIE_128BIT_ALIGN_MASK + 1)) {
+	if(Size >= (XAIE_128BIT_ALIGN_MASK + 1) &&
+		(((u64)Dest & XAIE_128BIT_ALIGN_MASK) == 0) &&
+		(((u64)Src & XAIE_128BIT_ALIGN_MASK) == 0)) {
 		memcpy((void *)Dest, (void *)Src,
 				(Size - EndExtraWrds) * sizeof(u32));
 		Dest += Size - EndExtraWrds;
@@ -783,7 +785,7 @@ static void _XAie_CopyDataToMem(u32 *Dest, const u32 *Src, u32 Size)
 	}
 
 	if(Size > 0) {
-		for(u8 i = 0; Size > 0; i++) {
+		for(u32 i = 0; Size > 0; i++) {
 			*Dest = *Src;
 			Dest++;
 			Src++;
