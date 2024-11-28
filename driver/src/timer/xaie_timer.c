@@ -31,6 +31,7 @@
 #include "xaie_events.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_timer.h"
 #include "xaiegbl.h"
 
@@ -172,6 +173,12 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->CtrlOff;
 	Mask = TimerMod->CtrlReset.Mask;
+
+	if ((_XAie_CheckPrecisionExceeds(TimerMod->CtrlReset.Lsb,
+			_XAie_MaxBitsNeeded(XAIE_RESETENABLE),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(XAIE_RESETENABLE, TimerMod->CtrlReset.Lsb, Mask);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, RegVal);
@@ -262,9 +269,19 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds( TimerMod->CtrlResetEvent.Lsb,
+			_XAie_MaxBitsNeeded(IntEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(IntEvent, TimerMod->CtrlResetEvent.Lsb,
 			TimerMod->CtrlResetEvent.Mask);
 
+	if ((_XAie_CheckPrecisionExceeds(TimerMod->CtrlReset.Lsb,
+			_XAie_MaxBitsNeeded((u32)Reset),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal |= XAie_SetField(Reset, TimerMod->CtrlReset.Lsb,
 			TimerMod->CtrlReset.Mask);
 
@@ -647,10 +664,18 @@ static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 static void _XAie_ClearShimBroadcast(XAie_DevInst *DevInst, u8 StartCol,
 		u8 EndCol, u32 BcastChannelId)
 {
+	AieRC RC;
+	if(BcastChannelId > UCHAR_MAX) {
+		XAIE_ERROR("Invalid BcastChannelId Value \n");
+		return;
+	}
 	for(u32 i = StartCol; i < EndCol; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
-		XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-			BcastChannelId, XAIE_EVENT_NONE_PL);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
+		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
+			(u8)BcastChannelId, XAIE_EVENT_NONE_PL);
+		if(RC != XAIE_OK) {
+			return;
+		}
 	}
 }
 
@@ -675,20 +700,32 @@ static void _XAie_ClearTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 
 		if(TType == XAIEGBL_TILE_TYPE_AIETILE) {
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[0U];
+			if((EvntMod->EventMin > XAIE_EVENT_LAST))
+				return;
+
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_MEM_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[1U];
+			if((EvntMod->EventMin > XAIE_EVENT_LAST))
+				return;
+
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_CORE_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 		} else if (TType == XAIEGBL_TILE_TYPE_MEMTILE) {
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[0U];
+
+            if((EvntMod->EventMin > XAIE_EVENT_LAST))
+				return;
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_MEM_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 		} else {
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[0U];
+            if((EvntMod->EventMin > XAIE_EVENT_LAST))
+            	return;
+
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_PL_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 		}
 	}
 }
@@ -761,7 +798,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	}
 
 	/* Get all ungated tiles to broadcast to */
-	NumTiles = DevInst->NumCols * DevInst->NumRows;
+	NumTiles = (u32)((u32)DevInst->NumCols * (u32)DevInst->NumRows);
 	Locs = (XAie_LocType *)malloc(NumTiles * sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
@@ -781,11 +818,16 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 		return RC;
 	}
 
+	if(BcastChannelId >= UCHAR_MAX) {
+		XAIE_ERROR("Invalid BcastChannelId Value \n");
+		free(Locs);
+		return XAIE_ERR;
+	}
 	ShimBcastEvent = _XAie_GetBroadcastEventfromRscId(DevInst,
 			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId + 1);
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId, ShimBcastEvent);
@@ -856,7 +898,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 	}
 
 	/* Get all ungated tiles to broadcast to */
-	NumTiles = DevInst->NumCols * DevInst->NumRows;
+	NumTiles = (u32)((u32)DevInst->NumCols * (u32)DevInst->NumRows);
 	Locs = (XAie_LocType *)malloc(NumTiles * sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
@@ -880,7 +922,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId2);
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId1, ShimBcastEvent);

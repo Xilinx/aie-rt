@@ -20,6 +20,7 @@
 #include "xaie_npi.h"
 #include "xaie_reset.h"
 #include "xaiegbl.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 
@@ -54,6 +55,12 @@ static void  _XAie_RstSetColumnReset(XAie_DevInst *DevInst,
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	RegAddr = PlIfMod->ColRstOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if (_XAie_CheckPrecisionExceeds(PlIfMod->ColRst.Lsb,
+			_XAie_MaxBitsNeeded(RstEnable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return;
+	}
 	FldVal = XAie_SetField(RstEnable,
 			PlIfMod->ColRst.Lsb,
 			PlIfMod->ColRst.Mask);
@@ -116,9 +123,21 @@ static void _XAie_RstSetBlockShimNocAxiMmNsuErr(XAie_DevInst *DevInst,
 	ShimNocAxiMM = PlIfMod->ShimNocAxiMM;
 	RegAddr = ShimNocAxiMM->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if (_XAie_CheckPrecisionExceeds(ShimNocAxiMM->NsuSlvErr.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return;
+	}
 	FldVal = XAie_SetField(Enable,
 			ShimNocAxiMM->NsuSlvErr.Lsb,
 			ShimNocAxiMM->NsuSlvErr.Mask);
+
+	if (_XAie_CheckPrecisionExceeds(ShimNocAxiMM->NsuDecErr.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return;
+	}
 	FldVal |= XAie_SetField(Enable,
 			ShimNocAxiMM->NsuDecErr.Lsb,
 			ShimNocAxiMM->NsuDecErr.Mask);

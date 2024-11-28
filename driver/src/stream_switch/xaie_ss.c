@@ -97,6 +97,14 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 		return XAIE_OK;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds(StrmMod->SlvEn.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->SlvPktEn.Lsb,
+					_XAie_MaxBitsNeeded(PktEnable), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	/* Frame the 32-bit reg value */
 	*RegVal = XAie_SetField(Enable, StrmMod->SlvEn.Lsb,
 			StrmMod->SlvEn.Mask) |
@@ -131,6 +139,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 {
 
 	u8 DropHdr;
+	u32 TempDropHdr;
 	*RegVal = 0U;
 	const XAie_StrmPort *PortPtr;
 
@@ -146,9 +155,35 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 		return XAIE_OK;
 	}
 
+	if (_XAie_CheckPrecisionExceedsForRightShift(StrmMod->DrpHdr.Lsb,
+			StrmMod->DrpHdr.Mask)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	/* Extract the drop header field */
-	DropHdr = (u8)XAie_GetField(Config, StrmMod->DrpHdr.Lsb,
+	TempDropHdr = XAie_GetField(Config, StrmMod->DrpHdr.Lsb,
 			StrmMod->DrpHdr.Mask);
+
+	if (TempDropHdr > UINT8_MAX){
+		XAIE_ERROR("DropHdr calculation Exceeds U8 MAX value \n");
+		return XAIE_ERR;
+	} else {
+		DropHdr = (u8)TempDropHdr;
+	}
+
+
+	if ((_XAie_CheckPrecisionExceeds(StrmMod->MstrEn.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->MstrPktEn.Lsb,
+			_XAie_MaxBitsNeeded(PktEnable), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->DrpHdr.Lsb,
+			_XAie_MaxBitsNeeded(DropHdr), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->Config.Lsb,
+			_XAie_MaxBitsNeeded(Config), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	/* Frame 32-bit reg value */
 	*RegVal = XAie_SetField(Enable, StrmMod->MstrEn.Lsb,
@@ -497,6 +532,15 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 
 	/* Get stream switch module pointer from device instance */
 	StrmMod = DevInst->DevProp.DevMod[TileType].StrmSw;
+	if ((_XAie_CheckPrecisionExceeds(StrmMod->DrpHdr.Lsb,
+			_XAie_MaxBitsNeeded((u8)DropHeader), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(XAIE_SS_MASTER_PORT_ARBITOR_LSB,
+			_XAie_MaxBitsNeeded(Arbitor), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(XAIE_SS_MASTER_PORT_MSELEN_LSB,
+			_XAie_MaxBitsNeeded(MSelEn), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	/* Construct Config and Drop header register fields */
 	if(Enable == XAIE_ENABLE) {
@@ -508,6 +552,10 @@ static AieRC _XAie_StrmPktSwMstrPortConfig(XAie_DevInst *DevInst,
 					XAIE_SS_MASTER_PORT_MSELEN_MASK);
 	}
 
+	if (Config > UINT8_MAX){
+		XAIE_ERROR("Config Exceeds U8 MAX value \n");
+		return XAIE_ERR;
+	}
 	/* Compute the register value and register address for the master port*/
 	RC = _StrmConfigMstr(StrmMod, Master, MstrPortNum, Enable, PktEn,
 			(u8)Config, &RegVal, &RegOff);
@@ -640,6 +688,19 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmMod->SlvSlotConfig[Slave].PortBaseAddr +
 		SlvPortNum * StrmMod->SlotOffsetPerPort +
 		SlotNum * StrmMod->SlotOffset;
+	if ((_XAie_CheckPrecisionExceeds(StrmMod->SlotPktId.Lsb,
+			_XAie_MaxBitsNeeded(Pkt.PktId), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->SlotMask.Lsb,
+			_XAie_MaxBitsNeeded(Mask), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->SlotEn.Lsb,
+			_XAie_MaxBitsNeeded(XAIE_ENABLE), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->SlotMsel.Lsb,
+			_XAie_MaxBitsNeeded(MSel), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(StrmMod->SlotArbitor.Lsb,
+			_XAie_MaxBitsNeeded(Arbitor), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	if(Enable == XAIE_ENABLE) {
 		RegVal = XAie_SetField(Pkt.PktId, StrmMod->SlotPktId.Lsb,
@@ -904,13 +965,20 @@ AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
 	}
 
 	RegAddr = (u64)(StrmMod->DetMerge->ConfigBase +
-		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
+		StrmMod->DetMerge->ArbConfigOffset * (u64)Arbitor) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	if(Position > 1U) {
 		RegAddr += 0x4U;
 	}
 
 	if((Position % 2U) == 0U) {
+		if ((_XAie_CheckPrecisionExceeds(StrmMod->DetMerge->SlvId0.Lsb,
+				_XAie_MaxBitsNeeded(SlvIdx), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+				(_XAie_CheckPrecisionExceeds(StrmMod->DetMerge->PktCount0.Lsb,
+				_XAie_MaxBitsNeeded(PktCount), MAX_VALID_AIE_REG_BIT_INDEX))) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		RegVal = XAie_SetField(SlvIdx, StrmMod->DetMerge->SlvId0.Lsb,
 				StrmMod->DetMerge->SlvId0.Mask) |
 			XAie_SetField(PktCount, StrmMod->DetMerge->PktCount0.Lsb,
@@ -918,6 +986,13 @@ AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
 		Mask = StrmMod->DetMerge->SlvId0.Mask |
 			StrmMod->DetMerge->PktCount0.Mask;
 	} else {
+		if ((_XAie_CheckPrecisionExceeds(StrmMod->DetMerge->SlvId1.Lsb,
+				_XAie_MaxBitsNeeded(SlvIdx), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+				(_XAie_CheckPrecisionExceeds(StrmMod->DetMerge->PktCount1.Lsb,
+				_XAie_MaxBitsNeeded(PktCount), MAX_VALID_AIE_REG_BIT_INDEX))) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		RegVal = XAie_SetField(SlvIdx, StrmMod->DetMerge->SlvId1.Lsb,
 				StrmMod->DetMerge->SlvId1.Mask) |
 			XAie_SetField(PktCount, StrmMod->DetMerge->PktCount1.Lsb,
@@ -978,8 +1053,13 @@ static AieRC _XAie_StrmSwDeterministicMergeCtrl(XAie_DevInst *DevInst,
 	}
 
 	RegAddr = (u64)(StrmMod->DetMerge->EnableBase +
-		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
+		StrmMod->DetMerge->ArbConfigOffset * (u64)Arbitor) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	if (_XAie_CheckPrecisionExceeds(StrmMod->DetMerge->Enable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(Enable, StrmMod->DetMerge->Enable.Lsb,
 			StrmMod->DetMerge->Enable.Mask);
 

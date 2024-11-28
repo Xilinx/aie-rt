@@ -210,6 +210,11 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 			for (u8 M = 0; M < NumMods; M++) {
 				RegAddr = MCtrlMod[M].MemCtrlRegOff +
 					XAie_GetTileAddr(DevInst, R, C);
+				if (_XAie_CheckPrecisionExceeds(MCtrlMod[M].MemZeroisation.Lsb,
+						_XAie_MaxBitsNeeded(XAIE_ENABLE), MAX_VALID_AIE_REG_BIT_INDEX)) {
+					XAIE_ERROR("Check Precision Exceeds Failed\n");
+					return XAIE_ERR;
+				}
 				FldVal = XAie_SetField(XAIE_ENABLE,
 					MCtrlMod[M].MemZeroisation.Lsb,
 					MCtrlMod[M].MemZeroisation.Mask);
@@ -273,6 +278,11 @@ static AieRC _XAieMl_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 
 	RegAddr = ClkBufCntr->RegOff +
 			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	if (_XAie_CheckPrecisionExceeds(ClkBufCntr->ClkBufEnable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
 			ClkBufCntr->ClkBufEnable.Mask);
 
@@ -410,10 +420,25 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 
 	RegAddr = ModClkCntr0->RegOff +
 			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	if (_XAie_CheckPrecisionExceeds(ModClkCntr0->StrmSwClkEnable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Enable, ModClkCntr0->StrmSwClkEnable.Lsb,
 			ModClkCntr0->StrmSwClkEnable.Mask);
+	if (_XAie_CheckPrecisionExceeds(ModClkCntr0->PlIntClkEnable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal |= XAie_SetField(Enable, ModClkCntr0->PlIntClkEnable.Lsb,
 			ModClkCntr0->PlIntClkEnable.Mask);
+	if (_XAie_CheckPrecisionExceeds(ModClkCntr0->CteClkEnable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal |= XAie_SetField(Enable, ModClkCntr0->CteClkEnable.Lsb,
 			ModClkCntr0->CteClkEnable.Mask);
 
@@ -426,6 +451,11 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 
 	RegAddr = ModClkCntr1->RegOff +
 			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	if (_XAie_CheckPrecisionExceeds(ModClkCntr1->NocModClkEnable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Enable, ModClkCntr1->NocModClkEnable.Lsb,
 			ModClkCntr1->NocModClkEnable.Mask);
 

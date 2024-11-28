@@ -682,6 +682,7 @@ typedef enum {
 	XAIE_EVENT_GROUP_USER_EVENT_MEM_TILE,
 	XAIE_EVENT_USER_EVENT_0_MEM_TILE,
 	XAIE_EVENT_USER_EVENT_1_MEM_TILE,
+	XAIE_EVENT_LAST,
 } XAie_Events;
 
 /* Enum to capture stream switch port interface */

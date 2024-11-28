@@ -37,6 +37,7 @@
 
 #ifdef XAIE_FEATURE_CORE_ENABLE
 
+#include "xaie_helper_internal.h"
 /************************** Constant Definitions *****************************/
 #define XAIETILE_CORE_STATUS_DEF_WAIT_USECS 500U
 
@@ -217,6 +218,11 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreCtrl->CtrlRst.Lsb,
+			_XAie_MaxBitsNeeded(1U),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
 	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlRst.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
@@ -832,6 +838,19 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugHaltCoreEvent0.Lsb,
+			_XAie_MaxBitsNeeded(MEvent0),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugHaltCoreEvent1.Lsb,
+			_XAie_MaxBitsNeeded(MEvent1),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugSStepCoreEvent.Lsb,
+			_XAie_MaxBitsNeeded(MSStepEvent),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugResumeCoreEvent.Lsb,
+			_XAie_MaxBitsNeeded(MResumeCoreEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	RegVal = XAie_SetField(MEvent0,
 			CoreMod->CoreDebug->DebugHaltCoreEvent0.Lsb,
 			CoreMod->CoreDebug->DebugHaltCoreEvent0.Mask) |
@@ -950,6 +969,12 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Mask = CoreMod->CoreEvent->EnableEvent.Mask |
 		CoreMod->CoreEvent->DisableEventOccurred.Mask |
 		CoreMod->CoreEvent->EnableEventOccurred.Mask;
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreEvent->EnableEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	Value = (u32)(MappedEvent << CoreMod->CoreEvent->EnableEvent.Lsb);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
@@ -1102,6 +1127,16 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 	 *  * For input , 0 == NORTH, 1 == WEST
 	 *  * For output, 0 == SOUTH, 1 == EAST
 	 */
+
+	if ((_XAie_CheckPrecisionExceeds(AccumCtrl->CascadeInput.Lsb,
+			_XAie_MaxBitsNeeded(((u8)InDir - (u8)SOUTH) % 2U),
+			MAX_VALID_AIE_REG_BIT_INDEX))  ||
+			(_XAie_CheckPrecisionExceeds(AccumCtrl->CascadeOutput.Lsb,
+			_XAie_MaxBitsNeeded(((u8)OutDir - (u8)SOUTH) % 2U),
+			MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(((u8)InDir - (u8)SOUTH) % 2U,
 			AccumCtrl->CascadeInput.Lsb,
 			AccumCtrl->CascadeInput.Mask) |
@@ -1149,6 +1184,12 @@ AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
 
 	RegAddr = CoreMod->CoreEvent->EnableEventOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreEvent->DisableEventOccurred.Lsb,
+			_XAie_MaxBitsNeeded(1U),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask;
 	Value = (u32)(1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb);
@@ -1198,6 +1239,12 @@ static AieRC _XAie_CoreProcessorBusConfig(XAie_DevInst *DevInst,
 	if (ProcBusCtrl == XAIE_NULL) {
 		XAIE_ERROR("Core processor bus control is not supported.\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	if ((_XAie_CheckPrecisionExceeds(ProcBusCtrl->CtrlEn.Lsb,
+			_XAie_MaxBitsNeeded(Enable),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	RegMask = ProcBusCtrl->CtrlEn.Mask;

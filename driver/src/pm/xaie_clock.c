@@ -59,7 +59,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(NumTiles > (u32)(DevInst->NumRows * DevInst->NumCols)) {
+	if(NumTiles > (u32)((u32)DevInst->NumRows * (u32)DevInst->NumCols)) {
 		XAIE_ERROR("Invalid NumTiles\n");
 		return XAIE_INVALID_ARGS;
 	}

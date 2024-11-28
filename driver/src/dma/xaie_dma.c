@@ -36,6 +36,7 @@
 #include "xaie_dma.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaiegbl_regdef.h"
 
 #ifdef XAIE_FEATURE_DMA_ENABLE
@@ -962,6 +963,11 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->Reset.Lsb,
+			_XAie_MaxBitsNeeded((u32)Reset), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	Val = XAie_SetField(Reset, DmaMod->ChProp->Reset.Lsb,
 			DmaMod->ChProp->Reset.Mask);
@@ -1080,6 +1086,12 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->PauseStream.Lsb,
+			_XAie_MaxBitsNeeded(Pause), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	Value = XAie_SetField(Pause, DmaMod->ChProp->PauseStream.Lsb,
 			DmaMod->ChProp->PauseStream.Mask);
 
@@ -1141,6 +1153,12 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	if(ChNum > DmaMod->NumChannels) {
 		XAIE_ERROR("Invalid Channel number\n");
 		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->PauseMem.Lsb,
+			_XAie_MaxBitsNeeded(Pause), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	Value = XAie_SetField(Pause, DmaMod->ChProp->PauseMem.Lsb,
@@ -1268,7 +1286,7 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u32)((u8)Dir * (u32)DmaMod->ChIdxOffset * DmaMod->NumChannels);
 
 	return XAie_MaskWrite32(DevInst,
 			Addr + (u64)(DmaMod->ChProp->Enable.Idx * 4U),
@@ -1799,6 +1817,15 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->StartQueueBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->StartBd.Lsb,
+			_XAie_MaxBitsNeeded(StartBd), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+		_XAie_CheckPrecisionExceeds(DmaMod->ChProp->RptCount.Lsb,
+			_XAie_MaxBitsNeeded(DmaQueueDesc->RepeatCount - 1U), MAX_VALID_AIE_REG_BIT_INDEX) ||
+		_XAie_CheckPrecisionExceeds(DmaMod->ChProp->EnToken.Lsb,
+			_XAie_MaxBitsNeeded(DmaQueueDesc->EnTokenIssue), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	Val = XAie_SetField(StartBd, DmaMod->ChProp->StartBd.Lsb,
 			DmaMod->ChProp->StartBd.Mask) |
@@ -1964,6 +1991,12 @@ AieRC XAie_DmaChannelSetControllerId(XAie_DmaChannelDesc *DmaChannelDesc,
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
+	if (_XAie_CheckPrecisionExceedsForRightShift(DmaMod->ChProp->ControllerId.Lsb,
+			DmaMod->ChProp->ControllerId.Mask)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	if(ControllerId > DmaMod->ChProp->ControllerId.Mask >>
 			DmaMod->ChProp->ControllerId.Lsb) {
 		XAIE_ERROR("Invalid ControllerId: %d\n", ControllerId);
@@ -2081,6 +2114,17 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
+		if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->ControllerId.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->ControllerId), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+			_XAie_CheckPrecisionExceeds(DmaMod->ChProp->FoTMode.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->FoTMode), MAX_VALID_AIE_REG_BIT_INDEX) ||
+			_XAie_CheckPrecisionExceeds(DmaMod->ChProp->EnOutofOrder.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->EnOutofOrderId), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+			_XAie_CheckPrecisionExceeds(DmaMod->ChProp->EnCompression.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->EnCompression), MAX_VALID_AIE_REG_BIT_INDEX)){
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 	Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, (DmaMod->ChProp->EnOutofOrder.Lsb),
 			(DmaMod->ChProp->EnOutofOrder.Mask)) |
 		XAie_SetField(DmaChannelDesc->EnCompression, (DmaMod->ChProp->EnCompression.Lsb),
@@ -2330,7 +2374,7 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 		return XAIE_INVALID_BD_NUM;
 	}
 
-	RegAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset) +
+	RegAddr = (u64)(DmaMod->BaseAddr + BdNum * (u64)DmaMod->IdxOffset) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->BdProp->BdEn->ValidBd.Idx * 4U;
 	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
@@ -2338,10 +2382,15 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 		return RC;
 	}
 
+		if (_XAie_CheckPrecisionExceedsForRightShift(DmaMod->BdProp->BdEn->ValidBd.Lsb,
+				DmaMod->BdProp->BdEn->ValidBd.Mask)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 	Valid = XAie_GetField(RegVal, DmaMod->BdProp->BdEn->ValidBd.Lsb,
 			DmaMod->BdProp->BdEn->ValidBd.Mask);
 	if(Valid == 1U) {
-		RegAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset)
+		RegAddr = (u64)(DmaMod->BaseAddr + BdNum * (u64)DmaMod->IdxOffset)
 			+ XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			DmaMod->BdProp->BufferLen.Idx * 4U;
 		RC = XAie_Read32(DevInst, RegAddr, &RegVal);
@@ -2349,6 +2398,11 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 			return RC;
 		}
 
+			if (_XAie_CheckPrecisionExceedsForRightShift(DmaMod->BdProp->BufferLen.Lsb,
+					DmaMod->BdProp->BufferLen.Mask)) {
+				XAIE_ERROR("Check Precision Exceeds Failed\n");
+				return XAIE_ERR;
+			}
 		*Len = (XAie_GetField(RegVal, DmaMod->BdProp->BufferLen.Lsb,
 			DmaMod->BdProp->BufferLen.Mask) +
 			DmaMod->BdProp->LenActualOffset)

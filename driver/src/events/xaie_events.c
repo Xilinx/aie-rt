@@ -107,6 +107,11 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = EvntMod->GenEventRegOff;
 	FldMask = EvntMod->GenEvent.Mask;
+	if (_XAie_CheckPrecisionExceeds(EvntMod->GenEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent, EvntMod->GenEvent.Lsb, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -167,8 +172,14 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
+	if (_XAie_CheckPrecisionExceeds(((u8)(ComboId) * (u32)EvntMod->ComboConfigOff),
+			_XAie_MaxBitsNeeded(EvntMod->ComboConfigMask),
+			MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegOffset = EvntMod->ComboCtrlRegOff;
-	FldMask = EvntMod->ComboConfigMask << ((u8)ComboId * EvntMod->ComboConfigOff);
+	FldMask = EvntMod->ComboConfigMask << ((u8)ComboId * (u32)EvntMod->ComboConfigOff);
 	FldVal = XAie_SetField(Op, (u8)ComboId * EvntMod->ComboConfigOff, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -205,6 +216,13 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Event2Lsb = ((u8)ComboId * 2U + 1U) * EvntMod->ComboEventOff;
 	Event1Mask = EvntMod->ComboEventMask << Event1Lsb;
 	Event2Mask = EvntMod->ComboEventMask << Event2Lsb;
+	if (_XAie_CheckPrecisionExceeds(Event1Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent1), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+		_XAie_CheckPrecisionExceeds(Event2Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent2), MAX_VALID_AIE_REG_BIT_INDEX)){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent1, Event1Lsb, Event1Mask) |
 		 XAie_SetField(MappedEvent2, Event2Lsb, Event2Mask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -307,6 +325,11 @@ AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
+	}
+
+	if(EventMod->ComboEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
 	}
 
 	*Event = (XAie_Events)EventMod->ComboEventBase;
@@ -448,6 +471,13 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 				(SelectId % EvntMod->StrmPortSelectIdsPerReg);
 	PortMstrSlvMask = EvntMod->PortMstrSlvMask << (8U *
 				(SelectId % EvntMod->StrmPortSelectIdsPerReg));
+	if (_XAie_CheckPrecisionExceeds((u8)PortIdLsb,
+			_XAie_MaxBitsNeeded(PortIdx), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+		_XAie_CheckPrecisionExceeds((u8)PortMstrSlvLsb,
+			_XAie_MaxBitsNeeded((u32)PortIntf), MAX_VALID_AIE_REG_BIT_INDEX)){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(PortIdx, PortIdLsb, PortIdMask) |
 		 XAie_SetField(PortIntf, PortMstrSlvLsb, PortMstrSlvMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -596,6 +626,11 @@ AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	}
 
+	if(EventMod->PortIdleEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
+	}
+
 	*Event = (XAie_Events)EventMod->PortIdleEventBase;
 
 	return RC;
@@ -655,6 +690,11 @@ static AieRC _XAie_EventSelectDmaChannelConfig(XAie_DevInst *DevInst,
 	ChannelDirLsb = EvntMod->DmaChannelMM2SOff * (u32)DmaDir;
 	ChannelIdLsb = (u32)(EvntMod->DmaChannelIdOff * SelectId) + ChannelDirLsb;
 	ChannelIdMask = (u32)EvntMod->DmaChannelIdMask << ChannelIdLsb;
+	if (_XAie_CheckPrecisionExceeds(ChannelIdLsb,
+			_XAie_MaxBitsNeeded(ChannelNum), MAX_VALID_AIE_REG_BIT_INDEX)){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	FldVal = XAie_SetField(ChannelNum, ChannelIdLsb, ChannelIdMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -987,8 +1027,8 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
-			    (u32)(DirShift * EvntMod->BroadcastSwBlockOff) +
-			    (u8)Switch * EvntMod->BroadcastSwOff;
+			    (u32)((u32)DirShift * EvntMod->BroadcastSwBlockOff) +
+			    (u8)Switch * (u32)EvntMod->BroadcastSwOff;
 		RegAddr   = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		RC = XAie_Write32(DevInst, RegAddr, (u32)(XAIE_ENABLE << BroadcastId));
@@ -1077,8 +1117,8 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
-			    (u32)(DirShift * EvntMod->BroadcastSwBlockOff) +
-			    (u8)Switch * EvntMod->BroadcastSwOff;
+			    (u32)((u32)DirShift * EvntMod->BroadcastSwBlockOff) +
+			    (u8)Switch * (u32)EvntMod->BroadcastSwOff;
 		RegAddr   = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		RC = XAie_Write32(DevInst, RegAddr, ChannelBitMap);
@@ -1167,8 +1207,8 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		RegOffset = EvntMod->BaseBroadcastSwUnblockRegOff +
-			    (u32)(DirShift * EvntMod->BroadcastSwUnblockOff) +
-			    (u8)Switch * EvntMod->BroadcastSwOff;
+			    (u32)((u32)DirShift * EvntMod->BroadcastSwUnblockOff) +
+			    (u8)Switch * (u32)EvntMod->BroadcastSwOff;
 		RegAddr   = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		RC = XAie_Write32(DevInst, RegAddr, (u32)(XAIE_ENABLE << BroadcastId));
@@ -1406,6 +1446,13 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds(EvntMod->EdgeDetectEvent.Lsb,
+			_XAie_MaxBitsNeeded(HwEvent), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(EvntMod->EdgeDetectTrigger.Lsb,
+			_XAie_MaxBitsNeeded(Trigger), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = (XAie_SetField(HwEvent, EvntMod->EdgeDetectEvent.Lsb,
 			EvntMod->EdgeDetectEvent.Mask) |
 		XAie_SetField(Trigger, EvntMod->EdgeDetectTrigger.Lsb,
@@ -1460,6 +1507,11 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	if(Valid == XAIE_DISABLE) {
+		if (_XAie_CheckPrecisionExceeds(EvntMod->PCValid.Lsb,
+				_XAie_MaxBitsNeeded(Valid), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField(Valid, EvntMod->PCValid.Lsb,
 				EvntMod->PCValid.Mask);
 
@@ -1477,6 +1529,13 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 			return RC;
 		}
 	} else {
+		if ((_XAie_CheckPrecisionExceeds(EvntMod->PCAddr.Lsb,
+				_XAie_MaxBitsNeeded(PCAddr), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			_XAie_CheckPrecisionExceeds(EvntMod->PCValid.Lsb,
+				_XAie_MaxBitsNeeded(Valid), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField(PCAddr, EvntMod->PCAddr.Lsb,
 				EvntMod->PCAddr.Mask) |
 			 XAie_SetField(Valid, EvntMod->PCValid.Lsb,
@@ -1774,7 +1833,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
-	*Status =  (u8)(RegVal >> (PhyEvent % 32U)) & 1U;
+	*Status =  (u8)((RegVal >> (PhyEvent % 32U)) & 1U);
 
 	return XAIE_OK;
 }
@@ -1823,6 +1882,11 @@ AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	}
+
+	if(EventMod->UserEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
 	}
 
 	*Event = (XAie_Events)EventMod->UserEventBase;

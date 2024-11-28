@@ -427,8 +427,14 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 {
 	va_list ArgPtr;
 	va_start(ArgPtr, Format);
-	fprintf(Fd, "%s %s():%d: ", prefix, func, line);
-	vfprintf(Fd, Format, ArgPtr);
+	if (fprintf(Fd, "%s %s():%u: ", prefix, func, line) == -1) {
+		va_end(ArgPtr);
+		return;
+	}
+	if (vfprintf(Fd, Format, ArgPtr) == -1){
+		va_end(ArgPtr);
+		return;
+	}
 	va_end(ArgPtr);
 }
 
@@ -678,12 +684,17 @@ static int TxnCmdDump(XAie_TxnCmd* cmd) {
 ******************************************************************************/
 static AieRC _XAie_ReallocCmdBuf(XAie_TxnInst *TxnInst)
 {
+	u64 NewMaxCmds = (u64)(TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS);
+	if(NewMaxCmds > UINT32_MAX) {
+		XAIE_ERROR("Failed reallocate memory for transaction buffer\n");
+		return XAIE_ERR;
+	}
+
 	TxnInst->CmdBuf = (XAie_TxnCmd *)realloc((void *)TxnInst->CmdBuf,
-			sizeof(XAie_TxnCmd) *
-			(u64)(TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS));
+			sizeof(XAie_TxnCmd) * (u32)NewMaxCmds);
 	if(TxnInst->CmdBuf == NULL) {
 		XAIE_ERROR("Failed reallocate memory for transaction buffer "
-				"with id: %d\n", TxnInst->Tid);
+				"with id: %llu\n", TxnInst->Tid);
 		return XAIE_ERR;
 	}
 
@@ -783,7 +794,7 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 							Cmd->Value);
 			}
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Wr failed. Addr: 0x%lx, Mask: 0x%x,"
+				XAIE_ERROR("Wr failed. Addr: 0x%llx, Mask: 0x%x,"
 						"Value: 0x%x\n", Cmd->RegOff,
 						Cmd->Mask, Cmd->Value);
 				return RC;
@@ -795,13 +806,13 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 					(u32 *)(uintptr_t)Cmd->DataPtr,
 					Cmd->Size);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Block Wr failed. Addr: 0x%lx\n",
+				XAIE_ERROR("Block Wr failed. Addr: 0x%llx\n",
 						Cmd->RegOff);
 				return RC;
 			}
 
 			if((Flags & XAIE_TXN_INST_EXPORTED_MASK) == 0U) {
-				free((void *)Cmd->DataPtr);
+				free((void *)(uintptr_t)Cmd->DataPtr);
 			}
 			break;
 		case XAIE_IO_BLOCKSET:
@@ -809,7 +820,7 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 					Cmd->RegOff, Cmd->Value,
 					Cmd->Size);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Block Wr failed. Addr: 0x%lx\n",
+				XAIE_ERROR("Block Wr failed. Addr: 0x%llx\n",
 						Cmd->RegOff);
 				return RC;
 			}
@@ -821,7 +832,7 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 							Cmd->RegOff, Cmd->Mask,
 							Cmd->Value, 0U);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("MP failed. Addr: 0x%lx, Mask: 0x%x, Value: 0x%x\n",
+				XAIE_ERROR("MP failed. Addr: 0x%llx, Mask: 0x%x, Value: 0x%x\n",
 						Cmd->RegOff, Cmd->Mask,
 						Cmd->Value);
 				return RC;
@@ -978,6 +989,7 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
 		XAie_TxnCmd *TmpCmd = &TmpInst->CmdBuf[i];
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
+
 		if(TmpCmd->Opcode == XAIE_IO_BLOCKWRITE) {
 			Cmd->DataPtr = (u64)(uintptr_t)malloc(
 					sizeof(u32) * TmpCmd->Size);
@@ -990,7 +1002,7 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 			}
 
 			Cmd->DataPtr = (u64)(uintptr_t)memcpy(
-					(void *)Cmd->DataPtr,
+					(void *)(uintptr_t)Cmd->DataPtr,
 					(void *)TmpCmd->DataPtr,
 					sizeof(u32) * TmpCmd->Size);
 		}
@@ -1037,7 +1049,7 @@ static inline u8 _XAie_GetColfromRegOff(XAie_DevInst *DevInst, u64 RegOff)
 static inline void _XAie_AppendWrite32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_Write32Hdr *Hdr = (XAie_Write32Hdr*)TxnPtr;
+	XAie_Write32Hdr *Hdr = (XAie_Write32Hdr*)(uintptr_t)TxnPtr;
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Value = Cmd->Value;
 	Hdr->Size = (u32)sizeof(*Hdr);
@@ -1049,7 +1061,7 @@ static inline void _XAie_AppendWrite32(XAie_DevInst *DevInst,
 static inline void _XAie_AppendMaskWrite32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_MaskWrite32Hdr *Hdr = (XAie_MaskWrite32Hdr*)TxnPtr;
+	XAie_MaskWrite32Hdr *Hdr = (XAie_MaskWrite32Hdr*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Mask = Cmd->Mask;
@@ -1063,7 +1075,7 @@ static inline void _XAie_AppendMaskWrite32(XAie_DevInst *DevInst,
 static inline void _XAie_AppendMaskPoll32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
 {
-	XAie_MaskPoll32Hdr *Hdr = (XAie_MaskPoll32Hdr*)TxnPtr;
+	XAie_MaskPoll32Hdr *Hdr = (XAie_MaskPoll32Hdr*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Mask = Cmd->Mask;
@@ -1077,7 +1089,7 @@ static inline void _XAie_AppendMaskPoll32(XAie_DevInst *DevInst,
 static inline void _XAie_AppendMaskPollBusy32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
 {
-	XAie_MaskPoll32Hdr *Hdr = (XAie_MaskPoll32Hdr*)TxnPtr;
+	XAie_MaskPoll32Hdr *Hdr = (XAie_MaskPoll32Hdr*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Mask = Cmd->Mask;
@@ -1092,7 +1104,7 @@ static inline void _XAie_AppendBlockWrite32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_BlockWrite32Hdr);
-	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)TxnPtr;
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = (u32)Cmd->RegOff;
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
@@ -1108,7 +1120,7 @@ static inline void _XAie_AppendBlockSet32(XAie_DevInst *DevInst,
 		XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_BlockWrite32Hdr);
-	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)TxnPtr;
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = (u32)Cmd->RegOff;
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
@@ -1117,7 +1129,7 @@ static inline void _XAie_AppendBlockSet32(XAie_DevInst *DevInst,
 	Hdr->OpHdr.Op = (u8)XAIE_IO_BLOCKWRITE;
 
 	for (u32 i = 0U; i < Cmd->Size; i++) {
-		*((u32 *)Payload) = Cmd->Value;
+		*((u32 *)(uintptr_t)Payload) = Cmd->Value;
 		Payload += 4;
 	}
 }
@@ -1125,26 +1137,26 @@ static inline void _XAie_AppendBlockSet32(XAie_DevInst *DevInst,
 static inline void _XAie_AppendCustomOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr);
-	XAie_CustomOpHdr *Hdr = (XAie_CustomOpHdr*)TxnPtr;
+	XAie_CustomOpHdr *Hdr = (XAie_CustomOpHdr*)(uintptr_t)TxnPtr;
 
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
 	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
 
 	for (u32 i = 0U; i < Cmd->Size; ++i, ++Payload) {
-		*(Payload) = *((u8*)Cmd->DataPtr + i);
+		*(Payload) = *((u8*)(uintptr_t)(Cmd->DataPtr + i));
 	}
 }
 
 static inline void _XAie_AppendNoOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_NoOpHdr *Hdr = ( XAie_NoOpHdr*)TxnPtr;
+	XAie_NoOpHdr *Hdr = ( XAie_NoOpHdr*)(uintptr_t)TxnPtr;
 
 	Hdr->Op = (u8)Cmd->Opcode;
 }
 
 static inline void _XAie_AppendPreempt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_PreemptHdr *Hdr = ( XAie_PreemptHdr*)TxnPtr;
+	XAie_PreemptHdr *Hdr = ( XAie_PreemptHdr*)(uintptr_t)TxnPtr;
 
 	Hdr->Op = (u8)Cmd->Opcode;
 	Hdr->Preempt_level = (u8)Cmd->Preempt_level;
@@ -1189,7 +1201,7 @@ static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
 
 static inline void _XAie_AppendWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_Write32Hdr_opt *Hdr = (XAie_Write32Hdr_opt*)TxnPtr;
+	XAie_Write32Hdr_opt *Hdr = (XAie_Write32Hdr_opt*)(uintptr_t)TxnPtr;
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Value = Cmd->Value;
 	Hdr->OpHdr.Op = (u8)XAIE_IO_WRITE;
@@ -1197,7 +1209,7 @@ static inline void _XAie_AppendWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 
 static inline void _XAie_AppendMaskWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_MaskWrite32Hdr_opt *Hdr = (XAie_MaskWrite32Hdr_opt*)TxnPtr;
+	XAie_MaskWrite32Hdr_opt *Hdr = (XAie_MaskWrite32Hdr_opt*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Mask = Cmd->Mask;
@@ -1207,7 +1219,7 @@ static inline void _XAie_AppendMaskWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 
 static inline void _XAie_AppendMaskPoll32_opt(XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
 {
-	XAie_MaskPoll32Hdr_opt *Hdr = (XAie_MaskPoll32Hdr_opt*)TxnPtr;
+	XAie_MaskPoll32Hdr_opt *Hdr = (XAie_MaskPoll32Hdr_opt*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Mask = Cmd->Mask;
@@ -1217,7 +1229,7 @@ static inline void _XAie_AppendMaskPoll32_opt(XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
 
 static inline void _XAie_AppendMaskPollBusy32_opt(XAie_TxnCmd *Cmd, uint8_t *TxnPtr)
 {
-	XAie_MaskPoll32Hdr_opt *Hdr = (XAie_MaskPoll32Hdr_opt*)TxnPtr;
+	XAie_MaskPoll32Hdr_opt *Hdr = (XAie_MaskPoll32Hdr_opt*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = Cmd->RegOff;
 	Hdr->Mask = Cmd->Mask;
@@ -1227,7 +1239,7 @@ static inline void _XAie_AppendMaskPollBusy32_opt(XAie_TxnCmd *Cmd, uint8_t *Txn
 static inline void _XAie_AppendBlockWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u32 *Payload = (void*)(TxnPtr + sizeof(XAie_BlockWrite32Hdr_opt));
-	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)TxnPtr;
+	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = (u32)Cmd->RegOff;
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
@@ -1240,14 +1252,14 @@ static inline void _XAie_AppendBlockWrite32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 static inline void _XAie_AppendBlockSet32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_BlockWrite32Hdr_opt);
-	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)TxnPtr;
+	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)TxnPtr;
 
 	Hdr->RegOff = (u32)Cmd->RegOff;
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
 	Hdr->OpHdr.Op = (u8)XAIE_IO_BLOCKWRITE;
 
 	for (u32 i = 0U; i < Cmd->Size; i++) {
-		*((u32 *)Payload) = Cmd->Value;
+		*((u32 *)(uintptr_t)Payload) = Cmd->Value;
 		Payload += 4;
 	}
 }
@@ -1255,13 +1267,13 @@ static inline void _XAie_AppendBlockSet32_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 static inline void _XAie_AppendCustomOp_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr_opt);
-	XAie_CustomOpHdr_opt *Hdr = (XAie_CustomOpHdr_opt*)TxnPtr;
+	XAie_CustomOpHdr_opt *Hdr = (XAie_CustomOpHdr_opt*)(uintptr_t)TxnPtr;
 
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
 	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
 
 	for (u32 i = 0U; i < Cmd->Size; ++i, ++Payload) {
-		*(Payload) = *((u8*)Cmd->DataPtr + i);
+		*(Payload) = *((u8*)(uintptr_t)(Cmd->DataPtr + i));
 	}
 }
 
@@ -1291,7 +1303,7 @@ static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
 
 static inline void Append_BW_To_Blockwrite_Buff(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd, u8 First_blockwrite_processed, u32* Blockwrite_buffer)
 {
-	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)Blockwrite_buffer;
+	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)Blockwrite_buffer;
 	u32* Payload;
 	u32 memcpy_size = Cmd->Size * (u32)sizeof(u32);
 	if(First_blockwrite_processed == 0)
@@ -2636,7 +2648,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		/* check memory allocation before increase Cmd vector */
 		char* tmpBuff = malloc(size);
 		if(tmpBuff == NULL) {
-			XAIE_ERROR("Fail to malloc %d size memory for DataPtr\n", size);
+			XAIE_ERROR("Fail to malloc %lu size memory for DataPtr\n", size);
 			return XAIE_ERR;
 		}
 
@@ -3095,7 +3107,12 @@ static AieRC _XAie_CoreStatusDump(XAie_DevInst *DevInst,
 	if (RC != XAIE_OK) {
 		return RC;
 	}
-	Index = Loc.Row - TileStart;
+	if(Loc.Row < TileStart){
+		XAIE_ERROR("Loc.Row should not be less than TileStart\n");
+		return XAIE_ERR;
+	}else {
+		Index = Loc.Row - TileStart;
+	}
 	Status[Loc.Col].CoreTile[Index].CoreStatus = RegVal;
 
 	/* program counter */
@@ -3175,6 +3192,11 @@ static AieRC _XAie_DmaStatusDump(XAie_DevInst *DevInst,
 			return RC;
 		}
 
+		if(Loc.Row < AieTileStart ||  Loc.Row < MemTileStart){
+			XAIE_ERROR("Loc.Row should not be less than TileStart\n");
+			return XAIE_ERR;
+		}
+
 		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 			Index = Loc.Row - AieTileStart;
 			CoreTile[Index].Dma[Chan].S2MMStatus = RegVal;
@@ -3242,6 +3264,12 @@ static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
 		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
+
+	if(Loc.Row < AieTileStart ||  Loc.Row < MemTileStart){
+		XAIE_ERROR("Loc.Row should not be less than TileStart\n");
+		return XAIE_ERR;
+	}
+
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 	CoreTile = Status[Loc.Col].CoreTile;
 	MemTile = Status[Loc.Col].MemTile;
@@ -3255,6 +3283,11 @@ static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
 		RC = XAie_LockGetValue(DevInst, Loc, Lock, &RegVal);
 		if (RC != XAIE_OK) {
 			return RC;
+		}
+
+		if(RegVal > UINT8_MAX){
+			XAIE_ERROR("Invalid Lock value\n");
+			return XAIE_ERR;
 		}
 
 		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
@@ -3312,6 +3345,11 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 	MemTile = Status[Loc.Col].MemTile;
 	ShimTile = Status[Loc.Col].ShimTile;
 	DevMod = DevInst->DevProp.DevMod;
+
+	if(Loc.Row < AieTileStart || Loc.Row < MemTileStart ){
+		XAIE_ERROR("Loc.Row should not be less than TileStart\n");
+		return XAIE_ERR;
+	}
 
 	if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 		EvntCoreMod = &DevMod[TileType].EvntMod[XAIE_CORE_MOD];
@@ -3380,7 +3418,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 ******************************************************************************/
 AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 {
-	u32 RC = (u32)XAIE_ERR;
+	AieRC RC = XAIE_ERR;
 	u8 StartCol = DevInst->StartCol;
 	u8 NumCols  = DevInst->NumCols;
 	u8 NumRows  = DevInst->NumRows;
@@ -3403,5 +3441,100 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 	}
 	return (AieRC)RC;
 }
+
+/*****************************************************************************/
+/**
+*
+* This routine is used to check if given lsb & value pair exceeds precision.
+*
+* @param	Lsb				: Shift Value
+* @param    ValueBitCount	: Value to be shifted
+* @param    MaxValidBitPos	: Max desired precision post shift
+*
+* @return	0 - if precision intact else precision exceeds
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+u8 _XAie_CheckPrecisionExceeds(u32 Lsb, u8 ValueBitCount, u8 MaxValidBitPos)
+{
+	if ((Lsb + ValueBitCount) > MaxValidBitPos) {
+		return 1;
+	}
+	return 0;
+}
+
+/*****************************************************************************/
+/**
+*
+* This routine is used calculate the max bits needed for a given integer number.
+*
+* @param    Value		: Value
+*
+* @return	No of bits needed to represent the value.
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+u8 _XAie_MaxBitsNeeded(u32 value)
+{
+    // Calculate the number of bits needed to represent the value
+    if (value == 0) {
+        return 1; // Special case for zero
+    }
+
+    u8 bits = 0;
+    while (value) {
+        bits++;
+        value >>= 1; // Right shift by 1 (equivalent to dividing by 2)
+    }
+    return bits;
+}
+
+/*****************************************************************************/
+/**
+*
+* This routine is used to check if given lsb & Mask pair exceeds precision
+* when a masked value is right shift by lsb
+*
+* @param	Lsb				: Shift Value
+* @param    Mask			: Value to be shifted
+*
+* @return	0 - if precision intact else precision exceeds
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+u8 _XAie_CheckPrecisionExceedsForRightShift(u32 Lsb, u32 Mask)
+{
+	if (Lsb  > _XAie_CountTrailingZeros(Mask)) {
+		return 1;
+	}
+	return 0;
+}
+
+/*****************************************************************************/
+/**
+*
+* This routine is used calculate the trailing zeros needed for a given 
+* integer number in  binary form
+*
+* @param    Value		: Value
+*
+* @return	No of trailing zeros in the given number.
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+u8 _XAie_CountTrailingZeros(u32 value)
+{
+	u8 count = 0;
+    while ((value & 1) == 0 && value > 0)  {
+		value >>= 1;
+        count++; // Right shift by 1 (equivalent to dividing by 2)
+    }
+    return count;
+}
+
 
 /** @} */

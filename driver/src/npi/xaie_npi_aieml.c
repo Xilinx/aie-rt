@@ -18,6 +18,7 @@
 #include "xaie_helper.h"
 #include "xaie_npi.h"
 #include "xaiegbl.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 
@@ -51,7 +52,7 @@
 static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 		XAie_NpiProtRegReq *Req, u32 *RegVal);
 
-const XAie_NpiMod _XAieMlNpiMod =
+XAie_NpiMod _XAieMlNpiMod =
 {
 	.PcsrMaskOff = XAIEML_NPI_PCSR_MASK,
 	.PcsrCntrOff = XAIEML_NPI_PCSR_CONTROL,
@@ -92,6 +93,12 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if (_XAie_CheckPrecisionExceeds(_XAieMlNpiMod.ProtRegEnable.Lsb,
+			_XAie_MaxBitsNeeded(Req->Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	*RegVal = XAie_SetField(Req->Enable, _XAieMlNpiMod.ProtRegEnable.Lsb,
 			       _XAieMlNpiMod.ProtRegEnable.Mask);
 
@@ -106,8 +113,20 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 
 	CLast = CFirst + NumCols - 1U;
 
+	if (_XAie_CheckPrecisionExceeds(_XAieMlNpiMod.ProtRegFirstCol.Lsb,
+			_XAie_MaxBitsNeeded(CFirst), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	*RegVal |= XAie_SetField(CFirst, _XAieMlNpiMod.ProtRegFirstCol.Lsb,
 				_XAieMlNpiMod.ProtRegFirstCol.Mask);
+
+	if (_XAie_CheckPrecisionExceeds(_XAieMlNpiMod.ProtRegLastCol.Lsb,
+			_XAie_MaxBitsNeeded(CLast), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	*RegVal |= XAie_SetField(CLast, _XAieMlNpiMod.ProtRegLastCol.Lsb,
 				_XAieMlNpiMod.ProtRegLastCol.Mask);
 

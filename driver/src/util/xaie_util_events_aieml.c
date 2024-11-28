@@ -73,6 +73,8 @@ int XAie_EventStatus_CSV(XAie_DevInst* DevInst, u32 Reg, char* Buf, u32 BufSize,
 		}
 		else if(TType == XAIEGBL_TILE_TYPE_AIETILE) {
 			XAie_EvntStrings = XAie_EventCoreModStrings[Mod];
+		}else {
+			return -1;
 		}
 		EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[Mod];
 	}

@@ -18,6 +18,7 @@
 #include "xaie_npi.h"
 #include "xaie_io_internal.h"
 #include "xaiegbl.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 
@@ -83,6 +84,9 @@ static AieRC _XAie_NpiSetLock(XAie_DevInst *DevInst, u8 Lock)
 	u32 LockVal;
 
 	NpiMod = _XAie_NpiGetMod(DevInst);
+	if (NpiMod == NULL) {
+		return XAIE_ERR;
+	}
 
 	if (Lock == XAIE_DISABLE) {
 		LockVal = NpiMod->PcsrUnlockCode;
@@ -175,6 +179,12 @@ AieRC _XAie_NpiSetShimReset(XAie_DevInst *DevInst, u8 RstEnable)
 
 	NpiMod = _XAie_NpiGetMod(DevInst);
 	if (NpiMod == NULL) {
+		return XAIE_ERR;
+	}
+
+	if (_XAie_CheckPrecisionExceeds(NpiMod->ShimReset.Lsb,
+			_XAie_MaxBitsNeeded(RstEnable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
 		return XAIE_ERR;
 	}
 

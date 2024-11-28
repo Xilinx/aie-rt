@@ -28,6 +28,7 @@
 #include "xaie_trace.h"
 
 #ifdef XAIE_FEATURE_TRACE_ENABLE
+#include "xaie_helper_internal.h"
 
 /************************** Constant Definitions *****************************/
 /************************** Function Definitions *****************************/
@@ -108,6 +109,12 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	EventRegOffId = SlotId / TraceMod->NumEventsPerSlot;
 	RegOffset = TraceMod->EventRegOffs[EventRegOffId];
 	FldMask = TraceMod->Event[SlotId].Mask;
+
+	if (_XAie_CheckPrecisionExceeds(TraceMod->Event[SlotId].Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent),MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent, TraceMod->Event[SlotId].Lsb,
 			FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -185,6 +192,12 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = TraceMod->CtrlRegOff;
 	FldMask = TraceMod->StartEvent.Mask;
+
+	if (_XAie_CheckPrecisionExceeds(TraceMod->StartEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent),MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent, TraceMod->StartEvent.Lsb, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -261,6 +274,12 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = TraceMod->CtrlRegOff;
 	FldMask = TraceMod->StopEvent.Mask;
+
+	if (_XAie_CheckPrecisionExceeds(TraceMod->StopEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent),MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent, TraceMod->StopEvent.Lsb, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -325,6 +344,14 @@ AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = TraceMod->PktConfigRegOff;
 	FldMask = TraceMod->PktId.Mask | TraceMod->PktType.Mask;
+
+	if ((_XAie_CheckPrecisionExceeds(TraceMod->PktId.Lsb,
+			_XAie_MaxBitsNeeded(Pkt.PktId),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(TraceMod->PktType.Lsb,
+			_XAie_MaxBitsNeeded(Pkt.PktType),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Pkt.PktId, TraceMod->PktId.Lsb,
 				TraceMod->PktId.Mask) |
 		 XAie_SetField(Pkt.PktType, TraceMod->PktType.Lsb,
@@ -394,6 +421,12 @@ AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegOffset = TraceMod->CtrlRegOff;
 	FldMask = TraceMod->ModeConfig.Mask;
+
+	if (_XAie_CheckPrecisionExceeds(TraceMod->ModeConfig.Lsb,
+			_XAie_MaxBitsNeeded((u32)Mode),MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Mode, TraceMod->ModeConfig.Lsb, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -455,6 +488,12 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RC = XAie_Read32(DevInst, RegAddr, &RegValue);
 	if(RC != XAIE_OK) {
 		return RC;
+	}
+
+	if (_XAie_CheckPrecisionExceedsForRightShift(TraceMod->State.Lsb,
+			TraceMod->State.Mask)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	*State = XAie_GetField(RegValue, TraceMod->State.Lsb,
@@ -520,6 +559,12 @@ AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RC = XAie_Read32(DevInst, RegAddr, &RegValue);
 	if(RC != XAIE_OK) {
 		return RC;
+	}
+
+	if (_XAie_CheckPrecisionExceedsForRightShift(TraceMod->ModeSts.Lsb,
+			TraceMod->ModeSts.Mask)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	*Mode = XAie_GetField(RegValue, TraceMod->ModeSts.Lsb,
@@ -608,6 +653,16 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(TraceMod->ModeConfig.Mask == XAIE_FEATURE_UNAVAILABLE)
 		Mode = 0U;
+
+	if ((_XAie_CheckPrecisionExceeds(TraceMod->ModeConfig.Lsb,
+			_XAie_MaxBitsNeeded((u32)Mode),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(TraceMod->StartEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedStartEvent),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(TraceMod->StopEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedStopEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	RegVal = XAie_SetField(Mode, TraceMod->ModeConfig.Lsb,
 			TraceMod->ModeConfig.Mask) |

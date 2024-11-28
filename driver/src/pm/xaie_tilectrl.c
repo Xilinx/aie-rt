@@ -26,6 +26,7 @@
 #include "xaie_helper.h"
 #include "xaie_tilectrl.h"
 #include "xaiegbl_defs.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 
@@ -77,6 +78,12 @@ AieRC _XAie_TileCtrlSetIsolation(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * This is internal function, the Dir input masks matches the register
 	 * isolation mask, there is no need to calculate each direction bit.
 	 */
+	if ((Dir > XAIE_ISOLATE_ALL_MASK) || \
+			(_XAie_CheckPrecisionExceeds(TCtrlMod->IsolateSouth.Lsb, \
+					_XAie_MaxBitsNeeded(Dir), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Dir,
 			TCtrlMod->IsolateSouth.Lsb, Mask);
 
