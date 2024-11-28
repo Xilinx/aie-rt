@@ -1023,7 +1023,7 @@ static inline void _XAie_CreateTxnHeader(XAie_DevInst *DevInst,
 
 static inline u8 _XAie_GetRowfromRegOff(XAie_DevInst *DevInst, u64 RegOff)
 {
-	return RegOff &(u64)(~(ULONG_MAX << DevInst->DevProp.RowShift));
+	return RegOff &(u64)(~((u64) ULONG_MAX << DevInst->DevProp.RowShift));
 }
 
 static inline u8 _XAie_GetColfromRegOff(XAie_DevInst *DevInst, u64 RegOff)
@@ -1428,6 +1428,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				(AllocatedBuffSize) * 2U, BuffSize);
 				if(TxnPtr == NULL) {
 					printf("Realloc Failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1550,6 +1551,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 									(BW_Buff_AllocatedSize) * 2U, BW_Buff_Size) );
 				if(blockwrite_buffer == NULL) {
 							printf("Realloc Failed\n");
+							free(TxnPtr);
 							return NULL;
 						}
 				BW_Buff_AllocatedSize *= 2U;
@@ -2643,6 +2645,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
 			if (RC != XAIE_OK) {
+				 free(tmpBuff);
 				 return RC;
 			}
 

@@ -904,7 +904,7 @@ AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
 	}
 
 	RegAddr = (u64)(StrmMod->DetMerge->ConfigBase +
-		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
+		StrmMod->DetMerge->ArbConfigOffset * (u64) Arbitor) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	if(Position > 1U) {
 		RegAddr += 0x4U;
@@ -978,7 +978,7 @@ static AieRC _XAie_StrmSwDeterministicMergeCtrl(XAie_DevInst *DevInst,
 	}
 
 	RegAddr = (u64)(StrmMod->DetMerge->EnableBase +
-		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
+		StrmMod->DetMerge->ArbConfigOffset * (u64) Arbitor) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	RegVal = XAie_SetField(Enable, StrmMod->DetMerge->Enable.Lsb,
 			StrmMod->DetMerge->Enable.Mask);

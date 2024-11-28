@@ -2330,7 +2330,7 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 		return XAIE_INVALID_BD_NUM;
 	}
 
-	RegAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset) +
+	RegAddr = (u64)(DmaMod->BaseAddr + ((u64)BdNum * DmaMod->IdxOffset)) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->BdProp->BdEn->ValidBd.Idx * 4U;
 	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
@@ -2341,7 +2341,7 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 	Valid = XAie_GetField(RegVal, DmaMod->BdProp->BdEn->ValidBd.Lsb,
 			DmaMod->BdProp->BdEn->ValidBd.Mask);
 	if(Valid == 1U) {
-		RegAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset)
+		RegAddr = (u64)(DmaMod->BaseAddr + ((u64) BdNum * DmaMod->IdxOffset))
 			+ XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			DmaMod->BdProp->BufferLen.Idx * 4U;
 		RC = XAie_Read32(DevInst, RegAddr, &RegVal);
