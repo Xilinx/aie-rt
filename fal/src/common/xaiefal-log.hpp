@@ -26,8 +26,8 @@ namespace xaiefal {
 
 		~Logger() {}
 
-		void setLogLevel(LogLevel L) {
-			Level = L;
+		void setLogLevel(LogLevel Lvl) {
+			Level = Lvl;
 		}
 
 		LogLevel getLogLevel() {
@@ -47,10 +47,10 @@ namespace xaiefal {
 
 			return logger;
 		}
-		static std::ostream &log(LogLevel L=LogLevel::FAL_MAX) {
+		static std::ostream &log(LogLevel Lvl=LogLevel::FAL_MAX) {
 			const char* label;
 
-			switch(L) {
+			switch(Lvl) {
 				case LogLevel::FAL_DEBUG: label = "XAIEFAL: DEBUG: "; break;
 				case LogLevel::FAL_INFO:  label = "XAIEFAL: INFO: "; break;
 				case LogLevel::FAL_WARN:  label = "XAIEFAL: WARN: "; break;
@@ -58,7 +58,7 @@ namespace xaiefal {
 				default: label = ""; break;
 			}
 
-			if (get().Level <= L) {
+			if (get().Level <= Lvl) {
 				if (get().of.rdbuf()->is_open()) {
 					get().of << label;
 					return get().of;

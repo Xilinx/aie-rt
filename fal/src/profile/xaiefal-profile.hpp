@@ -15,24 +15,24 @@ namespace xaiefal {
 	public:
 		XAieActiveCycles() = delete;
 		XAieActiveCycles(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L, bool CrossM = false):
-			XAiePerfCounter(DevHd, L, XAIE_CORE_MOD, CrossM) {
+			XAie_LocType Loc, bool CrossM = false):
+			XAiePerfCounter(DevHd, Loc, XAIE_CORE_MOD, CrossM) {
 			initialize(XAIE_CORE_MOD, XAIE_EVENT_ACTIVE_CORE,
 				XAIE_CORE_MOD, XAIE_EVENT_DISABLED_CORE);
 		}
 		XAieActiveCycles(XAieDev &Dev,
-			XAie_LocType L, bool CrossM = false):
-			XAieActiveCycles(Dev.getDevHandle(), L, CrossM) {}
+			XAie_LocType Loc, bool CrossM = false):
+			XAieActiveCycles(Dev.getDevHandle(), Loc, CrossM) {}
 	};
 	class XAieStallCycles: public XAiePerfCounter {
 	public:
 		XAieStallCycles() = delete;
 		XAieStallCycles(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L,
+			XAie_LocType Loc,
 			std::shared_ptr<XAieGroupEventHandle> StallG,
 			std::shared_ptr<XAieGroupEventHandle> FlowG,
 			bool CrossM = false):
-			XAiePerfCounter(DevHd, L, XAIE_CORE_MOD, CrossM),
+			XAiePerfCounter(DevHd, Loc, XAIE_CORE_MOD, CrossM),
 			StallGroupEvent(StallG),
 			FlowGroupEvent(FlowG) {
 			initialize(XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_STALL_CORE,
@@ -40,13 +40,13 @@ namespace xaiefal {
 			StallGroupEvent->setGroupEvents(0x19F);
 		}
 		XAieStallCycles(XAieDev &Dev,
-			XAie_LocType L,
+			XAie_LocType Loc,
 			bool CrossM = false):
-			XAiePerfCounter(Dev, L, XAIE_CORE_MOD, CrossM) {
+			XAiePerfCounter(Dev, Loc, XAIE_CORE_MOD, CrossM) {
 			initialize(XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_STALL_CORE,
 				XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
-			StallGroupEvent = Dev.tile(L).module(XAIE_CORE_MOD).groupEvent(XAIE_EVENT_GROUP_CORE_STALL_CORE);
-			FlowGroupEvent = Dev.tile(L).module(XAIE_CORE_MOD).groupEvent(XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
+			StallGroupEvent = Dev.tile(Loc).module(XAIE_CORE_MOD).groupEvent(XAIE_EVENT_GROUP_CORE_STALL_CORE);
+			FlowGroupEvent = Dev.tile(Loc).module(XAIE_CORE_MOD).groupEvent(XAIE_EVENT_GROUP_CORE_PROGRAM_FLOW_CORE);
 			StallGroupEvent->setGroupEvents(0x19F);
 			}
 
@@ -54,10 +54,10 @@ namespace xaiefal {
 		 * This function sets the stall group events enabling bits.
 		 * Must be called before reserve.
 		 *
-		 * @param C group event
+		 * @param Config group event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC stallGroupEventConfig(uint32_t C) {
+		AieRC stallGroupEventConfig(uint32_t Config) {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
@@ -67,7 +67,7 @@ namespace xaiefal {
 					" resource not allocated." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				StallGroupEvent->setGroupEvents(C);
+				StallGroupEvent->setGroupEvents(Config);
 			}
 			return RC;
 		}
@@ -76,10 +76,10 @@ namespace xaiefal {
 		 * This function sets the flow group events enabling bits.
 		 * Must be called before reserve.
 		 *
-		 * @param C group event
+		 * @param Config group event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC flowGroupEventConfig(uint32_t C) {
+		AieRC flowGroupEventConfig(uint32_t Config) {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
@@ -89,7 +89,7 @@ namespace xaiefal {
 					" resource not allocated." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				FlowGroupEvent->setGroupEvents(C);
+				FlowGroupEvent->setGroupEvents(Config);
 			}
 			return RC;
 		}
@@ -143,22 +143,22 @@ namespace xaiefal {
 	public:
 		XAieStallOccurrences() = delete;
 		XAieStallOccurrences(std::shared_ptr<XAieDevHandle> DevHd,
-			XAie_LocType L,
+			XAie_LocType Loc,
 			std::shared_ptr<XAieGroupEventHandle> StallG,
 			bool CrossM = false):
-			XAiePerfCounter(DevHd, L, XAIE_CORE_MOD, CrossM),
+			XAiePerfCounter(DevHd, Loc, XAIE_CORE_MOD, CrossM),
 			StallGroupEvent(StallG) {
 			initialize(XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_STALL_CORE,
 				XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_STALL_CORE);
 			StallGroupEvent->setGroupEvents(0x19F);
 		}
 		XAieStallOccurrences(XAieDev &Dev,
-			XAie_LocType L,
+			XAie_LocType Loc,
 			bool CrossM = false):
-			XAiePerfCounter(Dev, L, XAIE_CORE_MOD, CrossM) {
+			XAiePerfCounter(Dev, Loc, XAIE_CORE_MOD, CrossM) {
 			initialize(XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_STALL_CORE,
 				XAIE_CORE_MOD, XAIE_EVENT_GROUP_CORE_STALL_CORE);
-			StallGroupEvent = Dev.tile(L).module(XAIE_CORE_MOD).groupEvent(XAIE_EVENT_GROUP_CORE_STALL_CORE);
+			StallGroupEvent = Dev.tile(Loc).module(XAIE_CORE_MOD).groupEvent(XAIE_EVENT_GROUP_CORE_STALL_CORE);
 			StallGroupEvent->setGroupEvents(0x19F);
 			}
 
@@ -166,10 +166,10 @@ namespace xaiefal {
 		 * This function sets the stall group events enabling bits
 		 * Must be called before reserve.
 		 *
-		 * @param C group event
+		 * @param Config group event
 		 * @return XAIE_OK for success, error code for failure
 		 */
-		AieRC stallGroupEventConfig(uint32_t C) {
+		AieRC stallGroupEventConfig(uint32_t Config) {
 			AieRC RC = XAIE_OK;
 
 			if (State.Reserved == 0) {
@@ -179,7 +179,7 @@ namespace xaiefal {
 					" resource not allocated." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				StallGroupEvent->setGroupEvents(C);
+				StallGroupEvent->setGroupEvents(Config);
 			}
 			return RC;
 		}
