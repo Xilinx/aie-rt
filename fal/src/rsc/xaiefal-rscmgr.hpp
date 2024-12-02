@@ -10,7 +10,6 @@
 #include <vector>
 #include <xaiengine.h>
 
-
 #define BACKEND	XAieRscMgrGeneric
 #include <xaiefal/rsc/xaiefal-rscmgr-generic.hpp>
 
