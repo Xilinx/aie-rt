@@ -76,7 +76,7 @@ namespace xaiefal {
 				Logger::log(LogLevel::FAL_ERROR) << __func__ <<
 					"failed, tracing already started." << std::endl;
 			} else {
-				for (size_t i = 0; i < TraceSlotBits.size(); i++) {
+				for (uint32_t i = 0; i < TraceSlotBits.size(); i++) {
 					if (TraceSlotBits.test(i) == 0) {
 						TraceSlotBits.set(i);
 						Slot = static_cast<uint8_t>(i);
@@ -376,6 +376,8 @@ namespace xaiefal {
 			}
 			if (RC != XAIE_OK) {
 				vRscs.clear();
+			} else {
+				reservedId = vRscs[0].RscId;
 			}
 			return RC;
 		}
@@ -687,6 +689,8 @@ namespace xaiefal {
 				vRscs[0].Mod = Mod;
 				vRscs[0].RscId = Slot;
 			}
+
+			reservedId = vRscs[0].RscId;
 			return RC;
 		}
 		AieRC _release() {

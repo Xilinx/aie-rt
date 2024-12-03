@@ -399,6 +399,7 @@ namespace xaiefal {
 		XAieRscType Type; /**< resource type */
 		std::shared_ptr<XAieDevHandle> AieHd; /**< AI engine device instance */
 		uint32_t preferredId; /**< preferred resource Id */
+		uint32_t reservedId; /**< reserved resource Id */
 		std::vector<XAieUserRsc> vRscs; /**< resources data*/
 	private:
 		/**
@@ -570,7 +571,7 @@ namespace xaiefal {
 			} else {
 				if (vRscs.size() > 0) {
 					OutMod = vRscs[0].Mod;
-					OutRscId = vRscs[0].RscId;
+					OutRscId = reservedId;
 				}
 				OutLoc = Loc;
 				RC = XAIE_OK;

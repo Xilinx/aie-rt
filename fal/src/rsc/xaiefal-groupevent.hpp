@@ -252,6 +252,8 @@ namespace xaiefal {
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod << " resource not available.\n";
 				vRscs.clear();
+			} else {
+				reservedId = vRscs[0].RscId;
 			}
 			return RC;
 		}

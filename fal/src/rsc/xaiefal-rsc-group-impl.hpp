@@ -252,7 +252,7 @@ namespace xaiefal {
 			for (auto Ref: vRefs) {
 				uint32_t NumRscs;
 				XAie_LocType Loc;
-				XAie_ModuleType ModType;
+				XAie_ModuleType Mod;
 				XAieRscType ManagedRscType;
 
 				auto Rsc = Ref.lock();
@@ -271,8 +271,8 @@ namespace xaiefal {
 				}
 
 				Loc = std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->loc();
-				ModType = std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->mod();
-				if (RscStat.getNumRsc(Loc, ModType, Rsc->getRscType()) == 0 &&
+				Mod = std::static_pointer_cast<XAieSingleTileRsc>(Rsc)->mod();
+				if (RscStat.getNumRsc(Loc, Mod, Rsc->getRscType()) == 0 &&
 					Rsc->isReserved() == false) {
 					// If the parent resource is occupied
 					// but not by the current app, number of

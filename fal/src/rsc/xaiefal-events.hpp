@@ -159,6 +159,20 @@ namespace xaiefal {
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " resource not available.\n";
 				vRscs.clear();
+			} else {
+				if (vRscs.size() <= 2) {
+					/*
+					 * Only two input events, it can be combo0 or
+					 * combo1
+					 */
+					if (vRscs[0].RscId < 2) {
+						reservedId = 0;
+					} else {
+						reservedId = 1;
+					}
+				} else {
+					reservedId = 2;
+				}
 			}
 			return RC;
 		}
@@ -284,6 +298,8 @@ namespace xaiefal {
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Expect Mod= " << Mod << " resource not available.\n";
 				vRscs.clear();
+			} else {
+				reservedId = vRscs[0].RscId;
 			}
 			return RC;
 		}

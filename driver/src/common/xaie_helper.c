@@ -684,7 +684,7 @@ static int TxnCmdDump(XAie_TxnCmd* cmd) {
 ******************************************************************************/
 static AieRC _XAie_ReallocCmdBuf(XAie_TxnInst *TxnInst)
 {
-	u64 NewMaxCmds = (u64)(TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS);
+	u64 NewMaxCmds = (u64)TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS;
 	if(NewMaxCmds > UINT32_MAX) {
 		XAIE_ERROR("Failed reallocate memory for transaction buffer\n");
 		return XAIE_ERR;
