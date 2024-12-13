@@ -2075,8 +2075,9 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst)
 
 	for(u32 i = 0; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
-				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
+			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			free((void *)(uintptr_t)Cmd->DataPtr);
 		}
 	}
@@ -2113,9 +2114,9 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
-			//TBD handle custom OP as well
-			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
-					((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
+			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+				(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
+				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 				free((void *)(uintptr_t)Cmd->DataPtr);
 			}
 		}
@@ -2556,8 +2557,9 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 	for(u32 i = 0U; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
-			XAIE_DBG("free DataPtr %p\n", Cmd->DataPtr);
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
+			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			free((void *)Cmd->DataPtr);
 		}
 	}
