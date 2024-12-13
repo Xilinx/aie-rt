@@ -47,6 +47,7 @@
 #define XAIE_TXN_INSTANCE_EXPORTED	0b10U
 #define XAIE_TXN_INST_EXPORTED_MASK XAIE_TXN_INSTANCE_EXPORTED
 #define XAIE_TXN_AUTO_FLUSH_MASK XAIE_TRANSACTION_ENABLE_AUTO_FLUSH
+#define XAIE_TXN_STATE_TABLE_SIZE 32U
 
 #define TX_DUMP_ENABLE 0
 /************************** Variable Definitions *****************************/
@@ -1184,6 +1185,52 @@ static inline u8* _XAie_AppendPmLoad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	return (&(Hdr->LoadSequenceCount[0]));
 }
 
+static inline void _XAie_AppendStateTable(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_StateTableHdr);
+	XAie_StateTableHdr *Hdr = (XAie_StateTableHdr *)(uintptr_t)TxnPtr;
+
+	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
+	Hdr->Op = (u8)Cmd->Opcode;
+
+	memcpy((void *)Payload, (void const *)(uintptr_t)Cmd->DataPtr,
+			Cmd->Size * sizeof(u32));
+}
+
+static inline void _XAie_AppendUpdateState(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_UpdateStateHdr *Hdr = (XAie_UpdateStateHdr *)((void*)TxnPtr);
+
+	// Check pass Func value is not more than 8 bit value.
+	if (Cmd->Func > UCHAR_MAX) {
+		XAIE_ERROR("Func cannot be represented in 8bit system\n");
+		return ;
+	}
+
+	Hdr->Op = (u8)Cmd->Opcode;
+	Hdr->StateTableIdx = Cmd->StateTableIdx;
+	Hdr->Func = (u8)Cmd->Func;
+	Hdr->FuncArg = Cmd->FuncArg;
+}
+
+static inline void _XAie_AppendUpdateReg(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_UpdateRegHdr *Hdr = (XAie_UpdateRegHdr *)((void*)TxnPtr);
+	u32 RegOff = Cmd->RegOff & 0xFFFFFFFF;
+
+	// Check pass Func value is not more than 8 bit value.
+	if (Cmd->Func > UCHAR_MAX) {
+		XAIE_ERROR("Func cannot be represented in 8bit system\n");
+		return ;
+	}
+
+	Hdr->Op = (u8)Cmd->Opcode;
+	Hdr->RegOff = RegOff;
+	Hdr->StateTableIdx = Cmd->StateTableIdx;
+	Hdr->Func = (u8)Cmd->Func;
+	Hdr->FuncArg = Cmd->FuncArg;
+}
+
 static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
 		XAie_TxnHeader *Header)
 {
@@ -1689,6 +1736,57 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			DevInst->PmLoadingActive = 0;
 			continue;
 		}
+		else if(Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE)
+		{
+			if((BuffSize + sizeof(XAie_StateTableHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendStateTable(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
+			BuffSize += (u32)sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
+		{
+			if((BuffSize + sizeof(XAie_UpdateStateHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendUpdateState(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_UpdateStateHdr);
+			BuffSize += (u32)sizeof(XAie_UpdateStateHdr);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_UPDATE_REG)
+		{
+			if((BuffSize + sizeof(XAie_UpdateRegHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendUpdateReg(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_UpdateRegHdr);
+			BuffSize += (u32)sizeof(XAie_UpdateRegHdr);
+			continue;
+		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
 
 			if(Cmd->Opcode == XAIE_IO_CUSTOM_OP_BEGIN + 1)
@@ -1983,6 +2081,57 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			DevInst->PmLoadingActive = 1;
 			continue;
 		}
+		else if(Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE)
+		{
+			if((BuffSize + sizeof(XAie_StateTableHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendStateTable(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
+			BuffSize += (u32)sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
+		{
+			if((BuffSize + sizeof(XAie_UpdateStateHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendUpdateState(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_UpdateStateHdr);
+			BuffSize += (u32)sizeof(XAie_UpdateStateHdr);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_UPDATE_REG)
+		{
+			if((BuffSize + sizeof(XAie_UpdateRegHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendUpdateReg(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_UpdateRegHdr);
+			BuffSize += (u32)sizeof(XAie_UpdateRegHdr);
+			continue;
+		}
 		else if( (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL) && (LoadSeqCount != 0) )
 		{
 			if(LoadSeqCountPtr != NULL)
@@ -2075,7 +2224,8 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst)
 
 	for(u32 i = 0; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
 			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			free((void *)(uintptr_t)Cmd->DataPtr);
@@ -2114,7 +2264,9 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
-			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+
+			//TBD handle custom OP as well
+			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
 				(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 				free((void *)(uintptr_t)Cmd->DataPtr);
@@ -2557,9 +2709,11 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 	for(u32 i = 0U; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
 			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
+			XAIE_DBG("free DataPtr %p\n", Cmd->DataPtr);
 			free((void *)Cmd->DataPtr);
 		}
 	}
@@ -3073,6 +3227,213 @@ AieRC XAie_Txn_PmLoadEnd(XAie_DevInst *DevInst)
 	
 	return XAIE_ERR;
 
+}
+
+/*****************************************************************************/
+/**
+*
+* This API register XAIE_IO_SAVESTATE TXN command that can be added to the
+* transaction buffer.
+* @param    DevInst - Global AIE device instance pointer.
+* @param    Data - Pointer to the table entry / enetries.
+* @param    Size - Size of data in words.
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_LoadStateTable(XAie_DevInst *DevInst, u32 *StateTbl, u32 Size)
+{
+	AieRC RC;
+	u64 Tid;
+	u32 *Buf;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL)
+	{
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance associated with thread. Polling from register\n");
+			return XAIE_ERR;
+		}
+		if( (TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+					return RC;
+				}
+		}
+
+		if ((Size == 0U) || (Size > XAIE_TXN_STATE_TABLE_SIZE) || (StateTbl == NULL)){
+			XAIE_ERROR("Invalid State Table pointer or Size\n");
+			return XAIE_INVALID_ARGS;
+		}
+
+		Buf = (u32 *)malloc(sizeof(u32) * Size);
+		if(Buf == NULL) {
+			XAIE_ERROR("Memory allocation for Save State failed\n");
+			return XAIE_ERR;
+		}
+
+		Buf = memcpy((void *)Buf, (void *)StateTbl, sizeof(u32) * Size);
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_LOAD_STATE_TABLE;
+		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)(uintptr_t)Buf;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Size = Size;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API register XAIE_IO_UPDATESTATE TXN command that can be added to the
+* transaction buffer.
+* @param    DevInst - Global AIE device instance pointer.
+* @param    StateTableIdx - Index into the table.
+* @param    Func - Operation to calculate new sate value (Mul/Incr/Decr).
+* @param    FuncArg - Factor to be used for operation.
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_UpdateStateTable(XAie_DevInst *DevInst, u8 StateTableIdx,
+				XAie_StateTableFuncType Func, u32 FuncArg)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL)
+	{
+		if(StateTableIdx >= XAIE_TXN_STATE_TABLE_SIZE)
+		{
+			XAIE_ERROR("State Table Index exceeds the maximum size of 32\n");
+			return XAIE_ERR;
+		}
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance associated with thread. Polling from register\n");
+			return XAIE_ERR;
+		}
+		if( (TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+					return RC;
+				}
+		}
+
+		/**
+		 * Check if value of Func is representable in 8 bits
+		 * If not, return error. Since Func field is allocated 8 bits only
+		 * in the transaction binary specificsation of XAIE_IO_UPDATE_STATE_TABLE
+		 */
+		if (Func > UCHAR_MAX){
+			XAIE_ERROR("Func value exceeds 8 bits\n");
+			return XAIE_INVALID_ARGS;
+		}
+
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_UPDATE_STATE_TABLE;
+		TxnInst->CmdBuf[TxnInst->NumCmds].StateTableIdx = StateTableIdx;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Func = Func;
+		TxnInst->CmdBuf[TxnInst->NumCmds].FuncArg = FuncArg;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API register XAIE_IO_UPDATEREG TXN command that can be added to the
+* transaction buffer.
+* @param    DevInst - Global AIE device instance pointer.
+* @param    StateTableIdx - Index into the table.
+* @param    Func - Operation to calculate new sate value (Mul/Incr/Decr).
+* @param    FuncArg - Factor to be used for operation.
+* @param    RegOff - Register offset.
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_UpdateReg(XAie_DevInst *DevInst, u64 RegOff, u8 StateTableIdx,
+			 XAie_StateTableFuncType Func, u32 FuncArg)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(DevInst->TxnList.Next != NULL)
+	{
+		if(StateTableIdx >= XAIE_TXN_STATE_TABLE_SIZE)
+		{
+			XAIE_ERROR("State Table Index exceeds the maximum size of 32\n");
+			return XAIE_ERR;
+		}
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance associated with thread. Polling from register\n");
+			return XAIE_ERR;
+		}
+		if( (TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
+				RC = _XAie_ReallocCmdBuf(TxnInst);
+				if (RC != XAIE_OK) {
+					return RC;
+				}
+		}
+
+		/**
+		 * Check if value of Func is representable in 8 bits
+		 * If not, return error. Since Func field is allocated 8 bits only
+		 * in the transaction binary specificsation of XAIE_IO_UPDATE_REG
+		 */
+		if (Func > UCHAR_MAX){
+			XAIE_ERROR("Func value exceeds 8 bits\n");
+			return XAIE_INVALID_ARGS;
+		}
+
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_UPDATE_REG;
+		TxnInst->CmdBuf[TxnInst->NumCmds].StateTableIdx = StateTableIdx;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Func = Func;
+		TxnInst->CmdBuf[TxnInst->NumCmds].FuncArg = FuncArg;
+		TxnInst->CmdBuf[TxnInst->NumCmds].RegOff = RegOff;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
 }
 
 /*****************************************************************************/

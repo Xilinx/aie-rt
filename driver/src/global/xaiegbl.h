@@ -609,6 +609,35 @@ typedef struct {
 	uint32_t PmLoadId;
 }XAie_PmLoadHdr;
 
+typedef struct {
+	uint8_t Op;
+	uint8_t padding[3];
+	uint32_t Size;
+} XAie_StateTableHdr;
+
+typedef enum {
+	XAIE_STATE_TABLE_MUL,
+	XAIE_STATE_TABLE_INCR,
+	XAIE_STATE_TABLE_DECR,
+} XAie_StateTableFuncType;
+
+typedef struct {
+	uint8_t Op;
+	uint8_t StateTableIdx;
+	uint8_t Func;
+	uint8_t Reserved;
+	uint32_t FuncArg;
+} XAie_UpdateStateHdr;
+
+typedef struct {
+	uint8_t Op;
+	uint8_t StateTableIdx;
+	uint8_t Func;
+	uint8_t Reserved;
+	uint32_t FuncArg;
+	uint32_t RegOff;
+} XAie_UpdateRegHdr;
+
 /* Migrated from Aie-controller */
 enum op_types {
     OP_LIST(GENERATE_ENUM)

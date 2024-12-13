@@ -38,6 +38,9 @@ typedef enum {
 	XAIE_IO_MASKPOLL_BUSY,
 	XAIE_IO_LOADPDI,
 	XAIE_IO_LOAD_PM_START,
+	XAIE_IO_LOAD_STATE_TABLE,
+	XAIE_IO_UPDATE_STATE_TABLE,
+	XAIE_IO_UPDATE_REG,
 	XAIE_CONFIG_SHIMDMA_BD,
 	XAIE_CONFIG_SHIMDMA_DMABUF_BD,
 	XAIE_IO_CUSTOM_OP_BEGIN = 1U<<7U,
@@ -58,10 +61,12 @@ struct XAie_TxnCmd {
 	u32 Value;
 	u32 Size;
 	u64 DataPtr;
-	u8 Preempt_level;
-	u16 PdiId;
 	u32 PmId;
-	u8 Reserved;
+	u16 PdiId;
+	u8 Preempt_level;
+	u8 StateTableIdx;
+	u32 Func;
+	u32 FuncArg;
 };
 
 #endif
