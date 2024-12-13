@@ -916,6 +916,8 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_BroadcastSw Switch, u8 BroadcastId,
 		u8 Dir);
+AieRC XAie_EventGroupReadConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events GroupEvent, u32 *GroupBitMap);
 AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events GroupEvent, u32 GroupBitMap);
 AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,

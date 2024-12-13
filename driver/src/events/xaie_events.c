@@ -74,7 +74,13 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if ((DevInst->DevOps == NULL) ||
+	    (DevInst->DevOps->GetTTypefromLoc == NULL)) {
+		TileType = XAIEGBL_TILE_TYPE_MAX;
+	} else {
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	}
+
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAIE_ERROR("Invalid tile type\n");
 		return XAIE_INVALID_TILE;
@@ -1180,6 +1186,65 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This API reads enabled mask of events in a group event in the given
+* module.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Module: Module of tile.
+*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*			for Shim tile - XAIE_PL_MOD,
+*			for Mem tile - XAIE_MEM_MOD.
+* @param	GroupEvent: Group event ID.
+* @param	GroupBitMap: Bit mask.
+
+* @return	XAIE_OK on success, error code on failure.
+*
+******************************************************************************/
+AieRC XAie_EventGroupReadConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events GroupEvent, u32 *GroupBitMap)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 RegOffset;
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
+	RC = XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		return XAIE_INVALID_ARGS;
+	}
+
+	if (Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	for(u32 Index = 0; Index < EvntMod->NumGroupEvents; Index++) {
+		if(GroupEvent == EvntMod->Group[Index].GroupEvent) {
+			RegOffset = EvntMod->BaseGroupEventRegOff +
+				    ((u32)EvntMod->Group[Index].GroupOff * 4U);
+			RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+					RegOffset;
+
+			RC = XAie_Read32(DevInst, RegAddr, GroupBitMap);
+			if (RC != XAIE_OK) {
+				XAIE_ERROR("Group Event read failed: %d\n", RC);
+			}
+			return XAIE_OK;
+		}
+	}
+
+	XAIE_ERROR("Invalid group event ID\n");
+	return XAIE_INVALID_ARGS;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API enables, disables or resets events in a group event in the given
 * module.
 *
@@ -1235,7 +1300,6 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 				FldVal = XAie_SetField(GroupBitMap, 0U,
 					 EvntMod->Group[Index].GroupMask);
 			}
-
 			RC = XAie_Write32(DevInst, RegAddr, FldVal);
 			if(RC != XAIE_OK) {
 				return RC;

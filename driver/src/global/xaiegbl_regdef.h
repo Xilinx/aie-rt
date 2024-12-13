@@ -897,8 +897,10 @@ typedef struct XAie_ClockMod {
  * controller.
  */
 typedef struct XAie_L1IntrMod {
+	u32 BaseMaskRegOff;
 	u32 BaseEnableRegOff;
 	u32 BaseDisableRegOff;
+	u32 BaseStatusRegOff;
 	u32 BaseIrqRegOff;
 	u32 BaseIrqEventRegOff;
 	u32 BaseIrqEventMask;
@@ -919,8 +921,10 @@ typedef struct XAie_L1IntrMod {
  * controller.
  */
 typedef struct XAie_L2IntrMod {
+	u32 MaskRegOff;
 	u32 EnableRegOff;
 	u32 DisableRegOff;
+	u32 StatusRegOff;
 	u32 IrqRegOff;
 	u8 NumBroadcastIds;
 	u8 NumNoCIntr;

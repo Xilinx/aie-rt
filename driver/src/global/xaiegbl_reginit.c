@@ -3108,8 +3108,10 @@ static XAie_ClockMod AieTileClockMod =
  */
 static const XAie_L1IntrMod AiePlL1IntrMod =
 {
+	.BaseMaskRegOff = XAIEGBL_PL_INTCON1STLEVMSKA,
 	.BaseEnableRegOff = XAIEGBL_PL_INTCON1STLEVENAA,
 	.BaseDisableRegOff = XAIEGBL_PL_INTCON1STLEVDISA,
+	.BaseStatusRegOff = XAIEGBL_PL_INTCON1STLEVSTAA,
 	.BaseIrqRegOff = XAIEGBL_PL_INTCON1STLEVIRQNOA,
 	.BaseIrqEventRegOff = XAIEGBL_PL_INTCON1STLEVIRQEVTA,
 	.BaseIrqEventMask = XAIEGBL_PL_INTCON1STLEVIRQEVTA_IRQEVT0_MASK,
@@ -3136,8 +3138,10 @@ static const XAie_L1IntrMod AiePlL1IntrMod =
  */
 static const XAie_L2IntrMod AieNoCL2IntrMod =
 {
+	.MaskRegOff = XAIEGBL_NOC_INTCON2NDLEVMSK,
 	.EnableRegOff = XAIEGBL_NOC_INTCON2NDLEVENA,
 	.DisableRegOff = XAIEGBL_NOC_INTCON2NDLEVDIS,
+	.StatusRegOff = XAIEGBL_NOC_INTCON2NDLEVSTA,
 	.IrqRegOff = XAIEGBL_NOC_INTCON2NDLEVINT,
 	.NumBroadcastIds = 16U,
 	.NumNoCIntr = 4U,

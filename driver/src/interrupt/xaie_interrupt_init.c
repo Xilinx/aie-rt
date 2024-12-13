@@ -384,6 +384,233 @@ AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This API returns the status an event.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	Event: Physical event ID.
+*
+* @return	True is event was asserted, otherwise false.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+u8 XAie_EventReadStatusHw(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module, u8 Event)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 RegOff, RegVal = 0;
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid tile type\n");
+		return 0;
+	}
+
+	RC = XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		return 0;
+	}
+
+	if (Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	RegOff = EvntMod->BaseStatusRegOff + (((u32)Event / (u32)32U) * (u32)4U);
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+	if(RC != XAIE_OK) {
+		return 0;
+	}
+
+	RegVal = (u8)((RegVal >> ((u32)Event % (u32)32U)) & (u32)1U);
+
+	return (u8)RegVal;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API clears the status of first-level interrupt controller.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Switch: Broadcast switch.
+* @param	ChannelBitMap: Bitmap of channel statues to be cleared.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+void XAie_IntrCtrlL1Ack(XAie_DevInst *DevInst,
+			XAie_LocType Loc, XAie_BroadcastSw Switch,
+			u32 ChannelBitMap)
+{
+	const XAie_L1IntrMod *L1Mod;
+	u8 TileType;
+	u64 RegAddr;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if ((TileType != XAIEGBL_TILE_TYPE_SHIMPL) &&
+	    (TileType != XAIEGBL_TILE_TYPE_SHIMNOC)) {
+		return;
+	}
+
+	L1Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMPL].L1IntrMod;
+	if (L1Mod == NULL) {
+		return;
+	}
+	RegAddr = (u64)L1Mod->BaseStatusRegOff + ((u64)L1Mod->SwOff * (u64)Switch) +
+		  XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	(void)XAie_Write32(DevInst, RegAddr, ChannelBitMap);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API return the bitmap value of second level interrupts channels enabled.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+*
+* @return	Channel bitmap.
+*
+* @note		Internal Only.
+*
+******************************************************************************/
+u32 XAie_IntrCtrlL2Mask(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	const XAie_L2IntrMod *L2Mod;
+	u8 TileType;
+	u64 RegAddr;
+	u32 MaskVal = 0;
+	AieRC RC;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		return 0;
+	}
+
+	L2Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
+	if (L2Mod == NULL) {
+		return 0;
+	}
+	RegAddr = L2Mod->MaskRegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	RC = XAie_Read32(DevInst, RegAddr, &MaskVal);
+	if (RC != XAIE_OK) {
+		MaskVal = 0;
+	}
+
+	return MaskVal;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API clears the event status.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	Event: Physical event ID.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+void XAie_EventClearStatus(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module, u8 Event)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 RegOff, RegVal;
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid tile type\n");
+		return;
+	}
+
+	RC = XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		return;
+	}
+
+	if (Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	RegOff = EvntMod->BaseStatusRegOff + (u32)(((u32)Event / (u32)32U) * (u32)4U);
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
+
+	RegVal = (u32)((u32)1UL << ((u32)Event % (u32)32U));
+	(void)XAie_Write32(DevInst, RegAddr, RegVal);
+
+	return;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the status of first-level interrupt controller.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Switch: Broadcast switch.
+*
+* @return	Status first-level interrupt controller.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+u32 XAie_IntrCtrlL1Status(XAie_DevInst *DevInst,
+			XAie_LocType Loc, XAie_BroadcastSw Switch)
+{
+	const XAie_L1IntrMod *L1Mod;
+	u8 TileType;
+	u64 RegAddr;
+	u32 StatusVal = 0;
+	AieRC RC;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	switch (TileType) {
+	case XAIEGBL_TILE_TYPE_SHIMPL:
+	case XAIEGBL_TILE_TYPE_SHIMNOC:
+	      L1Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMPL].L1IntrMod;
+	      break;
+	default:
+	      XAIE_ERROR("No L1Ctrl. Not a NOC or PL tile\n");
+	      return 0;
+	}
+
+	if (L1Mod == NULL) {
+		return 0;
+	}
+	RegAddr = (u64)L1Mod->BaseStatusRegOff + ((u64)L1Mod->SwOff * (u64)Switch) +
+		  XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	RC = XAie_Read32(DevInst, RegAddr, &StatusVal);
+	if (RC != XAIE_OK) {
+		StatusVal = 0;
+	}
+
+	return StatusVal;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API enables/disables interrupts to second level interrupt controller.
 *
 * @param	DevInst: Device Instance
@@ -453,6 +680,83 @@ AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	return _XAie_IntrCtrlL2Config(DevInst, Loc, ChannelBitMap, XAIE_ENABLE);
 }
+
+/*****************************************************************************/
+/**
+*
+* This API returns L2status.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+*
+* @return	L2Status or 0 incase of error.
+*
+* @note		None.
+*
+******************************************************************************/
+u32 XAie_IntrCtrlL2Status(XAie_DevInst *DevInst, XAie_LocType Loc)
+{
+	const XAie_L2IntrMod *L2Mod;
+	u8 TileType;
+	u64 RegAddr;
+	u32 Status = 0;
+	AieRC RC;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		return 0;
+	}
+
+	L2Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
+	if (L2Mod == NULL) {
+		return 0;
+	}
+	RegAddr = L2Mod->StatusRegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	RC = XAie_Read32(DevInst, RegAddr, &Status);
+	if (RC != XAIE_OK) {
+		Status = 0;
+	}
+
+	return Status;
+
+}
+
+/*****************************************************************************/
+/**
+*
+* This API ACKs the L2 controller. i.e Write to L2 Status register with a bitmap.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	Status: Bitmap of status to ack.
+*
+* @return	L2Status or 0 incase of error.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_IntrCtrlL2Ack(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Status)
+{
+	const XAie_L2IntrMod *L2Mod;
+	u8 TileType;
+	u64 RegAddr;
+	AieRC RC;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	L2Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
+	if (L2Mod == NULL) {
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+	RegAddr = L2Mod->StatusRegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	RC = XAie_Write32(DevInst, RegAddr, Status);
+	return RC;
+}
+
+
 
 /*****************************************************************************/
 /**

@@ -26,11 +26,12 @@
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_interrupt.h"
+
+#if defined(XAIE_FEATURE_INTR_BTRK_ENABLE) && defined(XAIE_FEATURE_LITE)
+
 #include "xaie_lite.h"
 #include "xaie_lite_io.h"
 #include "xaie_lite_internal.h"
-
-#if defined(XAIE_FEATURE_INTR_BTRK_ENABLE) && defined(XAIE_FEATURE_LITE)
 
 /************************** Constant Definitions *****************************/
 /************************** Function Definitions *****************************/
@@ -675,6 +676,719 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 
 	/* Invalidate next info upon successful backtrack. */
 	MData->IsNextInfoValid = 0;
+
+	return XAIE_OK;
+}
+
+#elif defined(XAIE_FEATURE_INTR_BTRK_ENABLE)
+#include "xaie_reset_aie.h"
+
+/*****************************************************************************/
+/**
+*
+* This API returns the event ID of event being broadcast on a broadcast channel.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	BroadcastId: Broadcast channel ID.
+*
+* @return	Event: Physical event ID.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u32 _XAie_ReadArrayErrorBroadcastEvent(XAie_DevInst *DevInst,
+		 XAie_LocType Loc, XAie_ModuleType Module, u8 BroadcastId)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 RegOffset, RegVal = 0;
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
+	RC = XAie_CheckModule(DevInst, Loc, Module);
+	if(RC != XAIE_OK) {
+		return 0;
+	}
+
+	if (Module == XAIE_PL_MOD) {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	} else {
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+	if(BroadcastId >= EvntMod->NumBroadcastIds) {
+		XAIE_ERROR("Invalid event ID\n");
+		return 0;
+	}
+
+	RegOffset = (EvntMod->BaseBroadcastRegOff + (u32)((u32)BroadcastId * 4U));
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+
+	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+	if (RC != XAIE_OK) {
+		RegVal = 0;
+	}
+
+	return RegVal;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the event ID of shim event being broadcast on L1 IRQ channel.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	IrqId: L1 IRQ channel ID.
+*
+* @return	Event: Physical event ID.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u32 _XAie_Read_L1_IrqEvent(XAie_DevInst *DevInst,
+		 XAie_LocType Loc, XAie_BroadcastSw Switch, u8 IrqId)
+{
+	u64 RegAddr;
+	u32 RegOffset, EventMask, Event;
+	u8 TileType, EventLsb;
+	const XAie_L1IntrMod *L1IntrMod;
+	AieRC RC;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid device instance\n");
+		return 0;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
+		XAIE_ERROR("Invalid tile type\n");
+		return 0;
+	}
+
+	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
+
+	if(L1IntrMod == NULL || IrqId >= L1IntrMod->NumIrqEvents) {
+		XAIE_ERROR("Invalid module type or IRQ event ID\n");
+		return 0;
+	}
+
+
+	RegOffset = L1IntrMod->BaseIrqEventRegOff + ((u32)Switch * (u32)L1IntrMod->SwOff);
+	EventLsb = IrqId * L1IntrMod->IrqEventOff;
+	EventMask = L1IntrMod->BaseIrqEventMask << EventLsb;
+	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
+
+	RC = XAie_Read32(DevInst, RegAddr, &Event);
+	if (RC != XAIE_OK) {
+		return 0;
+	}
+
+	return XAie_GetField(Event, EventLsb, EventMask);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is a wrapper API returns the event ID of event being broadcast.
+* For AIE array tiles, it return the event on the event broadcast channels. For
+* Shim tiles, it return the event on L1 IRQ channels.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	BroadcastId: Broadcast channel ID.
+*
+* @return	Event: Physical event ID.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u32 _XAie_ReadErrorBroadcastEvent(XAie_DevInst *DevInst,
+		 XAie_LocType Loc, XAie_ModuleType Module, u8 BroadcastId)
+{
+	if (Loc.Row == DevInst->ShimRow) {
+		return _XAie_Read_L1_IrqEvent(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+				BroadcastId);
+	} else {
+		return _XAie_ReadArrayErrorBroadcastEvent(DevInst, Loc, Module,
+				BroadcastId);
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API maps a given group error event index to its physical event ID.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	GroupErrorIndex: Index of event in group error.
+*
+* @return	Physical event ID.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u8 _XAie_MapGroupErrorsToEventId(XAie_DevInst *DevInst,
+			XAie_LocType Loc, XAie_ModuleType Module,
+			u8 GroupErrorIndex)
+{
+	u8 TileType;
+	const XAie_EvntMod *EvntMod;
+	u32 ErrorBase;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	switch (Module) {
+	case XAIE_PL_MOD:
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+		break;
+	case XAIE_MEM_MOD:
+	case XAIE_CORE_MOD:
+		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+		break;
+	default:
+		XAIE_ERROR("Invalid Module: %d\n", Module);
+		return 0;
+	}
+
+	switch (TileType) {
+	case XAIEGBL_TILE_TYPE_AIETILE:
+		ErrorBase = (Module == XAIE_MEM_MOD) ? (u32)XAIE_EVENT_GROUP_ERRORS_MEM :
+			(u32)XAIE_EVENT_GROUP_ERRORS_1_CORE;
+		break;
+	case XAIEGBL_TILE_TYPE_MEMTILE:
+		ErrorBase = (u32)XAIE_EVENT_GROUP_ERRORS_MEM_TILE;
+		break;
+	case XAIEGBL_TILE_TYPE_SHIMNOC:
+	case XAIEGBL_TILE_TYPE_SHIMPL:
+		ErrorBase = (u32)XAIE_EVENT_GROUP_ERRORS_PL;
+		break;
+	default:
+		XAIE_ERROR("Invalid TileType: %d\n", TileType);
+		return 0;
+	};
+	ErrorBase -= EvntMod->EventMin;
+	ErrorBase = EvntMod->XAie_EventNumber[ErrorBase];
+	return GroupErrorIndex + (u8)ErrorBase + 1U;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns a bitmap of group error enabled.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+*
+* @return	Bitmap of enabled group errors.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline u32 _XAie_ReadGroupErrors(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module)
+{
+	u32 GroupBitMap;
+	u8 TileType;
+	XAie_Events Events;
+	AieRC RC;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
+	switch (TileType) {
+	case XAIEGBL_TILE_TYPE_AIETILE:
+		Events = (Module == XAIE_MEM_MOD) ? XAIE_EVENT_GROUP_ERRORS_MEM :
+			XAIE_EVENT_GROUP_ERRORS_0_CORE;
+		break;
+	case XAIEGBL_TILE_TYPE_MEMTILE:
+		Events = XAIE_EVENT_GROUP_ERRORS_MEM_TILE;
+		break;
+	case XAIEGBL_TILE_TYPE_SHIMNOC:
+	case XAIEGBL_TILE_TYPE_SHIMPL:
+		Events = XAIE_EVENT_GROUP_ERRORS_PL;
+		break;
+	default:
+		XAIE_ERROR("Unknown Tile type: %d\n", TileType);
+		return 0;
+	}
+
+	RC = XAie_EventGroupReadConfig(DevInst, Loc, Module, Events, &GroupBitMap);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Group event read failed: %d\n", RC);
+		return 0;
+	}
+	return GroupBitMap;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API applies the bitmap of events to be enabled/disabled in a group error.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	EventMap: Bitmap of events to be enabled/disabled from the
+*			  group.
+*
+* @return	Bitmap of enabled group errors.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static inline void _XAie_GroupErrorControl(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module, u32 EventMap)
+{
+	u8 TileType;
+	XAie_Events Events;
+	AieRC RC;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
+	switch (TileType) {
+	case XAIEGBL_TILE_TYPE_AIETILE:
+		Events = (Module == XAIE_MEM_MOD) ? XAIE_EVENT_GROUP_ERRORS_MEM :
+			XAIE_EVENT_GROUP_ERRORS_0_CORE;
+		break;
+	case XAIEGBL_TILE_TYPE_MEMTILE:
+		Events = XAIE_EVENT_GROUP_ERRORS_MEM_TILE;
+		break;
+	case XAIEGBL_TILE_TYPE_SHIMNOC:
+	case XAIEGBL_TILE_TYPE_SHIMPL:
+		Events = XAIE_EVENT_GROUP_ERRORS_PL;
+		break;
+	default:
+		XAIE_ERROR("Unknown Tile type: %d\n", TileType);
+		return;
+	}
+
+	RC = XAie_EventGroupControl(DevInst, Loc, Module, Events, EventMap);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Set Event GroupControl failed: %d\n", RC);
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API backtracks the source of error interrupt within a tile.
+*
+* @param	DevInst: Device Instance.
+* @param	MData: Error metadata.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_BacktrackTile(XAie_DevInst *DevInst,
+		XAie_ErrorMetaData *MData, XAie_LocType Loc,
+		XAie_ModuleType Module)
+{
+	XAie_ErrorPayload *Buffer = MData->Payload;
+	u32 *Count = &(MData->ErrorCount);
+	u32 Size = MData->ArraySize - (*Count);
+	u32 Value, Index, ErrorsMap;
+	u8 GroupEvent, Event;
+
+	/* Read event being broadcast on error channel */
+	GroupEvent = (u8)_XAie_ReadErrorBroadcastEvent(DevInst, Loc, Module,
+			XAIE_ERROR_BROADCAST_ID);
+
+	if (XAie_EventReadStatusHw(DevInst, Loc, Module, GroupEvent) == 0U) {
+		return XAIE_OK;
+	}
+
+	ErrorsMap = _XAie_ReadGroupErrors(DevInst, Loc, Module);
+	Value = ErrorsMap;
+
+	for_each_set_bit(Index, Value, 32U) {
+		Event = _XAie_MapGroupErrorsToEventId(DevInst, Loc, Module,
+				(u8)Index);
+
+		if (XAie_EventReadStatusHw(DevInst, Loc, Module, Event) == 0U) {
+			continue;
+		}
+
+		XAIE_DBG("%d: Error event %d asserted in module %d at (%d, %d)\n",
+				*Count, Event, Module, Loc.Col, Loc.Row);
+
+		ErrorsMap &= ~((u32)1U << Index);
+
+		Buffer[(*Count)].Loc = Loc;
+		Buffer[(*Count)].Module = Module;
+		Buffer[(*Count)].EventId = Event;
+		(*Count)++;
+
+		if (--Size == 0U) {
+			_XAie_GroupErrorControl(DevInst, Loc, Module,
+					ErrorsMap);
+			MData->NextTile = Loc;
+			MData->NextModule = Module;
+			MData->IsNextInfoValid = 1;
+			return XAIE_INSUFFICIENT_BUFFER_SIZE;
+		}
+	}
+
+	/* Disable backtracked error event broadcast */
+	_XAie_GroupErrorControl(DevInst, Loc, Module, ErrorsMap);
+
+	/*
+	 * Clear group error event status only if all active errors were
+	 * backtracked and disabled.
+	 */
+	XAie_EventClearStatus(DevInst, Loc, Module, GroupEvent);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API backtracks the source of error interrupt within a column.
+*
+* @param	DevInst: Device Instance.
+* @param	MData: Error metadata.
+* @param	Loc: Location of AIE tile.
+* @param	Switch: Broadcast switch.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_BacktrackIntrCtrlL1(XAie_DevInst *DevInst,
+		XAie_ErrorMetaData *MData, XAie_LocType L1Loc,
+		XAie_BroadcastSw Switch)
+{
+	AieRC RC;
+	u32 Status;
+	XAie_LocType Loc = L1Loc;
+
+	Status = XAie_IntrCtrlL1Status(DevInst, Loc, Switch);
+
+	/* Backtrack shim's internal events */
+	if (((Status & XAIE_ERROR_SHIM_INTR_MASK) != 0U) ||
+	    ((MData->IsNextInfoValid != 0U) &&
+	     (MData->NextModule == XAIE_PL_MOD) &&
+	     (MData->NextTile.Row == Loc.Row))) {
+		XAie_IntrCtrlL1Ack(DevInst, Loc, Switch,
+				XAIE_ERROR_SHIM_INTR_MASK);
+
+		RC = _XAie_BacktrackTile(DevInst, MData, Loc, XAIE_PL_MOD);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			return RC;
+		}
+	}
+
+	/* Backtrack array tile's internal events. */
+	if (!(((Status & XAIE_ERROR_BROADCAST_MASK) != 0U) ||
+	      ((MData->IsNextInfoValid != 0U) &&
+	       (MData->NextModule != XAIE_PL_MOD) &&
+	       (MData->NextTile.Row >= Loc.Row)))) {
+		return XAIE_OK;
+	}
+
+	XAie_IntrCtrlL1Ack(DevInst, Loc, Switch, XAIE_ERROR_BROADCAST_MASK);
+
+	for (Loc.Row = DevInst->MemTileRowStart;
+	     Loc.Row < (DevInst->MemTileRowStart + DevInst->MemTileNumRows);
+	     Loc.Row++)
+	{
+		u32 EventId = (u32)XAIE_EVENT_BROADCAST_0_MEM_TILE;
+		const XAie_EvntMod *EvntMod;
+
+		if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
+			continue;
+		}
+
+		RC = _XAie_BacktrackTile(DevInst, MData, Loc, XAIE_MEM_MOD);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			return RC;
+		}
+
+		EvntMod = &DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].EvntMod[XAIE_MEM_MOD];
+
+		/*
+		 * TODO: In SystemC model, incoming broadcast status bit
+		 *	 reported is off by a bit position. For switch A, skip
+		 *	 backtracking above array tiles when this bug is fixed.
+		 */
+		EventId -= EvntMod->EventMin;
+		EventId = (u8)EvntMod->XAie_EventNumber[EventId];
+		XAie_EventClearStatus(DevInst, Loc, XAIE_MEM_MOD, (u8)EventId);
+	}
+
+	for (Loc.Row = DevInst->AieTileRowStart;
+	     Loc.Row < (DevInst->AieTileRowStart + DevInst->AieTileNumRows);
+	     Loc.Row++)
+	{
+		const XAie_EvntMod *EvntMod;
+		XAie_ModuleType Module;
+		u32 Event;
+
+		if (Switch == XAIE_EVENT_SWITCH_A) {
+			Module = (XAie_ModuleType)XAIE_CORE_MOD;
+			Event = (u16)XAIE_EVENT_BROADCAST_0_CORE;
+		} else {
+			Module = (XAie_ModuleType)XAIE_MEM_MOD;
+			Event = (u16)XAIE_EVENT_BROADCAST_0_MEM;
+		}
+
+		if (_XAie_PmIsTileRequested(DevInst, Loc) == (u8)XAIE_DISABLE) {
+			continue;
+		}
+
+		RC = _XAie_BacktrackTile(DevInst, MData, Loc, Module);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			return RC;
+		}
+		EvntMod = &DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].EvntMod[Module];
+		Event -= EvntMod->EventMin;
+		Event = EvntMod->XAie_EventNumber[Event];
+		/*
+		 * Skip backtracking above array tiles if no broadcast signal
+		 * was received and the last backtrack operation was successful.
+		 */
+		if (((XAie_EventReadStatusHw(DevInst, Loc, Module, (u8)Event) == 0U) ||
+		     ((MData->IsNextInfoValid != 0U) &&
+		      (MData->NextModule == Module) &&
+		      (MData->NextTile.Row > Loc.Row)))) {
+			return XAIE_OK;
+		}
+
+		XAie_EventClearStatus(DevInst, Loc, Module, (u8)Event);
+	}
+
+	return XAIE_OK;
+}
+
+static void _XAie_MapL2MaskToL1_aie1_ml(const XAie_DevInst *DevInst, u32 Index, u8 L2Col, u8 *L1Col,
+			       XAie_BroadcastSw *Switch)
+{
+	if ((L2Col + 3U) >=  DevInst->NumCols) {
+	        *L1Col = L2Col + (((u8)Index % 6U) / 2U);
+	        *Switch = (((Index % 6U) % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+	} else if ((L2Col % 2U) == 0U) {
+	        /* Set bit position could be 0 - 5 */
+	        *L1Col = L2Col - (u8)(2U - ((Index % 6U) / 2U));
+	        *Switch = (((Index % 6U) % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+	} else {
+	        /* Set bit position could be 0 - 1 */
+	        *L1Col = L2Col;
+	        *Switch= (Index == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+	}
+}
+
+static void _XAie_MapL2MaskToL1_aie2ipu(const XAie_DevInst *DevInst, u32 Index,
+			u8 L2Col, u8 *L1Col, XAie_BroadcastSw *Switch)
+{
+	(void) DevInst;
+
+	if (L2Col < 2U) {
+		*L1Col = (u8)(Index / 2U);
+		*Switch = ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+	} else {
+	        *L1Col = L2Col;
+	        *Switch= ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_A;
+	}
+}
+
+static void _XAie_MapL2MaskToL1_aie2ps(const XAie_DevInst *DevInst, u32 Index,
+			u8 L2Col, u8 *L1Col, XAie_BroadcastSw *Switch)
+{
+	(void) DevInst;
+	(void) L2Col;
+
+	*L1Col = L2Col;
+	*Switch= ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+}
+
+static void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
+			u8 L2Col, u8 *L1Col, XAie_BroadcastSw *Switch)
+{
+	switch (DevInst->DevProp.DevGen) {
+	case XAIE_DEV_GEN_AIE:
+	case XAIE_DEV_GEN_AIEML:
+		return _XAie_MapL2MaskToL1_aie1_ml(DevInst, Index, L2Col, L1Col, Switch);
+	case XAIE_DEV_GEN_AIE2PS:
+		return _XAie_MapL2MaskToL1_aie2ps(DevInst, Index, L2Col, L1Col, Switch);
+	default:
+		*L1Col = L2Col;
+		*Switch = ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+	}
+}
+
+/* l1 bruteforce backtrack for IPU.
+ * This is a temporary fix for IPU.
+ */
+static AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
+		XAie_ErrorMetaData *MData)
+{
+
+	if ((MData->Payload == NULL) ||
+	    (MData->ArraySize == 0U)) {
+		XAIE_ERROR("Invalid error payload buffer or size\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if ((MData->Cols.Num == 0U) ||
+	    ((MData->Cols.Start + MData->Cols.Num) > DevInst->NumCols)) {
+		XAIE_ERROR("Invalid range of columns\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	AieRC RC;
+	XAie_Range Cols = MData->Cols;
+	u8 col;
+
+	/* Backward compatibility to support single channel interrupts */
+	if (Cols.Num == 0U) {
+		XAIE_DBG("Backtrack column range undefined. Backtracking (%d, %d).\n",
+				Cols.Start, Cols.Start + Cols.Num);
+		Cols.Num = DevInst->NumCols;
+	}
+
+	/* Reset the total error count from previous backtrack. */
+	MData->ErrorCount = 0U;
+	for (col = 0; col < Cols.Num; col++) {
+		XAie_LocType loc;
+
+		loc.Row = 0U;
+		loc.Col = col;
+		/* SWITCH A */
+		RC = _XAie_BacktrackIntrCtrlL1(DevInst, MData, loc, XAIE_EVENT_SWITCH_A);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			(void)XAie_IntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+			return RC;
+		}
+		/* SWITCH B */
+		RC = _XAie_BacktrackIntrCtrlL1(DevInst, MData, loc, XAIE_EVENT_SWITCH_B);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			(void)XAie_IntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+			return RC;
+		}
+		if (col != 0U) {
+			(void)XAie_IntrCtrlL2Enable(DevInst, loc, XAIE_ERROR_L2_ENABLE);
+		}
+
+	}
+
+	/* Invalidate next info upon successful backtrack. */
+	MData->IsNextInfoValid = 0U;
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API backtracks the source of error interrupts. While doing so, any active
+* error can be backtracked only once. Disabled L2 channels are re-enabled upon
+* successful backtrack. Mdata.ErrorCount captures the total number of valid
+* error payloads returned.
+* If more number of errors are backtracked than it can fit in the allocated
+* memory, XAIE_INSUFFICIENT_BUFFER_SIZE error code is returned. In such a
+* scenario, Mdata.IsNextInfoValid flag is set and Mdata.ErrorCount holds the
+* number of errors valid error payloads returned. Remaining active errors will
+* be backtracked upon successive invocations of this API.
+*
+* @param	DevInst: Device Instance. Passing valid partition device
+*			instance will only backtrack errors in the given
+*			partition.
+* @param	MData: Error metadata.
+*
+* @return	XAIE_OK on success, XAIE_INSUFFICIENT_BUFFER_SIZE code on
+*		failure.
+*
+* @note		Before invoking this API,
+*		- AIE error interrupts needs to be disabled by calling
+*		  XAie_BacktrackErrorInterrupts().
+*		- Error metadata instance needs to initialized using
+*		  XAie_ErrorMetadataInit() helper.
+*		- Backtrack column range needs to be setup per IRQ channel using
+*		  XAie_MapIrqIdToCols() and XAie_ErrorSetBacktrackRange().
+*		- If more than one buffers are used to backtrack the same
+*		  partition, error metadata needs to be preserve. To override
+*		  error payload buffer only, use
+*		  XAie_ErrorMetadataOverrideBuffer() helper macro.
+*
+******************************************************************************/
+
+AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
+		XAie_ErrorMetaData *MData)
+{
+#ifdef __AIEIPU__
+	return XAie_BacktrackErrorInterruptsIPU(DevInst, MData);
+#endif
+	if ((DevInst == NULL) ||
+	    (MData == NULL) ||
+	    (MData->Payload == NULL) ||
+	    (MData->ArraySize == 0U) ||
+	    (MData->Cols.Num == 0U) ||
+	    ((MData->Cols.Start + MData->Cols.Num) > DevInst->NumCols)) {
+		XAIE_ERROR("Invalid DevInst.\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	AieRC RC;
+	XAie_Range Cols = MData->Cols;
+	u8 TileType;
+	u8 ColEnd = Cols.Start + Cols.Num;
+
+	XAie_LocType L1 = XAie_TileLoc(Cols.Start, DevInst->ShimRow);
+	XAie_LocType L2 = XAie_TileLoc(Cols.Start, DevInst->ShimRow);
+
+	/* Reset the total error count from previous backtrack. */
+	MData->ErrorCount = 0U;
+
+	for (L2.Col = Cols.Start; L2.Col < ColEnd; L2.Col++) {
+		u32 L2Status, Index, L2Mask, Mask;
+		XAie_BroadcastSw Switch;
+		u32 Enable = 0;
+
+		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, L2);
+		if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+			continue;
+		}
+		L2Status = XAie_IntrCtrlL2Status(DevInst, L2);
+		L2Mask = XAie_IntrCtrlL2Mask(DevInst, L2);
+		if (L2Status) {
+			(void)XAie_IntrCtrlL2Disable(DevInst, L2, L2Status);
+			(void)XAie_IntrCtrlL2Ack(DevInst, L2, L2Status);
+		} else {
+			continue;
+		}
+		Mask = L2Status & L2Mask;
+		for_each_set_bit(Index, Mask, 32U) {
+			_XAie_MapL2MaskToL1(DevInst, Index, L2.Col, &L1.Col, &Switch);
+			RC = _XAie_BacktrackIntrCtrlL1(DevInst, MData, L1,
+					Switch);
+			if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+				(void)XAie_IntrCtrlL2Enable(DevInst, L2, Enable);
+				return RC;
+			}
+
+			Enable |= BIT(Index);
+
+		}
+
+		if (Enable) {
+			(void)XAie_IntrCtrlL2Enable(DevInst, L2, Enable);
+		}
+	}
+
+	MData->IsNextInfoValid = 0U;
 
 	return XAIE_OK;
 }

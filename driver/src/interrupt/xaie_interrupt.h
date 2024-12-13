@@ -56,14 +56,27 @@ AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u32 ChannelBitMap);
 AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u32 ChannelBitMap);
+u32 XAie_IntrCtrlL1Status(XAie_DevInst *DevInst,
+			XAie_LocType Loc, XAie_BroadcastSw Switch);
+u32 XAie_IntrCtrlL2Mask(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
+u32 XAie_IntrCtrlL2Status(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
 AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
 void XAie_DisableErrorInterrupts(u8 IrqId);
+AieRC XAie_IntrCtrlL2Ack(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Status);
 
 AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData);
+void XAie_IntrCtrlL1Ack(XAie_DevInst *DevInst,
+			XAie_LocType Loc, XAie_BroadcastSw Switch,
+			u32 ChannelBitMap);
+u8 XAie_EventReadStatusHw(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module, u8 Event);
+void XAie_EventClearStatus(XAie_DevInst *DevInst,
+		XAie_LocType Loc, XAie_ModuleType Module, u8 Event);
 
 #endif		/* end of protection macro */
+/** @} */
