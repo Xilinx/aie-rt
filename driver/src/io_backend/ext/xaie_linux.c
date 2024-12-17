@@ -75,6 +75,9 @@ typedef struct XAie_LinuxIO {
 	XAie_MemMap ProgMem;	/* Mapping of program memory of aie */
 	XAie_MemMap DataMem;  	/* Mapping of data memory of aie */
 	XAie_MemMap MemTileMem;	/* Mapping of memory tile mem */
+	XAie_MemMap UcProgMem;	/* Mapping of UC Program memory */
+	XAie_MemMap UcPrivDataMem; /* Mapping of UC Data memory */
+	XAie_MemMap UcDataMem;	/* Mapping of shared UC Data memory */
 	u64 ProgMemAddr;
 	u64 ProgMemSize;
 	u64 DataMemAddr;
@@ -173,17 +176,29 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
 	const XAie_MemMod *MemTileMod =
 		LinuxIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemMod;
+	const XAie_UcMod *UcMod =
+		LinuxIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].UcMod;
 
 	munmap(LinuxIOInst->RegMap.VAddr, LinuxIOInst->RegMap.MapSize);
 	if(MemTileMod != NULL)
 		munmap(LinuxIOInst->MemTileMem.VAddr, LinuxIOInst->MemTileMem.MapSize);
 	munmap(LinuxIOInst->ProgMem.VAddr, LinuxIOInst->ProgMem.MapSize);
 	munmap(LinuxIOInst->DataMem.VAddr, LinuxIOInst->DataMem.MapSize);
+	if (UcMod) {
+		munmap(LinuxIOInst->UcProgMem.VAddr, LinuxIOInst->UcProgMem.MapSize);
+		munmap(LinuxIOInst->UcPrivDataMem.VAddr, LinuxIOInst->UcPrivDataMem.MapSize);
+		munmap(LinuxIOInst->UcDataMem.VAddr, LinuxIOInst->UcDataMem.MapSize);
+	}
 
 	close(LinuxIOInst->ProgMem.Fd);
 	close(LinuxIOInst->DataMem.Fd);
 	if(MemTileMod != NULL)
 		close(LinuxIOInst->MemTileMem.Fd);
+	if (UcMod) {
+		close(LinuxIOInst->UcProgMem.Fd);
+		close(LinuxIOInst->UcPrivDataMem.Fd);
+		close(LinuxIOInst->UcDataMem.Fd);
+	}
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
@@ -361,6 +376,8 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 		DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].MemMod;
 	const XAie_MemMod *MemTileMod =
 		DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemMod;
+	const XAie_UcMod *UcMod =
+		DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].UcMod;
 
 	Ret = ioctl(IOInst->PartitionFd, AIE_GET_MEM_IOCTL, &MemArgs);
 	if(Ret < 0) {
@@ -416,8 +433,24 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 			IOInst->MemTileMem.VAddr = MemVAddr;
 			IOInst->MemTileMem.MapSize = MMapSize;
 			IOInst->MemTileMem.Fd = Mem->fd;
+		} else if (UcMod &&
+			   (Mem->offset == UcMod->ProgMemHostOffset)) {
+			IOInst->UcProgMem.VAddr = MemVAddr;
+			IOInst->UcProgMem.MapSize = MMapSize;
+			IOInst->UcProgMem.Fd = Mem->fd;
+		} else if (UcMod &&
+			   (Mem->offset == UcMod->PrivDataMemAddr)) {
+			IOInst->UcPrivDataMem.VAddr = MemVAddr;
+			IOInst->UcPrivDataMem.MapSize = MMapSize;
+			IOInst->UcPrivDataMem.Fd = Mem->fd;
+		} else if (UcMod &&
+			   (Mem->offset == UcMod->DataMemAddr)) {
+			IOInst->UcDataMem.VAddr = MemVAddr;
+			IOInst->UcDataMem.MapSize = MMapSize;
+			IOInst->UcDataMem.Fd = Mem->fd;
+
 		} else {
-			XAIE_ERROR("Memory offset 0x%x is not valid.",
+			XAIE_ERROR("Memory offset 0x%x is not valid.\n",
 					Mem->offset);
 			free(MemArgs.mems);
 			return XAIE_ERR;
