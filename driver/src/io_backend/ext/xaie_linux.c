@@ -35,8 +35,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include <signal.h>
+#include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "xlnx-ai-engine.h"
 
@@ -47,17 +49,20 @@
 #include "xaie_io.h"
 #include "xaie_io_common.h"
 #include "xaie_npi.h"
+#include "xaie_perfcnt.h"
+#include "xaie_reset_aie.h"
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_128BIT_ALIGN_MASK 0xF
 #define XAIE_DEVICE_FILE "/dev/aie0"
+#define XAIE_OCCUPANCY_USER_EVENT_NUM 0x2U
 
 #ifdef __AIELINUX__
 
 /***************************** Global Variable *******************************/
-static struct aie_perfinst_args *Perfinst = NULL;
 static XAie_PerfInst *UserInst = NULL;
 static void *IOInstLinux = NULL;
+static timer_t TimerID;
 
 /****************************** Type Definitions *****************************/
 
@@ -1451,6 +1456,7 @@ static AieRC _XAie_LinuxIO_SetColumnClock(void *IOInst,
 	return XAIE_OK;
 }
 
+#ifdef _POSIX_C_SOURCE
 /*****************************************************************************/
 /**
 * The API is a signal callback to calculate the core tile utilization and store
@@ -1465,31 +1471,51 @@ static AieRC _XAie_LinuxIO_SetColumnClock(void *IOInst,
 *
 *******************************************************************************/
 void _XAie_LinuxIO_UtilCalculation(int SignalNum, siginfo_t *SignalInfo,
-		void *Arg) {
-
+		void *Arg)
+{
 	XAie_LinuxIO *LinuxIO = (XAie_LinuxIO *)IOInstLinux;
-	int Ret;
 
 	(void)Arg;
-	(void)SignalInfo;
 	(void)SignalNum;
-	/*
-	 * Stores the size of the Util array in bytes.
-	 */
-	UserInst->UtilSize = Perfinst->util_size * sizeof(XAie_Occupancy);
-	for(__u32 i = 0U; i < Perfinst->util_size; i++) {
-		UserInst->Util[i].Loc.Row = Perfinst->util[i].loc.row;
-		UserInst->Util[i].Loc.Col = Perfinst->util[i].loc.col;
-		UserInst->Util[i].KernelUtil = (float)
-			((float) Perfinst->util[i].active_cycle /
-			 (float) Perfinst->util[i].total_cycle) * 100U;
+
+	int Ret;
+	AieRC RC;
+	u32 CounterVal;
+	float ActiveCycle, TotalCycle;
+	XAie_PerfInst *PerfInst = (XAie_PerfInst *) SignalInfo->si_value.sival_ptr;
+
+	for(uint32_t Index = 0; Index < PerfInst->UtilSize; Index++) {
+		for(uint8_t Cycle = 0; Cycle < XAIE_PERF_CORE_NUM_CYCLES;
+		    Cycle++) {
+			RC = XAie_PerfCounterGet(LinuxIO->DevInst,
+					PerfInst->Util[Index].Loc, XAIE_CORE_MOD,
+					PerfInst->Util[Index].PerfCnt[Cycle],
+					&CounterVal);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Error retrieving the number of cycles\n");
+				return;
+			}
+			if(Cycle == XAIE_CORE_ACTIVE_CYCLE) {
+				ActiveCycle = (float) CounterVal;
+				RC = XAie_EventGenerate(LinuxIO->DevInst,
+						PerfInst->Util[Index].Loc,
+						XAIE_CORE_MOD,
+						XAIE_EVENT_USER_EVENT_1_CORE);
+			} else if(Cycle == XAIE_CORE_TOTAL_CYCLE) {
+				TotalCycle = (float) CounterVal;
+			}
+		}
+		PerfInst->Util[Index].KernelUtil = (ActiveCycle / TotalCycle)*100U;
+	}
+
+	for(uint32_t Index = 0U; Index < PerfInst->UtilSize; Index++) {
 		struct aie_rsc Rsc = {0};
-		Rsc.loc.row = Perfinst->util[i].loc.row;
-		Rsc.loc.col = Perfinst->util[i].loc.col;
+		Rsc.loc.row = PerfInst->Util[Index].Loc.Row;
+		Rsc.loc.col = PerfInst->Util[Index].Loc.Col;
 		Rsc.mod = XAIE_CORE_MOD;
 		Rsc.type = AIE_RSCTYPE_PERF;
-		for(int index = 0U; index < 2; index++) {
-			Rsc.id = Perfinst->util[i].perfcnt[index];
+		for(uint8_t Counter = 0U; Counter < 2U; Counter++) {
+			Rsc.id = PerfInst->Util[Index].PerfCnt[Counter];
 			Ret = ioctl(LinuxIO->PartitionFd,
 					AIE_RSC_RELEASE_IOCTL, &Rsc);
 			if(Ret != 0U) {
@@ -1500,6 +1526,13 @@ void _XAie_LinuxIO_UtilCalculation(int SignalNum, siginfo_t *SignalInfo,
 		}
 
 	}
+
+	/*
+	 * Stores the size of the Util array in bytes.
+	 */
+	PerfInst->UtilSize *= sizeof(XAie_Occupancy);
+
+	timer_delete(TimerID);
 }
 
 /*****************************************************************************/
@@ -1517,90 +1550,195 @@ void _XAie_LinuxIO_UtilCalculation(int SignalNum, siginfo_t *SignalInfo,
 static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst)
 {
 	int Ret;
-	static struct aie_perfinst_args PerformanceInst;
-#ifdef _POSIX_C_SOURCE
+	AieRC RC;
 	struct sigaction SignalAction;
-#endif
+	struct sigevent SignalEvent;
+	static struct itimerspec TimerSpec;
+	const XAie_CoreMod* CoreMod;
 	struct aie_rsc Rscs[2];
+	XAie_LocType Loc;
+	XAie_Events StartEvent, StopEvent, ResetEvent;
+	u32 CoreStatus, Index;
+	struct aie_rsc_req_rsp RscReq = {0};
+	struct aie_rsc Rsc;
 
-	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *) IOInst;
 
-	Perfinst = &PerformanceInst;
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+
 	UserInst = PerfInst;
-	IOInstLinux = (void *)LinuxIOInst;
+	IOInstLinux = (void *) LinuxIOInst;
 
-	PerformanceInst.range.start.col = PerfInst->Range->Start;
-	PerformanceInst.range.size.col = PerfInst->Range->Start + PerfInst->Range->Num;
-	PerformanceInst.range.start.row = LinuxIOInst->DevInst->AieTileRowStart;
-	PerformanceInst.range.size.row = LinuxIOInst->DevInst->AieTileNumRows;
-	PerformanceInst.time_interval_ms = PerfInst->TimeInterval_ms;
-	PerformanceInst.util = (struct aie_occupancy*)malloc(
-			sizeof(struct aie_occupancy)*PerfInst->UtilSize);
-
-#ifdef _POSIX_C_SOURCE
 	/*
 	 * Registering signal callback to calculate utilization as floating
 	 * point cannot be calculated in linux kernel driver.
 	 */
 	sigemptyset(&SignalAction.sa_mask);
-	SignalAction.sa_flags = (SA_SIGINFO | SA_RESTART);
-	SignalAction.sa_sigaction = &_XAie_LinuxIO_UtilCalculation;
-	sigaction (SIGPERFUTIL, &SignalAction, NULL);
-#endif
+	SignalAction.sa_flags = SA_SIGINFO;
+	SignalAction.sa_sigaction = _XAie_LinuxIO_UtilCalculation;
+	sigaction (SIGRTMIN, &SignalAction, NULL);
 
 	/*
-	 * util_size is passed as zero for scanning the partition for enabled
-	 * tiles.
+	 * Setting up the timer to fire at the end of user-defined time.
 	 */
-	PerformanceInst.util_size = 0U;
-
-	/*
-	 * Populates all the tiles enabled and in use.
-	 */
-	PerformanceInst.util_size = ioctl(LinuxIOInst->PartitionFd,
-			AIE_PERFORMANCE_UTILIZATION_IOCTL, &PerformanceInst);
-	if(PerformanceInst.util_size <= 0U) {
-		XAIE_ERROR("Failed to scan the partition for enabled core tiles, %d: %s\n",
-				errno, strerror(errno));
+	SignalEvent.sigev_notify = SIGEV_SIGNAL;
+	SignalEvent.sigev_signo = SIGRTMIN;
+	SignalEvent.sigev_value.sival_ptr = UserInst;
+	Ret = timer_create(CLOCK_REALTIME, &SignalEvent, &TimerID);
+	if(Ret < 0) {
+		XAIE_ERROR("Error creating the timer %d: %s\n", errno,
+			   strerror(errno));
 		return XAIE_ERR;
 	}
 
-	/*
-	 * Reserves the performance counters for the tiles mentioned in
-	 * struct aie_occupancy.
-	 */
-	for(__u32 i = 0U; i < PerformanceInst.util_size; i++) {
-		struct aie_rsc_req_rsp RscReq = {0};
-		RscReq.req.loc = PerformanceInst.util[i].loc;
-		RscReq.req.mod = XAIE_CORE_MOD;
-		RscReq.req.type = AIE_RSCTYPE_PERF;
-		RscReq.req.num_rscs = 2;
-		RscReq.rscs = (__u64)&Rscs;
-		Ret = ioctl(LinuxIOInst->PartitionFd, AIE_RSC_REQ_IOCTL, &RscReq);
-		if(Ret != 0U) {
-			XAIE_WARN("Failed to request resource %u\n",
-						RscReq.req.type);
-			return XAIE_ERR;
-		}
+	TimerSpec.it_value.tv_sec = (PerfInst->TimeInterval_ms / 1000) % 10U;
+	TimerSpec.it_value.tv_nsec = ((float)PerfInst->TimeInterval_ms / 1000 -
+			TimerSpec.it_value.tv_sec) * 1000U * 1000000U;
 
-		for(__u32 index = 0U; index < RscReq.req.num_rscs; index++) {
-			PerformanceInst.util[i].perfcnt[index] = Rscs[index].id;
+	/*
+	 * Populates all the tiles enabled and in use.
+	 * Reserves the performance counters for the tiles in the Util array.
+	 */
+	CoreMod = LinuxIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	Index = 0U;
+	for(Loc.Col = PerfInst->Range->Start; Loc.Col < PerfInst->Range->Num;
+			Loc.Col++) {
+		for(Loc.Row = LinuxIOInst->DevInst->AieTileRowStart; Loc.Row <
+				(LinuxIOInst->DevInst->AieTileRowStart +
+				 LinuxIOInst->DevInst->AieTileNumRows);
+				 Loc.Row++) {
+			RC = XAie_CoreGetStatus(LinuxIOInst->DevInst, Loc,
+					&CoreStatus);
+			if(XAie_GetField(CoreStatus, CoreMod->CoreSts->En.Lsb,
+				CoreMod->CoreSts->En.Mask) &&
+				_XAie_PmIsTileRequested(LinuxIOInst->DevInst,
+							Loc)) {
+				PerfInst->Util[Index].Loc = Loc;
+				RscReq.req.loc.col = PerfInst->Util[Index].Loc.Col;
+				RscReq.req.loc.row = PerfInst->Util[Index].Loc.Row;
+				RscReq.req.mod = XAIE_CORE_MOD;
+				RscReq.req.type = AIE_RSCTYPE_PERF;
+				RscReq.req.num_rscs = 2U;
+				RscReq.rscs = (__u64)&Rscs;
+				Ret = ioctl(LinuxIOInst->PartitionFd,
+					    AIE_RSC_REQ_IOCTL, &RscReq);
+				if(Ret != 0U) {
+					XAIE_WARN("Failed to request performance counter %u\n",
+						RscReq.req.type);
+					return XAIE_ERR;
+				}
+				for(__u32 Counter = 0U;
+				    Counter < RscReq.req.num_rscs; Counter++) {
+					PerfInst->Util[Index].PerfCnt[Counter] =
+						Rscs[Counter].id;
+				}
+
+				for(u32 Id = 0U;
+					Id < XAIE_OCCUPANCY_USER_EVENT_NUM;
+					Id++) {
+					Rsc.loc.col = PerfInst->Util[Index].Loc.Col;
+					Rsc.loc.row = PerfInst->Util[Index].Loc.Row;
+					Rsc.mod = XAIE_CORE_MOD;
+					Rsc.type = AIE_RSCTYPE_USEREVENT;
+					Rsc.id = Id;
+					Ret = ioctl(LinuxIOInst->PartitionFd,
+						    AIE_RSC_REQ_SPECIFIC_IOCTL,
+						    &Rsc);
+					if(Ret != 0) {
+						XAIE_WARN("Failed to request user event %u, %d: %s\n",
+							   Rsc.type, errno,
+							   strerror(errno));
+						return XAIE_ERR;
+					}
+				}
+				Index++;
+
+			}
 		}
 	}
 
+	PerfInst->UtilSize = Index;
+
+	for(uint32_t UIndex = 0U; UIndex < PerfInst->UtilSize; UIndex++) {
+		for(uint8_t Cycle = 0U; Cycle < XAIE_PERF_CORE_NUM_CYCLES;
+		    Cycle++) {
+			if(Cycle == XAIE_CORE_ACTIVE_CYCLE) {
+				StartEvent = XAIE_EVENT_ACTIVE_CORE;
+				StopEvent = XAIE_EVENT_DISABLED_CORE;
+			} else if(Cycle == XAIE_CORE_TOTAL_CYCLE) {
+				StartEvent = XAIE_EVENT_USER_EVENT_0_CORE;
+				StopEvent = XAIE_EVENT_USER_EVENT_1_CORE;
+			}
+
+			ResetEvent = XAIE_EVENT_USER_EVENT_0_CORE;
+
+			RC = XAie_PerfCounterControlSet(LinuxIOInst->DevInst,
+				PerfInst->Util[UIndex].Loc, XAIE_CORE_MOD,
+				PerfInst->Util[UIndex].PerfCnt[Cycle],
+				StartEvent, StopEvent);
+			RC |= XAie_PerfCounterResetControlSet(LinuxIOInst->DevInst,
+				PerfInst->Util[UIndex].Loc, XAIE_CORE_MOD,
+				PerfInst->Util[UIndex].PerfCnt[Cycle], ResetEvent);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Performance counter start, stop or reset event setup failed for (%u, %u) at Index: %u!\n",
+						PerfInst->Util[UIndex].Loc.Row,
+						PerfInst->Util[UIndex].Loc.Col,
+						UIndex);
+				return RC;
+			}
+
+		}
+
+	}
+
 	/*
-	 * Calculates the kernel utilization.
+	 * Resets active cycle & total cycle performance counter and starts the
+	 * total cycle performance counter.
+	 * Since the core occupancy capture is time-sensitive performance
+	 * counter setup and reset is split as separate runs.
 	 */
-	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_PERFORMANCE_UTILIZATION_IOCTL,
-			&PerformanceInst);
-	if(Ret != 0U) {
-		XAIE_ERROR("Failed to capture performance utilization, %d: %s\n",
-				errno, strerror(errno));
+	for(uint32_t UIndex = 0U; UIndex < PerfInst->UtilSize; UIndex++) {
+		RC = XAie_EventGenerate(LinuxIOInst->DevInst,
+						PerfInst->Util[UIndex].Loc,
+						XAIE_CORE_MOD,
+						XAIE_EVENT_USER_EVENT_0_CORE);
+	}
+
+	/*
+	 * Enables the timer.
+	 */
+	Ret = timer_settime(TimerID, 0, &TimerSpec, NULL);
+	if(Ret < 0) {
+		XAIE_ERROR("Error starting the timer %d: %s\n", errno,
+			   strerror(errno));
 		return XAIE_ERR;
 	}
 
 	return XAIE_OK;
 }
+
+#else
+/*****************************************************************************/
+/**
+* The API captures core tile utilization over a user-defined period.
+*
+* @param	IOInst: IO instance pointer
+* @param	PerfInst: Performance instance.
+*
+* @return	XAIE_ERR as posix is not enabled.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst)
+{
+	(void)IOInst;
+	(void)PerfInst;
+
+	XAIE_ERROR("POSIX is not enabled. Aborting the occupancy collection!\n");
+	return XAIE_ERR;
+
+}
+#endif
 
 /*****************************************************************************/
 /**

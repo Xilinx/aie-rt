@@ -67,6 +67,7 @@
 #define XAIE_CLEAR_ISOLATION			1
 #define XAIE_INIT_WEST_ISOLATION		2
 #define XAIE_INIT_EAST_ISOLATION		4
+#define XAIE_PERF_CORE_NUM_CYCLES		2U
 
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
@@ -589,6 +590,18 @@ typedef struct {
 	XAie_OpHdr OpHdr;
 	uint32_t Size;
 } XAie_CustomOpHdr;
+
+/*
+ * Typedef for enum of AIE backend attribute type
+ */
+typedef enum {
+	XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE,
+} XAie_BackendAttrType;
+
+typedef enum {
+	XAIE_CORE_ACTIVE_CYCLE,
+	XAIE_CORE_TOTAL_CYCLE
+} XAie_PerfUtilCycle;
 
 /*
  * This typedef contains members necessary to store the tile location and
