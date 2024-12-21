@@ -913,7 +913,7 @@ AieRC _XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-		XAie_LocType Loc, u32 Len, u8 BdNum)
+		XAie_LocType Loc, u32 Len, u16 BdNum)
 {
 	u64 RegAddr;
 	u32 RegVal, Mask;
@@ -947,7 +947,7 @@ AieRC _XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAie_ShimDmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-		XAie_LocType Loc, u32 Len, u8 BdNum)
+		XAie_LocType Loc, u32 Len, u16 BdNum)
 {
 	u64 RegAddr;
 	u32 RegVal;
@@ -981,7 +981,7 @@ AieRC _XAie_ShimDmaUpdateBdLen(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
-		XAie_LocType Loc, u64 Addr, u8 BdNum)
+		XAie_LocType Loc, u64 Addr, u16 BdNum)
 {
 	u64 RegAddr;
 	u32 RegVal, Mask;
@@ -1014,7 +1014,7 @@ AieRC _XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 *		not operate on software descriptor.
 ******************************************************************************/
 AieRC _XAie_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
-		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u64 Addr, u8 BdNum)
+		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u64 Addr, u16 BdNum)
 {
 	AieRC RC;
 	u64 RegAddr;
@@ -1062,7 +1062,7 @@ AieRC _XAie_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 * @note		Internal only.
 *
 ******************************************************************************/
-AieRC _XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u8 Wrap,
+AieRC _XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr)
 {
 	(void)DmaDesc;

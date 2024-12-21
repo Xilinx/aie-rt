@@ -280,8 +280,8 @@ typedef struct {
 } XAie_DmaTensor;
 
 typedef struct {
-	u8 LockAcqId;
-	u8 LockRelId;
+	u16 LockAcqId;
+	u16 LockRelId;
 	u8 LockAcqEn;
 	s8 LockAcqVal;
 	u8 LockAcqValEn;
@@ -488,7 +488,7 @@ typedef enum {
 
 /* Data structure to capture lock id and value */
 typedef struct {
-	u8 LockId;
+	u16 LockId;
 	s8 LockVal;
 } XAie_Lock;
 
@@ -677,7 +677,7 @@ AieRC XAie_GetPartitionFdList(XAie_DevInst *DevInst);
 * @note		None.
 *
 ******************************************************************************/
-static inline XAie_Lock XAie_LockInit(u8 Id, s8 Value)
+static inline XAie_Lock XAie_LockInit(u16 Id, s8 Value)
 {
 	XAie_Lock Lock = {Id, Value};
 	return Lock;
@@ -723,27 +723,6 @@ static inline XAie_LocType XAie_TileLoc(u8 col, u8 row)
 {
 	XAie_LocType Loc = { row, col };
 	return Loc;
-}
-
-/*****************************************************************************/
-/**
-*
-* This routine is used to check if the shim tile has uc module.
-*
-* @param	DevInst: Device Instance.
-* @param	TileType: Type of the tile.
-*
-* @return       1 if uc module is present and 0 otherwise.
-*
-* @note	 Internal API only.
-*
-*******************************************************************************/
-static inline u8 _XAie_IsUcModulePresent(XAie_DevInst* DevInst, u8 TileType) {
-	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS &&
-			TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
-		return 1;
-	}
-	return 0;
 }
 
 /*****************************************************************************/

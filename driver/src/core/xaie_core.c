@@ -34,6 +34,7 @@
 #include "xaie_core.h"
 #include "xaie_events.h"
 #include "xaie_feature_config.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_CORE_ENABLE
 
@@ -887,7 +888,8 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 RegAddr;
 	const XAie_EvntMod *EvntMod;
-	u8 HwEvent, TileType;
+	u16 HwEvent;
+	u8 TileType;
 	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||
@@ -907,7 +909,7 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		EvntMod->ErrorHaltRegOff;
 
-	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, XAIE_CORE_MOD,
+	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, XAIE_CORE_MOD,
 			Event, &HwEvent);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Invalid event ID\n");
