@@ -35,6 +35,7 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC _XAie_TxnFree(XAie_TxnInst *Inst);
 void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
 void _XAie_FreeTxnPtr(void *Ptr);
+u8 _XAie_IsUcModulePresent(XAie_DevInst* DevInst, u8 TileType);
 void _XAie_AppendPartitionToList(XAie_DevInst *DevInst, XAie_PartitionList *PartInst);
 AieRC _XAie_DestroyPartitionFdList(XAie_DevInst *DevInst);
 AieRC _XAie_PrintPartitionList(XAie_DevInst *DevInst);

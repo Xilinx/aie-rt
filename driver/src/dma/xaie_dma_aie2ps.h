@@ -42,7 +42,7 @@ AieRC _XAie2PS_ShimDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 
 AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		const XAie_DmaMod *DmaMod, XAie_LocType Loc, u64 Addr,
-		u8 BdNum);
+		u16 BdNum);
 AieRC _XAie2PS_AxiBurstLenCheck(u8 BurstLen, u8 *AxiBurstLen);
 AieRC XAie_GetUcDmaAxiMmOutstandingTxn(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *Status);
