@@ -1332,7 +1332,7 @@ static u8* _XAie_ReallocTxnBuf_MemInit(u8 *TxnPtr, u32 NewSize, u32 Buffsize)
 		XAIE_ERROR("Reallocation failed for txn buffer\n");
 		return NULL;
 	}
-        memset(Tmp + Buffsize,0,(NewSize  - Buffsize));
+	memset(Tmp + Buffsize,0,(NewSize  - Buffsize));
 	return Tmp;
 }
 
@@ -1437,6 +1437,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	u8 first_blockwrite_processed = 0;
 	u32* blockwrite_buffer = NULL;
 	u8* LoadSeqCountPtr = NULL;
+	u32 LoadSeqCountOffset = 0;
 
 	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
 	u32 BW_Buff_AllocatedSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
@@ -1714,14 +1715,20 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 			}
 			LoadSeqCountPtr = _XAie_AppendPmLoad(Cmd, TxnPtr);
+			LoadSeqCountOffset = LoadSeqCountPtr - (TxnPtr - BuffSize);
 			TxnPtr += sizeof(XAie_PmLoadHdr);
 			BuffSize += (u32)sizeof(XAie_PmLoadHdr);
 			DevInst->PmLoadingActive = 1;
 			continue;
 		}
-		else if( (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL) && (LoadSeqCount != 0) )
+		else if (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL)
 		{
-			if(LoadSeqCountPtr != NULL)
+			// Check if LoadSeqCountPtr needs to be updated due to realloc of TXN Ptr.
+			if ((LoadSeqCountOffset != 0) && (LoadSeqCountPtr != ((TxnPtr - BuffSize) + LoadSeqCountOffset))) {
+				LoadSeqCountPtr = (TxnPtr - BuffSize) + LoadSeqCountOffset;
+			}
+
+			if((LoadSeqCount != 0) && (LoadSeqCountPtr != NULL))
 			{
 				*LoadSeqCountPtr = LoadSeqCount & 0xFF;
 				*(LoadSeqCountPtr + 1) = (LoadSeqCount & 0xFF00) >> 8;
@@ -1844,7 +1851,6 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	XAIE_DBG("Num of Operations in the transaction buffer: %u\n",
 			TmpInst->NumCmds);
 
-
 	/* Adjust pointer and reallocate to the right size */
 	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
 	if(TxnPtr == NULL) {
@@ -1864,6 +1870,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 	XAie_TxnInst *TmpInst = NULL;
 	u8 *TxnPtr = NULL;
 	u8* LoadSeqCountPtr = NULL;
+	u32 LoadSeqCountOffset = 0;
 	u32 LoadSeqCount = 0;
 	u32 BuffSize = 0U, NumOps = 0;
 	u32 AllocatedBuffSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
@@ -2076,6 +2083,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 
 			}
 			LoadSeqCountPtr = _XAie_AppendPmLoad(Cmd, TxnPtr);
+			LoadSeqCountOffset = LoadSeqCountPtr - (TxnPtr - BuffSize);
 			TxnPtr += sizeof(XAie_PmLoadHdr);
 			BuffSize += (u32)sizeof(XAie_PmLoadHdr);
 			DevInst->PmLoadingActive = 1;
@@ -2132,9 +2140,14 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			BuffSize += (u32)sizeof(XAie_UpdateRegHdr);
 			continue;
 		}
-		else if( (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL) && (LoadSeqCount != 0) )
+		else if (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL)
 		{
-			if(LoadSeqCountPtr != NULL)
+			// Check if LoadSeqCountPtr needs to be updated due to realloc of TXN Ptr.
+			if ((LoadSeqCountOffset != 0) && (LoadSeqCountPtr != ((TxnPtr - BuffSize) + LoadSeqCountOffset))) {
+				LoadSeqCountPtr = (TxnPtr - BuffSize) + LoadSeqCountOffset;
+			}
+
+			if ((LoadSeqCount != 0) && (LoadSeqCountPtr != NULL))
 			{
 				*LoadSeqCountPtr = LoadSeqCount & 0xFF;
 				*(LoadSeqCountPtr + 1) = (LoadSeqCount & 0xFF00) >> 8;
@@ -2183,7 +2196,6 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			four_byte_aligned_BuffSize);
 	XAIE_DBG("Num of Operations in the transaction buffer: %u\n",
 			TmpInst->NumCmds);
-
 
 	/* Adjust pointer and reallocate to the right size */
 	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
@@ -2265,7 +2277,6 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
 
-			//TBD handle custom OP as well
 			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
 				(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
@@ -2713,7 +2724,6 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
 			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
-			XAIE_DBG("free DataPtr %p\n", Cmd->DataPtr);
 			free((void *)Cmd->DataPtr);
 		}
 	}
