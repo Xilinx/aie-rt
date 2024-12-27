@@ -962,7 +962,7 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->Reset.Lsb,
 			_XAie_MaxBitsNeeded((u32)Reset), MAX_VALID_AIE_REG_BIT_INDEX)) {
 		XAIE_ERROR("Check Precision Exceeds Failed\n");
@@ -1097,7 +1097,7 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 
 	return XAie_MaskWrite32(DevInst, Addr, DmaMod->ChProp->PauseStream.Mask,
 			Value);
@@ -1165,7 +1165,7 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 			DmaMod->ChProp->PauseMem.Mask);
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 
 	return XAie_MaskWrite32(DevInst, Addr, DmaMod->ChProp->PauseMem.Mask,
 			Value);
@@ -1232,7 +1232,7 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 
 	return XAie_Write32(DevInst, Addr + (u64)(DmaMod->ChProp->StartBd.Idx * 4U),
 			BdNum);
@@ -1286,7 +1286,7 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u32)((u8)Dir * (u32)DmaMod->ChIdxOffset * DmaMod->NumChannels);
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 
 	return XAie_MaskWrite32(DevInst,
 			Addr + (u64)(DmaMod->ChProp->Enable.Idx * 4U),
@@ -1816,7 +1816,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->StartQueueBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->StartBd.Lsb,
 			_XAie_MaxBitsNeeded(StartBd), MAX_VALID_AIE_REG_BIT_INDEX)  ||
 		_XAie_CheckPrecisionExceeds(DmaMod->ChProp->RptCount.Lsb,
@@ -2112,7 +2112,7 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		((u64)(u8)Dir) * ((u64)DmaMod->ChIdxOffset * (u64)DmaMod->NumChannels);
 
 		if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->ControllerId.Lsb,
 				_XAie_MaxBitsNeeded(DmaChannelDesc->ControllerId), MAX_VALID_AIE_REG_BIT_INDEX)  ||
