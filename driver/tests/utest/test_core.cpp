@@ -124,16 +124,27 @@ TEST(CoreControlApis, CoreWaitForDone)
 	RC = XAie_CoreWaitForDone(&DevInst, XAie_TileLoc(8, 3), 0);
 	/*
 	 * This test case will always fail as the core is not executing during
-	 * the execution of this unit test case.
+	 * the execution of this unit test case. Debug backend always returns
+	 * XAIE_OK.
 	 */
-	CHECK_EQUAL(XAIE_CORE_STATUS_TIMEOUT, RC);
+
+	if(DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(XAIE_CORE_STATUS_TIMEOUT, RC);
+	}
 
 	RC = XAie_CoreWaitForDone(&DevInst, XAie_TileLoc(8, 3), 1);
 	/*
 	 * This test case will always fail as the core is not executing during
-	 * the execution of this unit test case.
+	 * the execution of this unit test case. Debug backend always returns
+	 * XAIE_OK.
 	 */
-	CHECK_EQUAL(XAIE_CORE_STATUS_TIMEOUT, RC);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(XAIE_CORE_STATUS_TIMEOUT, RC);
+	}
 }
 
 TEST(CoreControlApis, CoreWaitForDisable)

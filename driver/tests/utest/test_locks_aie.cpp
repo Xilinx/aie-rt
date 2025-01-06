@@ -46,7 +46,11 @@ TEST(LockApisAie, AcquireLock)
 	CHECK_EQUAL(XAIE_OK, RC);
 
 	RC = XAie_LockAcquire(&DevInst, TileLoc, XAie_LockInit(5, 1), 0);
-	CHECK_EQUAL(XAIE_LOCK_RESULT_FAILED, RC);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(XAIE_LOCK_RESULT_FAILED, RC);
+	}
 
 	RC = XAie_LockRelease(&DevInst, TileLoc,
 			XAie_LockInit(5, XAIE_LOCK_WITH_NO_VALUE), 0);
@@ -58,7 +62,11 @@ TEST(LockApisAie, AcquireLock)
 
 	RC = XAie_LockAcquire(&DevInst, TileLoc,
 			XAie_LockInit(5, XAIE_LOCK_WITH_NO_VALUE), 0);
-	CHECK_EQUAL(XAIE_LOCK_RESULT_FAILED, RC);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(XAIE_LOCK_RESULT_FAILED, RC);
+	}
 }
 
 TEST(LockApisAie, ReleaseLock)

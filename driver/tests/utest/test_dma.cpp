@@ -289,7 +289,11 @@ TEST(DmaStatusApis, TileDmaStatusApis)
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 1, DMA_MM2S, 0);
-	CHECK_EQUAL(RC, XAIE_ERR);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(RC, XAIE_ERR);
+	}
 
 	/* MM2S Channel 0 */
 	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 0, DMA_MM2S, Bd);
@@ -303,7 +307,11 @@ TEST(DmaStatusApis, TileDmaStatusApis)
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 0, DMA_MM2S, 0);
-	CHECK_EQUAL(RC, XAIE_ERR);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(RC, XAIE_ERR);
+	}
 
 	/* S2MM Channel 1 */
 	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 1, DMA_S2MM, Bd);
@@ -317,7 +325,11 @@ TEST(DmaStatusApis, TileDmaStatusApis)
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 1, DMA_S2MM, 0);
-	CHECK_EQUAL(RC, XAIE_ERR);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(RC, XAIE_ERR);
+	}
 
 	/* S2MM Channel 0 */
 	RC = XAie_DmaChannelPushBdToQueue(&DevInst, TileLoc, 0, DMA_S2MM, Bd);
@@ -331,7 +343,11 @@ TEST(DmaStatusApis, TileDmaStatusApis)
 	CHECK_EQUAL(RC, XAIE_OK);
 
 	RC = XAie_DmaWaitForDone(&DevInst, TileLoc, 0, DMA_S2MM, 0);
-	CHECK_EQUAL(RC, XAIE_ERR);
+	if (DevInst.Backend->Type == XAIE_IO_BACKEND_DEBUG) {
+		CHECK_EQUAL(RC, XAIE_OK);
+	} else {
+		CHECK_EQUAL(RC, XAIE_ERR);
+	}
 }
 
 TEST(DmaStatusApis, ShimDmaStatusApis)
