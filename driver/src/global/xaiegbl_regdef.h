@@ -461,6 +461,7 @@ typedef struct {
 	XAie_AieMlDmaDimProp DmaDimProp[4U];
 	XAie_AieMlDmaDimProp Iter;
 	XAie_RegBdFldAttr IterCurr;
+	XAie_RegBdFldAttr StepSize_Zero;
 } XAie_AieMlAddressMode;
 
 /*

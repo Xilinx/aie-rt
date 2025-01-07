@@ -45,6 +45,47 @@
 /*****************************************************************************/
 /**
 *
+* This API setups the DmaDesc with the register fields required for the dma
+* addressing mode of AIE2PS.
+*
+* @param	DmaDesc: Initialized Dma Descriptor.
+* @param	Tensor: Dma Tensor describing the address mode of dma.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal API only.
+*
+******************************************************************************/
+AieRC _XAie2PS_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
+{
+	for(u8 i = 0U; i < Tensor->NumDim; i++) {
+		const XAie_DmaBdProp *BdProp = DmaDesc->DmaMod->BdProp;
+		if((Tensor->Dim[i].AieMlDimDesc.StepSize == 0U) && (i != 3U)) {
+			XAIE_ERROR("Invalid stepsize for dimension %d\n", i);
+			return XAIE_ERR;
+		}
+		if((Tensor->Dim[i].AieMlDimDesc.StepSize > (BdProp->StepSizeMax +1U)) ||
+				(Tensor->Dim[i].AieMlDimDesc.Wrap > (BdProp->WrapMax + 1U))) {
+			XAIE_ERROR("Invalid stepsize or wrap for dimension %d\n",
+					i);
+			return XAIE_ERR;
+		}
+	}
+
+	for(u8 i = 0U; i < Tensor->NumDim; i++) {
+
+		DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[i].StepSize =
+			Tensor->Dim[i].AieMlDimDesc.StepSize;
+		DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[i].Wrap =
+			Tensor->Dim[i].AieMlDimDesc.Wrap;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API checks the validity of wrap and padding before and after fields of
 * the Dma descriptor.
 *
@@ -181,6 +222,9 @@ AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		 XAie_SetField((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[0U].StepSize - 1U),
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Mask) |
+		 XAie_SetField(((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[3U].StepSize > 0U) ? 0U : 1U),
+				BdProp->AddrMode->AieMlMultiDimAddr.StepSize_Zero.Lsb,
+				BdProp->AddrMode->AieMlMultiDimAddr.StepSize_Zero.Mask) |
 		 XAie_SetField((DmaDesc->PadDesc[2U].Before >> (XAIE2PS_DMA_PAD_NUM_BITS - 2U)),
 				 BdProp->Pad->D2_PadBeforeHigh.Lsb,
 				 BdProp->Pad->D2_PadBeforeHigh.Mask) |

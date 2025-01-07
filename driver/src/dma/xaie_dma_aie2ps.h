@@ -33,6 +33,7 @@ typedef enum { XAIE_UC_MODULE__DMA_DIR__DM2MM,
 } UcDmaDir_enum;
 
 /************************** Function Prototypes  *****************************/
+AieRC _XAie2PS_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor);
 AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
 AieRC _XAie2PS_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,

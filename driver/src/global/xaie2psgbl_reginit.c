@@ -1631,6 +1631,9 @@ static const XAie_DmaBdMultiDimAddr Aie2PSMemTileMultiDimProp =
 	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize.Idx = 5U,
 	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D3_STEPSIZE_LSB,
 	.AieMlMultiDimAddr.DmaDimProp[3U].StepSize.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_5_D3_STEPSIZE_MASK,
+	.AieMlMultiDimAddr.StepSize_Zero.Idx = 2U,
+	.AieMlMultiDimAddr.StepSize_Zero.Lsb = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_D3_STEPSIZE_ZERO_LSB,
+	.AieMlMultiDimAddr.StepSize_Zero.Mask = XAIE2PSGBL_MEM_TILE_MODULE_DMA_BD0_2_D3_STEPSIZE_ZERO_MASK,
 };
 
 static const XAie_DmaBdPad Aie2PSMemTilePadProp =
@@ -1787,7 +1790,7 @@ static const XAie_DmaMod Aie2PSMemTileDmaMod =
 	.DmaBdInit = &_XAieMl_MemTileDmaInit,
 	.SetLock = &_XAieMl_DmaSetLock,
 	.SetIntrleave = NULL,
-	.SetMultiDim = &_XAieMl_DmaSetMultiDim,
+	.SetMultiDim = &_XAie2PS_DmaSetMultiDim,
 	.SetBdIter = &_XAieMl_DmaSetBdIteration,
 	.WriteBd = &_XAie2PS_MemTileDmaWriteBd,
 	.ReadBd = &_XAieMl_MemTileDmaReadBd,
