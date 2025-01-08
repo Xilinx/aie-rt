@@ -320,7 +320,11 @@ jobs:
         echo "PR Details: $PR_DETAILS"
         PR_BODY=$(echo "$PR_DETAILS" | jq -r '.body')
         echo "PR Body: $PR_BODY"
-        ID_INFOS=$(echo "$PR_BODY" | grep -oiP '\b(cr|pr|jira)-\d+\b' | tr '\n' ',' | sed 's/,$//')
+        ID_INFOS=$(echo "$PR_BODY" | grep -oiP '^((jira)[-:])?\s*((cr|pr)[-: ]?)?\s*\d+' \
+          | sed -E 's/^jira[-:]?\s*/CR-/I' \
+          | sed -E 's/[-: ]+/-/g' \
+          | awk -F'-' '{print toupper($(NF-1) "-" $NF)}' \
+          | tr '\n' ',' | sed 's/,$//')
         echo "ID Infos: $ID_INFOS"
 
         if [ -z "$ID_INFOS" ]; then
