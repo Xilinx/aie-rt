@@ -1453,13 +1453,13 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 	blockwrite_buffer = calloc(AllocatedBuffSize,1);
 	if(blockwrite_buffer == NULL) {
-		XAIE_ERROR("Calloc failed\n");
+		XAIE_ERROR("BlockWrite Buffer Calloc failed\n");
 		return NULL;
 	}
 
 	TxnPtr = calloc(AllocatedBuffSize,1);
 	if(TxnPtr == NULL) {
-		XAIE_ERROR("Calloc failed\n");
+		XAIE_ERROR("TxnPtr Calloc failed\n");
 		free(blockwrite_buffer);
 		return NULL;
 	}
@@ -1487,7 +1487,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 				(AllocatedBuffSize) * 2U, BuffSize);
 				if(TxnPtr == NULL) {
-					printf("Realloc Failed\n");
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1498,13 +1499,14 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			patch_cmd_count = 0;
 			first_blockwrite_processed = 0;
 		}
-		
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
 			if((BuffSize + sizeof(XAie_Write32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL){
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1521,6 +1523,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1537,6 +1541,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1553,6 +1559,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1576,11 +1584,11 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			 	if ( Cmd->RegOff != RegOff_last_blockwrite)
 			 	{
 					while((BuffSize + BW_Buff_Size) > AllocatedBuffSize) {
-						printf("Realloc Blockwrite\n");
 						TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						(AllocatedBuffSize) * 2U, BuffSize);
 						if(TxnPtr == NULL) {
-							printf("Realloc Failed\n");
+							XAIE_ERROR("TxnPtr realloc failed\n");
+							free(blockwrite_buffer);
 							return NULL;
 						}
 						AllocatedBuffSize *= 2U;
@@ -1594,6 +1602,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				else
 				{
 					NumOps--;
+					LoadSeqCount--;
 				}
 			} else {
 				/**
@@ -1609,9 +1618,10 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				blockwrite_buffer = (u32*) ( _XAie_ReallocTxnBuf_MemInit((u8 *)blockwrite_buffer,
 									(BW_Buff_AllocatedSize) * 2U, BW_Buff_Size) );
 				if(blockwrite_buffer == NULL) {
-							printf("Realloc Failed\n");
-							return NULL;
-						}
+					XAIE_ERROR("BlockWrite Buffer Realloc Failed\n");
+					free(TxnPtr);
+					return NULL;
+				}
 				BW_Buff_AllocatedSize *= 2U;
 			}
 			RegOff_last_blockwrite = (u64) ( Cmd->RegOff + (Cmd->Size*4) );
@@ -1634,6 +1644,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1653,11 +1665,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			_XAie_AppendNoOp(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_NoOpHdr);
@@ -1671,11 +1684,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			_XAie_AppendPreempt(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_PreemptHdr);
@@ -1689,11 +1703,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			_XAie_AppendLoadPdi(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_LoadPdiHdr);
@@ -1707,12 +1722,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			LoadSeqCountPtr = _XAie_AppendPmLoad(Cmd, TxnPtr);
 			LoadSeqCountOffset = LoadSeqCountPtr - (TxnPtr - BuffSize);
@@ -1734,9 +1749,12 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				*(LoadSeqCountPtr + 1) = (LoadSeqCount & 0xFF00) >> 8;
 				*(LoadSeqCountPtr + 2) = (LoadSeqCount & 0xFF0000) >> 16;
 			}
-			else
+			else if (LoadSeqCountPtr == NULL)
 			{
 				XAIE_ERROR("LoadSeqCountPtr is equal to NULL\n");
+				free(blockwrite_buffer);
+				free(TxnPtr);
+				return NULL;
 			}
 			LoadSeqCount = 0;
 			NumOps--;
@@ -1750,6 +1768,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1767,6 +1787,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1784,6 +1806,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1811,6 +1835,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(blockwrite_buffer);
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1826,17 +1852,18 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	}
 	if(first_blockwrite_processed != 0)
 	{	
-		XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)blockwrite_buffer;
-				while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
-					TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
-					(AllocatedBuffSize) * 2U, BuffSize);
-					if(TxnPtr == NULL) {
-						printf("Realloc Failed\n");
-						return NULL;
-					}
-					AllocatedBuffSize *= 2U;
-					TxnPtr += BuffSize;
-				}
+		XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)blockwrite_buffer;
+		while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
+			TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						(AllocatedBuffSize) * 2U, BuffSize);
+			if(TxnPtr == NULL) {
+				XAIE_ERROR("TxnPtr realloc failed\n");
+				free(blockwrite_buffer);
+				return NULL;
+			}
+			AllocatedBuffSize *= 2U;
+			TxnPtr += BuffSize;
+		}
 		BuffSize += Hdr->Size;
 		TxnPtr += Append_BW_To_Txn_Buff(blockwrite_buffer,TxnPtr,patch_cmd_count);
 	}
@@ -1884,11 +1911,9 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		return NULL;
 	}
 
-
 	TxnPtr = calloc(AllocatedBuffSize,1);
-
 	if(TxnPtr == NULL) {
-		XAIE_ERROR("Calloc failed\n");
+		XAIE_ERROR("TxnPtr Calloc failed\n");
 		return NULL;
 	}
 
@@ -1896,7 +1921,6 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 	BuffSize += (u32)sizeof(XAie_TxnHeader);
 	TxnPtr += sizeof(XAie_TxnHeader);
 	XAIE_DBG("number of cmd %d\n", TmpInst->NumCmds);
-
 
 	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
 		NumOps++;
@@ -1913,6 +1937,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL){
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1929,6 +1954,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1945,6 +1971,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1961,6 +1988,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1978,6 +2006,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -1996,11 +2025,12 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			 * blockwrite size
 			 */
 			if((BuffSize + sizeof(XAie_BlockWrite32Hdr_opt) +
-						Cmd->Size * sizeof(u32)) >
+					Cmd->Size * sizeof(u32)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -2013,7 +2043,6 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				Cmd->Size * (u32)sizeof(u32);
 			continue;
 		}
-
 		else if(Cmd->Opcode == XAIE_IO_NOOP)
 		{
 			if( (BuffSize + sizeof(XAie_NoOpHdr)) >
@@ -2021,18 +2050,17 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			_XAie_AppendNoOp(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_NoOpHdr);
 			BuffSize += (u32)sizeof(XAie_NoOpHdr);
 			continue;
 		}
-
 		else if(Cmd->Opcode == XAIE_IO_PREEMPT)
 		{
 			if( (BuffSize + sizeof(XAie_PreemptHdr)) >
@@ -2040,11 +2068,11 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			_XAie_AppendPreempt(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_PreemptHdr);
@@ -2058,11 +2086,11 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			_XAie_AppendLoadPdi(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_LoadPdiHdr);
@@ -2076,11 +2104,11 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
-
 			}
 			LoadSeqCountPtr = _XAie_AppendPmLoad(Cmd, TxnPtr);
 			LoadSeqCountOffset = LoadSeqCountPtr - (TxnPtr - BuffSize);
@@ -2096,6 +2124,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -2113,6 +2142,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -2130,6 +2160,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -2153,9 +2184,11 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				*(LoadSeqCountPtr + 1) = (LoadSeqCount & 0xFF00) >> 8;
 				*(LoadSeqCountPtr + 2) = (LoadSeqCount & 0xFF0000) >> 16;
 			}
-			else
+			else if (LoadSeqCountPtr == NULL)
 			{
 				XAIE_ERROR("LoadSeqCountPtr is equal to NULL\n");
+				free(TxnPtr);
+				return NULL;
 			}
 			LoadSeqCount = 0;
 			NumOps--;
@@ -2170,10 +2203,10 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 
 			if((BuffSize + sizeof(XAie_CustomOpHdr_opt) +
 						Cmd->Size) > AllocatedBuffSize) {
-				printf("lmn\n");
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
 				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
 					return NULL;
 				}
 				AllocatedBuffSize *= 2U;
@@ -2199,10 +2232,10 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 
 	/* Adjust pointer and reallocate to the right size */
 	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
-        if(TxnPtr == NULL) {
-                XAIE_ERROR("TxnPtr realloc failed\n");
-                return NULL;
-        }
+	if(TxnPtr == NULL) {
+		XAIE_ERROR("TxnPtr realloc failed\n");
+		return NULL;
+	}
 	
 	((XAie_TxnHeader *)TxnPtr)->NumOps =  NumOps;
 	((XAie_TxnHeader *)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
@@ -2915,7 +2948,7 @@ AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* Preempt)
 	u8 p_level = Preempt->Preempt_level;
 	if(p_level >= INVALID)
 	{
-		printf("Error: Preempt_level = %d",p_level);
+		XAIE_ERROR("Error: Preempt_level = %d",p_level);
 		return XAIE_ERR;
 	}
 
