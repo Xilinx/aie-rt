@@ -83,7 +83,7 @@ namespace xaiefal {
 					" Expect Mod= " << Mod << " resource reserved." << std::endl;
 				return XAIE_ERR;
 			} else {
-				uint8_t HwEvent;
+				uint16_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 					StartM, StartE, &HwEvent);
@@ -154,7 +154,7 @@ namespace xaiefal {
 					std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				uint8_t HwEvent;
+				uint16_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(),
 						Loc, Module, Event, &HwEvent);
@@ -215,7 +215,7 @@ namespace xaiefal {
 					std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				uint8_t HwEvent;
+				uint16_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 						Module, Event, &HwEvent);
@@ -252,7 +252,7 @@ namespace xaiefal {
 					std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
-				uint8_t HwEvent;
+				uint16_t HwEvent;
 
 				RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 						Module, Event, &HwEvent);

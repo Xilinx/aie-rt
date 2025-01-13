@@ -1650,7 +1650,7 @@ AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 }
 
 AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events Event, u8 *HwEvent)
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent)
 {
 	u16 HwEvent_16;
 	AieRC RC;
@@ -1717,7 +1717,7 @@ AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 	return XAIE_INVALID_ARGS;
 }
 AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 HwEvent, XAie_Events *EnumEvent)
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent)
 {
 	return XAie_EventPhysicalToLogicalConv_16(DevInst, Loc,	Module,
 						  (u16)HwEvent, EnumEvent);

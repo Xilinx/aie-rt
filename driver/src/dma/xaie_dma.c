@@ -515,7 +515,7 @@ AieRC XAie_DmaSetBdIteration_16(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 	return DmaMod->SetBdIter(DmaDesc, StepSize, Wrap, IterCurr);
 }
 
-AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u8 Wrap,
+AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr)
 {
 	return XAie_DmaSetBdIteration_16(DmaDesc, StepSize, (u16)Wrap, IterCurr);
@@ -672,7 +672,7 @@ AieRC XAie_DmaSetNextBd_16(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 	return XAIE_OK;
 }
 
-AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u8 NextBd, u8 EnableNextBd)
+AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 {
 	return XAie_DmaSetNextBd_16(DmaDesc, (u16)NextBd, EnableNextBd);
 }
@@ -855,7 +855,7 @@ AieRC XAie_DmaWriteBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 }
 
 AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum)
+		XAie_LocType Loc, u16 BdNum)
 {
 	return XAie_DmaWriteBd_16(DevInst, DmaDesc, Loc, (u16)BdNum);
 }
@@ -907,7 +907,7 @@ AieRC XAie_DmaReadBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 }
 
 AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum)
+		XAie_LocType Loc, u16 BdNum)
 {
 	return XAie_DmaReadBd_16(DevInst, DmaDesc, Loc, (u16)BdNum);
 }
@@ -1227,7 +1227,7 @@ AieRC XAie_DmaChannelPushBdToQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 }
 
 AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 BdNum)
+		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
 {
 	return XAie_DmaChannelPushBdToQueue_16(DevInst, Loc, ChNum, Dir, (u16)BdNum);
 }
@@ -1586,7 +1586,7 @@ AieRC XAie_DmaGetBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 }
 
 AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
-		u8 BdNum)
+		u16 BdNum)
 {
 	return XAie_DmaGetBdLen_16(DevInst, Loc, Len, (u16)BdNum);
 }
@@ -1625,7 +1625,7 @@ AieRC XAie_DmaChannelSetStartQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 }
 
 AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 BdNum, u32 RepeatCount,
+		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue)
 {
 	return XAie_DmaChannelSetStartQueue_16(DevInst, Loc, ChNum, Dir,
@@ -1784,7 +1784,7 @@ AieRC XAie_DmaUpdateBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 }
 
 AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
-		u8 BdNum)
+		u16 BdNum)
 {
 	return XAie_DmaUpdateBdLen_16(DevInst, Loc, Len, (u16)BdNum);
 }
@@ -1840,7 +1840,7 @@ AieRC XAie_DmaUpdateBdAddr_16(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 }
 
 AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
-		u8 BdNum)
+		u16 BdNum)
 {
 	return XAie_DmaUpdateBdAddr_16(DevInst, Loc, Addr, (u16)BdNum);
 }
@@ -2409,7 +2409,7 @@ AieRC XAie_DmaUpdateBdAddrOff_16(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Of
 }
 
 AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
-		u8 BdNum)
+		u16 BdNum)
 {
 	return XAie_DmaUpdateBdAddrOff_16(MemInst, Loc, Offset,	(u16)BdNum);
 }
