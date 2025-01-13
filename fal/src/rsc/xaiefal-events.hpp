@@ -57,7 +57,7 @@ namespace xaiefal {
 				RC = XAIE_INVALID_ARGS;
 			} else {
 				for (int i = 0; i < (int)vInEvents.size(); i++) {
-					uint8_t HwEvent;
+					uint16_t HwEvent;
 
 					RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 							Mod, vInEvents[i], &HwEvent);
