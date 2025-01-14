@@ -25,8 +25,8 @@
 
 /************************** Constant Definitions *****************************/
 typedef struct {
-    u8 sourceBD;
-    u8 destinationBD;
+    u16 sourceBD;
+    u16 destinationBD;
 } XAie_BDs;
 
 typedef enum { XAIE_AIE_SHIM = 0, XAIE_AIE_MEM, XAIE_AIE_CORE } TileType;

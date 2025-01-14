@@ -1359,7 +1359,8 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u32 FldVal;
 	u64 RegAddr;
-	u8 TileType, HwEvent;
+	u8 TileType;
+	u16 HwEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1395,7 +1396,7 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, Event, &HwEvent);
+	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Event, &HwEvent);
 	if (RC != XAIE_OK) {
 		return RC;
 	}
@@ -1602,8 +1603,8 @@ AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 * @note
 *
 ******************************************************************************/
-AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events Event, u8 *HwEvent)
+AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent)
 {
 	AieRC RC;
 	u8 TileType;
@@ -1648,6 +1649,18 @@ AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 	return XAIE_OK;
 }
 
+AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent)
+{
+	u16 HwEvent_16;
+	AieRC RC;
+
+	HwEvent_16 = (u16)*HwEvent;
+	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Event, &HwEvent_16);
+	*HwEvent = (u8)HwEvent_16;
+	return RC;
+}
+
 /*****************************************************************************/
 /**
 * This API is used to convert hardware event id to XAie_Events enum.
@@ -1663,8 +1676,8 @@ AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note
 *
 ******************************************************************************/
-AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 HwEvent, XAie_Events *EnumEvent)
+AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent)
 {
 	AieRC RC;
 	u8 TileType;
@@ -1703,6 +1716,12 @@ AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	return XAIE_INVALID_ARGS;
 }
+AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent)
+{
+	return XAie_EventPhysicalToLogicalConv_16(DevInst, Loc,	Module,
+						  (u16)HwEvent, EnumEvent);
+}
 
 /*****************************************************************************/
 /**
@@ -1728,7 +1747,8 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOff, RegVal;
-	u8 TileType, PhyEvent;
+	u8 TileType;
+	u16 PhyEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((Status == XAIE_NULL) || (DevInst == XAIE_NULL) ||
@@ -1754,7 +1774,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, Events,
+	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Events,
 								&PhyEvent);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Invalid event ID\n");

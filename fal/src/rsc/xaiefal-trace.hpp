@@ -176,7 +176,7 @@ namespace xaiefal {
 					"failed, trace started." << std::endl;
 				RC = XAIE_ERR;
 			} else {
-				uint8_t HwE;
+				uint16_t HwE;
 
 				StartM = XAieEstimateModFromEvent(StartE);
 				StopM = XAieEstimateModFromEvent(StopE);
@@ -571,7 +571,7 @@ namespace xaiefal {
 		 */
 		AieRC setEvent(XAie_ModuleType Module, XAie_Events TraceEvent) {
 			AieRC RC;
-			uint8_t HwEvent;
+			uint16_t HwEvent;
 
 			RC = XAie_EventLogicalToPhysicalConv(dev(), Loc,
 					Module, TraceEvent, &HwEvent);

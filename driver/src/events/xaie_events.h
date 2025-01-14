@@ -930,9 +930,13 @@ AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PCEventId);
 AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u8 HwEvent, XAie_Events *EnumEvent);
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent);
+AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent);
 AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events Event, u8 *HwEvent);
+		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent);
+AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent);
 AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Events, u8 *Status);
 AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
