@@ -1602,7 +1602,14 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				else
 				{
 					NumOps--;
-					LoadSeqCount--;
+
+					/**
+					 * Load Sequence Count should be reduced only if there is an active
+					 * PM Loading else do nothing.
+					 **/
+					if (DevInst->PmLoadingActive == 1) {
+						LoadSeqCount--;
+					}
 				}
 			} else {
 				/**
