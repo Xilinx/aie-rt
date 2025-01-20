@@ -47,10 +47,6 @@ AieRC XAie_StrmConnCctDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
 		u8 MstrPortNum);
 
-AieRC XAie_SStrmConnCctDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
-				StrmSwPortType Slave, u8 SlvPortNum, StrmSwPortType Master,
-						u8 MstrPortNum);
-
 AieRC XAie_StrmPktSwMstrPortEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		StrmSwPortType Master, u8 MstrPortNum,
 		XAie_StrmSwPktHeader DropHeader, u8 Arbitor, u8 MSelEn);

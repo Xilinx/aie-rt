@@ -1151,27 +1151,10 @@ AieRC XAie_RoutingSwitchReset(XAie_RoutingInstance *routingInstance,
 								 * configurations without
 								 * erroring out.
 								 */
-								rc = XAie_SStrmConnCctDisable(
+								rc = XAie_StrmConnCctDisable(
 								routingInstance->DeviceInstance,
 								currentTile, slaveDir, bit,
 								masterDir, bitM);
-								if (rc != XAIE_OK) {
-									XAIE_ERROR("XAie_Routing"
-									"Switch Reset Error: "
-									"Failed to disable stream "
-									"connection at Col:%d, "
-									"Row: %d, Slave Dir: %s, "
-									"Slave Port: %d, "
-									"Master Dir: %s, "
-									"Master Port: %d.\n",
-									currentTile.Col,
-									currentTile.Row,
-									slaveDir,
-									bit,
-									masterDir,
-									bitM);
-									return XAIE_ERR;
-								}
 							}
 						}
 					}
