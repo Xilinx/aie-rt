@@ -2883,7 +2883,7 @@ AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols)
 				}
 		}
 
-		u32* tctDataBuff = (u32 *)calloc(sizeof(tct_op_t), 1);
+		u32* tctDataBuff = (u32 *)calloc(1, sizeof(tct_op_t));
 		tctDataBuff[0] = ((0x000000FF & num_tokens) || (0x0000FF00 & (num_cols << 8)));
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CUSTOM_OP_MERGE_SYNC;
 		TxnInst->CmdBuf[TxnInst->NumCmds].Size = (u32)sizeof(tct_op_t);
@@ -2939,7 +2939,7 @@ AieRC XAie_Txn_DdrAddressPatch(XAie_DevInst *DevInst, u64 regaddr, u64 argidx,
 				}
 		}
 
-		patch_op_t* patchDataBuff = (patch_op_t *)calloc(sizeof(patch_op_t), 1);
+		patch_op_t* patchDataBuff = (patch_op_t *)calloc(1, sizeof(patch_op_t));
 		patchDataBuff->regaddr = regaddr;
 		patchDataBuff->argidx = argidx;
 		patchDataBuff->argplus = argplus;
