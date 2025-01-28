@@ -1335,7 +1335,7 @@ static inline u32 Append_BW_To_Txn_Buff(u32* Blockwrite_buffer,u8* TxnPtr, u32 P
 
 		patch_cmd_size = (Patch_cmd_count) * ( sizeof(patch_op_t) + sizeof(XAie_CustomOpHdr) );
 
-		temp_ptr = calloc(patch_cmd_size,1);
+		temp_ptr = calloc(1, patch_cmd_size);
 		if(temp_ptr == NULL) {
 			XAIE_ERROR("Calloc failed\n");
 			return 0;
@@ -1403,13 +1403,13 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		return NULL;
 	}
 
-	blockwrite_buffer = calloc(AllocatedBuffSize,1);
+	blockwrite_buffer = calloc(1, AllocatedBuffSize);
 	if(blockwrite_buffer == NULL) {
 		XAIE_ERROR("Calloc failed\n");
 		return NULL;
 	}
 
-	TxnPtr = calloc(AllocatedBuffSize,1);
+	TxnPtr = calloc(1, AllocatedBuffSize);
 	if(TxnPtr == NULL) {
 		XAIE_ERROR("Calloc failed\n");
 		free(blockwrite_buffer);
@@ -1780,7 +1780,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 	}
 
 
-	TxnPtr = calloc(AllocatedBuffSize,1);
+	TxnPtr = calloc(1, AllocatedBuffSize);
 
 	if(TxnPtr == NULL) {
 		XAIE_ERROR("Calloc failed\n");
@@ -2883,7 +2883,7 @@ AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols)
 				}
 		}
 
-		u32* tctDataBuff = (u32 *)calloc(sizeof(tct_op_t), 1);
+		u32* tctDataBuff = (u32 *)calloc(1, sizeof(tct_op_t));
 		tctDataBuff[0] = ((0x000000FF & num_tokens) || (0x0000FF00 & (num_cols << 8)));
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CUSTOM_OP_MERGE_SYNC;
 		TxnInst->CmdBuf[TxnInst->NumCmds].Size = (u32)sizeof(tct_op_t);
@@ -2939,7 +2939,7 @@ AieRC XAie_Txn_DdrAddressPatch(XAie_DevInst *DevInst, u64 regaddr, u64 argidx,
 				}
 		}
 
-		patch_op_t* patchDataBuff = (patch_op_t *)calloc(sizeof(patch_op_t), 1);
+		patch_op_t* patchDataBuff = (patch_op_t *)calloc(1, sizeof(patch_op_t));
 		patchDataBuff->regaddr = regaddr;
 		patchDataBuff->argidx = argidx;
 		patchDataBuff->argplus = argplus;
