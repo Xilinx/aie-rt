@@ -953,6 +953,7 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 static AieRC XAie_SimMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
 {
 	(void)DevInst;
+	(void)VAddr;
 	return XAIE_ERR;
 }
 
@@ -991,6 +992,7 @@ static AieRC XAie_SimMemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr,
 {
 	(void)DevInst;
 	(void)VAddr;
+	(void)DevAddr;
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 

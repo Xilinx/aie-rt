@@ -1191,20 +1191,6 @@ static void _XAie_MapL2MaskToL1_aie1_ml(const XAie_DevInst *DevInst, u32 Index, 
 	}
 }
 
-static void _XAie_MapL2MaskToL1_aie2ipu(const XAie_DevInst *DevInst, u32 Index,
-			u8 L2Col, u8 *L1Col, XAie_BroadcastSw *Switch)
-{
-	(void) DevInst;
-
-	if (L2Col < 2U) {
-		*L1Col = (u8)(Index / 2U);
-		*Switch = ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
-	} else {
-	        *L1Col = L2Col;
-	        *Switch= ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_A;
-	}
-}
-
 static void _XAie_MapL2MaskToL1_aie2ps(const XAie_DevInst *DevInst, u32 Index,
 			u8 L2Col, u8 *L1Col, XAie_BroadcastSw *Switch)
 {
@@ -1230,6 +1216,7 @@ static void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
 	}
 }
 
+#ifdef __AIEIPU__
 /* l1 bruteforce backtrack for IPU.
  * This is a temporary fix for IPU.
  */
@@ -1289,6 +1276,7 @@ static AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 	MData->IsNextInfoValid = 0U;
 	return XAIE_OK;
 }
+#endif
 
 /*****************************************************************************/
 /**
