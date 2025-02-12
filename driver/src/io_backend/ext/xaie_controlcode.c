@@ -647,7 +647,7 @@ static AieRC XAie_ControlCodeIO_AddressPatching(void *IOInst, u32 Arg_Index, u8 
 {
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
 	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
-		((ControlCodeInst->UcPageTextSize + ISA_OPSIZE_APPLY_OFFSET_57) % DATA_SECTION_ALIGNMENT));
+		((ControlCodeInst->UcPageTextSize + ISA_OPSIZE_APPLY_OFFSET_57 + ISA_OPSIZE_UC_DMA_WRITE_DES_SYNC) % DATA_SECTION_ALIGNMENT));
 
 	if (DataAligner == DATA_SECTION_ALIGNMENT) {
 		DataAligner = 0U;
@@ -660,7 +660,7 @@ static AieRC XAie_ControlCodeIO_AddressPatching(void *IOInst, u32 Arg_Index, u8 
 		}
 
 		if((ControlCodeInst->UcPageSize + ISA_OPSIZE_APPLY_OFFSET_57 + ISA_OPSIZE_UC_DMA_WRITE_DES_SYNC +
-			(Num_BDs * (UC_DMA_BD_SIZE + UC_DMA_WORD_LEN * 9)) + DataAligner) > ControlCodeInst->PageSizeMax) {
+			UC_DMA_BD_SIZE + (UC_DMA_WORD_LEN * Num_BDs * 9) + DataAligner) > ControlCodeInst->PageSizeMax) {
 			_XAie_StartNewPage(ControlCodeInst);
 			_XAie_StartNewJob(ControlCodeInst);
 		}
