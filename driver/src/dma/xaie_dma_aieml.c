@@ -38,9 +38,11 @@
 #define XAIEML_DMA_PAD_NUM_DIMS				3U
 #define XAIEML_DMA_PAD_WORDS_MAX			0x3FU /* 6 bits */
 
-#define XAIEML_DMA_STATUS_IDLE				0x0U
-#define XAIEML_DMA_STATUS_CHANNEL_NOT_RUNNING 		0x0U
+#define XAIEML_DMA_STATUS_IDLE					0x0U
+#define XAIEML_DMA_STATUS_CHANNEL_NOT_RUNNING 	0x0U
 #define XAIEML_DMA_STATUS_CHNUM_OFFSET			0x4U
+#define XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB		22
+
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -1233,6 +1235,47 @@ AieRC _XAieMl_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on DMA channel taskqueue till its free with at least
+* one task or till the timeout.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	DmaMod: Dma module pointer
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param    TimeOutUs: Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+*
+******************************************************************************/
+AieRC _XAieMl_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
+		u32 TimeOutUs)
+{
+	u64 Addr;
+	AieRC Status = XAIE_OK;
+
+	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->ChStatusBase + ChNum * XAIEML_DMA_STATUS_CHNUM_OFFSET +
+		(u32)Dir * DmaMod->ChStatusOffset;
+
+	/* Poll for the MSB bit of Task_queue_size bits to ensure
+	 * queue is not full*/
+	Status = XAie_MaskPoll(DevInst, Addr, (1U << XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB),
+		 0, TimeOutUs);
+
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Wait for task queue timed out\n");
+		return XAIE_ERR;
+	}
+
+	return Status;
 }
 
 /*****************************************************************************/
