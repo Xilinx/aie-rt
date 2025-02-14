@@ -368,6 +368,7 @@ typedef struct XAie_UcMod {
 	u32 DataMemAddr;
 	u32 DataMemSize;
 	u32 DataMemUcOffset;
+	u32 MemPrivilegedOffset;
 	const XAie_RegUcCoreCtrl *CoreCtrl;
 	const XAie_RegUcCoreSts *CoreSts;
 	const XAie_RegUcDmaOutsTxn *UcDmaOutstandingReg;

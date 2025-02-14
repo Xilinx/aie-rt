@@ -879,7 +879,7 @@ AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 Offset;
-	u8 TileType, Index;
+	u8 TileType, Index, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) || (CounterVal == NULL) ||
@@ -892,6 +892,16 @@ AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
@@ -1001,7 +1011,7 @@ AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 Offset;
-	u8 TileType, TotalCounters;
+	u8 TileType, TotalCounters, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) || (CounterStatus == NULL) ||
@@ -1014,6 +1024,16 @@ AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	/* Reset counter access to first counter */
@@ -1069,12 +1089,22 @@ AieRC _XAie_MdmPerfCounterControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 Offset;
-	u8 TileType, TotalCounters;
+	u8 TileType, TotalCounters, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	/* Expect caller to check valid tiletype */
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
+	}
 
 	/* Reset counter access to first counter */
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -1206,13 +1236,23 @@ AieRC XAie_MdmPerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 Offset;
-	u8 TileType, Index;
+	u8 TileType, Index, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
@@ -1275,8 +1315,9 @@ AieRC XAie_MdmPerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
+	AieRC RC;
 	u64 Offset;
-	u8 TileType;
+	u8 TileType, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1289,6 +1330,16 @@ AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	/* Reset counters through control register */
@@ -1316,7 +1367,7 @@ AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Lo
 {
 	AieRC RC;
 	u64 Offset;
-	u8 TileType, TotalCounters;
+	u8 TileType, TotalCounters, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) || (UcEvents == NULL) ||
@@ -1329,6 +1380,16 @@ AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Lo
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	/* Reset counter access to first counter */
@@ -1373,8 +1434,9 @@ AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Lo
 ******************************************************************************/
 AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
+	AieRC RC;
 	u64 Offset;
-	u8 TileType;
+	u8 TileType, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1387,6 +1449,16 @@ AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc)
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	/* Start counters using the control register */
@@ -1414,9 +1486,10 @@ AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc)
 AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 SampleEnable)
 {
+	AieRC RC;
 	u64 Offset;
-	u8 TileType;
 	u32 FldVal, Mask;
+	u8 TileType, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1429,6 +1502,16 @@ AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	/* Stop counters using the control register */
@@ -1459,8 +1542,9 @@ AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
+	AieRC RC;
 	u64 Offset;
-	u8 TileType;
+	u8 TileType, Priv;
 	const XAie_UcMdm *UcMdm;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1473,6 +1557,16 @@ AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc)
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Tile does not have uC module\n");
 		return XAIE_INVALID_TILE;
+	}
+
+	/* Check uC memory privileged is not set */
+	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+	if (Priv != 0U) {
+		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
+		return XAIE_ERR;
 	}
 
 	/* Stop counters using the control register */

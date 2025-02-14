@@ -2334,12 +2334,57 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 * @return	1 if uc module is present and 0 otherwise.
 *
 *******************************************************************************/
-u8 XAie_IsUcModulePresent(XAie_DevInst *DevInst, u8 TileType) {
+u8 XAie_IsUcModulePresent(XAie_DevInst *DevInst, u8 TileType)
+{
 	if(DevInst->DevProp.DevGen >= XAIE_DEV_GEN_AIE2PS &&
 			TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
 		return DevInst->DevProp.DevMod[TileType].UcMod == XAIE_NULL ? 0 : 1;
 	}
 	return 0;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API checks the SHIM uC modules memory privileged bit
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of SHIM Tile
+* @param	Priv: Return for status of privileged bit
+*
+* @return	XAIE_OK for success, error code for failure
+*
+* @note		Internal API only
+******************************************************************************/
+AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv)
+{
+	AieRC RC;
+	u32 RegVal;
+	u64 Offset;
+	u8 TileType;
+	const XAie_UcMod *UcMod;
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
+		XAIE_ERROR("Tile does not have uC module\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	UcMod = DevInst->DevProp.DevMod[TileType].UcMod;
+	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		UcMod->MemPrivilegedOffset;
+	RC = XAie_Read32(DevInst, Offset, &RegVal);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Privileged memory register\n");
+		return RC;
+	}
+
+	if((RegVal & 0x1) != 0) {
+		*Priv = 1U;
+	}
+	*Priv = 0U;
+
+	return RC;
 }
 
 /** @} */

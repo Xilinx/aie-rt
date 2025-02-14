@@ -317,6 +317,7 @@ static const XAie_UcMod Aie2PSUcMod =
 	.DataMemAddr = XAIE2PSGBL_UC_MODULE_MODULE_DATA_MEMORY,
 	.DataMemSize = 32 * 1024,
 	.DataMemUcOffset = 0x20000,
+	.MemPrivilegedOffset = XAIE2PSGBL_UC_MODULE_MEMORY_PRIVILEGED,
 	.CoreCtrl = &Aie2PSUcCoreCtrlReg,
 	.CoreSts = &Aie2PSUcCoreStsReg,
 #if (defined XAIE_FEATURE_PRIVILEGED_ENABLE) && (defined XAIE_FEATURE_DMA_ENABLE)
