@@ -2331,15 +2331,13 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 * @param	DevInst: Device Instance.
 * @param	TileType: Type of the tile.
 *
-* @return       1 if uc module is present and 0 otherwise.
-*
-* @note	 Internal API only.
+* @return	1 if uc module is present and 0 otherwise.
 *
 *******************************************************************************/
-u8 _XAie_IsUcModulePresent(XAie_DevInst* DevInst, u8 TileType) {
-	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS &&
+u8 XAie_IsUcModulePresent(XAie_DevInst *DevInst, u8 TileType) {
+	if(DevInst->DevProp.DevGen >= XAIE_DEV_GEN_AIE2PS &&
 			TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
-		return 1;
+		return DevInst->DevProp.DevMod[TileType].UcMod == XAIE_NULL ? 0 : 1;
 	}
 	return 0;
 }

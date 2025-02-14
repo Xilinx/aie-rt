@@ -221,5 +221,6 @@ u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
 u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
 AieRC XAie_GetPartitionList(XAie_DevInst *DevInst);
+u8 XAie_IsUcModulePresent(XAie_DevInst* DevInst, u8 TileType);
 #endif		/* end of protection macro */
 /** @} */

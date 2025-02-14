@@ -1181,16 +1181,12 @@ AieRC XAie_CoreUcWakeUp(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	TType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(_XAie_IsUcModulePresent(DevInst, TType) == 0U) {
+	if(XAie_IsUcModulePresent(DevInst, TType) == 0U) {
 		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	UcMod = DevInst->DevProp.DevMod[TType].UcMod;
-	if(UcMod == XAIE_NULL) {
-		return XAIE_ERR;
-	}
-
 	return UcMod->Wakeup(DevInst, Loc, UcMod);
 }
 
@@ -1218,16 +1214,12 @@ AieRC XAie_CoreUcSleep(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	TType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(_XAie_IsUcModulePresent(DevInst, TType) == 0U) {
+	if(XAie_IsUcModulePresent(DevInst, TType) == 0U) {
 		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	UcMod = DevInst->DevProp.DevMod[TType].UcMod;
-	if(UcMod == XAIE_NULL) {
-		return XAIE_ERR;
-	}
-
 	return UcMod->Sleep(DevInst, Loc, UcMod);
 }
 #endif /*XAIE_FEATURE_UC_ENABLE*/
