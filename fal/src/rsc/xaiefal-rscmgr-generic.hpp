@@ -10,6 +10,7 @@
 
 #define XAIE_TRACE_PER_MOD 1U
 #define XAIE_COMBO_PER_MOD 4U
+#define XAIE_MDMPERF_PER_MOD 1U
 
 #define XAIE_RSC_HEADER_TTYPE_SHIFT	0U
 #define XAIE_RSC_HEADER_TTYPE_MASK	0xF
@@ -446,6 +447,14 @@ namespace xaiefal {
 				for (RType = 0; RType < XAIE_MAXRSC; RType++) {
 					auto MaxRsc = &RscMaps[TType].MaxRscs[RType];
 					auto Bitmap = RscMaps[TType].Bitmaps[RType];
+
+					/*
+					 * TODO: add support for MDM perfcount
+					 * rsc in Linux driver. Once added we
+					 * remove the below statement
+					 */
+					if (RType == XAIE_MDMPERFCNT)
+						continue;
 
 					for (uint8_t i = 0; i < NumMods; i++) {
 						uint32_t Size, ModOff = 0U;
@@ -989,6 +998,14 @@ namespace xaiefal {
 
 				return EventMod->NumGroupEvents;
 
+			}
+			case XAIE_MDMPERFCNT:
+			{
+				if ((XAie_GetNumRows(dev(), TileType) > 0U) &&
+						(Mod == XAIE_PL_MOD))
+					return XAIE_MDMPERF_PER_MOD;
+				else
+					return 0U;
 			}
 			default:
 				return 0U;

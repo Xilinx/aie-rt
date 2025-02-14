@@ -52,6 +52,7 @@ namespace xaiefal {
 			case XAIE_TRACECTRL:
 			case XAIE_PCEVENT:
 			case XAIE_SSEVENT:
+			case XAIE_MDMPERFCNT:
 			{
 				RC = Rsc.getRscs(vRequests);
 				if (RC != XAIE_OK) {

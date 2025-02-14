@@ -30,6 +30,7 @@ namespace xaiefal {
 	class XAieGroupEventHandle;
 	class XAieUserEvent;
 	class XAiePerfCounter;
+	class XAieMdmPerfCounter;
 	class XAieTraceCntr;
 	class XAieTraceEvent;
 	class XAieActiveCycles;
@@ -540,6 +541,33 @@ namespace xaiefal {
 		}
 
 		/**
+		 * This function returns MDM perfcounter resource software object
+		 * of the module (SHIM tile only).
+		 *
+		 * @param RGroup resource group
+		 * @return perfconter software object pointer
+		 *
+		 * Please note that this function will not request hardware
+		 * resource. After this function is called, in order to reserve
+		 * the hardware resource, it will need to call reserve()
+		 * function of the resource class.
+		 */
+		std::shared_ptr<XAieMdmPerfCounter> mdmPerfCounter(
+				XAieDevHdRscGroupWrapper &RGroup) {
+			auto Rsc = std::make_shared<XAieMdmPerfCounter>(AieHandle,
+					Loc);
+
+			RGroup.addRsc(Rsc);
+			return Rsc;
+		}
+		std::shared_ptr<XAieMdmPerfCounter> mdmPerfCounter() {
+			XAieDevHdRscGroupWrapper RGroup =
+				AieHandle->getRscGroup("Generic");
+
+			return mdmPerfCounter(RGroup);
+		}
+
+		/**
 		 * This function returns trace control resource software object
 		 * of the module.
 		 *
@@ -976,6 +1004,31 @@ namespace xaiefal {
 			return perfCounter(RGroup);
 		}
 
+		/**
+		 * This function returns MDM perfcounter software object
+		 * within a SHIM tile.
+		 *
+		 * @param RGroup resource group
+		 * @return perfcounter software object pointer within a tile.
+		 *
+		 * Please note that this function will not request hardware
+		 * resource. After this function is called, in order to reserve
+		 * the hardware resource, it will need to call reserve()
+		 * function of the resource class.
+		 */
+		std::shared_ptr<XAieMdmPerfCounter> mdmPerfCounter(
+				XAieDevHdRscGroupWrapper &RGroup) {
+			auto C = std::make_shared<XAieMdmPerfCounter>(AieHandle,
+					Loc);
+			RGroup.addRsc(C);
+			return C;
+		}
+		std::shared_ptr<XAieMdmPerfCounter> mdmPerfCounter() {
+			XAieDevHdRscGroupWrapper RGroup =
+				AieHandle->getRscGroup("Generic");
+
+			return mdmPerfCounter(RGroup);
+		}
 		/**
 		 * This function returns stream switch port select software
 		 * object within a tile.
