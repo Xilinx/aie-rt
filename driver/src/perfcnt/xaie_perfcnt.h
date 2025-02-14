@@ -28,7 +28,6 @@
 #include "xaie_helper.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
-#include "xaiegbl_defs.h"
 
 /************************** Function Prototypes  *****************************/
 AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -57,4 +56,22 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events *StopEvent, XAie_Events *ResetEvent);
 AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events *Event);
+AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 *CounterVal);
+AieRC XAie_MdmPerfCounterGetConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 *NumEvntCounter, u8 *NumLatCounter, u8 *CounterWidth);
+AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 *CounterStatus);
+AieRC XAie_MdmPerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 *UcEvents);
+AieRC XAie_MdmPerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc);
+AieRC XAie_MdmPerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 *CounterVal);
+AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc);
+AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 *UcEvents);
+AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc);
+AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 SampleEnable);
+AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc);
 #endif		/* end of protection macro */
