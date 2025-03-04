@@ -747,7 +747,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 
 	/* Get all ungated tiles to broadcast to */
 	NumTiles = DevInst->NumCols * DevInst->NumRows;
-	Locs = (XAie_LocType *)malloc(NumTiles * sizeof(XAie_LocType));
+	Locs = (XAie_LocType *)calloc(NumTiles, sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
 		return XAIE_ERR;
