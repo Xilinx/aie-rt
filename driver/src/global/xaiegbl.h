@@ -139,6 +139,7 @@ typedef struct {
 	u8 AieTileRowStart; /* Aie tile starting row in the partition */
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
+	u8 IsProd;	/*Baremetal production environment*/
 	u8 EccStatus;		/* Ecc On/Off status of the partition */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */

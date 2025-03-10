@@ -26,12 +26,13 @@
 
 #ifdef __AIEBAREMETAL__
 
+#include "pm_init.h"
 #include "sleep.h"
 #include "xil_cache.h"
 #include "xil_io.h"
 #include "xil_types.h"
 #include "xstatus.h"
-
+#include "xpm_defs.h"
 #endif
 
 #include "xaie_helper.h"
@@ -83,6 +84,8 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
 	XAie_BaremetalIO *IOInst;
+	static XIpiPsu IpiInst;
+	int Ret;
 
 	IOInst = (XAie_BaremetalIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -93,6 +96,18 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	DevInst->IOInst = (void *)IOInst;
+
+#if defined(XAIE_PROD)
+	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIEML) {
+		DevInst->IsProd = 1U;
+
+		Ret = XAie_PmInit(&IpiInst);
+		if (Ret != XST_SUCCESS) {
+			XAIE_ERROR("Failed to initialize PM\n");
+			return Ret;
+		}
+	}
+#endif
 
 	return XAIE_OK;
 }
@@ -116,6 +131,38 @@ static AieRC XAie_BaremetalIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 	XAie_BaremetalIO *BaremetalIOInst = (XAie_BaremetalIO *)IOInst;
 
 	Xil_Out32(BaremetalIOInst->BaseAddr + RegOff, Value);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the memory IO function to write 32bit data to the specified address
+* using PLM.
+*
+* @param	IOInst: IO instance pointer
+* @param	StartCol: Start column of the partition.
+* @param	NumCols: Number of columns in the partition.
+* @param	Ops: Operation ID to pass to PLM.
+*
+* @return	None.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
+						u32 NumCols, u32 Ops)
+{
+	u32 Response;
+	int Ret;
+
+	Ret = XPm_DevIoctl(PM_DEV_AIE, IOCTL_AIE_OPS, (NumCols << 16)
+			      | StartCol, Ops, &Response);
+	if (Ret != XST_SUCCESS) {
+		XAIE_ERROR("Failed to write to privileged register.\n");
+		return XAIE_ERR;
+	}
 
 	return XAIE_OK;
 }
@@ -481,6 +528,177 @@ static AieRC _XAie_BaremetalIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 
 /*****************************************************************************/
 /**
+* This API initializes the AI engine partition via PLM
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Opts: Initialization options
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		This operation does the following steps to initialize an AI
+*		engine partition:
+*		- Clock gate all columns
+*		- Reset Columns
+*		- Ungate all Columns
+*		- Remove columns reset
+*		- Reset shims
+*		- Setup AXI MM not to return errors for AXI decode or slave
+*		  errors, raise events instead.
+*		- ungate all columns
+*		- Setup partition isolation.
+*		- zeroize memory if it is requested
+*
+*******************************************************************************/
+static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
+						 XAie_PartInitOpts *Opts)
+{
+	u32 OptFlags;
+	AieRC RC;
+
+	if(Opts != NULL) {
+		OptFlags = Opts->InitOpts;
+	} else {
+		OptFlags = XAIE_PART_INIT_OPT_DEFAULT;
+	}
+
+	if((OptFlags & XAIE_PART_INIT_OPT_COLUMN_RST) != 0U) {
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols, AIE_OPS_COL_RST);
+	}
+
+	if((OptFlags & XAIE_PART_INIT_OPT_SHIM_RST) != 0U) {
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+					    DevInst->NumCols, AIE_OPS_SHIM_RST);
+	}
+
+	if((OptFlags & XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR) != 0U) {
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+					    DevInst->NumCols,
+					    AIE_OPS_ENB_AXI_MM_ERR_EVENT);
+	}
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols,
+				    AIE_OPS_ENB_COL_CLK_BUFF);
+
+	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0U) {
+		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
+	}
+	else {
+		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_CLEAR_ISOLATION);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
+	}
+
+	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0U) {
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+					    DevInst->NumCols,
+					    AIE_OPS_ALL_MEM_ZEROIZATION);
+	}
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
+				    AIE_OPS_SET_L2_CTRL_NPI_INTR);
+
+
+	/*
+	 * This is a temporary workaround to unblock rel-v2023.1 and make
+	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
+	 */
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+					    DevInst->NumCols,
+					    AIE_OPS_DIS_COL_CLK_BUFF);
+	}
+
+	/* Enable only the tiles requested in Opts parameter */
+	if(Opts != NULL) {
+		XAie_BackendTilesArray TilesArray;
+
+		TilesArray.NumTiles = Opts->NumUseTiles;
+		TilesArray.Locs = Opts->Locs;
+
+		RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_REQUEST_TILES,
+		(void *)&TilesArray);
+
+		if(RC != XAIE_OK) {
+			return RC;
+		}
+	}
+
+	return RC;
+}
+
+/*****************************************************************************/
+/**
+* This API tears down the AI engine partition
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Opts: Initialization options
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		This operation does the following steps to initialize an AI
+*		engine partition:
+*		- Clock gate all columns
+*		- Reset Columns
+*		- Ungate all columns
+*		- Reset shims
+*		- Remove columns reset
+*		- Ungate all columns
+*		- Zeroize memories
+*		- Clock gate all columns
+*
+*******************************************************************************/
+static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols, AIE_OPS_COL_RST);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Column reset failed!\n");
+		return RC;
+	}
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols, AIE_OPS_SHIM_RST);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Shim reset failed!\n");
+		return RC;
+	}
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols,
+				    AIE_OPS_ENB_COL_CLK_BUFF);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Column Ungating failed!\n");
+		return RC;
+	}
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols,
+				    AIE_OPS_ALL_MEM_ZEROIZATION);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Memory Zeroization failed!\n");
+		return RC;
+	}
+
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+				    DevInst->NumCols,
+				    AIE_OPS_DIS_COL_CLK_BUFF);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Column Gating failed!\n");
+	}
+
+	return RC;
+}
+
+/*****************************************************************************/
+/**
 *
 * This is the function to run backend operations
 *
@@ -528,10 +746,19 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			return _XAie_PrivilegeRequestTiles(DevInst,
 					(XAie_BackendTilesArray *)Arg);
 		case XAIE_BACKEND_OP_PARTITION_INITIALIZE:
-			return _XAie_PrivilegeInitPart(DevInst,
+			if (DevInst->IsProd == 1U) {
+				return _XAie_BaremetalIO_PrivilegeInitPart(DevInst,
+						(XAie_PartInitOpts *)Arg);
+			} else {
+				return _XAie_PrivilegeInitPart(DevInst,
 					(XAie_PartInitOpts *)Arg);
+			}
 		case XAIE_BACKEND_OP_PARTITION_TEARDOWN:
-			return _XAie_PrivilegeTeardownPart(DevInst);
+			if (DevInst->IsProd == 1U) {
+				return _XAie_BaremetalIO_PrivilegeTeardownPart(DevInst);
+			} else {
+				return _XAie_PrivilegeTeardownPart(DevInst);
+			}
 		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
 		{
 			XAie_BaremetalIO *BaremetalIOInst =
@@ -686,6 +913,15 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
+static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
+						u32 NumCols, u32 Ops)
+{
+	(void) StartCol;
+	(void) NumCols;
+	(void) Ops;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
 #endif /* __AIEBAREMETAL__ */
 
 static AieRC XAie_BaremetalIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
@@ -713,6 +949,7 @@ const XAie_Backend BaremetalBackend =
 	.Ops.MaskWrite32 = XAie_BaremetalIO_MaskWrite32,
 	.Ops.MaskPoll = XAie_BaremetalIO_MaskPoll,
 	.Ops.BlockWrite32 = XAie_BaremetalIO_BlockWrite32,
+	.Ops.PrivilegeWrite32 = _XAie_BaremetalIO_PrivilegeWrite32,
 	.Ops.BlockSet32 = XAie_BaremetalIO_BlockSet32,
 	.Ops.CmdWrite = XAie_BaremetalIO_CmdWrite,
 	.Ops.RunOp = XAie_BaremetalIO_RunOp,

@@ -196,6 +196,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
 	InstPtr->EccStatus = XAIE_ENABLE;
 	InstPtr->TxnList.Next = NULL;
+	InstPtr->IsProd = 0U;
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
@@ -509,6 +510,7 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 	_XAie_TxnResourceCleanup(DevInst);
 
 	CurrBackend = DevInst->Backend;
+	DevInst->IsProd = 0U;
 	RC = CurrBackend->Ops.Finish(DevInst->IOInst);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to close backend instance.\n");
@@ -550,6 +552,7 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 
 	/* Release resources for current backend */
 	CurrBackend = DevInst->Backend;
+	DevInst->IsProd = 0U;
 	RC = CurrBackend->Ops.Finish((void *)(DevInst->IOInst));
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to close backend instance."

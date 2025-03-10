@@ -485,7 +485,6 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
 		}
-
 	}
 
 	if((OptFlags & XAIE_PART_INIT_OPT_SHIM_RST) != 0U) {
@@ -507,7 +506,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	if((OptFlags & XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR) != 0U) {
 		RC = _XAie_PrivilegeSetPartBlockAxiMmNsuErr(DevInst,
-			XAIE_ENABLE, XAIE_ENABLE);
+				XAIE_ENABLE, XAIE_ENABLE);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
