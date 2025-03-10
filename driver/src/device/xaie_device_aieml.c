@@ -29,9 +29,6 @@
 #include "xaie_tilectrl.h"
 #include "xaiemlgbl_params.h"
 
-#ifdef __AIEBAREMETAL__
-#include "xpm_defs.h"
-#endif
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 /***************************** Macro Definitions *****************************/
 /* set timeout to 1000us. */
@@ -275,37 +272,24 @@ static AieRC _XAieMl_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 {
 	AieRC RC;
 	u8 TileType;
-	u32 FldVal, Ops;
+	u32 FldVal;
 	u64 RegAddr;
 	XAie_LocType ShimLoc = XAie_TileLoc(Loc.Col, 0U);
 	const XAie_PlIfMod *PlIfMod;
 	const XAie_ShimClkBufCntr *ClkBufCntr;
 	const XAie_Backend *Backend = DevInst->Backend;
 
-	if (DevInst->IsProd == 1U) {
-#ifdef __AIEBAREMETAL__
-		Ops = Enable ? AIE_OPS_ENB_COL_CLK_BUFF: AIE_OPS_DIS_COL_CLK_BUFF;
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, ShimLoc);
+	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
+	ClkBufCntr = PlIfMod->ClkBufCntr;
 
-		RC = Backend->Ops.PrivilegeWrite32(Loc.Col, 1U, Ops);
-#else
-		(void) Ops;
-		(void) Backend;
-		XAIE_ERROR("Failed to enable column clocks!\n");
-		RC = XAIE_ERR;
-#endif
-	} else {
-		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, ShimLoc);
-		PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
-		ClkBufCntr = PlIfMod->ClkBufCntr;
+	RegAddr = ClkBufCntr->RegOff +
+			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
+			ClkBufCntr->ClkBufEnable.Mask);
 
-		RegAddr = ClkBufCntr->RegOff +
-				XAie_GetTileAddr(DevInst, 0U, Loc.Col);
-		FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
-				ClkBufCntr->ClkBufEnable.Mask);
-
-		RC = XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
-			FldVal);
-	}
+	RC = XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
+		FldVal);
 	return RC;
 }
 

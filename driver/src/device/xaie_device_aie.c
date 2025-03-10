@@ -27,10 +27,6 @@
 #include "xaie_clock.h"
 #include "xaie_tilectrl.h"
 
-#ifdef __AIEBAREMETAL__
-#include "xpm_defs.h"
-#endif
-
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 
 /*
@@ -62,37 +58,24 @@ static AieRC _XAie_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 {
 	AieRC RC;
 	u8 TileType;
-	u32 FldVal, Ops;
+	u32 FldVal;
 	u64 RegAddr;
 	const XAie_PlIfMod *PlIfMod;
 	const XAie_ShimClkBufCntr *ClkBufCntr;
 	const XAie_Backend *Backend = DevInst->Backend;
 
 
-	if (DevInst->IsProd == 1U && DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
-#ifdef __AIEBAREMETAL__
-		Ops = Enable ? AIE_OPS_ENB_COL_CLK_BUFF: AIE_OPS_DIS_COL_CLK_BUFF;
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
+	ClkBufCntr = PlIfMod->ClkBufCntr;
 
-		RC = Backend->Ops.PrivilegeWrite32(Loc.Col, 1U, Ops);
-#else
-		(void) Ops;
-		(void) Backend;
-		XAIE_ERROR("Failed to enable column clock!\n");
-		RC = XAIE_ERR;
-#endif
-	} else {
-		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-		PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
-		ClkBufCntr = PlIfMod->ClkBufCntr;
+	RegAddr = ClkBufCntr->RegOff +
+			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
+	FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
+			ClkBufCntr->ClkBufEnable.Mask);
 
-		RegAddr = ClkBufCntr->RegOff +
-				XAie_GetTileAddr(DevInst, 0U, Loc.Col);
-		FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
-				ClkBufCntr->ClkBufEnable.Mask);
-
-		RC = XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
-				FldVal);
-	}
+	RC = XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
+			FldVal);
 
 	return RC;
 }

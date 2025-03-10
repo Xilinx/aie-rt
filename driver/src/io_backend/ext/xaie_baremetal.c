@@ -36,6 +36,7 @@
 #endif
 
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_io.h"
 #include "xaie_io_common.h"
 #include "xaie_io_privilege.h"
@@ -697,6 +698,118 @@ static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 	return RC;
 }
 
+AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
+					      XAie_BackendColumnReq *Args)
+{
+	AieRC RC;
+
+	u32 TileStatus, NumTiles, Ops;
+	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
+
+	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
+			((Args->StartCol + Args->NumCols - 1U) > PartEndCol) ) {
+		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		return XAIE_ERR;
+	}
+
+	Ops = Args->Enable ? AIE_OPS_ENB_COL_CLK_BUFF: AIE_OPS_DIS_COL_CLK_BUFF;
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->StartCol, Args->NumCols,Ops);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to enable clock for column\n");
+		return RC;
+	}
+
+	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
+			XAie_TileLoc((u8)Args->StartCol, 1));
+	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
+
+	if(Args->Enable) {
+		/*
+		 * Set bitmap from start column to Start+Number of columns
+		 */
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+				TileStatus, NumTiles);
+	} else {
+		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				TileStatus, NumTiles);
+	}
+
+	return XAIE_OK;
+}
+
+AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
+					      XAie_BackendTilesArray *Args)
+{
+	AieRC RC;
+	u32 SetTileStatus;
+
+	if(Args->Locs == NULL) {
+		u32 NumTiles;
+		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
+		NumTiles = (u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
+
+		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
+				     NumTiles);
+
+		return _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
+							AIE_OPS_ENB_COL_CLK_BUFF);
+	}
+
+	/* Disbale all the column clock and enable only the requested column clock */
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
+						AIE_OPS_DIS_COL_CLK_BUFF);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to enable clock for column\n");
+		return RC;
+	}
+
+	/* Clear the TilesInuse bitmap to reflect the current status */
+	for(u32 C = 0; C < DevInst->NumCols; C++) {
+		XAie_LocType Loc;
+		u32 ColClockStatus;
+
+		Loc = XAie_TileLoc((u8)C, 1U);
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				ColClockStatus, (u32)(DevInst->NumRows - 1U));
+	}
+
+	for(u32 i = 0; i < Args->NumTiles; i++) {
+		u32 ColClockStatus;
+		/*
+	         * Shim rows are enabled by default, skip shim row
+		 */
+		if (Args->Locs[i].Row == 0U) {
+			continue;
+		}
+		/*
+		 * Check if column clock buffer is already enabled and continue
+		 * Get bitmap position from first row after shim
+		 */
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
+				XAie_TileLoc(Args->Locs[i].Col, 1));
+		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+			continue;
+		}
+
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->Locs[i].Col, 1U,
+							AIE_OPS_ENB_COL_CLK_BUFF);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable clock for column\n");
+			return RC;
+		}
+
+		/*
+		 * Set bitmap for entire column, row 1 to last row.
+		 * Shim row is already set, so use NumRows-1
+		 */
+		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
+			ColClockStatus, (u32)(DevInst->NumRows - 1U));
+	}
+	return XAIE_OK;
+}
+
 /*****************************************************************************/
 /**
 *
@@ -743,8 +856,15 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			break;
 		}
 		case XAIE_BACKEND_OP_REQUEST_TILES:
-			return _XAie_PrivilegeRequestTiles(DevInst,
-					(XAie_BackendTilesArray *)Arg);
+			if (DevInst->IsProd == 1U &&
+					DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
+				return _XAie_BaremetalIO_PrivilegeRequestTiles(DevInst,
+						(XAie_BackendTilesArray *)Arg);
+
+			} else {
+				return _XAie_PrivilegeRequestTiles(DevInst,
+						(XAie_BackendTilesArray *)Arg);
+			}
 		case XAIE_BACKEND_OP_PARTITION_INITIALIZE:
 			if (DevInst->IsProd == 1U) {
 				return _XAie_BaremetalIO_PrivilegeInitPart(DevInst,
@@ -767,8 +887,15 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			break;
 		}
 		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
-			return _XAie_PrivilegeSetColumnClk(DevInst,
-					(XAie_BackendColumnReq *)Arg);
+		{
+			if (DevInst->IsProd == 1U && DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
+				return _XAie_BaremetalIO_PrivilegeSetColumnClk(DevInst,
+						(XAie_BackendColumnReq *)Arg);
+			} else {
+				return _XAie_PrivilegeSetColumnClk(DevInst,
+						(XAie_BackendColumnReq *)Arg);
+			}
+		}
 		default:
 			XAIE_ERROR("Baremetal backend doesn't support operation"
 					" %d\n", Op);
