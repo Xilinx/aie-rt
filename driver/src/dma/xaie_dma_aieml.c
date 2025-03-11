@@ -2320,9 +2320,10 @@ AieRC _XAieMl_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 {
 	const XAie_DmaBdProp *BdProp = DmaDesc->DmaMod->BdProp;
 
-	if((StepSize > (BdProp->IterStepSizeMax + 1U)) || (Wrap > (BdProp->IterWrapMax + 1U)) ||
+	if((StepSize > (BdProp->IterStepSizeMax + 1U)) || (Wrap < 1) || (Wrap > (BdProp->IterWrapMax + 1U)) ||
 			(IterCurr > BdProp->IterCurrMax)) {
-		XAIE_ERROR("Iteration parameters exceed max value.\n");
+		XAIE_ERROR("Iteration parameters exceed min and max value. \
+			StepSize = %d, Wrap = %d, IterCurr = %d\n", StepSize, Wrap, IterCurr);
 		return XAIE_ERR;
 	}
 
