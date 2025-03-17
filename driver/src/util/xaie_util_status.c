@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "xaie_helper.h"
 #include "xaie_util_status.h"
 
 #ifdef XAIE_FEATURE_UTIL_STATUS_ENABLE
@@ -268,6 +269,11 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 	   continue;
 	}
 
+	if (FlagVal > XAIE_DMA_STATUS_S2MM_CURRENT_BD) {
+		XAIE_ERROR("Invalid FlagVal\n");
+		return XAIE_ERR;
+	}
+
 	if(XAie_DmaS2MMStatus_Strings[FlagVal] != NULL)
         {
             u32 Val = (Reg >> FlagVal);
@@ -379,6 +385,11 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 			 (FlagVal == XAIE_DMA_STATUS_MM2S_AXI_MM_SLAVE_ERROR))
 	  ) {
 	   continue;
+	}
+
+	if (FlagVal > XAIE_DMA_STATUS_MM2S_CURRENT_BD) {
+		XAIE_ERROR("Invalid FlagVal\n");
+		return XAIE_ERR;
 	}
 
 	if(XAie_DmaMM2SStatus_Strings[FlagVal] != NULL)
