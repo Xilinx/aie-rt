@@ -577,7 +577,6 @@ namespace xaiefal {
 		XAieMdmPerfCounter(std::shared_ptr<XAieDevHandle> DevHd,
 			XAie_LocType Loc):
 			XAieSingleTileRsc(DevHd, Loc, XAIE_PL_MOD, XAIE_MDMPERFCNT) {
-			AieRC RC;
 			uint8_t TType = dev()->DevOps->GetTTypefromLoc(dev(), Loc);
 
 			if(XAie_IsUcModulePresent(dev(), TType) == 0U)

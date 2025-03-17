@@ -270,6 +270,12 @@ namespace xaiefal {
 				auto Bitmap = RscMaps[TType].Bitmaps[RscReq[i].RscType];
 				uint32_t StartBit, rBit, rIndex;
 
+				if (TType == XAIEGBL_TILE_TYPE_MAX) {
+					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
+						" Invalid Tile Type" << std::endl;
+					return XAIE_INVALID_TILE;
+				}
+
 				RscReq[i].RscId = CommonId;
 				StartBit = CommonId + getStartBit(RscReq[i].Loc, RscReq[i].Mod,
 						RscReq[i].RscType);
