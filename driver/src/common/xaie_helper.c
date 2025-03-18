@@ -1185,16 +1185,14 @@ static inline u8* _XAie_AppendPmLoad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	return (&(Hdr->LoadSequenceCount[0]));
 }
 
-static inline void _XAie_AppendStateTable(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+static inline void _XAie_AppendCreateScratchPad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	u8 *Payload = TxnPtr + sizeof(XAie_StateTableHdr);
-	XAie_StateTableHdr *Hdr = (XAie_StateTableHdr *)(uintptr_t)TxnPtr;
+	XAie_CreateScratchPadHdr *Hdr = ( XAie_CreateScratchPadHdr*)(uintptr_t)TxnPtr;
 
-	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size * (u32)sizeof(u32);
 	Hdr->Op = (u8)Cmd->Opcode;
-
-	memcpy((void *)Payload, (void const *)(uintptr_t)Cmd->DataPtr,
-			Cmd->Size * sizeof(u32));
+	Hdr->Usage_type = (u8)Cmd->Usage_type;
+	Hdr->DdrAddr = (u32)Cmd->DdrAddr;
+	Hdr->SpSize = (u16)Cmd->Size;
 }
 
 static inline void _XAie_AppendUpdateState(XAie_TxnCmd *Cmd, u8 *TxnPtr)
@@ -1229,6 +1227,13 @@ static inline void _XAie_AppendUpdateReg(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	Hdr->StateTableIdx = Cmd->StateTableIdx;
 	Hdr->Func = (u8)Cmd->Func;
 	Hdr->FuncArg = Cmd->FuncArg;
+}
+
+static inline void _XAie_AppendUpdateScratch(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	XAie_UpdateScratchHdr *Hdr = ( XAie_UpdateScratchHdr*)(uintptr_t)TxnPtr;
+
+	Hdr->Op = (u8)Cmd->Opcode;
 }
 
 static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
@@ -1761,6 +1766,25 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			DevInst->PmLoadingActive = 1;
 			continue;
 		}
+		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
+		{
+			if( (BuffSize + sizeof(XAie_CreateScratchPadHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(BlockwriteBuffer);
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendCreateScratchPad(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_CreateScratchPadHdr);
+			BuffSize += (u32)sizeof(XAie_CreateScratchPadHdr);
+			continue;
+		}
 		else if (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL)
 		{
 			// Check if LoadSeqCountPtr needs to be updated due to realloc of TXN Ptr.
@@ -1784,25 +1808,6 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			LoadSeqCount = 0;
 			NumOps--;
 			DevInst->PmLoadingActive = 0;
-			continue;
-		}
-		else if(Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE)
-		{
-			if((BuffSize + sizeof(XAie_StateTableHdr)) >
-					AllocatedBuffSize ) {
-				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
-						AllocatedBuffSize * 2U, BuffSize);
-				if(TxnPtr == NULL) {
-					XAIE_ERROR("TxnPtr realloc failed\n");
-					free(BlockwriteBuffer);
-					return NULL;
-				}
-				AllocatedBuffSize *= 2U;
-				TxnPtr += BuffSize;
-			}
-			_XAie_AppendStateTable(Cmd, TxnPtr);
-			TxnPtr += sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
-			BuffSize += (u32)sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
 			continue;
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
@@ -1841,6 +1846,25 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			_XAie_AppendUpdateReg(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_UpdateRegHdr);
 			BuffSize += (u32)sizeof(XAie_UpdateRegHdr);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_UPDATE_SCRATCH)
+		{
+			if( (BuffSize + sizeof(XAie_UpdateScratchHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(BlockwriteBuffer);
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendUpdateScratch(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_UpdateScratchHdr);
+			BuffSize += (u32)sizeof(XAie_UpdateScratchHdr);
 			continue;
 		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_TCT) {
@@ -2142,9 +2166,9 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			DevInst->PmLoadingActive = 1;
 			continue;
 		}
-		else if(Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE)
+		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
 		{
-			if((BuffSize + sizeof(XAie_StateTableHdr)) >
+			if( (BuffSize + sizeof(XAie_CreateScratchPadHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2155,9 +2179,9 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
 			}
-			_XAie_AppendStateTable(Cmd, TxnPtr);
-			TxnPtr += sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
-			BuffSize += (u32)sizeof(XAie_StateTableHdr) + Cmd->Size * (u32)sizeof(u32);
+			_XAie_AppendCreateScratchPad(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_CreateScratchPadHdr);
+			BuffSize += (u32)sizeof(XAie_CreateScratchPadHdr);
 			continue;
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
@@ -2194,6 +2218,24 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			_XAie_AppendUpdateReg(Cmd, TxnPtr);
 			TxnPtr += sizeof(XAie_UpdateRegHdr);
 			BuffSize += (u32)sizeof(XAie_UpdateRegHdr);
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_UPDATE_SCRATCH)
+		{
+			if( (BuffSize + sizeof(XAie_UpdateScratchHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendUpdateScratch(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_UpdateScratchHdr);
+			BuffSize += (u32)sizeof(XAie_UpdateScratchHdr);
 			continue;
 		}
 		else if (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL)
@@ -2295,7 +2337,7 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst)
 	for(u32 i = 0; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
 
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
 			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			free((void *)(uintptr_t)Cmd->DataPtr);
@@ -2335,7 +2377,7 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
 
-			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
+			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
 				(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 				free((void *)(uintptr_t)Cmd->DataPtr);
@@ -2779,7 +2821,7 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 	for(u32 i = 0U; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
 
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode == XAIE_IO_LOAD_STATE_TABLE ||
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
 			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
 			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			free((void *)Cmd->DataPtr);
@@ -3314,22 +3356,26 @@ AieRC XAie_Txn_PmLoadEnd(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
-* This API register XAIE_IO_SAVESTATE TXN command that can be added to the
-* transaction buffer.
-* @param    DevInst - Global AIE device instance pointer.
-* @param    Data - Pointer to the table entry / enetries.
-* @param    Size - Size of data in words.
+* This API register XAIE_IO_CREATE_SCRATCHPAD that can be added to the transaction buffer.
+* @param    DevInst - Global AIE device instance pointer. 
+* @param    CreateScratch - CreateScratch struct that needs to be filled in by the caller
 *
 * @return   XAIE_OK for success and error code otherwise.
 *
 * @note     This function must be called after XAie_StartTransaction();
 *
 ******************************************************************************/
-AieRC XAie_Txn_LoadStateTable(XAie_DevInst *DevInst, u32 *StateTbl, u32 Size)
+AieRC XAie_Txn_CreateScratchPad(XAie_DevInst *DevInst, XAie_CreateScratchPadHdr* CreateScratch)
 {
+	u8 Usage_type = CreateScratch->Usage_type;
+	if(Usage_type != XAIE_STATE_TABLE)
+	{
+		XAIE_ERROR("Error: Usage_type = %d",Usage_type);
+		return XAIE_ERR;
+	}
+
 	AieRC RC;
 	u64 Tid;
-	u32 *Buf;
 	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
 
@@ -3338,31 +3384,21 @@ AieRC XAie_Txn_LoadStateTable(XAie_DevInst *DevInst, u32 *StateTbl, u32 Size)
 		Tid = Backend->Ops.GetTid();
 		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
 		if(TxnInst == NULL) {
-			XAIE_ERROR("Could not find transaction instance associated with thread. Polling from register\n");
+			XAIE_ERROR("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
 			return XAIE_ERR;
 		}
-		if( (TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
-				RC = _XAie_ReallocCmdBuf(TxnInst);
-				if (RC != XAIE_OK) {
-					return RC;
-				}
+		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+			RC = _XAie_ReallocCmdBuf(TxnInst);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
 		}
-
-		if ((Size == 0U) || (Size > XAIE_TXN_STATE_TABLE_SIZE) || (StateTbl == NULL)){
-			XAIE_ERROR("Invalid State Table pointer or Size\n");
-			return XAIE_INVALID_ARGS;
-		}
-
-		Buf = (u32 *)malloc(sizeof(u32) * Size);
-		if(Buf == NULL) {
-			XAIE_ERROR("Memory allocation for Save State failed\n");
-			return XAIE_ERR;
-		}
-
-		Buf = memcpy((void *)Buf, (void *)StateTbl, sizeof(u32) * Size);
-		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_LOAD_STATE_TABLE;
-		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)(uintptr_t)Buf;
-		TxnInst->CmdBuf[TxnInst->NumCmds].Size = Size;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CREATE_SCRATCHPAD;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Usage_type = Usage_type;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Size = CreateScratch->SpSize;
+		TxnInst->CmdBuf[TxnInst->NumCmds].DdrAddr = CreateScratch->DdrAddr;
 
 		if (TX_DUMP_ENABLE) {
 			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
@@ -3496,6 +3532,54 @@ AieRC XAie_Txn_UpdateReg(XAie_DevInst *DevInst, u64 RegOff, u8 StateTableIdx,
 	}
 
 	return XAIE_ERR;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API register XAIE_IO_UPDATE_SCRATCH that can be added to the transaction buffer.
+* @param    DevInst - Global AIE device instance pointer.
+*
+* @return   XAIE_OK for success and error code otherwise.
+*
+* @note     This function must be called after XAie_StartTransaction();
+*
+******************************************************************************/
+AieRC XAie_Txn_UpdateScratch(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u64 Tid;
+	XAie_TxnInst *TxnInst;
+	const XAie_Backend *Backend = DevInst->Backend;
+	if(DevInst->TxnList.Next != NULL)
+	{
+		Tid = Backend->Ops.GetTid();
+		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
+		if(TxnInst == NULL) {
+			XAIE_ERROR("Could not find transaction instance "
+					"associated with thread. Polling "
+					"from register\n");
+			return XAIE_ERR;
+		}
+		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+			RC = _XAie_ReallocCmdBuf(TxnInst);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+		};
+		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_UPDATE_SCRATCH;
+
+		if (TX_DUMP_ENABLE) {
+			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
+		}
+
+		TxnInst->NumCmds++;
+
+		return XAIE_OK;
+	}
+
+	return XAIE_ERR;
+
 }
 
 /*****************************************************************************/

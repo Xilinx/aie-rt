@@ -250,8 +250,9 @@ XAIE_AIG_EXPORT AieRC XAie_Txn_Preempt(XAie_DevInst *DevInst, XAie_PreemptHdr* P
 XAIE_AIG_EXPORT AieRC XAie_Txn_LoadPdi(XAie_DevInst *DevInst, u16 PdiId);
 XAIE_AIG_EXPORT AieRC XAie_Txn_PmLoadStart(XAie_DevInst *DevInst, u32 PmLoadId);
 XAIE_AIG_EXPORT AieRC XAie_Txn_PmLoadEnd(XAie_DevInst *DevInst);
-XAIE_AIG_EXPORT AieRC XAie_Txn_LoadStateTable(XAie_DevInst *DevInst, u32 *StateTbl, u32 Size);
 XAIE_AIG_EXPORT AieRC XAie_Txn_UpdateStateTable(XAie_DevInst *DevInst, u8 StateTableIdx, XAie_StateTableFuncType Func, u32 FuncArg);
 XAIE_AIG_EXPORT AieRC XAie_Txn_UpdateReg(XAie_DevInst *DevInst, u64 RegOff, u8 StateTableIdx, XAie_StateTableFuncType Func, u32 FuncArg);
+XAIE_AIG_EXPORT AieRC XAie_Txn_CreateScratchPad(XAie_DevInst *DevInst, XAie_CreateScratchPadHdr* CreateScratch);
+XAIE_AIG_EXPORT AieRC XAie_Txn_UpdateScratch(XAie_DevInst *DevInst);
 #endif		/* end of protection macro */
 /** @} */

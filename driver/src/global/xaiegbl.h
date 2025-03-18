@@ -609,11 +609,21 @@ typedef struct {
 	uint32_t PmLoadId;
 }XAie_PmLoadHdr;
 
+typedef enum {
+	XAIE_STATE_TABLE
+} XAie_UsageType;
+
+typedef struct {
+	uint8_t Op;
+	uint8_t Usage_type;
+	uint16_t SpSize;
+	uint32_t DdrAddr;
+} XAie_CreateScratchPadHdr;
+
 typedef struct {
 	uint8_t Op;
 	uint8_t padding[3];
-	uint32_t Size;
-} XAie_StateTableHdr;
+} XAie_UpdateScratchHdr;
 
 typedef enum {
 	XAIE_STATE_TABLE_MUL,
