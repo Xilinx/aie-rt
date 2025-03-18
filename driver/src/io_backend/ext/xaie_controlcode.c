@@ -38,6 +38,7 @@
 #define TEMP_ASM_FILE1    ".temp_data1.txt"
 #define TEMP_ASM_FILE2    ".temp_data2.txt"
 #define TEMP_ASM_FILE3    ".temp_data3.txt"
+#define PAGE_SIZE_MAX	  8192
 
 //#define UC_DMA_DATASZ					4
 //#define DATA_SECTION_ALIGNMENT        16
@@ -808,7 +809,6 @@ static AieRC XAie_ControlCodeIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		     XAie_BackendOpCode Op, void *Arg)
 {
 	AieRC RC = XAIE_OK;
-	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
 
 	switch(Op) {
 		case XAIE_BACKEND_OP_NPIWR32:
@@ -886,6 +886,12 @@ static AieRC XAie_ControlCodeIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 ******************************************************************************/
 AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 PageSize)
 {
+	if(PageSize > PAGE_SIZE_MAX)
+	{
+		XAIE_ERROR("PageSize cannot be > PAGE_SIZE_MAX\n");
+		return XAIE_ERR;
+	}
+
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)DevInst->IOInst;
 
 	if(DevInst->Backend->Type != XAIE_IO_BACKEND_CONTROLCODE) {
@@ -907,7 +913,6 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 	ControlCodeInst->ControlCodedata3fp = fopen(TEMP_ASM_FILE3, "w+");
 
 	ControlCodeInst->PageSizeMax = PageSize;
-	ControlCodeInst->PageSizeMax = 8192; //TBD this line to be removed
 	ControlCodeInst->CombineCommands = 0;
 
 	if (ControlCodeInst->ControlCodefp == NULL ||
