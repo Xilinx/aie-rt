@@ -615,16 +615,11 @@ typedef enum {
 
 typedef struct {
 	uint8_t Op;
-	uint8_t Usage_type;
+	uint8_t UsageType;
 	uint16_t padding;
-	uint32_t SpSize;
+	uint32_t Size;
 	uint64_t DdrAddr;
-} XAie_CreateScratchPadHdr;
-
-typedef struct {
-	uint8_t Op;
-	uint8_t padding[3];
-} XAie_UpdateScratchHdr;
+} XAie_CreateScratchpadHdr;
 
 typedef enum {
 	XAIE_STATE_TABLE_MUL,
@@ -648,6 +643,11 @@ typedef struct {
 	uint32_t FuncArg;
 	uint32_t RegOff;
 } XAie_UpdateRegHdr;
+
+typedef struct {
+	uint8_t Op;
+	uint8_t padding[3];
+} XAie_UpdateScratchHdr;
 
 /* Migrated from Aie-controller */
 enum op_types {

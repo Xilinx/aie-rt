@@ -66,7 +66,7 @@ struct XAie_TxnCmd {
 	u16 PdiId;
 	u8 Preempt_level;
 	u64 DdrAddr;
-	u8 Usage_type;
+	u8 UsageType;
 	u8 StateTableIdx;
 	u32 Func;
 	u32 FuncArg;

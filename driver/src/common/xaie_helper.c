@@ -1185,14 +1185,14 @@ static inline u8* _XAie_AppendPmLoad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	return (&(Hdr->LoadSequenceCount[0]));
 }
 
-static inline void _XAie_AppendCreateScratchPad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+static inline void _XAie_AppendCreateScratchpad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
-	XAie_CreateScratchPadHdr *Hdr = ( XAie_CreateScratchPadHdr*)(uintptr_t)TxnPtr;
+	XAie_CreateScratchpadHdr *Hdr = ( XAie_CreateScratchpadHdr*)(uintptr_t)TxnPtr;
 
 	Hdr->Op = (u8)Cmd->Opcode;
-	Hdr->Usage_type = (u8)Cmd->Usage_type;
+	Hdr->UsageType = (u8)Cmd->UsageType;
+	Hdr->Size = (u32)Cmd->Size;
 	Hdr->DdrAddr = (u64)Cmd->DdrAddr;
-	Hdr->SpSize = (u32)Cmd->Size;
 }
 
 static inline void _XAie_AppendUpdateState(XAie_TxnCmd *Cmd, u8 *TxnPtr)
@@ -1766,25 +1766,6 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			DevInst->PmLoadingActive = 1;
 			continue;
 		}
-		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
-		{
-			if( (BuffSize + sizeof(XAie_CreateScratchPadHdr)) >
-					AllocatedBuffSize ) {
-				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
-						AllocatedBuffSize * 2U, BuffSize);
-				if(TxnPtr == NULL) {
-					XAIE_ERROR("TxnPtr realloc failed\n");
-					free(BlockwriteBuffer);
-					return NULL;
-				}
-				AllocatedBuffSize *= 2U;
-				TxnPtr += BuffSize;
-			}
-			_XAie_AppendCreateScratchPad(Cmd, TxnPtr);
-			TxnPtr += sizeof(XAie_CreateScratchPadHdr);
-			BuffSize += (u32)sizeof(XAie_CreateScratchPadHdr);
-			continue;
-		}
 		else if (Cmd->Opcode == XAIE_IO_LOAD_PM_END_INTERNAL)
 		{
 			// Check if LoadSeqCountPtr needs to be updated due to realloc of TXN Ptr.
@@ -1808,6 +1789,25 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			LoadSeqCount = 0;
 			NumOps--;
 			DevInst->PmLoadingActive = 0;
+			continue;
+		}
+		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
+		{
+			if( (BuffSize + sizeof(XAie_CreateScratchpadHdr)) >
+					AllocatedBuffSize ) {
+				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
+						AllocatedBuffSize * 2U, BuffSize);
+				if(TxnPtr == NULL) {
+					XAIE_ERROR("TxnPtr realloc failed\n");
+					free(BlockwriteBuffer);
+					return NULL;
+				}
+				AllocatedBuffSize *= 2U;
+				TxnPtr += BuffSize;
+			}
+			_XAie_AppendCreateScratchpad(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_CreateScratchpadHdr);
+			BuffSize += (u32)sizeof(XAie_CreateScratchpadHdr);
 			continue;
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
@@ -2168,7 +2168,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
 		{
-			if( (BuffSize + sizeof(XAie_CreateScratchPadHdr)) >
+			if( (BuffSize + sizeof(XAie_CreateScratchpadHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2179,9 +2179,9 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				AllocatedBuffSize *= 2U;
 				TxnPtr += BuffSize;
 			}
-			_XAie_AppendCreateScratchPad(Cmd, TxnPtr);
-			TxnPtr += sizeof(XAie_CreateScratchPadHdr);
-			BuffSize += (u32)sizeof(XAie_CreateScratchPadHdr);
+			_XAie_AppendCreateScratchpad(Cmd, TxnPtr);
+			TxnPtr += sizeof(XAie_CreateScratchpadHdr);
+			BuffSize += (u32)sizeof(XAie_CreateScratchpadHdr);
 			continue;
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
@@ -3358,6 +3358,8 @@ AieRC XAie_Txn_PmLoadEnd(XAie_DevInst *DevInst)
 *
 * This API register XAIE_IO_CREATE_SCRATCHPAD that can be added to the transaction buffer.
 * @param    DevInst - Global AIE device instance pointer. 
+* @param    UsageType - Scratchpad usage type
+* @param    Size - Size of scratchpad in bytes.
 * @param    CreateScratch - CreateScratch struct that needs to be filled in by the caller
 *
 * @return   XAIE_OK for success and error code otherwise.
@@ -3365,19 +3367,19 @@ AieRC XAie_Txn_PmLoadEnd(XAie_DevInst *DevInst)
 * @note     This function must be called after XAie_StartTransaction();
 *
 ******************************************************************************/
-AieRC XAie_Txn_CreateScratchPad(XAie_DevInst *DevInst, XAie_CreateScratchPadHdr* CreateScratch)
+AieRC XAie_Txn_CreateScratchpad(XAie_DevInst *DevInst, u8 UsageType, u32 Size,
+								u64 DdrAddr)
 {
-	u8 Usage_type = CreateScratch->Usage_type;
-	if(Usage_type != XAIE_STATE_TABLE)
-	{
-		XAIE_ERROR("Error: Usage_type = %d",Usage_type);
-		return XAIE_ERR;
-	}
-
 	AieRC RC;
 	u64 Tid;
 	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
+
+	if(UsageType != XAIE_STATE_TABLE)
+	{
+		XAIE_ERROR("Error: UsageType = %d (unsupported value)",UsageType);
+		return XAIE_ERR;
+	}
 
 	if(DevInst->TxnList.Next != NULL)
 	{
@@ -3396,9 +3398,9 @@ AieRC XAie_Txn_CreateScratchPad(XAie_DevInst *DevInst, XAie_CreateScratchPadHdr*
 			}
 		}
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CREATE_SCRATCHPAD;
-		TxnInst->CmdBuf[TxnInst->NumCmds].Usage_type = Usage_type;
-		TxnInst->CmdBuf[TxnInst->NumCmds].Size = CreateScratch->SpSize;
-		TxnInst->CmdBuf[TxnInst->NumCmds].DdrAddr = CreateScratch->DdrAddr;
+		TxnInst->CmdBuf[TxnInst->NumCmds].UsageType = UsageType;
+		TxnInst->CmdBuf[TxnInst->NumCmds].Size = Size;
+		TxnInst->CmdBuf[TxnInst->NumCmds].DdrAddr = DdrAddr;
 
 		if (TX_DUMP_ENABLE) {
 			TxnCmdDump(&TxnInst->CmdBuf[TxnInst->NumCmds]);
@@ -3551,6 +3553,7 @@ AieRC XAie_Txn_UpdateScratch(XAie_DevInst *DevInst)
 	u64 Tid;
 	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
+
 	if(DevInst->TxnList.Next != NULL)
 	{
 		Tid = Backend->Ops.GetTid();
@@ -3566,7 +3569,8 @@ AieRC XAie_Txn_UpdateScratch(XAie_DevInst *DevInst)
 			if (RC != XAIE_OK) {
 				return RC;
 			}
-		};
+		}
+
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_UPDATE_SCRATCH;
 
 		if (TX_DUMP_ENABLE) {
