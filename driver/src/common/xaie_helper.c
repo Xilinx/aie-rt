@@ -1191,8 +1191,8 @@ static inline void _XAie_AppendCreateScratchPad(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 
 	Hdr->Op = (u8)Cmd->Opcode;
 	Hdr->Usage_type = (u8)Cmd->Usage_type;
-	Hdr->DdrAddr = (u32)Cmd->DdrAddr;
-	Hdr->SpSize = (u16)Cmd->Size;
+	Hdr->DdrAddr = (u64)Cmd->DdrAddr;
+	Hdr->SpSize = (u32)Cmd->Size;
 }
 
 static inline void _XAie_AppendUpdateState(XAie_TxnCmd *Cmd, u8 *TxnPtr)

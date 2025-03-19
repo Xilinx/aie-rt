@@ -616,8 +616,9 @@ typedef enum {
 typedef struct {
 	uint8_t Op;
 	uint8_t Usage_type;
-	uint16_t SpSize;
-	uint32_t DdrAddr;
+	uint16_t padding;
+	uint32_t SpSize;
+	uint64_t DdrAddr;
 } XAie_CreateScratchPadHdr;
 
 typedef struct {
