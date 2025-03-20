@@ -255,11 +255,10 @@ static void btree4_merge_root(struct btree4 *tree, struct btree4_node *node,
 	int i;
 
 	node_data_count = btree4_data_count(node);
-	if (node_data_count == 0) {
-		tree->root = NULL;
-		free(node);
+	if (node_data_count > 1) {
 		return;
-	} else if (node_data_count > 1) {
+	} else if (__builtin_expect(!node_data_count, 0)) {
+		/* node cannot be emmpty and root here. This condition will never happen */
 		return;
 	}
 	/*	 [node]
@@ -397,8 +396,17 @@ static void btree4_merge(struct btree4 *tree, struct btree4_node *node,
 		if (parent->child[i] == node)
 			break;
 	}
+	/* This condition should never occur. */
+	if (__builtin_expect((i >= BTREE4_CHILD_NUM), 0)) {
+		return;
+	}
 	if (parent_count == i) {
 		int ci;
+
+		/* This should never happe. parent data count and child index cannot be 0 */
+		if (__builtin_expect(i == 0, 0)) {
+			return;
+		}
 		/*	[parent, a,        b]
 		 *     /      /    \         \
 		 *               [other]     [node]
@@ -425,7 +433,8 @@ static void btree4_merge(struct btree4 *tree, struct btree4_node *node,
 			free(other);
 			parent->child[i - 1] = node;
 			parent->child[i] = NULL;
-		} else {
+		/* ci, which is data count should never be 0 */
+		} else if (__builtin_expect(ci != 0, 1)) {
 			/*  [p0, p1,             p2]      [p0, p1,     o2]
 			 * /   /   \                \  ->/   /   \       \
 			 *        [o0, o1, o2]      [n]         [o0, o1] [p2, n]
@@ -442,7 +451,7 @@ static void btree4_merge(struct btree4 *tree, struct btree4_node *node,
 			if (node->child[0])
 				node->child[0]->parent = node;
 		}
-	} else {
+	} else if (__builtin_expect((i < (BTREE4_CHILD_NUM - 1)), 1)) {
 		/*		[parent,     a,    c]
 		 *	       /       /      \     \
 		 *	  [node]     [other]
@@ -577,7 +586,12 @@ void *btree4_delete(struct btree4 *tree, void *data)
 		if (parent->child[i] == merge_node)
 			break;
 	}
+	/* i = 3 parent_count = 3 */
 	if (parent_count == i) {
+		if (__builtin_expect(i == 0, 0)) {
+			/* This condition will never occur */
+			return NULL;
+		}
 		/*    [p0, p1, p2]
 		 *   /   /   \   \
 		 *               []
@@ -590,6 +604,13 @@ void *btree4_delete(struct btree4 *tree, void *data)
 		 *   /   /   \   \
 		 *      []
 		 */
+
+		/* i will never be >= BTREE4_DATA_NUM.
+		 * Add unnecessary check to supress the error.
+		 */
+		if (__builtin_expect((i >= BTREE4_DATA_NUM), 0)) {
+			return value;
+		}
 		insert_value = parent->data[i];
 		for (; i < (BTREE4_DATA_NUM - 1); i++) {
 			parent->data[i] = parent->data[i + 1];
