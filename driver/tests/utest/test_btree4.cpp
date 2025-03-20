@@ -120,7 +120,7 @@ TEST(BTree4, BTree4_test)
 		res = check_order(&tree);
 		CHECK_EQUAL(res, 0);
 
-		res = (uint64_t)btree4_search(&tree, (void *)res);
+		res = (uint64_t)btree4_search(&tree, (void *)data[index]);
 		CHECK_EQUAL(res, 0);
 
 		for (uint64_t j = 0; j < size; j++) {
