@@ -502,7 +502,6 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	struct XAie_DevMem *Head = &IOInst->DevMem;
 	struct XAie_DevMem *Pos;
 	u64 Align = Size % 4;
-	struct XAie_DevMem *Node;
 	int Ret;
 
 	if (Align) {
@@ -554,10 +553,6 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			MemInst->Size = Size;
 			MemInst->Cache = Cache;
 			MemInst->DevInst = DevInst;
-			if (Ret) {
-				XAie_SimMemFree(MemInst);
-				return NULL;
-			}
 			return MemInst;
 		}
 		Pos = Pos->Next;
