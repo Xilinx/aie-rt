@@ -80,6 +80,8 @@ TEST(BTree4, BTree4_test)
 
 	/* Insert */
 	for (i = 0; i < size; i++) {
+		printf("\rInsert test: %ld%%", (i * 100) / size);
+		fflush(stdout);
 		if (data[i] == 0)
 			continue;
 
@@ -91,17 +93,21 @@ TEST(BTree4, BTree4_test)
 		res = check_order(&tree);
 		CHECK_EQUAL(res, 0);
 	}
+	printf("\n");
 
 	/* Search */
 	for (i = 0; i < size; i++) {
+		printf("\rSearch test: %ld%%", (i * 100) / size);
 		if (data[i] == 0)
 			continue;
 		res = (uint64_t)btree4_search(&tree, (void *)data[i]);
 		CHECK_EQUAL(res, data[i]);
 	}
+	printf("\n");
 
 	/* Random Delete */
 	for (i = 0; i < size; i++) {
+		printf("\rDelete test: %ld%%", (i * 100) / size);
 		uint64_t index = random_index[i];
 
 		index %= size;
@@ -122,5 +128,6 @@ TEST(BTree4, BTree4_test)
 				data[j] = 0;
 		}
 	}
+	printf("\n");
 }
 #endif  /*#ifndef FILES_MISSING*/
