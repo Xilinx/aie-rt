@@ -163,4 +163,21 @@ XAIE_AIG_EXPORT AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Lo
 XAIE_AIG_EXPORT AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 *Status);
 
+/* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 
+ * TODO: Need to revert these changes later*/
+XAIE_AIG_EXPORT AieRC XAie_DmaGetNumBdsPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc,
+	u8 ChNum, XAie_DmaDirection Dir, u8 *NumBds);
+XAIE_AIG_EXPORT AieRC XAie_DmaSetNextBdPvtBuffPool(XAie_DmaDesc *DmaDesc, 
+	u8 ChNum, XAie_DmaDirection Dir, u16 NextBd, u8 EnableNextBd);
+XAIE_AIG_EXPORT AieRC XAie_DmaWriteBdPvtBuffPool(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+	XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir, u16 BdNum);
+XAIE_AIG_EXPORT AieRC XAie_DmaReadBdPvtBuffPool(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+	XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir, u16 BdNum);
+XAIE_AIG_EXPORT AieRC XAie_DmaGetBdLenPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc, 
+	u8 ChNum, XAie_DmaDirection Dir, u32 *Len,	u16 BdNum);
+XAIE_AIG_EXPORT AieRC XAie_DmaUpdateBdLenPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc,
+	u8 ChNum, XAie_DmaDirection Dir, u32 Len, u16 BdNum);
+XAIE_AIG_EXPORT AieRC XAie_DmaUpdateBdAddrPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc,
+	u8 ChNum, XAie_DmaDirection Dir, u64 Addr,	u16 BdNum);
+
 #endif		/* end of protection macro */

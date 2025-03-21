@@ -833,6 +833,11 @@ XAIE_AIG_EXPORT AieRC XAie_StartNextJob(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
 XAIE_AIG_EXPORT AieRC XAie_ConfigMemInterleaving(XAie_DevInst *DevInst,
 		XAie_LocType *Locs, u32 NumTiles, u8 Enable);
+
+/* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 
+ * TODO: Need to revert these changes later*/
+XAIE_AIG_EXPORT AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad);
+XAIE_AIG_EXPORT AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp);
 /*****************************************************************************/
 /*
 *

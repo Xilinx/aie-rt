@@ -1151,4 +1151,20 @@ AieRC XAie_ConfigMemInterleaving(XAie_DevInst *DevInst,
 	return XAIE_OK;
 }
 
+/* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 
+ * TODO: Need to revert these changes later*/
+AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad) 
+{
+	(void) DevInst;
+	(void) Scrachpad;
+
+	return XAIE_OK;
+}
+AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp)
+{
+	(void) DevInst;
+	(void) Timestamp;
+	return XAIE_OK;
+}
+
 /** @}@} */
