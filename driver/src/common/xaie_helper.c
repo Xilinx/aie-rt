@@ -3240,7 +3240,7 @@ AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols)
 	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
 
-    if (num_cols > DevInst->NumCols) {
+	if (num_cols > DevInst->NumCols) {
 		XAIE_ERROR("Invalid argument num_cols > max columns reserved for partition\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -3256,15 +3256,15 @@ AieRC XAie_Txn_MergeSync(XAie_DevInst *DevInst, u8 num_tokens, u8 num_cols)
 			return XAIE_ERR;
 		}
 		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
-				RC = _XAie_ReallocCmdBuf(TxnInst);
-				if (RC != XAIE_OK) {
-					return RC;
-				}
+			RC = _XAie_ReallocCmdBuf(TxnInst);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
 		}
 
 		u32* tctDataBuff = (u32 *)calloc(1,sizeof(tct_op_t));
 		if(tctDataBuff != NULL) {
-			tctDataBuff[0] = ((0x000000FF & num_tokens) || (0x0000FF00 & (num_cols << 8)));
+			tctDataBuff[0] = ((0x000000FF & num_tokens) | (0x0000FF00 & (num_cols << 8)));
 			TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = XAIE_IO_CUSTOM_OP_MERGE_SYNC;
 			TxnInst->CmdBuf[TxnInst->NumCmds].Size = (u32)sizeof(tct_op_t);
 			TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)tctDataBuff;
