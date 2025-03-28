@@ -187,7 +187,7 @@ static AieRC XAie_DebugIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value
 	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (void *)UINTPTR_T DebugIOInst->BaseAddr +
 			RegOff, Mask, Value, TimeOutUs);
 
-	return XAIE_ERR;
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
