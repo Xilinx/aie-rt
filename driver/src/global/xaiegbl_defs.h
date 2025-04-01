@@ -53,9 +53,6 @@ typedef uint64_t		u64;
 #define XAIE_DEV_GEN_S200		7U
 #define XAIE_DEV_GEN_AIE2P_STRIX_A0	8U
 #define XAIE_DEV_GEN_AIE2P_STRIX_B0	9U
-#define XAIE_DEV_GEN_AIE4_SOUNDWAVE     40U
-#define XAIE_DEV_GEN_AIE4               41U
-#define XAIE_DEV_GEN_AIE4_MEDUSA        42U
 
 #define XAIE_COMPONENT_IS_READY		1U
 
