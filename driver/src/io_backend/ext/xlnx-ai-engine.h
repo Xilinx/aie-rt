@@ -247,6 +247,8 @@ struct aie_partition_req {
 	__u32 uid;
 	__u64 meta_data;
 	__u32 flag;
+	void *reserve1;
+	void *reserve2;
 };
 
 /**
