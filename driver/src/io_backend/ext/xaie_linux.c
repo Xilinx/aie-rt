@@ -187,6 +187,7 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 	munmap(LinuxIOInst->RegMap.VAddr, LinuxIOInst->RegMap.MapSize);
 	if(MemTileMod != NULL)
 		munmap(LinuxIOInst->MemTileMem.VAddr, LinuxIOInst->MemTileMem.MapSize);
+
 	munmap(LinuxIOInst->ProgMem.VAddr, LinuxIOInst->ProgMem.MapSize);
 	munmap(LinuxIOInst->DataMem.VAddr, LinuxIOInst->DataMem.MapSize);
 	if (UcMod) {
@@ -465,6 +466,11 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 	XAIE_DBG("Prog memory mapped to %p\n", IOInst->ProgMem.VAddr);
 	XAIE_DBG("Data memory mapped to %p\n", IOInst->DataMem.VAddr);
 	XAIE_DBG("Mem tile memory mapped to %p\n", IOInst->MemTileMem.VAddr);
+	if (UcMod) {
+		XAIE_DBG("UcProgMem mapped to %p\n", IOInst->UcProgMem.VAddr);
+		XAIE_DBG("UcPrivDataMem mapped to %p\n", IOInst->UcPrivDataMem.VAddr);
+		XAIE_DBG("UcDataMem mapped to %p\n", IOInst->UcDataMem.VAddr);
+	}
 
 	IOInst->ProgMemAddr = CoreMod->ProgMemHostOffset;
 	IOInst->ProgMemSize = CoreMod->ProgMemSize;
@@ -633,18 +639,24 @@ static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 	} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 		OffsetAddr = LinuxIOInst->MemTileMemAddr + XAie_GetTileAddr(DevInst, Row, Col);
 		MemSize = OffsetAddr + LinuxIOInst->MemTileMemSize;
+	} else {
+		/*
+		 * Workaround to fix shim tile register out of bound issue
+		 */
+		OffsetAddr = LinuxIOInst->MemTileMemAddr + XAie_GetTileAddr(DevInst, Row, Col);
+		MemSize = OffsetAddr + LinuxIOInst->MemTileMemSize;
 	}
 
 	if(RegOff >= OffsetAddr && RegOff <=  MemSize) {
 		if((RegOff+sizeof(u32)) > MemSize) {
-			XAIE_ERROR(" Reading register failed for offset 0x%lx",
-					RegOff);
+			XAIE_ERROR(" Reading register failed for offset 0x%lx, [%d, %d], OffsetAddr: 0x%x MemSize: 0x%x\n",
+					RegOff, Col, Row, OffsetAddr, MemSize);
 			return XAIE_ERR;
 		}
 	} else if(RegOff < OffsetAddr && ((RegOff+sizeof(u32)) >= OffsetAddr
 				&& (RegOff+sizeof(u32)) <=  MemSize)) {
-		XAIE_ERROR(" Reading register failed for offset 0x%lx",
-					RegOff);
+		XAIE_ERROR(" Reading register failed for offset 0x%lx, [%d, %d]\n",
+					RegOff, Col, Row);
 		return XAIE_ERR;
 	}
 
