@@ -4171,6 +4171,7 @@ static const XAie_EvntMod Aie2PSTileEvntMod[] =
 {
 	{
 		.XAie_EventNumber = Aie2PSMemModEventMapping,
+		.NumEventReg = 4U,
 		.EventMin = XAIE_EVENT_NONE_MEM,
 		.EventMax = XAIE_EVENT_DMA_TASK_TOKEN_STALL_MEM,
 		.ComboEventBase = XAIE_EVENT_COMBO_EVENT_0_MEM,
@@ -4231,6 +4232,7 @@ static const XAie_EvntMod Aie2PSTileEvntMod[] =
 	},
 	{
 		.XAie_EventNumber = Aie2PSCoreModEventMapping,
+		.NumEventReg = 4U,
 		.EventMin = XAIE_EVENT_NONE_CORE,
 		.EventMax = XAIE_EVENT_SPARSITY_OVERFLOW_CORE,
 		.ComboEventBase = XAIE_EVENT_COMBO_EVENT_0_CORE,
@@ -4309,6 +4311,7 @@ static const XAie_EvntMod Aie2PSTileEvntMod[] =
 static const XAie_EvntMod Aie2PSNocEvntMod =
 {
 	.XAie_EventNumber = Aie2PSNocModEventMapping,
+	.NumEventReg = 8U,
 	.EventMin = XAIE_EVENT_NONE_PL,
 	.EventMax = XAIE_EVENT_CORE_STREAM_PUT_UC,
 	.ComboEventBase = XAIE_EVENT_COMBO_EVENT_0_PL,
@@ -4386,6 +4389,7 @@ static const XAie_EvntMod Aie2PSNocEvntMod =
 static const XAie_EvntMod Aie2PSPlEvntMod =
 {
 	.XAie_EventNumber = Aie2PSPlModEventMapping,
+	.NumEventReg = 8U,
 	.EventMin = XAIE_EVENT_NONE_PL,
 	.EventMax = XAIE_EVENT_CORE_STREAM_PUT_UC,
 	.ComboEventBase = XAIE_EVENT_COMBO_EVENT_0_PL,
@@ -4461,6 +4465,7 @@ static const XAie_EvntMod Aie2PSPlEvntMod =
 static const XAie_EvntMod Aie2PSMemTileEvntMod =
 {
 	.XAie_EventNumber = Aie2PSMemTileModEventMapping,
+	.NumEventReg = 6U,
 	.EventMin = XAIE_EVENT_NONE_MEM_TILE,
 	.EventMax = XAIE_EVENT_USER_EVENT_1_MEM_TILE,
 	.ComboEventBase = XAIE_EVENT_COMBO_EVENT_0_MEM_TILE,

@@ -59,7 +59,7 @@ u8 _XAie2PS_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAIE_ERROR("Cannot find Tile Type\n");
+	XAIE_ERROR("Cannot find Tile Type for [%d, %d]\n", Loc.Col, Loc.Row);
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
