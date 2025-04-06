@@ -247,8 +247,8 @@ struct aie_partition_req {
 	__u32 uid;
 	__u64 meta_data;
 	__u32 flag;
-	void *reserve1;
-	void *reserve2;
+	void *reserved1;
+	void *reserved2;
 };
 
 /**
@@ -261,17 +261,47 @@ struct aie_partition_init_args {
 	struct aie_location *locs;
 	__u32 num_tiles;
 	__u32 init_opts;
+	__u32 ecc_scrub;
+	__u32 *handshake;
+	__u32 handshake_size;
 };
 
 /*
  * AI engine partition initialize options
  */
-#define AIE_PART_INIT_OPT_COLUMN_RST		(1U << 0)
-#define AIE_PART_INIT_OPT_SHIM_RST		(1U << 1)
-#define AIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR	(1U << 2)
-#define AIE_PART_INIT_OPT_ISOLATE		(1U << 3)
-#define AIE_PART_INIT_OPT_ZEROIZEMEM		(1U << 4)
-#define AIE_PART_INIT_OPT_DEFAULT		0xFU
+#define AIE_PART_INIT_OPT_START_NUM_COL		0U
+#define AIE_PART_INIT_OPT_COLUMN_RST		BIT(0)
+#define AIE_PART_INIT_OPT_SHIM_RST		BIT(1)
+#define AIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR	BIT(2)
+#define AIE_PART_INIT_OPT_ISOLATE		BIT(3)
+#define AIE_PART_INIT_OPT_ZEROIZEMEM		BIT(4)
+#define AIE_PART_INIT_OPT_UC_ENB_MEM_PRIV	BIT(5)
+#define AIE_PART_INIT_ERROR_HANDLING		BIT(6)
+#define AIE_PART_INIT_OPT_DIS_COLCLK_BUFF	BIT(7)
+#define AIE_PART_INIT_OPT_SET_L2_IRQ		BIT(8)
+#define AIE_PART_INIT_OPT_HW_ERR_INT		BIT(9)
+#define AIE_PART_INIT_OPT_HW_ERR_MASK		BIT(10)
+#define AIE_PART_INIT_OPT_SET_ECC_SCRUB_PERIOD	BIT(11)
+#define AIE_PART_INIT_OPT_NMU_CONFIG		BIT(12)
+#define AIE_PART_INIT_OPT_ENB_COLCLK_BUFF	BIT(13)
+#define AIE_PART_INIT_OPT_UC_ZEROIZATION	BIT(14)
+#define AIE_PART_INIT_OPT_UC_DIS_MEM_PRIV	BIT(15)
+#define AIE_PART_INIT_OPT_ENB_NOC_DMA_PAUSE	BIT(16)
+#define AIE_PART_INIT_OPT_ENB_UC_DMA_PAUSE	BIT(17)
+#define AIE_PART_INIT_OPT_HW_ERR_STS		BIT(18)
+#define AIE_PART_INIT_OPT_DIS_MEM_INTERLEAVE	BIT(19)
+#define AIE_PART_INIT_OPT_HANDSHAKE		BIT(20)
+
+#define AIE_PART_INIT_OPT_DEFAULT	(AIE_PART_INIT_OPT_COLUMN_RST		|	\
+					 AIE_PART_INIT_OPT_SHIM_RST		|	\
+					 AIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR	|	\
+					 AIE_PART_INIT_OPT_ISOLATE		|	\
+					 AIE_PART_INIT_ERROR_HANDLING		|	\
+					 AIE_PART_INIT_OPT_UC_ENB_MEM_PRIV	|	\
+					 AIE_PART_INIT_OPT_SET_L2_IRQ		|	\
+					 AIE_PART_INIT_OPT_HW_ERR_INT		|	\
+					 AIE_PART_INIT_OPT_HW_ERR_MASK		|	\
+					 AIE_PART_INIT_OPT_NMU_CONFIG)
 
 /**
  * struct aie_dma_bd_args - AIE DMA buffer descriptor information
