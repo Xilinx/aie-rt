@@ -1543,7 +1543,6 @@ void _XAie_LinuxIO_UtilCalculation(int SignalNum, siginfo_t *SignalInfo,
 	 * Stores the size of the Util array in bytes.
 	 */
 	PerfInst->UtilSize *= sizeof(XAie_Occupancy);
-
 	timer_delete(TimerID);
 }
 
@@ -1620,6 +1619,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 				 Loc.Row++) {
 			RC = XAie_CoreGetStatus(LinuxIOInst->DevInst, Loc,
 					&CoreStatus);
+			XAIE_DBG("Corestatus[%d, %d]: %d\n", Loc.Col, Loc.Row, CoreStatus);
 			if(XAie_GetField(CoreStatus, CoreMod->CoreSts->En.Lsb,
 				CoreMod->CoreSts->En.Mask) &&
 				_XAie_PmIsTileRequested(LinuxIOInst->DevInst,
@@ -1669,6 +1669,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 	}
 
 	PerfInst->UtilSize = Index;
+	XAIE_DBG("PerfInst->UtilSize set to %d\n", Index);
 
 	for(uint32_t UIndex = 0U; UIndex < PerfInst->UtilSize; UIndex++) {
 		for(uint8_t Cycle = 0U; Cycle < XAIE_PERF_CORE_NUM_CYCLES;
