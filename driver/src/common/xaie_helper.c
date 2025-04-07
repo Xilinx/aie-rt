@@ -1524,7 +1524,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			FirstBlockwriteProcessed = 0;
 		}
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
-			if((BuffSize + sizeof(XAie_Write32Hdr)) >
+			while((BuffSize + sizeof(XAie_Write32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1542,7 +1542,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
-			if((BuffSize + sizeof(XAie_MaskWrite32Hdr)) >
+			while((BuffSize + sizeof(XAie_MaskWrite32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1560,7 +1560,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
-			if((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
+			while((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1578,7 +1578,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
-			if((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
+			while((BuffSize + sizeof(XAie_MaskPoll32Hdr)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1691,7 +1691,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_NOOP)
 		{
-			if( (BuffSize + sizeof(XAie_NoOpHdr)) >
+			while( (BuffSize + sizeof(XAie_NoOpHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1710,7 +1710,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_PREEMPT)
 		{
-			if( (BuffSize + sizeof(XAie_PreemptHdr)) >
+			while( (BuffSize + sizeof(XAie_PreemptHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1729,7 +1729,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_LOADPDI)
 		{
-			if( (BuffSize + sizeof(XAie_LoadPdiHdr)) >
+			while( (BuffSize + sizeof(XAie_LoadPdiHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1748,7 +1748,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_LOAD_PM_START)
 		{
-			if( (BuffSize + sizeof(XAie_PmLoadHdr)) >
+			while( (BuffSize + sizeof(XAie_PmLoadHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1794,7 +1794,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
 		{
-			if( (BuffSize + sizeof(XAie_CreateScratchpadHdr)) >
+			while( (BuffSize + sizeof(XAie_CreateScratchpadHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1813,7 +1813,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
 		{
-			if((BuffSize + sizeof(XAie_UpdateStateHdr)) >
+			while((BuffSize + sizeof(XAie_UpdateStateHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1832,7 +1832,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_REG)
 		{
-			if((BuffSize + sizeof(XAie_UpdateRegHdr)) >
+			while((BuffSize + sizeof(XAie_UpdateRegHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1851,7 +1851,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_SCRATCH)
 		{
-			if( (BuffSize + sizeof(XAie_UpdateScratchHdr)) >
+			while( (BuffSize + sizeof(XAie_UpdateScratchHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -1880,7 +1880,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
 
-			if((BuffSize + sizeof(XAie_CustomOpHdr) +
+			while((BuffSize + sizeof(XAie_CustomOpHdr) +
 						Cmd->Size) > AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2015,7 +2015,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 	
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
-			if((BuffSize + sizeof(XAie_Write32Hdr_opt)) >
+			while((BuffSize + sizeof(XAie_Write32Hdr_opt)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2033,7 +2033,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
-			if((BuffSize + sizeof(XAie_MaskWrite32Hdr_opt)) >
+			while((BuffSize + sizeof(XAie_MaskWrite32Hdr_opt)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2051,7 +2051,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
-			if((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
+			while((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2069,7 +2069,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
-			if((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
+			while((BuffSize + sizeof(XAie_MaskPoll32Hdr_opt)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2155,7 +2155,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			 * Blockset gets converted to blockwrite. so check for
 			 * blockwrite size
 			 */
-			if((BuffSize + sizeof(XAie_BlockWrite32Hdr_opt) +
+			while((BuffSize + sizeof(XAie_BlockWrite32Hdr_opt) +
 					Cmd->Size * sizeof(u32)) >
 					AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
@@ -2177,7 +2177,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_NOOP)
 		{
-			if( (BuffSize + sizeof(XAie_NoOpHdr)) >
+			while( (BuffSize + sizeof(XAie_NoOpHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2196,7 +2196,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_PREEMPT)
 		{
-			if( (BuffSize + sizeof(XAie_PreemptHdr)) >
+			while( (BuffSize + sizeof(XAie_PreemptHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2215,7 +2215,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_LOADPDI)
 		{
-			if( (BuffSize + sizeof(XAie_LoadPdiHdr)) >
+			while( (BuffSize + sizeof(XAie_LoadPdiHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2234,7 +2234,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_LOAD_PM_START)
 		{
-			if( (BuffSize + sizeof(XAie_PmLoadHdr)) >
+			while( (BuffSize + sizeof(XAie_PmLoadHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2255,7 +2255,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
 		{
-			if( (BuffSize + sizeof(XAie_CreateScratchpadHdr)) >
+			while( (BuffSize + sizeof(XAie_CreateScratchpadHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2274,7 +2274,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
 		{
-			if((BuffSize + sizeof(XAie_UpdateStateHdr)) >
+			while((BuffSize + sizeof(XAie_UpdateStateHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2293,7 +2293,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_REG)
 		{
-			if((BuffSize + sizeof(XAie_UpdateRegHdr)) >
+			while((BuffSize + sizeof(XAie_UpdateRegHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2312,7 +2312,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_SCRATCH)
 		{
-			if( (BuffSize + sizeof(XAie_UpdateScratchHdr)) >
+			while( (BuffSize + sizeof(XAie_UpdateScratchHdr)) >
 					AllocatedBuffSize ) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
@@ -2365,7 +2365,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 
 			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
 
-			if((BuffSize + sizeof(XAie_CustomOpHdr_opt) +
+			while((BuffSize + sizeof(XAie_CustomOpHdr_opt) +
 						Cmd->Size) > AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						AllocatedBuffSize * 2U, BuffSize);
