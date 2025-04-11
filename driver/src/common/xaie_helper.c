@@ -1710,45 +1710,24 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr)
 {
-	AieRC RC;
-	u64 Tid;
-	XAie_TxnInst *TxnInst;
 	const XAie_Backend *Backend = DevInst->Backend;
+	AieRC result = XAIE_OK;
 
 	if(DevInst->TxnList.Next != NULL) {
-		Tid = Backend->Ops.GetTid();
-		TxnInst = _XAie_GetTxnInst(DevInst, Tid);
-		if(TxnInst == NULL) {
-			XAIE_DBG("Could not find transaction instance "
-					"associated with thread. Writing cmd "
-					"to register\n");
-			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-					Command, CmdWd0, CmdWd1, CmdStr);
-		}
-
-		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) {
-
-			if (TxnInst->NumCmds > 0U) {
-				/* Flush command buffer */
-				XAIE_DBG("Auto flushing contents of the transaction "
-						"buffer.\n");
-				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-				if(RC != XAIE_OK) {
-					XAIE_ERROR("Failed to flush cmd buffer\n");
-					return RC;
-				}
-				TxnInst->NumCmds = 0;
-			}
-			return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-					Command, CmdWd0, CmdWd1, CmdStr);
-		} else {
-			XAIE_ERROR("Cmd Write operation is not supported "
-					"when auto flush is disabled\n");
-			return XAIE_ERR;
-		}
+		/**
+		 * This function is only used in XAie_LoadElf() on AIESIM platform.
+		 * In the past the elf loading was done via XCLBIN (PDI) but not
+		 * via TXN binary. Hence this unwanted TXN implementation did not have
+		 * any side effects. But when elf loading is attempted via TXN flow
+		 * this needs to be made a NOOP else it fails. Hence Making
+		 * XAIe_CmdWrite no-op for transaction mode.
+		 **/
+		result = XAIE_OK;
+	} else {
+		result = Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
+				Command, CmdWd0, CmdWd1, CmdStr);
 	}
-	return Backend->Ops.CmdWrite((void *)(DevInst->IOInst), Col, Row,
-			Command, CmdWd0, CmdWd1, CmdStr);
+	return result;
 }
 
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
