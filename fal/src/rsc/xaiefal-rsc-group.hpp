@@ -407,19 +407,27 @@ namespace xaiefal {
 			uint32_t ShimModNumRscs = 0, CoreModNumRscs = 0;
 			uint32_t CoreMemModNumRscs = 0, MemModNumRscs = 0;
 			uint32_t NumTiles = 0, NumCoreTiles = 0, NumShimTiles = 0;
-			uint32_t i;
+			uint32_t i, MdmPresent = 0;
 
 			if (RscType != XAIE_RSC_TYPE_ANY && RscType >= XAIE_MAXRSC) {
 				throw std::invalid_argument("Invalid Rsc Type to get rsc stat");
+			}
+
+			if (XAie_IsUcModulePresent(DevInst, DevInst->ShimRow)) {
+				MdmPresent = 1;
+			} else {
+				MdmPresent = 0;
 			}
 
 			// Get number of resources per module
 			if (Mod == static_cast<XAie_ModuleType>(XAIE_MOD_ANY) ||
 					Mod == XAIE_PL_MOD) {
 				if (RscType == static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)) {
-					ShimModNumRscs = MaxNumRscs - 1;
+					ShimModNumRscs = MdmPresent ? MaxNumRscs - 1 : MaxNumRscs - 2;
 				} else if (RscType == XAIE_PCEVENT) {
 					ShimModNumRscs = 0;
+				} else if (RscType == XAIE_MDMPERFCNT) {
+					ShimModNumRscs = MdmPresent;
 				} else {
 					ShimModNumRscs = 1;
 				}
@@ -427,17 +435,23 @@ namespace xaiefal {
 			if (Mod == static_cast<XAie_ModuleType>(XAIE_MOD_ANY) ||
 					Mod == XAIE_CORE_MOD) {
 				if (RscType == static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)) {
-					CoreModNumRscs = MaxNumRscs;
+					CoreModNumRscs = MaxNumRscs - 1;
+				} else if (RscType == XAIE_MDMPERFCNT) {
+					CoreModNumRscs = 0;
 				} else {
 					CoreModNumRscs = 1;
 				}
 			}
+
 			if (Mod == static_cast<XAie_ModuleType>(XAIE_MOD_ANY) ||
 					Mod == XAIE_MEM_MOD) {
 				if (RscType == static_cast<XAieRscType>(XAIE_RSC_TYPE_ANY)) {
-					MemModNumRscs = MaxNumRscs - 1;
-					CoreMemModNumRscs = MaxNumRscs - 2;
+					MemModNumRscs = MaxNumRscs - 2;
+					CoreMemModNumRscs = MaxNumRscs - 3;
 				} else if (RscType == XAIE_PCEVENT) {
+					MemModNumRscs = 0;
+					CoreMemModNumRscs = 0;
+				} else if (RscType == XAIE_MDMPERFCNT) {
 					MemModNumRscs = 0;
 					CoreMemModNumRscs = 0;
 				} else {
@@ -492,6 +506,11 @@ namespace xaiefal {
 						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT)) {
 							continue;
 						}
+						if (Rsc == static_cast<uint8_t>(XAIE_MDMPERFCNT)) {
+							if (MdmPresent == 0) {
+								continue;
+							}
+						}
 						RscsStats[i].Loc = L;
 						RscsStats[i].Mod = XAIE_PL_MOD;
 						RscsStats[i].RscType = static_cast<XAieRscType>(Rsc);
@@ -509,6 +528,9 @@ namespace xaiefal {
 					} else if (CoreModNumRscs > 1) {
 						for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
 							Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
+							if (Rsc == static_cast<uint8_t>(XAIE_MDMPERFCNT)) {
+								continue;
+							}
 							RscsStats[i].Loc = L;
 							RscsStats[i].Mod = XAIE_CORE_MOD;
 							RscsStats[i].RscType = static_cast<XAieRscType>(Rsc);
@@ -532,7 +554,8 @@ namespace xaiefal {
 					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
 						Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
 						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT) ||
-							Rsc == static_cast<uint8_t>(XAIE_SSEVENT)) {
+							Rsc == static_cast<uint8_t>(XAIE_SSEVENT) ||
+							Rsc == static_cast<uint8_t>(XAIE_MDMPERFCNT)) {
 							continue;
 						}
 						RscsStats[i].Loc = L;
@@ -556,7 +579,8 @@ namespace xaiefal {
 					}
 					for (uint8_t Rsc = static_cast<uint8_t>(XAIE_PERFCOUNT);
 						Rsc < static_cast<uint8_t>(XAIE_MAXRSC); Rsc++) {
-						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT)) {
+						if (Rsc == static_cast<uint8_t>(XAIE_PCEVENT) ||
+							Rsc == static_cast<uint8_t>(XAIE_MDMPERFCNT)) {
 							continue;
 						}
 						RscsStats[i].Loc = L;
