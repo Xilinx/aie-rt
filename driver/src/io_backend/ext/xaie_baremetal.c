@@ -559,9 +559,9 @@ static AieRC _XAie_BaremetalIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 						 XAie_PartInitOpts *Opts)
 {
+	AieRC RC = XAIE_OK;
 #ifdef XAIE_PROD
 	u32 OptFlags;
-	AieRC RC;
 
 	if(Opts != NULL) {
 		OptFlags = Opts->InitOpts;
@@ -611,17 +611,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
 				    AIE_OPS_SET_L2_CTRL_NPI_INTR);
 
-
-	/*
-	 * This is a temporary workaround to unblock rel-v2023.1 and make
-	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
-	 */
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-					    DevInst->NumCols,
-					    AIE_OPS_DIS_COL_CLK_BUFF);
-	}
-
 	/* Enable only the tiles requested in Opts parameter */
 	if(Opts != NULL) {
 		XAie_BackendTilesArray TilesArray;
@@ -637,10 +626,29 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 		}
 	}
 
-	return RC;
-#else
-	return XAIE_OK;
+	/*
+	 * This is a temporary workaround to unblock rel-v2023.1 and make
+	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
+	 */
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+
+		for(u32 C = 0; C < DevInst->NumCols; C++) {
+			XAie_LocType Loc;
+			u32 ColClockStatus;
+
+			Loc = XAie_TileLoc(C, 1);
+			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
+			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
+				       ColClockStatus, DevInst->NumRows - 1);
+		}
+	}
+
 #endif
+	return RC;
 }
 
 /*****************************************************************************/
@@ -666,8 +674,9 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 *******************************************************************************/
 static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 {
+	AieRC RC = XAIE_OK;
+
 #if defined(XAIE_PROD)
-	AieRC RC;
 
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
 				    DevInst->NumCols, AIE_OPS_COL_RST);
@@ -699,17 +708,23 @@ static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 		return RC;
 	}
 
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols,
-				    AIE_OPS_DIS_COL_CLK_BUFF);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Column Gating failed!\n");
+
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
+		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+	} else {
+		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+					    DevInst->NumCols,
+					    AIE_OPS_DIS_COL_CLK_BUFF);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Column Gating failed!\n");
+		}
 	}
+#endif
 
 	return RC;
-#else
-	return XAIE_OK;
-#endif
 }
 
 AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,

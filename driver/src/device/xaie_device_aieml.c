@@ -277,7 +277,6 @@ static AieRC _XAieMl_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 	XAie_LocType ShimLoc = XAie_TileLoc(Loc.Col, 0U);
 	const XAie_PlIfMod *PlIfMod;
 	const XAie_ShimClkBufCntr *ClkBufCntr;
-	const XAie_Backend *Backend = DevInst->Backend;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, ShimLoc);
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;

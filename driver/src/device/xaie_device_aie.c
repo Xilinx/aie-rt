@@ -62,8 +62,6 @@ static AieRC _XAie_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 	u64 RegAddr;
 	const XAie_PlIfMod *PlIfMod;
 	const XAie_ShimClkBufCntr *ClkBufCntr;
-	const XAie_Backend *Backend = DevInst->Backend;
-
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
