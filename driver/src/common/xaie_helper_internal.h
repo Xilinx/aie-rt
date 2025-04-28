@@ -41,4 +41,5 @@ AieRC _XAie_DestroyPartitionFdList(XAie_DevInst *DevInst);
 AieRC _XAie_PrintPartitionList(XAie_DevInst *DevInst);
 int _XAie_MatchPartitionList(XAie_DevInst *DevInst, u32 PartitionId);
 AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv);
+AieRC _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable);
 #endif
