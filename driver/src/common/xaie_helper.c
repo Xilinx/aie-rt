@@ -1940,6 +1940,81 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	return (u8 *)TxnPtr;
 }
 
+static inline void _XAie_AppendBWToBlockwriteBuff_opt(XAie_TxnCmd *Cmd, u8 FirstBlockwriteProcessed, u32* BlockwriteBuffer)
+{
+	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)BlockwriteBuffer;
+	u32* Payload;
+	u32 memcpy_size = Cmd->Size * (u32)sizeof(u32);
+	#if UINTPTR_MAX == U64_MAX  // 64-bit system
+	if (Cmd->DataPtr > UINTPTR_MAX) {
+		XAIE_ERROR("DataPtr cannot be represented in 64bit system\n");
+		return;
+	}
+	#endif
+	if(FirstBlockwriteProcessed == 0)
+	{
+		u32 payload_offset = sizeof(XAie_BlockWrite32Hdr_opt) / 4;
+		Payload = (void *)(BlockwriteBuffer + payload_offset);
+
+		u32 RegOff = Cmd->RegOff & UINT_MAX;
+		Hdr->RegOff = RegOff;
+		Hdr->Size = (u32)sizeof(XAie_BlockWrite32Hdr_opt) + Cmd->Size * (u32)sizeof(u32);
+		Hdr->OpHdr.Op = (u8)XAIE_IO_BLOCKWRITE;
+
+		memcpy((void*)Payload, (void const*)(uintptr_t)Cmd->DataPtr, memcpy_size);
+	}
+	else
+	{
+		Payload = (void *)(BlockwriteBuffer + (Hdr->Size / 4));
+		memcpy((void*)Payload, (void const*)(uintptr_t)Cmd->DataPtr, memcpy_size);
+		Hdr->Size +=Cmd->Size * (u32)sizeof(u32);
+	}
+}
+
+static inline u32 _XAie_AppendBWToTxnBuff_opt(u32* BlockwriteBuffer,u8* TxnPtr, u32 PatchCmdCount)
+{
+	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)BlockwriteBuffer;
+	u32 Size = 0,PatchCmdSize=0;
+	u8* TempPtr = NULL;
+
+	if(PatchCmdCount != 0){
+
+		PatchCmdSize = ((PatchCmdCount) * ( sizeof(patch_op_t) + sizeof(XAie_CustomOpHdr_opt) )) & UINT_MAX;
+		XAIE_DBG("_XAie_AppendBWToTxnBuff:PatchCmdSize = %d\n", PatchCmdSize);
+
+		TempPtr = calloc(1, PatchCmdSize);
+		if(TempPtr == NULL) {
+			XAIE_ERROR("Calloc failed\n");
+			return 0;
+		}
+
+		TxnPtr -= PatchCmdSize;
+		memcpy(TempPtr, TxnPtr, PatchCmdSize);
+		memset(TxnPtr, 0, PatchCmdSize);
+	}
+	else
+	{
+		XAIE_DBG("PatchCmdCount is 0\n");
+	}
+
+	memcpy((void*)TxnPtr, (const void *)(uintptr_t)BlockwriteBuffer, Hdr->Size);
+	Size = Hdr->Size;
+	memset(BlockwriteBuffer, 0, Size);
+
+	if(PatchCmdCount != 0)
+	{
+		TxnPtr += Size;
+		memcpy(TxnPtr, TempPtr, PatchCmdSize);
+		free(TempPtr);
+	}
+	else
+	{
+		XAIE_DBG("PatchCmdCount is 0\n");
+	}
+
+    return Size;
+}
+
 u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		u32 Flags)
 {
@@ -1996,7 +2071,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		    (Cmd->Opcode != XAIE_IO_CUSTOM_OP_DDR_PATCH) &&
 		    (FirstBlockwriteProcessed != 0) )
 		{
-			XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)BlockwriteBuffer;
+			XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)BlockwriteBuffer;
 			while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
 				TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 				(AllocatedBuffSize) * 2U, BuffSize);
@@ -2009,7 +2084,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr += BuffSize;
 			}
 			BuffSize += Hdr->Size;
-			TxnPtr += _XAie_AppendBWToTxnBuff(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+			TxnPtr += _XAie_AppendBWToTxnBuff_opt(BlockwriteBuffer,TxnPtr,PatchCmdCount);
 			PatchCmdCount = 0;
 			FirstBlockwriteProcessed = 0;
 		}
@@ -2093,7 +2168,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			 * In that case we should keep reallocating till the new
 			 * buffer size if big enough to hold existing + current opcode.
 			 */
-			BWBuffSize = ((XAie_BlockWrite32Hdr*)(uintptr_t)BlockwriteBuffer)->Size;
+			BWBuffSize = ((XAie_BlockWrite32Hdr_opt*)(uintptr_t)BlockwriteBuffer)->Size;
 			if(FirstBlockwriteProcessed != 0)
 			{
 			 	if ( Cmd->RegOff != RegOffLastBlockWrite)
@@ -2110,7 +2185,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 						TxnPtr += BuffSize;
 					}
 					BuffSize += BWBuffSize;
-					TxnPtr += _XAie_AppendBWToTxnBuff(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+					TxnPtr += _XAie_AppendBWToTxnBuff_opt(BlockwriteBuffer,TxnPtr,PatchCmdCount);
 					PatchCmdCount = 0;
 					FirstBlockwriteProcessed = 0;
 				}
@@ -2129,10 +2204,10 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			} else {
 				/**
 				 *  When BW Buffer is empty which is represented by FirstBlockwriteProcessed == 0
-				 *  BWBuffSize should be initialized to size of XAie_BlockWrite32Hdr struct in bytes.
+				 *  BWBuffSize should be initialized to size of XAie_BlockWrite32Hdr_opt struct in bytes.
 				 *  Since the Cmd->Size field of Cmd from TmpInst->CmdBuf only considers payload size.
 				 */
-				BWBuffSize = sizeof(XAie_BlockWrite32Hdr);
+				BWBuffSize = sizeof(XAie_BlockWrite32Hdr_opt);
 			}
 
 			while( (Cmd->Size * 4) + BWBuffSize > BWBuffAllocatedSize)
@@ -2147,7 +2222,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				 BWBuffAllocatedSize *= 2U;
 			}
 			RegOffLastBlockWrite = (u64) ( Cmd->RegOff + (Cmd->Size*4) );
-			_XAie_AppendBWToBlockwriteBuff(DevInst, Cmd,FirstBlockwriteProcessed,BlockwriteBuffer);
+			_XAie_AppendBWToBlockwriteBuff_opt(Cmd, FirstBlockwriteProcessed, BlockwriteBuffer);
 			FirstBlockwriteProcessed = 1;
 		}
 		else if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
@@ -2388,7 +2463,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 	}
 	if(FirstBlockwriteProcessed != 0)
 	{	
-		XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)BlockwriteBuffer;
+		XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)BlockwriteBuffer;
 		while((BuffSize + Hdr->Size) > AllocatedBuffSize) {
 			TxnPtr = _XAie_ReallocTxnBuf_MemInit(TxnPtr - BuffSize,
 						(AllocatedBuffSize) * 2U, BuffSize);
@@ -2401,7 +2476,7 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			TxnPtr += BuffSize;
 		}
 		BuffSize += Hdr->Size;
-		TxnPtr += _XAie_AppendBWToTxnBuff(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+		TxnPtr += _XAie_AppendBWToTxnBuff_opt(BlockwriteBuffer,TxnPtr,PatchCmdCount);
 	}
     
 	u32 four_byte_aligned_BuffSize = ((BuffSize % 4U) != 0U) ? ((BuffSize / 4U + 1U)*4) : BuffSize;
