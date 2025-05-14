@@ -1330,6 +1330,26 @@ static inline void _XAie_AppendCustomOp_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	}
 }
 
+static inline void _XAie_AppendDDRPatch_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
+{
+	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr_opt);
+	XAie_CustomOpHdr_opt *Hdr = (XAie_CustomOpHdr_opt*)(uintptr_t)TxnPtr;
+
+	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
+	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
+#if UINTPTR_MAX == U64_MAX  // 64-bit system
+    if (Cmd->DataPtr > UINTPTR_MAX) {
+    	XAIE_ERROR("DataPtr cannot be represented in 64bit system\n");
+    	return ;
+    }
+#endif
+	patch_op_t *PatchOp = (patch_op_t *)(uintptr_t)Cmd->DataPtr;
+	patch_op_opt_t *PatchOpOpt = (patch_op_opt_t *)(uintptr_t)Payload;
+	PatchOpOpt->regaddr = (uint32_t)(PatchOp->regaddr & 0xFFFFFFFF);
+	PatchOpOpt->argidx = (uint8_t)(PatchOp->argidx & 0xFF);
+	PatchOpOpt->argplus = PatchOp->argplus;
+}
+
 static u8* _XAie_ReallocTxnBuf_MemInit(u8 *TxnPtr, u32 NewSize, u32 Buffsize)
 {
 	u8 *Tmp;
@@ -2453,7 +2473,12 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr += BuffSize;
 			}
 			
-			_XAie_AppendCustomOp_opt(Cmd, TxnPtr);
+			if(Cmd->Opcode != XAIE_IO_CUSTOM_OP_DDR_PATCH){
+				_XAie_AppendCustomOp_opt(Cmd, TxnPtr);
+			}
+			else{
+				_XAie_AppendDDRPatch_opt(Cmd, TxnPtr);
+			}
 			TxnPtr += sizeof(XAie_CustomOpHdr_opt) +
 				Cmd->Size * sizeof(u8);
 			BuffSize += (u32)sizeof(XAie_CustomOpHdr_opt) +
