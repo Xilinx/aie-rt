@@ -1084,7 +1084,7 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 	XAie_LinuxMem *LinuxMemInst;
 	AieRC RC;
 
-	LinuxMemInst = (XAie_LinuxMem *)malloc(sizeof(*LinuxMemInst));
+	LinuxMemInst = (XAie_LinuxMem *) malloc(sizeof(*LinuxMemInst));
 	if(LinuxMemInst == NULL) {
 		XAIE_ERROR("Memory attachment failed, Memory allocation failed\n");
 		return XAIE_ERR;
@@ -1988,6 +1988,135 @@ static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)
 	return XAIE_OK;
 }
 
+static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)DevInst->IOInst;
+	XAie_MemInst *MemInst;
+	XAie_LinuxMem *LinuxMemInst;
+	void* Buf;
+	AieRC RC;
+	int Fd;
+
+	MemInst = (XAie_MemInst *)malloc(sizeof(XAie_MemInst));
+	if(MemInst == NULL) {
+		return NULL;
+	}
+
+	Fd = ioctl(LinuxIOInst->PartitionFd, AIE_DMA_MEM_ALLOCATE_IOCTL,
+		    &Size);
+	if(Fd < 0) {
+		XAIE_ERROR("Memory Allocation Failed");
+		free(MemInst);
+		return NULL;
+	}
+
+	MemInst->Size = Size;
+	MemInst->DevInst = DevInst;
+	MemInst->Cache = Cache;
+
+	Buf = mmap(NULL, MemInst->Size, PROT_READ | PROT_WRITE, MAP_SHARED,
+		   Fd, 0);
+	if(Buf == MAP_FAILED) {
+		XAIE_ERROR("Memory Mapping Failed!: %d\n", errno);
+		free(MemInst);
+		return NULL;
+	}
+
+	MemInst->VAddr = Buf;
+	MemInst->DevAddr = 0x0;
+
+	LinuxMemInst = (XAie_LinuxMem *) malloc(sizeof(XAie_LinuxMem));
+	LinuxMemInst->BufferFd = Fd;
+	MemInst->BackendHandle = (void *) LinuxMemInst;
+
+	RC = _XAie_LinuxMemAttach((XAie_LinuxIO *)DevInst->IOInst,
+				  LinuxMemInst);
+	if(RC != XAIE_OK) {
+		free(LinuxMemInst);
+		free(MemInst);
+		return NULL;
+	}
+
+	return MemInst;
+}
+
+static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
+{
+	XAie_LinuxMem* LinuxMemInst = (XAie_LinuxMem *)MemInst->BackendHandle;
+	XAie_LinuxIO* LinuxIOInst = (XAie_LinuxIO *)MemInst->DevInst->IOInst;
+	int Ret;
+
+	Ret = _XAie_LinuxMemDetach(LinuxIOInst, LinuxMemInst);
+	if(Ret < 0) {
+		free(MemInst->BackendHandle);
+		free(MemInst);
+		return XAIE_ERR;
+	}
+
+	Ret = munmap(MemInst->VAddr, MemInst->Size);
+	if (Ret < 0) {
+		free(MemInst->BackendHandle);
+		free(MemInst);
+		return XAIE_ERR;
+	}
+
+	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_DMA_MEM_FREE_IOCTL,
+		    &LinuxMemInst->BufferFd);
+	if (Ret < 0) {
+		free(MemInst->BackendHandle);
+		free(MemInst);
+		return XAIE_ERR;
+	}
+
+	free(MemInst->BackendHandle);
+	free(MemInst);
+	MemInst = XAIE_NULL;
+
+	return XAIE_OK;
+}
+
+static AieRC XAie_LinuxMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	struct dma_buf_sync Sync;
+	XAie_LinuxMem *LinuxMem;
+	int Ret;
+
+	LinuxMem = (XAie_LinuxMem *) MemInst->BackendHandle;
+	if (LinuxMem == XAIE_NULL) {
+		return XAIE_ERR;
+	}
+
+	Sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_RW;
+	Ret = ioctl(LinuxMem->BufferFd, DMA_BUF_IOCTL_SYNC, &Sync);
+	if(Ret < 0) {
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
+static AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
+{
+	struct dma_buf_sync Sync;
+	XAie_LinuxMem *LinuxMem;
+	int Ret;
+
+	LinuxMem = (XAie_LinuxMem *) MemInst->BackendHandle;
+	if (LinuxMem == XAIE_NULL) {
+		return XAIE_ERR;
+	}
+
+	Sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_RW;
+
+	Ret = ioctl(LinuxMem->BufferFd, DMA_BUF_IOCTL_SYNC, &Sync);
+	if(Ret < 0) {
+		return XAIE_ERR;
+	}
+
+	return XAIE_OK;
+}
+
 #else
 
 static AieRC XAie_LinuxIO_Finish(void *IOInst)
@@ -2083,6 +2212,38 @@ static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
+static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	(void) DevInst;
+	(void) Size;
+	(void) Cache;
+
+	return XAIE_NULL;
+}
+
+static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
+{
+	(void) MemInst;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	(void) MemInst;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
+{
+	(void) MemInst;
+
+	return XAIE_ERR;
+}
+
+
 static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
 	(void)MemInst;
@@ -2139,33 +2300,6 @@ static AieRC XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 	(void)CmdWd1;
 	(void)CmdStr;
 
-	return XAIE_ERR;
-}
-
-static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst *DevInst, u64 Size,
-		XAie_MemCacheProp Cache)
-{
-	(void)DevInst;
-	(void)Size;
-	(void)Cache;
-	return NULL;
-}
-
-static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
-{
-	(void)MemInst;
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxMemSyncForCPU(XAie_MemInst *MemInst)
-{
-	(void)MemInst;
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
-{
-	(void)MemInst;
 	return XAIE_ERR;
 }
 

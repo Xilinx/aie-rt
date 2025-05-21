@@ -758,17 +758,23 @@ struct aie_rsc_user_stat_array {
 					     struct aie_tiles_array)
 
 /**
- * DOC: AIE_PERFORMANCE_UTILIZATION_IOCTL - capture kernel utilization
+ * DOC: AIE_DMA_MEM_ALLOCATE_IOCTL - allocated dma memory
  *
- * This ioctl is used to capture kernel utilization of the core tiles in the
- * partition if range is not mentioned in the performance instance structure by
- * the user. If range is passed by the user, kernel utilization is captured for
- * the core tiles in the range. The utilization is captured over period
- * mentioned  by the user in timeinterval_ms.
+ * This ioctl is used to allocate physically contiguous memory for DMA
+ * transactions and export it as a dma-buf which is passed to the userspace as
+ * a file descriptor. The file descriptor is memory mapped into the process's address space.
  */
+#define AIE_DMA_MEM_ALLOCATE_IOCTL	_IOW(AIE_IOCTL_BASE, 0x1c, \
+					     __kernel_size_t)
 
-#define AIE_PERFORMANCE_UTILIZATION_IOCTL _IOW(AIE_IOCTL_BASE, 0x1c, \
-						struct aie_perfinst_args)
+/**
+ * DOC: AIE_DMA_MEM_FREE_IOCTL - free dma memory
+ *
+ * This ioctl is used to de-allocate physically contiguous memory for DMA
+ * transactions and unexport it as a dma-buf which is passed to the userspace as
+ * a file descriptor.
+ */
+#define AIE_DMA_MEM_FREE_IOCTL		_IOW(AIE_IOCTL_BASE, 0x1d, int)
 
 /**
  * DOC: AIE_UPDATE_SHIMDMA_DMABUF_BD_ADDR_IOCTL - updates the SHIM DMA address
