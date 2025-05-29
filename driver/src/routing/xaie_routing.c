@@ -1788,14 +1788,17 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 		source.Col, source.Row);
 	if (_XAie_isShimTile(routingInstance, source)) {
 		if ((DevInst->Backend->Type == XAIE_IO_BACKEND_BAREMETAL) ||
-				(DevInst->Backend->Type == XAIE_IO_BACKEND_SOCKET))
-			RC |= XAie_DmaSetAddrLen(&SourceBufferDescriptor,
-						(u64)(uintptr_t)SourceObject, data_size);
-		else
-			RC |= XAie_DmaSetAddrOffsetLen(&SourceBufferDescriptor,
+				(DevInst->Backend->Type == XAIE_IO_BACKEND_SOCKET)) {
+			XAie_MemInst* srcMemInst = (XAie_MemInst*)SourceObject;
+			u64 sourceObjectDevAddr = XAie_MemGetDevAddr(srcMemInst);
+			RC |= (u32)XAie_DmaSetAddrLen(&SourceBufferDescriptor,
+						sourceObjectDevAddr, data_size);
+		} else {
+			RC |= (u32)XAie_DmaSetAddrOffsetLen(&SourceBufferDescriptor,
 						(XAie_MemInst*)SourceObject, 0x0, data_size);
+		}
 	} else {
-		RC |= XAie_DmaSetAddrLen(&SourceBufferDescriptor,
+		RC |= (u32)XAie_DmaSetAddrLen(&SourceBufferDescriptor,
 						(u64)(uintptr_t)SourceObject, data_size);
 	}
 
@@ -1817,14 +1820,17 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 		destination.Col, destination.Row);
 	if (_XAie_isShimTile(routingInstance, destination)) {
 		if ((DevInst->Backend->Type == XAIE_IO_BACKEND_BAREMETAL) ||
-						(DevInst->Backend->Type == XAIE_IO_BACKEND_SOCKET))
-			RC |= XAie_DmaSetAddrLen(&DestBufferDescriptor,
-						(u64)(uintptr_t)DestinationObject, data_size);
-		else
-			RC |= XAie_DmaSetAddrOffsetLen(&DestBufferDescriptor,
+				(DevInst->Backend->Type == XAIE_IO_BACKEND_SOCKET)) {
+			XAie_MemInst* destMemInst = (XAie_MemInst*)DestinationObject;
+			u64 destObjectDevAddr = XAie_MemGetDevAddr(destMemInst);
+			RC |= (u32)XAie_DmaSetAddrLen(&DestBufferDescriptor,
+						destObjectDevAddr, data_size);
+		} else {
+			RC |= (u32)XAie_DmaSetAddrOffsetLen(&DestBufferDescriptor,
 						(XAie_MemInst*)DestinationObject, 0x0, data_size);
+		}
 	} else {
-		RC |= XAie_DmaSetAddrLen(&DestBufferDescriptor,
+		RC |= (u32)XAie_DmaSetAddrLen(&DestBufferDescriptor,
 						(u64)(uintptr_t)DestinationObject, data_size);
 	}
 	RC |= XAie_DmaEnableBd(&DestBufferDescriptor);
@@ -1963,6 +1969,49 @@ AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, 
 	XAIE_DBG("\n [COMMAND] XAie_DmaChannelEnable -> Data routed successfully\n");
 	return XAIE_OK;
 }
+
+/*****************************************************************************/
+/*
+ * @brief	Moves data between the source and destination tile.
+ *
+ * @param	routingInstance: Routing Instance
+ * @param 	source: Source Tile
+ * @param 	SourceObject: Source XAie_MemInstance
+ * @param 	data_size: Data size
+ * @param 	DestinationObject: Destination Address
+ * @param 	destination: Destination Tile
+ * @return	XAIE_OK if successful.
+ *
+ * @note		None.
+ *
+ ******************************************************************************/
+AieRC XAie_MoveDataExternal2Aie(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject,
+			u32 data_size, u32 DestinationObject, XAie_LocType destination) {
+	return XAie_MoveData(routingInstance, source, (void*)SourceObject,
+			data_size, (void*)(uintptr_t)DestinationObject, destination);
+}
+
+/*****************************************************************************/
+/*
+ * @brief	Moves data between the source and destination tile.
+ *
+ * @param	routingInstance: Routing Instance
+ * @param	source: Source Tile
+ * @param	SourceObject: Source Address
+ * @param	data_size: Data size
+ * @param	DestinationObject: Destination XAie_MemInstance
+ * @param	destination: Destination Tile
+ * @return	XAIE_OK if successful.
+ *
+ * @note		None.
+ *
+ ******************************************************************************/
+AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocType source, u32 SourceObject,
+			u32 data_size, XAie_MemInst* DestinationObject, XAie_LocType destination) {
+	return XAie_MoveData(routingInstance, source, (void*)(uintptr_t)SourceObject,
+			data_size, (void*)DestinationObject, destination);
+}
+
 
 /*****************************************************************************/
 /*

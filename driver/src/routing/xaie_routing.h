@@ -146,6 +146,10 @@ AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* RoutingInstance, 
 AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, XAie_CoreConstraint* constraint, u8 row, u8 col) ;
 AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, void* SourceObject, u32 data_size, void* DestinationObject,
               XAie_LocType destination);
+AieRC XAie_MoveDataExternal2Aie(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject,
+			u32 data_size, u32 DestinationObject, XAie_LocType destination);
+AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocType source, u32 SourceObject,
+			u32 data_size, XAie_MemInst* DestinationObject, XAie_LocType destination);
 
 AieRC XAie_Route(XAie_RoutingInstance *routingInstance,  XAie_RouteConstraints* RouteConstraints, XAie_LocType source, XAie_LocType destination);
 AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination, bool ShouldModifyCoreConfig);
