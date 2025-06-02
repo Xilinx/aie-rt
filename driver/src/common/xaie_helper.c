@@ -1335,6 +1335,10 @@ static inline void _XAie_AppendDDRPatch_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr_opt);
 	XAie_CustomOpHdr_opt *Hdr = (XAie_CustomOpHdr_opt*)(uintptr_t)TxnPtr;
 
+	// Modify the cmd size to align with version 1.0
+	Cmd->Size = (u32)sizeof(patch_op_opt_t);
+
+	// Write the custom header into Txn Ptr with correct size.
 	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
 	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
 #if UINTPTR_MAX == U64_MAX  // 64-bit system
@@ -1343,6 +1347,9 @@ static inline void _XAie_AppendDDRPatch_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
     	return ;
     }
 #endif
+
+	// Map the patch_op_t fields to patch_op_opt_t and
+	// Write patch_op_opt_t into txn ptr.
 	patch_op_t *PatchOp = (patch_op_t *)(uintptr_t)Cmd->DataPtr;
 	patch_op_opt_t *PatchOpOpt = (patch_op_opt_t *)(uintptr_t)Payload;
 	PatchOpOpt->regaddr = (uint32_t)(PatchOp->regaddr & 0xFFFFFFFF);
