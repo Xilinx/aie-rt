@@ -355,7 +355,7 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		return NULL;
 	}
 
-	MemInst->VAddr = (void *)malloc(Size);
+	MemInst->VAddr = (void *)aligned_alloc(16, Size);
 	if(MemInst->VAddr == NULL) {
 		XAIE_ERROR("malloc failed\n");
 		free(MemInst);
