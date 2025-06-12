@@ -619,7 +619,7 @@ typedef struct {
 	uint8_t UsageType;
 	uint16_t padding;
 	uint32_t Size;
-	uint64_t ScratchOffset;
+	uint64_t DdrAddr;
 } XAie_CreateScratchpadHdr;
 
 typedef enum {
