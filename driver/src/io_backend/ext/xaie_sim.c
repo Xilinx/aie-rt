@@ -1062,6 +1062,8 @@ const XAie_Backend SimBackend =
 	.Ops.GetAttr = XAie_SimIOGetAttr,
 	.Ops.SetAttr = XAie_SimIOSetAttr,
 	.Ops.AddressPatching = NULL,
+	.Ops.SetPadInteger = NULL,
+	.Ops.SetPadString = NULL,
 };
 
 /** @} */
