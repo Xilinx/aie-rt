@@ -2192,7 +2192,9 @@ const XAie_Backend LinuxBackend =
 	.Ops.GetPartFd = XAie_LinuxGetPartFd,
 	.Ops.SubmitTxn = XAie_LinuxSubmitTxn,
 	.Ops.GetShimDmaBdConfig = XAie_LinuxIO_GetShimDmaBdConfig,
-	.Ops.GetPartitionList = XAie_LinuxIO_GetPartitionList
+	.Ops.GetPartitionList = XAie_LinuxIO_GetPartitionList,
+	.Ops.SetPadInteger = NULL,
+	.Ops.SetPadString = NULL,
 };
 
 /** @} */

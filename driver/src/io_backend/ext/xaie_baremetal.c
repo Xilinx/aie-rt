@@ -1122,6 +1122,8 @@ const XAie_Backend BaremetalBackend =
 	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 	.Ops.AddressPatching = NULL,
+	.Ops.SetPadInteger = NULL,
+	.Ops.SetPadString = NULL,
 };
 
 /** @} */

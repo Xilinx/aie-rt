@@ -752,6 +752,8 @@ const XAie_Backend SocketBackend =
 	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 	.Ops.AddressPatching = NULL,
+	.Ops.SetPadInteger = NULL,
+	.Ops.SetPadString = NULL,
 };
 
 /** @} */

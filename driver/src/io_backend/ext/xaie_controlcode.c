@@ -936,6 +936,7 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 		return XAIE_ERR;
 	}
 	printf("Generating: %s\n", FileName);
+	fprintf(ControlCodeInst->ControlCodefp, ".partition\t %dcolumn\n",DevInst->NumCols);
 	fprintf(ControlCodeInst->ControlCodefp, ";\n");
 	fprintf(ControlCodeInst->ControlCodefp, ";text\n");
 	fprintf(ControlCodeInst->ControlCodefp, ";\n");
@@ -1184,6 +1185,76 @@ AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad)
         }
 }
 
+/*****************************************************************************/
+/**
+*
+* This function is used to add preempt opcode to asm file.
+*
+* @param        IOInst: IO instance pointer
+* @param        BuffName: Name of Save/Restore Buffer
+* @param        BuffSize: Size of Save/Restore Buffer
+*                         eg .setpad ctrl_pkt, 0x1000
+* @return       XAIE_OK or XAIE_ERR.
+*
+*******************************************************************************/
+static AieRC XAie_ControlCodeIO_SetPadInteger(void *IOInst, char* BuffName, u32 BuffSize)
+{
+    XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+
+    if(BuffName == NULL) {
+        XAIE_ERROR("Buffer name cannot be NULL\n");
+        return XAIE_ERR;
+    }
+    if(BuffSize == 0) {
+        XAIE_ERROR("Buffer size cannot be zero\n");
+        return XAIE_ERR;
+    }
+    if(ControlCodeInst->ControlCodefp != NULL) {
+        fprintf(ControlCodeInst->ControlCodefp, ".setpad\t %s, 0x%x\n",BuffName, BuffSize);
+        ControlCodeInst->CombineCommands = 0;
+        return XAIE_OK;
+    } else {
+        XAIE_ERROR("Control code file pointer is NULL\n");
+        return XAIE_ERR;
+    }
+}
+
+/*****************************************************************************/
+/**
+*
+* This function is used to add preempt opcode to asm file.
+*
+* @param        IOInst: IO instance pointer
+* @param        BuffName: Name of Save/Restore Buffer
+* @param        BuffBlobPath: Path to the Buffer Blob .bin file
+*                             eg .setpad ctrl_pkt, ctrlpkt.bin
+* @return       XAIE_OK or XAIE_ERR.
+*
+*******************************************************************************/
+static AieRC XAie_ControlCodeIO_SetPadString(void *IOInst, char* BuffName, char* BuffBlobPath)
+{
+    XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)IOInst;
+
+    if(BuffName == NULL) {
+        XAIE_ERROR("Buffer name cannot be NULL\n");
+        return XAIE_ERR;
+    }
+    if(BuffBlobPath == NULL) {
+        XAIE_ERROR("Buffer Blob Path cannot be NULL\n");
+        return XAIE_ERR;
+    }
+    if(ControlCodeInst->ControlCodefp != NULL) {
+        fprintf(ControlCodeInst->ControlCodefp, ".setpad\t %s, %s\n",BuffName, BuffBlobPath);
+        ControlCodeInst->CombineCommands = 0;
+        return XAIE_OK;
+    } else {
+        XAIE_ERROR("Control code file pointer is NULL\n");
+        return XAIE_ERR;
+    }
+}
+
+
+
 #else
 
 AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 PageSize)
@@ -1381,6 +1452,30 @@ AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad)
         return XAIE_INVALID_BACKEND;
 }
 
+static AieRC XAie_ControlCodeIO_SetPadInteger(void *IOInst, char* BuffName, u32 BuffSize)
+{
+    /* no-op */
+    (void)IOInst;
+    (void)BuffName;
+    (void)BuffSize;
+    XAIE_ERROR("Driver is not compiled with ControlCode generation "
+            "backend (__AIECONTROLCODE__)\n");
+    return XAIE_INVALID_BACKEND;
+}
+
+static AieRC XAie_ControlCodeIO_SetPadString(void *IOInst, char* BuffName, char* BuffBlobPath)
+{
+    /* no-op */
+    (void)IOInst;
+    (void)BuffName;
+    (void)BuffBlobPath;
+    XAIE_ERROR("Driver is not compiled with ControlCode generation "
+            "backend (__AIECONTROLCODE__)\n");
+    return XAIE_INVALID_BACKEND;
+}
+
+
+
 #endif /* __AIECONTROLCODE__ */
 
 static AieRC XAie_ControlCodeIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
@@ -1460,6 +1555,8 @@ const XAie_Backend ControlCodeBackend =
 	.Ops.MemDetach = XAie_ControlCodeMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
 	.Ops.SubmitTxn = NULL,
+	.Ops.SetPadInteger = XAie_ControlCodeIO_SetPadInteger,
+	.Ops.SetPadString = XAie_ControlCodeIO_SetPadString,
 };
 
 /** @} */

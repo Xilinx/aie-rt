@@ -162,6 +162,8 @@ typedef struct XAie_BackendOps {
 	u64 (*GetAttr)(void *IOInst, XAie_BackendAttrType Type);
 	AieRC (*SetAttr)(void *IOInst, XAie_BackendAttrType Type, u64 AttrVal);
 	AieRC (*GetPartitionList)(XAie_DevInst *DevInst);
+	AieRC (*SetPadInteger)(void *IOInst, char* BuffName, u32 BuffSize);
+	AieRC (*SetPadString)(void *IOInst, char* BuffName, char* BuffBlobPath);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */

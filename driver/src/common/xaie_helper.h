@@ -217,6 +217,8 @@ int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
 AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
 AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u32 Arg_Offset, u8 Num_BDs);
 AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
+AieRC XAie_SetPadInteger(XAie_DevInst *DevInst, char* BuffName, u32 BuffSize);
+AieRC XAie_SetPadString(XAie_DevInst *DevInst, char* BuffName, char* BuffBlobPath);
 u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
 u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);

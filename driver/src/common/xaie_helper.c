@@ -2366,4 +2366,28 @@ AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv)
 	return RC;
 }
 
+AieRC XAie_SetPadInteger(XAie_DevInst *DevInst, char* BuffName, u32 BuffSize)
+{
+    const XAie_Backend *Backend = DevInst->Backend;
+
+    if (Backend->Ops.SetPadInteger != NULL) {
+        return Backend->Ops.SetPadInteger((void *)DevInst->IOInst, BuffName, BuffSize);
+    } else {
+        XAIE_ERROR("SetPadInteger function pointer points to NULL\n");
+        return XAIE_INVALID_ARGS;
+    }
+}
+
+AieRC XAie_SetPadString(XAie_DevInst *DevInst, char* BuffName, char* BuffBlobPath)
+{
+    const XAie_Backend *Backend = DevInst->Backend;
+
+    if (Backend->Ops.SetPadString != NULL) {
+        return Backend->Ops.SetPadString((void *)DevInst->IOInst, BuffName, BuffBlobPath);
+    } else {
+        XAIE_ERROR("SetPadString function pointer points to NULL\n");
+        return XAIE_INVALID_ARGS;
+    }
+}
+
 /** @} */
