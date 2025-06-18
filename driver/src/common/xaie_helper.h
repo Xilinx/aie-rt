@@ -253,7 +253,7 @@ XAIE_AIG_EXPORT AieRC XAie_Txn_PmLoadStart(XAie_DevInst *DevInst, u32 PmLoadId);
 XAIE_AIG_EXPORT AieRC XAie_Txn_PmLoadEnd(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT AieRC XAie_Txn_UpdateStateTable(XAie_DevInst *DevInst, u8 StateTableIdx, XAie_StateTableFuncType Func, u32 FuncArg);
 XAIE_AIG_EXPORT AieRC XAie_Txn_UpdateReg(XAie_DevInst *DevInst, u64 RegOff, u8 StateTableIdx, XAie_StateTableFuncType Func, u32 FuncArg);
-XAIE_AIG_EXPORT AieRC XAie_Txn_CreateScratchpad(XAie_DevInst *DevInst, u8 UsageType, u32 Size, u64 DdrAddr);
+XAIE_AIG_EXPORT AieRC XAie_Txn_CreateScratchpad(XAie_DevInst *DevInst, u8 UsageType, u32 Size, u64 ScratchOffset);
 XAIE_AIG_EXPORT AieRC XAie_Txn_UpdateScratch(XAie_DevInst *DevInst);
 #endif		/* end of protection macro */
 /** @} */
