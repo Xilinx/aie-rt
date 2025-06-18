@@ -2006,7 +2006,7 @@ static inline u32 _XAie_AppendBWToTxnBuff_opt(u32* BlockwriteBuffer,u8* TxnPtr, 
 
 	if(PatchCmdCount != 0){
 
-		PatchCmdSize = ((PatchCmdCount) * ( sizeof(patch_op_t) + sizeof(XAie_CustomOpHdr_opt) )) & UINT_MAX;
+		PatchCmdSize = ((PatchCmdCount) * ( sizeof(patch_op_opt_t) + sizeof(XAie_CustomOpHdr_opt) )) & UINT_MAX;
 		XAIE_DBG("_XAie_AppendBWToTxnBuff:PatchCmdSize = %d\n", PatchCmdSize);
 
 		TempPtr = calloc(1, PatchCmdSize);
