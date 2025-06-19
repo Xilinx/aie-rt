@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Determine if this is an amend operation
+IS_AMEND=$(ps -ocommand= -p $PPID | grep -e '--amend');
+
+if [ -n "$IS_AMEND" ]; then
+	echo "You are ammending patch, version file already updated with parent git hash"
+	exit 0
+fi
+
+# For regular commits, get the current HEAD
+GIT_PARENT_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+
+# Define the file to update
+FILE_TO_UPDATE="driver/src/global/xaie_version.h"
+
+# Check if the file exists, create it with a default template if it doesn't
+if [ ! -f "$FILE_TO_UPDATE" ]; then
+    mkdir -p "$(dirname "$FILE_TO_UPDATE")"
+    cat > "$FILE_TO_UPDATE" << EOL
+#ifndef VERSION_H
+#define VERSION_H
+
+#define GIT_PARENT_HASH "unknown"
+#define GIT_BRANCH "unknown"
+
+#endif // VERSION_H
+EOL
+fi
+
+# Update the macros in version.h
+sed -i 's/#define[[:space:]]\+GIT_PARENT_HASH[[:space:]]\+".*"/#define GIT_PARENT_HASH "'"$GIT_PARENT_HASH"'"/g' "$FILE_TO_UPDATE"
+sed -i 's/#define[[:space:]]\+GIT_BRANCH[[:space:]]\+".*"/#define GIT_BRANCH "'"$GIT_BRANCH"'"/g' "$FILE_TO_UPDATE"
+
+# Verify the file was updated correctly
+if grep -q "#define GIT_PARENT_HASH \"$GIT_PARENT_HASH\"" "$FILE_TO_UPDATE" && \
+   grep -q "#define GIT_BRANCH \"$GIT_BRANCH\"" "$FILE_TO_UPDATE"; then
+    # Stage the updated file
+    git add "$FILE_TO_UPDATE"
+    echo "Updated $FILE_TO_UPDATE with Git hash $GIT_PARENT_HASH and branch $GIT_BRANCH."
+else
+    echo "Error: Failed to update $FILE_TO_UPDATE with Git metadata."
+    exit 1
+fi
+
+exit 0
