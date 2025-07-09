@@ -22,6 +22,7 @@
  ******************************************************************************/
 /***************************** Include Files *********************************/
 #include <string.h>
+#include <stdlib.h>
 #include "xaie_routing.h"
 #include "xaie_routing_internal.h"
 #include "xaie_helper.h"
@@ -1568,7 +1569,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 							lastDir, lastStream, dirLast, destStream);
 
 			/* Create a new routing step */
-			XAie_RoutingStep *newStep = aligned_alloc(16, sizeof(XAie_RoutingStep));
+			XAie_RoutingStep *newStep = (XAie_RoutingStep*) aligned_alloc(16, sizeof(XAie_RoutingStep));
 			newStep->sourceTile = LastTile;
 			newStep->sourceStream = lastStream;
 			newStep->destStream = destStream;
@@ -1603,7 +1604,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 
 			if (Sourceconstraint->routesDB == NULL) {
 				XAIE_DBG("Adding first route to routes DB\n");
-				Sourceconstraint->routesDB = aligned_alloc(16,
+				Sourceconstraint->routesDB = (XAie_ProgrammedRoutes*) aligned_alloc(16,
 								sizeof(XAie_ProgrammedRoutes));
 				Sourceconstraint->routesDB->routePath = CurrRoutingPath;
 			}
@@ -1685,7 +1686,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 				return XAIE_ERR;
 			}
 			/* Create a new routing step */
-			XAie_RoutingStep *newStep = aligned_alloc(16, sizeof(XAie_RoutingStep));
+			XAie_RoutingStep *newStep = (XAie_RoutingStep*) aligned_alloc(16, sizeof(XAie_RoutingStep));
 			newStep->sourceTile = SourceTile;
 			newStep->sourceStream = sourceStream;
 			newStep->destStream = destStream;
@@ -2346,7 +2347,7 @@ AieRC XAie_Route(XAie_RoutingInstance *routingInstance,  XAie_RouteConstraints* 
 		return XAIE_ERR;
 	}
 
-	XAie_LocType *path = aligned_alloc(16,
+	XAie_LocType *path = (XAie_LocType*) aligned_alloc(16,
 			routingInstance->NumRows * routingInstance->NumCols * sizeof(XAie_LocType));
 	if (!path) {
 		XAIE_ERROR("XAie_Route backend Failed!. Memory allocation failed\n");
@@ -2516,9 +2517,9 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 		}
 	}
 
-	XAie_ChannelPortMapping* defaultHost2AIEPortChannelMapping = aligned_alloc
+	XAie_ChannelPortMapping* defaultHost2AIEPortChannelMapping = (XAie_ChannelPortMapping*) aligned_alloc
 						(16, 2*sizeof(XAie_ChannelPortMapping));
-	XAie_ChannelPortMapping* defaultAIE2HostPortChannelMapping = aligned_alloc
+	XAie_ChannelPortMapping* defaultAIE2HostPortChannelMapping = (XAie_ChannelPortMapping*) aligned_alloc
 						(16, 2*sizeof(XAie_ChannelPortMapping));
 
 	defaultHost2AIEPortChannelMapping[0].port = 3;
