@@ -54,6 +54,11 @@
 const u8 TransactionHeaderVersion_Major = 0;
 const u8 TransactionHeaderVersion_Minor = 1;
 
+/**
+ Define the global log level variable with a default value.
+ If the environment variable isn't set, this level will be used.
+ ***************************************************************/
+XAieLogLevel AieLogLevel = XAIE_LOG_LEVEL_ERROR;
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -329,6 +334,30 @@ u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	return EvntMod->DefaultGroupErrorMask;
+}
+
+/**
+ * This function is automatically executed when the shared library is loaded.
+ * It reads the "XAIE_LOG_LEVEL" environment variable to configure the logger.
+ * Note: __attribute__((constructor)) is a GCC/Clang language extension.
+ * If the environment variable is not set or has an invalid value,
+ * the default AieLogLevel (XAIE_LOG_LEVEL_ERROR) remains active.
+ */
+__attribute__((constructor))
+static void _XAie_LoggerInit(void) {
+    const char *AieLevelEnv = getenv("XAIE_LOG_LEVEL");
+	XAie_LoggerInit(AieLevelEnv);
+}
+
+void XAie_LoggerInit(const char *AieLevelEnv) {
+    if (AieLevelEnv) {
+        if (strcasecmp(AieLevelEnv, "FATAL") == 0) AieLogLevel = XAIE_LOG_LEVEL_FATAL;
+        else if (strcasecmp(AieLevelEnv, "ERROR") == 0) AieLogLevel = XAIE_LOG_LEVEL_ERROR;
+        else if (strcasecmp(AieLevelEnv, "WARN")  == 0) AieLogLevel = XAIE_LOG_LEVEL_WARN;
+        else if (strcasecmp(AieLevelEnv, "INFO")  == 0) AieLogLevel = XAIE_LOG_LEVEL_INFO;
+        else if (strcasecmp(AieLevelEnv, "DEBUG") == 0) AieLogLevel = XAIE_LOG_LEVEL_DEBUG;
+        else if (strcasecmp(AieLevelEnv, "TRACE") == 0) AieLogLevel = XAIE_LOG_LEVEL_TRACE;
+    }
 }
 
 void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,

@@ -40,6 +40,21 @@
 #include "xaie_core.h"
 #include "xaie_dma.h"
 #include "xaie_locks.h"
+/************************** Variable Definitions *****************************/
+/**
+ * Defines the available log levels.
+ * The levels are ordered by severity. A higher value means more verbose logging.
+ */
+typedef enum {
+    XAIE_LOG_LEVEL_FATAL = 0,
+    XAIE_LOG_LEVEL_ERROR,
+    XAIE_LOG_LEVEL_WARN,
+    XAIE_LOG_LEVEL_INFO,
+    XAIE_LOG_LEVEL_DEBUG,
+    XAIE_LOG_LEVEL_TRACE
+} XAieLogLevel;
+
+extern XAieLogLevel AieLogLevel;
 
 /***************************** Macro Definitions *****************************/
 #define container_of(ptr, type, member)	({					\
@@ -49,31 +64,41 @@
 #define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
 				(u32)(1U << (u64)(pos) % (sizeof((bitmap)[0]) * 8U)))
 
-#define XAIE_ERROR(...)							      \
-	do {								      \
-		XAie_Log(stderr, "[AIE ERROR]", __func__, __LINE__,	      \
-				__VA_ARGS__);				      \
-	} while(0)
+#define XAIE_FATAL(...) \
+    do { \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_FATAL) \
+            XAie_Log(stderr, "[AIE FATAL]", __func__, __LINE__, __VA_ARGS__); \
+    } while(0)
 
-#define XAIE_WARN(...)							      \
-	do {								      \
-		XAie_Log(stderr, "[AIE WARNING]", __func__, __LINE__,	      \
-				__VA_ARGS__);				      \
-	} while(0)
+#define XAIE_ERROR(...) \
+    do { \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_ERROR) \
+            XAie_Log(stderr, "[AIE ERROR]", __func__, __LINE__, __VA_ARGS__); \
+    } while(0)
 
-#ifdef XAIE_DEBUG
+#define XAIE_WARN(...) \
+    do { \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_WARN) \
+            XAie_Log(stdout, "[AIE WARNING]", __func__, __LINE__, __VA_ARGS__); \
+    } while(0)
 
-#define XAIE_DBG(...)							      \
-	do {								      \
-		XAie_Log(stdout, "[AIE DEBUG]", __func__, __LINE__,	      \
-				__VA_ARGS__);				      \
-	} while(0)
+#define XAIE_INFO(...) \
+    do { \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_INFO) \
+            XAie_Log(stdout, "[AIE INFO]", __func__, __LINE__, __VA_ARGS__); \
+    } while(0)
 
-#else
+#define XAIE_DBG(...) \
+    do { \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_DEBUG) \
+            XAie_Log(stdout, "[AIE DEBUG]", __func__, __LINE__, __VA_ARGS__); \
+    } while(0)
 
-#define XAIE_DBG(DevInst, ...) {}
-
-#endif /* XAIE_DEBUG */
+#define XAIE_TRACE(...) \
+    do { \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_TRACE) \
+            XAie_Log(stdout, "[AIE TRACE]", __func__, __LINE__, __VA_ARGS__); \
+    } while(0)
 
 #if  defined(__microblaze__)
 #define PRINT xil_printf
@@ -224,5 +249,6 @@ u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
 AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
 AieRC XAie_GetPartitionList(XAie_DevInst *DevInst);
 u8 XAie_IsUcModulePresent(XAie_DevInst* DevInst, u8 TileType);
+void XAie_LoggerInit(const char *AieLevelEnv);
 #endif		/* end of protection macro */
 /** @} */

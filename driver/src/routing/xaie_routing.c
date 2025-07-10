@@ -31,7 +31,6 @@
 
 #ifdef XAIE_FEATURE_ROUTING_ENABLE
 /***************************** Helper APIs *********************************/
-#ifdef XAIE_DEBUG
 void PrintBits(u8 value)
 {
 	XAIE_DBG("0b");
@@ -52,17 +51,6 @@ void PrintBDBits(uint64_t num)
 		}
 	}
 }
-#else
-void PrintBits(u8 value)
-{
-	(void) value;
-}
-
-void PrintBDBits(uint64_t num)
-{
-	(void) num;
-}
-#endif
 
 /* Queue Operations */
 static Queue* createQueue(unsigned capacity)
@@ -226,9 +214,7 @@ AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* RoutingInstance, 
 AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance,
 					XAie_CoreConstraint* constraint, u8 row, u8 col)
 {
-#ifdef XAIE_DEBUG
 	const char* tileTypeStr[] = {"XAIE_AIE_SHIM", "XAIE_AIE_MEM", "XAIE_AIE_CORE"};
-#endif
 
 	XAIE_DBG("    {\n");
 	XAIE_DBG("      \"row\": %d,\n", row);
@@ -322,7 +308,6 @@ static const char* _XAie_StrmSwPortTypeToString(StrmSwPortType type)
 	}
 }
 
-#ifdef XAIE_DEBUG
 /*****************************************************************************/
 /*
  *
@@ -428,17 +413,6 @@ out:
 	}
 	free(Grid);
 }
-#else
-static void _XAie_drawRoute(XAie_RoutingInstance *routingInstance, XAie_LocType *path,
-		int pathLength, XAie_LocType source, XAie_LocType destination)
-{
-	(void) routingInstance;
-	(void) path;
-	(void) pathLength;
-	(void) source;
-	(void) destination;
-}
-#endif
 
 /*****************************************************************************/
 /*
@@ -1165,8 +1139,6 @@ AieRC XAie_RoutingSwitchReset(XAie_RoutingInstance *routingInstance,
 	return rc;
 }
 
-
-#ifdef XAIE_DEBUG
 /****************************************************************************
  *
  * This function provides a detailed dump of the routing and switch configuration
@@ -1290,15 +1262,6 @@ void XAie_DumpRoutingSwitchInfo(XAie_RoutingInstance *routingInstance,
 		XAIE_DBG("*********************************************\n");
 	}
 }
-#else
-void XAie_DumpRoutingSwitchInfo(XAie_RoutingInstance *routingInstance,
-		XAie_LocType* listOfTiles, uint32_t NoOfTiles)
-{
-	(void) routingInstance;
-	(void) listOfTiles;
-	(void) NoOfTiles;
-}
-#endif
 
 /*****************************************************************************/
 /*
