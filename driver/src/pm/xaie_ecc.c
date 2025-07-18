@@ -148,8 +148,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	 * memory. Configure ECC scrubbing event register for mem module
 	 * with broadcast 6 event.
 	 */
-	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_BROADCAST_6_MEM -
-			EvntMod->EventMin];
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_BROADCAST_6_MEM];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -250,8 +249,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			CoreMod->EccEvntRegOff;
-	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT_0_CORE -
-			EvntMod->EventMin];
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT_0_CORE];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -400,7 +398,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			MemMod->EccEvntRegOff;
 	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
-			XAIE_ECC_PERFCOUNTER_ID - EvntMod->EventMin];
+			XAIE_ECC_PERFCOUNTER_ID];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
 		return RC;

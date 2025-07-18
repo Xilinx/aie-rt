@@ -852,7 +852,7 @@ typedef struct {
 
 /* This typedef contains attributes of Events module */
 typedef struct XAie_EvntMod {
-	const u8 *XAie_EventNumber;	/* Array of event numbers with true event val */
+	const u16 *XAie_EventNumber;	/* Array of event numbers with true event val */
 	u8  NumEventReg;
 	u32 EventMin;		/* number corresponding to evt 0 in the enum */
 	u32 EventMax;		/* number corresponding to last evt in enum */
@@ -1060,6 +1060,21 @@ struct XAie_DeviceOps {
 	AieRC (*SetColumnClk)(XAie_DevInst *DevInst,
 			XAie_BackendColumnReq *Args);
 };
+
+static inline u16 XAie_GetEventNumber(const struct XAie_EvntMod *EventMod, XAie_Events EventId)
+{
+	if ((EventMod ==NULL) ||
+	    (EventMod->XAie_EventNumber == NULL)) {
+		return XAIE_EVENT_INVALID;
+	}
+	if ((EventId < EventMod->EventMin) ||
+	    (EventId > EventMod->EventMax) ||
+	    ((EventId != EventMod->EventMin) && (EventMod->XAie_EventNumber[(u32)EventId] == 0))) {
+		return XAIE_EVENT_INVALID;
+	}
+
+	return EventMod->XAie_EventNumber[(u32)EventId];
+}
 
 #endif
 

@@ -216,12 +216,11 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 RegAddr;
 	u32 RegOffset, EventMask, FldVal;
-	u32 EventVal;
-	u8 TileType, EventLsb, MappedEvent;
+	u8 TileType, EventLsb;
+	u16 MappedEvent;
 	const XAie_L1IntrMod *L1IntrMod;
 	const XAie_EvntMod *EvntMod;
 
-	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
@@ -242,13 +241,7 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	EventVal -= EvntMod->EventMin;
-	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
+	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;

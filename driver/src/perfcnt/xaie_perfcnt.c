@@ -209,7 +209,8 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 RegOffset, FldVal, FldMask;
 	u64 RegAddr;
-	u8 TileType, IntStartEvent, IntStopEvent;
+	u8 TileType;
+	u16 IntStartEvent, IntStopEvent;
 	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
@@ -240,20 +241,9 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	/* check if the event passed as input is corresponding to the module */
-	if(StartEvent < EvntMod->EventMin || StartEvent > EvntMod->EventMax ||
-		StopEvent < EvntMod->EventMin || StopEvent > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid Event id\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	/* Subtract the module offset from event number */
-	StartEvent -= EvntMod->EventMin;
-	StopEvent -= EvntMod->EventMin;
-
 	/* Getting the true event number from the enum to array mapping */
-	IntStartEvent = EvntMod->XAie_EventNumber[StartEvent];
-	IntStopEvent = EvntMod->XAie_EventNumber[StopEvent];
+	IntStartEvent = XAie_GetEventNumber(EvntMod, StartEvent);
+	IntStopEvent = XAie_GetEventNumber(EvntMod, StopEvent);
 
 	/*checking for valid true event number */
 	if(IntStartEvent == XAIE_EVENT_INVALID ||
@@ -313,7 +303,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 ResetRegOffset, ResetFldVal, ResetFldMask;
 	u64 ResetRegAddr;
-	u8 TileType, IntResetEvent;
+	u8 TileType;
+	u16 IntResetEvent;
 	AieRC RC;
 	const XAie_PerfMod *PerfMod;
 	const XAie_EvntMod *EvntMod;
@@ -344,17 +335,8 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	/* check if the event passed as input is corresponding to the module */
-	if(ResetEvent < EvntMod->EventMin || ResetEvent > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid Event id: %d\n", ResetEvent);
-		return XAIE_INVALID_ARGS;
-	}
-
-	/* Subtract the module offset from event number */
-	ResetEvent -= EvntMod->EventMin;
-
 	/* Getting the true event number from the enum to array mapping */
-	IntResetEvent = EvntMod->XAie_EventNumber[ResetEvent];
+	IntResetEvent = XAie_GetEventNumber(EvntMod, ResetEvent);
 
 	/*checking for valid true event number */
 	if(IntResetEvent == XAIE_EVENT_INVALID) {
@@ -593,7 +575,6 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
-	u32 ResetEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -620,15 +601,12 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	/* Since first event of all modules is NONE event, using it to reset */
-	ResetEvent = EvntMod->EventMin;
-
 	/*
 	 * Currently calling the external api, later it can be factorized to
 	 * remove redundant checks.
 	 */
 	return XAie_PerfCounterResetControlSet(DevInst, Loc, Module, Counter,
-			(XAie_Events)ResetEvent);
+			(XAie_Events)EvntMod->EventMin);
 }
 
 /*****************************************************************************/

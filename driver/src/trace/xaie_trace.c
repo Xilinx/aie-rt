@@ -57,7 +57,8 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask;
-	u8 TileType, MappedEvent, EventRegOffId;
+	u8 TileType, EventRegOffId;
+	u16 MappedEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -86,15 +87,8 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	Event -= EvntMod->EventMin;
-
-	MappedEvent = EvntMod->XAie_EventNumber[Event];
-	if(MappedEvent == XAIE_EVENT_INVALID) {
+	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
+	if (MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -139,7 +133,8 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask;
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -168,15 +163,8 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if(StartEvent < EvntMod->EventMin || StartEvent > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	StartEvent -= EvntMod->EventMin;
-
-	MappedEvent = EvntMod->XAie_EventNumber[StartEvent];
-	if(MappedEvent == XAIE_EVENT_INVALID) {
+	MappedEvent = XAie_GetEventNumber(EvntMod, StartEvent);
+	if (MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -214,7 +202,8 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask;
-	u8 TileType, MappedEvent;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -243,15 +232,8 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if(StopEvent < EvntMod->EventMin || StopEvent > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	StopEvent -= EvntMod->EventMin;
-
-	MappedEvent = EvntMod->XAie_EventNumber[StopEvent];
-	if(MappedEvent == XAIE_EVENT_INVALID) {
+	MappedEvent = XAie_GetEventNumber(EvntMod, StopEvent);
+	if (MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -555,7 +537,8 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegVal;
-	u8 TileType, MappedStartEvent, MappedStopEvent;
+	u8 TileType;
+	u16 MappedStartEvent, MappedStopEvent;
 	const XAie_TraceMod *TraceMod;
 	const XAie_EvntMod *EvntMod;
 
@@ -584,20 +567,10 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if((StopEvent < EvntMod->EventMin || StopEvent > EvntMod->EventMax) ||
-			(StartEvent < EvntMod->EventMin ||
-			 StartEvent > EvntMod->EventMax)) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	StartEvent -= EvntMod->EventMin;
-	StopEvent -= EvntMod->EventMin;
-	MappedStartEvent = EvntMod->XAie_EventNumber[StartEvent];
-	MappedStopEvent = EvntMod->XAie_EventNumber[StopEvent];
-
+	MappedStartEvent = XAie_GetEventNumber(EvntMod, StartEvent);
+	MappedStopEvent = XAie_GetEventNumber(EvntMod, StopEvent);
 	if((MappedStartEvent == XAIE_EVENT_INVALID) ||
-			(MappedStopEvent == XAIE_EVENT_INVALID)) {
+	   (MappedStopEvent == XAIE_EVENT_INVALID)) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}

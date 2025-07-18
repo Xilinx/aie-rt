@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define GIT_PARENT_HASH "c0b74a871f7e1df26709b98462920728db0c6942"
+#define GIT_PARENT_HASH "c7f7b86e6321217a030222afc1430a8df9e65b2f"
 #define GIT_BRANCH "main-aie"
 
 #endif // VERSION_H

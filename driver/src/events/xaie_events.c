@@ -63,11 +63,11 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 RegAddr;
-	u32 RegOffset, FldVal, FldMask, EventVal;
-	u8 TileType, MappedEvent;
+	u32 RegOffset, FldVal, FldMask;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_EvntMod *EvntMod;
 
-	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
@@ -97,14 +97,8 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	EventVal -= EvntMod->EventMin;
-	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
-	if(MappedEvent == XAIE_EVENT_INVALID) {
+	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
+	if (MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -152,12 +146,10 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask, Event1Mask, Event2Mask;
-	u32 Event1Val, Event2Val;
-	u8 TileType, Event1Lsb, Event2Lsb, MappedEvent1, MappedEvent2;
+	u8 TileType, Event1Lsb, Event2Lsb;
+	u16 MappedEvent1, MappedEvent2;
 	const XAie_EvntMod *EvntMod;
 
-	Event1Val = (u32)Event1;
-	Event2Val = (u32)Event2;
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	RC = XAie_CheckModule(DevInst, Loc, Module);
@@ -186,20 +178,10 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_OK;
 	}
 
-	if(Event1Val < EvntMod->EventMin || Event1Val > EvntMod->EventMax ||
-		Event2Val < EvntMod->EventMin || Event2Val > EvntMod->EventMax)
-	{
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	Event1Val -= EvntMod->EventMin;
-	Event2Val -= EvntMod->EventMin;
-	MappedEvent1 = EvntMod->XAie_EventNumber[Event1Val];
-	MappedEvent2 = EvntMod->XAie_EventNumber[Event2Val];
-	if(MappedEvent1 == XAIE_EVENT_INVALID ||
-			MappedEvent2 == XAIE_EVENT_INVALID)
-	{
+	MappedEvent1 = XAie_GetEventNumber(EvntMod, Event1);
+	MappedEvent2 = XAie_GetEventNumber(EvntMod, Event2);
+	if ((MappedEvent1 == XAIE_EVENT_INVALID) ||
+	    (MappedEvent2 == XAIE_EVENT_INVALID)) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -775,11 +757,11 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 RegAddr;
-	u32 RegOffset, EventVal;
-	u8 TileType, MappedEvent;
+	u32 RegOffset;
+	u8 TileType;
+	u16 MappedEvent;
 	const XAie_EvntMod *EvntMod;
 
-	EventVal = (u32)Event;
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	RC = XAie_CheckModule(DevInst, Loc, Module);
@@ -798,13 +780,7 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid event ID\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	EventVal -= EvntMod->EventMin;
-	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
+	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
@@ -1672,10 +1648,8 @@ AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 {
 	AieRC RC;
 	u8 TileType;
-	u32 EventVal;
 	const XAie_EvntMod *EvntMod;
 
-	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
@@ -1698,17 +1672,12 @@ AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
-	/* check if the event passed as input is corresponding to the module */
-	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid Event id\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	/* Subtract the module offset from event number */
-	EventVal -= EvntMod->EventMin;
 
 	/* Getting the true event number from the enum to array mapping */
-	*HwEvent = EvntMod->XAie_EventNumber[EventVal];
+	*HwEvent = XAie_GetEventNumber(EvntMod, Event);
+	if(*HwEvent == XAIE_EVENT_INVALID) {
+		return XAIE_INVALID_ARGS;
+	}
 
 	return XAIE_OK;
 }
@@ -1771,7 +1740,7 @@ AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 	}
 
 	for(u32 i = EvntMod->EventMin; i <= EvntMod->EventMax; i++) {
-		if(EvntMod->XAie_EventNumber[i - EvntMod->EventMin] == HwEvent) {
+		if(EvntMod->XAie_EventNumber[i] == HwEvent) {
 			*EnumEvent = (XAie_Events)i;
 			return XAIE_OK;
 		}

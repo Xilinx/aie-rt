@@ -875,7 +875,6 @@ static inline u8 _XAie_MapGroupErrorsToEventId(XAie_DevInst *DevInst,
 		XAIE_ERROR("Invalid TileType: %d\n", TileType);
 		return 0;
 	};
-	ErrorBase -= EvntMod->EventMin;
 	ErrorBase = EvntMod->XAie_EventNumber[ErrorBase];
 	return GroupErrorIndex + (u8)ErrorBase + 1U;
 }
@@ -1125,7 +1124,6 @@ static AieRC _XAie_BacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 		 *	 reported is off by a bit position. For switch A, skip
 		 *	 backtracking above array tiles when this bug is fixed.
 		 */
-		EventId -= EvntMod->EventMin;
 		EventId = (u8)EvntMod->XAie_EventNumber[EventId];
 		XAie_EventClearStatus(DevInst, Loc, XAIE_MEM_MOD, (u8)EventId);
 	}
@@ -1155,7 +1153,6 @@ static AieRC _XAie_BacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 			return RC;
 		}
 		EvntMod = &DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].EvntMod[Module];
-		Event -= EvntMod->EventMin;
 		Event = EvntMod->XAie_EventNumber[Event];
 		/*
 		 * Skip backtracking above array tiles if no broadcast signal
