@@ -45,9 +45,9 @@
 
 /**************************** Macro Definitions ******************************/
 #ifdef _MSC_VER
-#define XAIE2PS_TILES_BITMAPSIZE	1U
+#define XAIE2PS_TILES_BITMAPSIZE	16U
 #else
-#define XAIE2PS_TILES_BITMAPSIZE	0U
+#define XAIE2PS_TILES_BITMAPSIZE	16U
 #endif
 
 /************************** Variable Definitions *****************************/
