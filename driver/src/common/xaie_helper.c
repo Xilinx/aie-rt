@@ -50,6 +50,17 @@
 
 #define TX_DUMP_ENABLE 0
 #define XAIE_INVALID_PARTITIONFD -1
+
+#define XAIE_TILEDMA_NUM_BD_WORDS			7U
+#define XAIE_SHIMDMA_NUM_BD_WORDS			5U
+
+#define XAIEML_TILEDMA_NUM_BD_WORDS			6U
+#define XAIEML_SHIMDMA_NUM_BD_WORDS			8U
+#define XAIEML_MEMTILEDMA_NUM_BD_WORDS			8U
+
+#define XAIE2PS_TILEDMA_NUM_BD_WORDS			6U
+#define XAIE2PS_SHIMDMA_NUM_BD_WORDS			9U
+#define XAIE2PS_MEMTILEDMA_NUM_BD_WORDS		8U
 /************************** Variable Definitions *****************************/
 const u8 TransactionHeaderVersion_Major = 0;
 const u8 TransactionHeaderVersion_Minor = 1;
@@ -2293,6 +2304,115 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 		}
 	}
 	return XAIE_OK;
+}
+
+AieRC XAie_PrintDmaStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_DmaMod *DmaMod)
+{
+	u32 s2mm_val, mm2s_val;
+	AieRC RC;
+
+        for (u8 Chan = 0; Chan < DmaMod->NumChannels; Chan++) {
+			RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan, DMA_S2MM, &s2mm_val);
+			if (RC != XAIE_OK)
+					return RC;
+
+			RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan, DMA_MM2S, &mm2s_val);
+			if (RC != XAIE_OK)
+					return RC;
+			XAIE_DBG("Tile[%u,%u] Chan[%d]: S2MM=0x%x | MM2S=0x%x\n", Loc.Col, Loc.Row, Chan, s2mm_val, mm2s_val);
+        }
+
+        return XAIE_OK;
+}
+
+AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_DmaMod *DmaMod, u8 BdWordCount)
+{
+	u64 BdAddr;
+	u32 bd_val;
+	AieRC RC;
+
+		for(u8 BD=0; BD < DmaMod->NumBds; BD++, printf("\n")){
+			BdAddr = (u64)DmaMod->BaseAddr +
+						(u64)XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + (u64)(BD * DmaMod->IdxOffset);
+			for(u8 i = 0; i < BdWordCount; i++) {
+				RC = XAie_Read32(DevInst, BdAddr, &bd_val);
+				if (RC != XAIE_OK)
+						return RC;
+
+				XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
+				BdAddr += 4U;
+                }
+        }
+
+        return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API returns the column status for N number of colums.
+*
+* @param        DevInst: Device Instance
+* @param        StartCol: Start column
+* @param        NumCols: Number of columns
+*
+* @return       XAIE_OK for success and error code otherwise.
+*
+* @note None.
+*
+******************************************************************************/
+AieRC XAie_DmaStatusDump(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols)
+{
+        u8 NumRows = DevInst->NumRows;
+        u32 RC = (u32)XAIE_ERR;
+
+        for (u8 Col = StartCol; Col < (StartCol + NumCols); Col++) {
+                for (u8 Row = 0; Row < NumRows; Row++) {
+                        XAie_LocType Loc = {.Col = Col, .Row = Row};
+                        u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
+                        if (TileType >= XAIEGBL_TILE_TYPE_MAX || TileType == XAIEGBL_TILE_TYPE_SHIMPL)
+                                continue;
+
+                        const XAie_DmaMod *DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+                        if (DmaMod == NULL)
+                                return XAIE_ERR;
+
+                        RC = XAie_PrintDmaStatus(DevInst, Loc, DmaMod);
+                        if (RC != XAIE_OK)
+                                return RC;
+
+			switch (TileType) {
+				case XAIEGBL_TILE_TYPE_AIETILE:
+					if (DevInst->DevProp.DevGen == 1)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE_TILEDMA_NUM_BD_WORDS);
+					else if (DevInst->DevProp.DevGen == 2)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_TILEDMA_NUM_BD_WORDS);
+					else if (DevInst->DevProp.DevGen == 5)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_TILEDMA_NUM_BD_WORDS);
+					break;
+				case XAIEGBL_TILE_TYPE_MEMTILE:
+					if (DevInst->DevProp.DevGen == 2)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_MEMTILEDMA_NUM_BD_WORDS);
+					else if (DevInst->DevProp.DevGen == 5)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_MEMTILEDMA_NUM_BD_WORDS);
+					break;
+				case XAIEGBL_TILE_TYPE_SHIMNOC:
+					if (DevInst->DevProp.DevGen == 1)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE_SHIMDMA_NUM_BD_WORDS);
+					else if (DevInst->DevProp.DevGen == 2)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_SHIMDMA_NUM_BD_WORDS);
+					else if (DevInst->DevProp.DevGen == 5)
+						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_SHIMDMA_NUM_BD_WORDS);
+					break;
+			}
+
+			if (RC != XAIE_OK)
+				return RC;
+                }
+        }
+
+        return XAIE_OK;
 }
 
 /*****************************************************************************/
