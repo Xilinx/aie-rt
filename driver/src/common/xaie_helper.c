@@ -2331,7 +2331,7 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 	u32 bd_val;
 	AieRC RC;
 
-		for(u8 BD=0; BD < DmaMod->NumBds; BD++, printf("\n")){
+		for(u8 BD=0; BD < DmaMod->NumBds; BD++){
 			BdAddr = (u64)DmaMod->BaseAddr +
 						(u64)XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + (u64)(BD * DmaMod->IdxOffset);
 			for(u8 i = 0; i < BdWordCount; i++) {
@@ -2341,9 +2341,9 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 
 				XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
 				BdAddr += 4U;
-                }
-        }
-
+			}
+			printf("\n");
+		}
         return XAIE_OK;
 }
 
