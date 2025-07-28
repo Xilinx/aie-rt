@@ -8,7 +8,7 @@
 #define XAIE_COL_SHIFT 23
 #define XAIE_ROW_SHIFT 18
 
-#if DEVICE == 80 /* s80 Config */
+#if DEVICE == 80
 	#define XAIE_NUM_ROWS 9
 	#define XAIE_NUM_COLS 50
 	#define XAIE_SHIM_ROW 0
@@ -35,7 +35,7 @@
 #define XAIE_COL_SHIFT 25
 #define XAIE_ROW_SHIFT 20
 
-#if DEVICE == 60 /* sv60 Config */
+#if DEVICE == 60
         #define XAIE_NUM_ROWS 11
         #define XAIE_NUM_COLS 38
         #define XAIE_SHIM_ROW 0
