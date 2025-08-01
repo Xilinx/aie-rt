@@ -262,8 +262,8 @@ struct aie_partition_init_args {
 	__u32 num_tiles;
 	__u32 init_opts;
 	__u32 ecc_scrub;
-	__u32 *handshake;
-	__u32 handshake_size;
+	__u32 reserved1;
+	void *reserved2;
 };
 
 /*
