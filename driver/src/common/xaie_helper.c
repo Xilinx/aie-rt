@@ -51,12 +51,16 @@
 #define XAIE_TXN_STATE_TABLE_SIZE 32U
 #define TX_DUMP_ENABLE 0
 #define U64_MAX 0xFFFFFFFFFFFFFFFFU
-/************************** Variable Definitions *****************************/
-const u8 TransactionHeaderVersion_Major = 0;
-const u8 TransactionHeaderVersion_Minor = 1;
-const u8 TransactionHeaderVersion_Major_opt = 1;
-const u8 TransactionHeaderVersion_Minor_opt = 0;
 
+// Major & Minor version details for TXN version 0.1 called Initial version
+#define XAIE_TXN_VER_01_MAJOR 0
+#define XAIE_TXN_VER_01_MINOR 1
+
+// Major & Minor version details for TXN version 1.0 called optimized version
+#define XAIE_TXN_VER_10_MAJOR 1
+#define XAIE_TXN_VER_10_MINOR 0
+
+/************************** Variable Definitions *****************************/
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
 /******************************************************************************/
@@ -1032,8 +1036,8 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 static inline void _XAie_CreateTxnHeader(XAie_DevInst *DevInst,
 		XAie_TxnHeader *Header)
 {
-	Header->Major = TransactionHeaderVersion_Major;
-	Header->Minor = TransactionHeaderVersion_Minor;
+	Header->Major = XAIE_TXN_VER_01_MAJOR;
+	Header->Minor = XAIE_TXN_VER_01_MINOR;
 	Header->DevGen = DevInst->DevProp.DevGen;
 	Header->NumRows = DevInst->NumRows;
 	Header->NumCols = DevInst->NumCols;
@@ -1249,8 +1253,8 @@ static inline void _XAie_AppendUpdateScratch(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 static inline void _XAie_CreateTxnHeader_opt(XAie_DevInst *DevInst,
 		XAie_TxnHeader *Header)
 {
-	Header->Major = TransactionHeaderVersion_Major_opt;
-	Header->Minor = TransactionHeaderVersion_Minor_opt;
+	Header->Major = XAIE_TXN_VER_10_MAJOR;
+	Header->Minor = XAIE_TXN_VER_10_MINOR;
 	Header->DevGen = DevInst->DevProp.DevGen;
 	Header->NumRows = DevInst->NumRows;
 	Header->NumCols = DevInst->NumCols;
