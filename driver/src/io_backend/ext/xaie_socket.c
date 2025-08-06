@@ -120,6 +120,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	if(Fd == NULL){
 		XAIE_ERROR("Unable to open file to read port number of "
 				"simulator, %d: %s\n", errno, strerror(errno));
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -128,6 +129,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 		fclose(Fd);
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 			errno, strerror(errno));
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -139,6 +141,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 		fclose(Fd);
 		XAIE_ERROR("Memory allocation failedi. Unable to read port"
 				" number\n");
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -147,6 +150,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 		fclose(Fd);
 		free(PortNum);
 		XAIE_ERROR("Failed to read port number from file\n");
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -166,6 +170,8 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	ret = getaddrinfo("localhost", PortNum, &hints, &slist);
 	if(ret != 0) {
 		XAIE_ERROR("get addr info failed. ec %s\n", gai_strerror(ret));
+		free(PortNum);
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -184,6 +190,9 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 
 	if(p == NULL) {
 		XAIE_ERROR("failed to connect to sim\n");
+		freeaddrinfo(slist);
+		free(PortNum);
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
