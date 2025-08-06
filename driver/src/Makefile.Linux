@@ -73,10 +73,14 @@ ifeq ($(MAKECMDGOALS) ,controlcode)
 	$(CC) $(CFLAGS_controlcode) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
-
-
-
-
+clang-tidy-check: $(LIBSOURCES)
+	@echo "Running clang-tidy-check target..."
+	@if [ -f clang-tidy-report.log ]; then \
+		echo "clang-tidy-report.log exists, deleting..."; \
+		rm clang-tidy-report.log; \
+	fi
+	@echo "Executing clang-tidy on sources..."
+	clang-tidy $(CPPFLAGS) -checks=cppcoreguidelines-avoid-non-const-global-variables,clang-analyzer-unix.Malloc $(LIBSOURCES) -- -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine | tee clang-tidy-report.log
 
 doc-generate:
 	mkdir -p $(DOCS_DIR)
