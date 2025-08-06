@@ -82,7 +82,7 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -99,7 +99,7 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
 	if (MappedEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID. MappedEvent:%d\n",MappedEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -182,7 +182,7 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	MappedEvent2 = XAie_GetEventNumber(EvntMod, Event2);
 	if ((MappedEvent1 == XAIE_EVENT_INVALID) ||
 	    (MappedEvent2 == XAIE_EVENT_INVALID)) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID. MappedEvent1: %d MappedEvent2: %d\n",MappedEvent1,MappedEvent2);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -241,7 +241,7 @@ AieRC XAie_EventComboConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -280,7 +280,7 @@ AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -332,7 +332,7 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -392,12 +392,12 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 	const XAie_EvntMod *EvntMod;
 
 	if(PortIntf > XAIE_STRMSW_MASTER) {
-		XAIE_ERROR("Invalid stream switch interface\n");
+		XAIE_ERROR("Invalid stream switch interface. PortIntf: %d\n", PortIntf);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Port >= SS_PORT_TYPE_MAX) {
-		XAIE_ERROR("Invalid stream switch ports\n");
+		XAIE_ERROR("Invalid stream switch ports. Port: %d\n", Port);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -409,7 +409,7 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 	}
 
 	if(SelectId >= EvntMod->NumStrmPortSelectIds) {
-		XAIE_ERROR("Invalid selection ID\n");
+		XAIE_ERROR("Invalid selection ID. SelectId : %u\n", SelectId);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -422,7 +422,7 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 		RC = _XAie_GetMstrIdx(StrmMod, Port, PortNum, &PortIdx);
 	}
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to compute port index\n");
+		XAIE_ERROR("Unable to compute port index. Port: %d PortNum: %u\n", Port, PortNum);
 		return RC;
 	}
 
@@ -480,7 +480,7 @@ AieRC XAie_EventSelectStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -525,7 +525,8 @@ AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	} else if (TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 		Port = DMA;
 	} else {
-		XAIE_ERROR("Failed to reset event select strm port. Invalid tile type\n");
+		XAIE_ERROR("Failed to reset event select strm port. Invalid tile type"\
+				"Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -564,7 +565,7 @@ AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -619,7 +620,7 @@ static AieRC _XAie_EventSelectDmaChannelConfig(XAie_DevInst *DevInst,
 	const XAie_DmaMod *DmaMod;
 
 	if(DmaDir >= DMA_MAX) {
-		XAIE_ERROR("Invalid dma direction\n");
+		XAIE_ERROR("Invalid dma direction. DmaDir: %d\n", DmaDir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -628,12 +629,12 @@ static AieRC _XAie_EventSelectDmaChannelConfig(XAie_DevInst *DevInst,
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 
 	if(SelectId >= EvntMod->NumDmaChannelSelectIds) {
-		XAIE_ERROR("Invalid selection ID\n");
+		XAIE_ERROR("Invalid selection ID SelectId: %u \n",SelectId);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(ChannelNum >= DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid channel number\n");
+		XAIE_ERROR("Invalid channel number, ChannelNum: %u\n",ChannelNum);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -685,7 +686,7 @@ AieRC XAie_EventSelectDmaChannel(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Register only in memtiles */
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
-		XAIE_ERROR("Tile is not memory tile\n");
+		XAIE_ERROR("Tile is not memory tile, TileType: %u\n", TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -724,7 +725,7 @@ AieRC XAie_EventSelectDmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Register only in memtiles */
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
-		XAIE_ERROR("Tile is not memory tile\n");
+		XAIE_ERROR("Tile is not memory tile, TileType: %u\n", TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -776,13 +777,13 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID. BroadcastId: %u EvntMod->NumBroadcastIds: %u\n", BroadcastId, EvntMod->NumBroadcastIds);
 		return XAIE_INVALID_ARGS;
 	}
 
 	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
 	if(MappedEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID. MappedEvent: %d\n", MappedEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -824,7 +825,7 @@ AieRC XAie_EventBroadcast(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -864,7 +865,7 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -934,7 +935,7 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -944,7 +945,7 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(Dir & ~(u8)XAIE_EVENT_BROADCAST_ALL) {
-		XAIE_ERROR("Invalid broadcast direction\n");
+		XAIE_ERROR("Invalid broadcast direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -956,7 +957,8 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds ||
 					(u8)Switch > EvntMod->NumSwitches) {
-		XAIE_ERROR("Invalid broadcast ID or switch value\n");
+		XAIE_ERROR("Invalid broadcast ID or switch value. BroadcastId: %u Switch:%u EvntMod->NumBroadcastIds: %u"\
+				"EvntMod->NumSwitches: %u\n",BroadcastId, (u8)Switch, EvntMod->NumBroadcastIds, EvntMod->NumSwitches);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1024,7 +1026,7 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1034,7 +1036,7 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(Dir & ~(u8)XAIE_EVENT_BROADCAST_ALL) {
-		XAIE_ERROR("Invalid broadcast direction\n");
+		XAIE_ERROR("Invalid broadcast direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1046,7 +1048,8 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << EvntMod->NumBroadcastIds) ||
 					(u8)Switch > EvntMod->NumSwitches) {
-		XAIE_ERROR("Invalid broadcast bitmap or switch value\n");
+		XAIE_ERROR("Invalid broadcast bitmap or switch value. ChannelBitMap: %u Switch: %u"\
+				" EvntMod->NumSwitches: %u\n", ChannelBitMap, (u8)Switch,  EvntMod->NumSwitches);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1114,7 +1117,7 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1124,7 +1127,7 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(Dir & ~(u8)XAIE_EVENT_BROADCAST_ALL) {
-		XAIE_ERROR("Invalid broadcast direction\n");
+		XAIE_ERROR("Invalid broadcast direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1136,7 +1139,8 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds ||
 					(u8)Switch > EvntMod->NumSwitches) {
-		XAIE_ERROR("Invalid broadcast ID or switch value\n");
+		XAIE_ERROR("Invalid broadcast ID or switch value, BroadcastId: %u EvntMod->NumBroadcastIds: %u"\
+				"Switch: %u EvntMod->NumSwitches: %u\n", BroadcastId, EvntMod->NumBroadcastIds, (u8)Switch, EvntMod->NumSwitches);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1208,13 +1212,13 @@ AieRC XAie_EventGroupReadConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 			RC = XAie_Read32(DevInst, RegAddr, GroupBitMap);
 			if (RC != XAIE_OK) {
-				XAIE_ERROR("Group Event read failed: %d\n", RC);
+				XAIE_ERROR("Group Event read failed: RegAddr:0x%llu  Col:%u Row:%u\n", RegAddr, Loc.Col, Loc.Row);
 			}
 			return XAIE_OK;
 		}
 	}
 
-	XAIE_ERROR("Invalid group event ID\n");
+	XAIE_ERROR("Invalid group event ID. GroupEvent : %d\n", GroupEvent);
 	return XAIE_INVALID_ARGS;
 }
 
@@ -1285,7 +1289,7 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 	}
 
-	XAIE_ERROR("Invalid group event ID\n");
+	XAIE_ERROR("Invalid group event ID. GroupEvent: %d\n", GroupEvent);
 	return XAIE_INVALID_ARGS;
 }
 
@@ -1321,7 +1325,7 @@ AieRC XAie_EventGroupControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1361,7 +1365,7 @@ AieRC XAie_EventGroupReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1411,7 +1415,7 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1427,12 +1431,12 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
-		XAIE_ERROR("Invalid Event id\n");
+		XAIE_ERROR("Invalid Event id. Event: %d Col:%u Row:%u\n",Event, Loc.Col, Loc.Row);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if (SelectId >= EvntMod->NumEdgeSelectIds) {
-		XAIE_ERROR("Invalid select id\n");
+		XAIE_ERROR("Invalid select id. SelectId: %u EvntMod->NumEdgeSelectIds:%u\n", SelectId, EvntMod->NumEdgeSelectIds);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1488,7 +1492,7 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
 	if(PCEventId >= EvntMod->NumPCEvents) {
-		XAIE_ERROR("Invalid PC event ID\n");
+		XAIE_ERROR("Invalid PC event ID. PCEventId: %u EvntMod->NumPCEvents: %u Col:%u Row:%u\n",PCEventId, EvntMod->NumPCEvents, Loc.Col, Loc.Row);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1553,7 +1557,7 @@ AieRC XAie_EventPCEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1587,7 +1591,7 @@ AieRC XAie_EventPCDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1621,7 +1625,7 @@ AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1745,7 +1749,7 @@ AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 			return XAIE_OK;
 		}
 	}
-	XAIE_ERROR("Could not convert Physical event:%u to Logical event.\n", HwEvent);
+	XAIE_ERROR("Could not convert Physical event:%u to Logical event. Col:%u Row:%u\n", HwEvent, Loc.Col, Loc.Row);
 
 	return XAIE_INVALID_ARGS;
 }
@@ -1792,7 +1796,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1810,7 +1814,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Events,
 								&PhyEvent);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID. Events: %d PhyEvent: %u Col:%u Row:%u\n", Events, PhyEvent, Loc.Col, Loc.Row);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1857,7 +1861,7 @@ AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1912,7 +1916,7 @@ AieRC XAie_EventRegStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 

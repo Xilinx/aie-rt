@@ -111,7 +111,7 @@ u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAIE_ERROR("Cannot find Tile Type\n");
+	XAIE_ERROR("Cannot find Tile Type. Col: %u Row:%u \n", Loc.Col, Loc.Row);
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
@@ -137,19 +137,19 @@ AieRC XAie_CheckModule(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_AIETILE && Module > XAIE_CORE_MOD) {
-		XAIE_ERROR("Invalid Module\n");
+		XAIE_ERROR("Invalid Module.Col:%u Row:%u TileType:%u Module:%u\n",Loc.Col, Loc.Row, TileType, Module);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
 	    TileType == XAIEGBL_TILE_TYPE_SHIMNOC) && Module != XAIE_PL_MOD) {
-		XAIE_ERROR("Invalid Module\n");
+		XAIE_ERROR("Invalid Module.Col:%u Row:%u TileType:%u Module:%u\n",Loc.Col, Loc.Row, TileType, Module);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE &&
 		Module != XAIE_MEM_MOD) {
-		XAIE_ERROR("Invalid Module\n");
+		XAIE_ERROR("Invalid Module.Col:%u Row:%u TileType:%u Module:%u\n",Loc.Col, Loc.Row, TileType, Module);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -186,7 +186,7 @@ u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType)
 	}
 	default:
 	{
-		XAIE_ERROR("Invalid Tiletype\n");
+		XAIE_ERROR("Invalid Tiletype. TileType: %u\n", TileType);
 		return 0;
 	}
 	}
@@ -226,7 +226,7 @@ u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType)
 	}
 	default:
 	{
-		XAIE_ERROR("Invalid Tiletype\n");
+		XAIE_ERROR("Invalid Tiletype. TileType: %u\n", TileType);
 		return 0;
 	}
 	}
@@ -304,7 +304,7 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 
 	/* Return error if the Master Port Type is not valid */
 	if((PortPtr->NumPorts == 0U) || (PortNum >= PortPtr->NumPorts)) {
-		XAIE_ERROR("Invalid Master Port\n");
+		XAIE_ERROR("Invalid Master Port. NumPorts: %u PortNum: %u\n",PortPtr->NumPorts, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -424,8 +424,8 @@ AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
 
 			if(_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_ENABLE) {
 				if(Index >= *NumTiles) {
-					XAIE_ERROR("Invalid NumTiles: %d\n",
-						*NumTiles);
+					XAIE_ERROR("Invalid NumTiles: %d Col: %u Row: %u\n",
+						*NumTiles, Loc.Col, Loc.Row);
 					return XAIE_INVALID_ARGS;
 				}
 
@@ -547,7 +547,8 @@ int _XAie_MatchPartitionList(XAie_DevInst *DevInst, u32 PartitionId)
 		NodePtr = NodePtr->Next;
 	}
 
-	XAIE_ERROR("Failed to match the partition id from the list PartitionId: %u \n", PartitionId);
+	XAIE_ERROR("Failed to match the partition id from the list PartitionId: %u  "\
+			"  ListNode->PartitionId: %u\n", PartitionId,  ListNode->PartitionId);
 
 	return XAIE_INVALID_PARTITIONFD;
 }
@@ -708,7 +709,7 @@ static AieRC _XAie_RemoveTxnInstFromList(XAie_DevInst *DevInst, u64 Tid)
 	}
 
 	if(NodePtr == NULL) {
-		XAIE_ERROR("Cannot find node to delete from list\n");
+		XAIE_ERROR("Cannot find node to delete from list,  NodePtr is NULL\n");
 		return XAIE_ERR;
 	} else {
 		Prev->Next = NodePtr->Next;
@@ -1239,7 +1240,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 	TxnPtr = malloc(AllocatedBuffSize);
 	if(TxnPtr == NULL) {
-		XAIE_ERROR("Malloc failed\n");
+		XAIE_ERROR("Failed to allocate memory for alocated buffer\n");
 		return NULL;
 	}
 
@@ -2027,7 +2028,7 @@ static AieRC _XAie_CoreStatusDump(XAie_DevInst *DevInst,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -2097,7 +2098,7 @@ static AieRC _XAie_DmaStatusDump(XAie_DevInst *DevInst,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType >= XAIEGBL_TILE_TYPE_MAX) ||
 			(TileType == XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -2180,7 +2181,7 @@ static AieRC _XAie_LockValueStatusDump(XAie_DevInst *DevInst,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType >= XAIEGBL_TILE_TYPE_MAX) ||
 			(TileType == XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
@@ -2245,7 +2246,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType >= XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -2509,7 +2510,7 @@ AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module. Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -2518,7 +2519,7 @@ AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv)
 		UcMod->MemPrivilegedOffset;
 	RC = XAie_Read32(DevInst, Offset, &RegVal);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Privileged memory register\n");
+		XAIE_ERROR("Privileged memory register. Failed to read register value. Offset: %lu\n", Offset);
 		return RC;
 	}
 

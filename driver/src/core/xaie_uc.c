@@ -185,7 +185,8 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		RC = (*BlockWrite)(DevInst, Loc, (u32)Addr,
 				(const void*)Buffer, BytesToWrite);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Write to data memory failed\n");
+			XAIE_ERROR("Write to data memory failed. Col: %u Row: %u, BytesToWrite: %lu\n"\
+					,Loc.Col, Loc.Row, BytesToWrite);
 			if(Phdr->p_filesz == 0U) {
 				free(Tmp);
 			}
@@ -309,7 +310,7 @@ AieRC XAie_LoadUcMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -354,7 +355,7 @@ AieRC XAie_LoadUc(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 

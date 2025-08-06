@@ -178,19 +178,19 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 		break;
 	default:
 		/* Invalid CardDir */
-		XAIE_ERROR("Invalid address - 0x%x\n", Addr);
+		XAIE_ERROR("Invalid address - 0x%x Col: %u Row:%u\n", Addr, Loc.Col, Loc.Row);
 		return XAIE_ERR;
 	}
 
 	/* Return errors if modified rows and cols are invalid */
 	if(Loc.Row >= DevInst->NumRows || Loc.Col >= DevInst->NumCols) {
-		XAIE_ERROR("Target row/col out of range\n");
+		XAIE_ERROR("Target row/col out of range, Col: %u Row:%u\n",Loc.Col, Loc.Row);
 		return XAIE_ERR;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type for address\n");
+		XAIE_ERROR("Invalid tile type for address. Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_ERR;
 	}
 
@@ -310,8 +310,8 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		RC = _XAie_GetTargetTileLoc(DevInst, Loc, SectionAddr, &TgtLoc);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to get target "\
-					"location for p_paddr 0x%x\n",
-					SectionAddr);
+					"location for p_paddr 0x%x Col: %u Row: %u\n",
+					SectionAddr, Loc.Col, Loc.Row);
 			if(Phdr->p_filesz == 0U) {
 				free(Tmp);
 			}
@@ -333,7 +333,8 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		if(DevInst->EccStatus) {
 			RC = _XAie_EccOnDM(DevInst, TgtLoc);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Unable to turn ECC On for Data Memory\n");
+				XAIE_ERROR("Unable to turn ECC On for Data Memory. Target loc, Col: %u"\
+						"Row.: %u\n",TgtLoc.Col, TgtLoc.Row);
 				if(Phdr->p_filesz == 0U) {
 					free(Tmp);
 				}
@@ -344,7 +345,8 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		RC = XAie_DataMemBlockWrite(DevInst, TgtLoc, (u32)Addr,
 				(const void*)Buffer, BytesToWrite);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Write to data memory failed\n");
+			XAIE_ERROR("Write to data memory failed. Col: %u Row: %u,"\
+				       "BytesToWrite: %lu\n", TgtLoc.Col, TgtLoc.Row, BytesToWrite);
 			if(Phdr->p_filesz == 0U) {
 				free(Tmp);
 			}
@@ -443,7 +445,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(DevInst->EccStatus) {
 		RC = _XAie_EccOnPM(DevInst, Loc);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Unable to turn ECC On for Program Memory\n");
+			XAIE_ERROR("Unable to turn ECC On for Program Memory. Col:%u Row:%u\n",Loc.Col, Loc.Row);
 			return RC;
 		}
 	}
@@ -479,7 +481,7 @@ AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -587,7 +589,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -719,7 +721,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -762,7 +764,7 @@ AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -804,7 +806,7 @@ AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 

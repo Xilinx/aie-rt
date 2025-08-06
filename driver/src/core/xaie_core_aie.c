@@ -140,7 +140,7 @@ AieRC _XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(XAie_MaskPoll(DevInst, EventRegAddr, Mask, Value, TimeOut) !=
 			XAIE_OK) {
-		XAIE_DBG("Status poll time out\n");
+		XAIE_DBG("Status poll time out. Col:%u Row:%u\n",Loc.Col, Loc.Row);
 		return XAIE_CORE_STATUS_TIMEOUT;
 	}
 

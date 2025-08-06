@@ -72,7 +72,7 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -128,7 +128,7 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -170,7 +170,7 @@ AieRC XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -209,7 +209,7 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -252,7 +252,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -295,7 +295,7 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -374,7 +374,7 @@ static AieRC _XAie_CoreDebugCtrlHalt(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -454,7 +454,7 @@ AieRC XAie_CoreGetDebugHaltStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -508,7 +508,7 @@ AieRC XAie_CoreGetPCValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -547,7 +547,7 @@ AieRC XAie_CoreGetSPValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -586,7 +586,7 @@ AieRC XAie_CoreGetLRValue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -625,7 +625,7 @@ AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -662,7 +662,7 @@ AieRC XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -708,7 +708,7 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -724,7 +724,8 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 	   (MEvent1 == XAIE_EVENT_INVALID) ||
 	   (MSStepEvent == XAIE_EVENT_INVALID) ||
 	   (MResumeCoreEvent == XAIE_EVENT_INVALID)) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID, MEvent0: %u MEvent1: %u MSStepEvent: %u"\
+			       "MResumeCoreEvent: %u\n",MEvent0,MEvent1,MSStepEvent,MResumeCoreEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -775,7 +776,7 @@ AieRC XAie_CoreClearDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -820,7 +821,7 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -829,7 +830,7 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
 	if(MappedEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID, MappedEvent: %u\n",MappedEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -875,7 +876,7 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -887,7 +888,7 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, XAIE_CORE_MOD,
 			Event, &HwEvent);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID, Col: %u Row: %u Event: %d HwEvent: %u\n",Loc.Col, Loc.Row, Event, HwEvent);
 		return RC;
 	}
 
@@ -922,7 +923,7 @@ AieRC XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -960,7 +961,7 @@ AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1006,7 +1007,7 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1020,7 +1021,8 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 
 	if ((InDir != NORTH && InDir != WEST) ||
 		(OutDir != SOUTH && OutDir != EAST)) {
-		XAIE_ERROR("Configure accum control failed, invalid direction.\n");
+		XAIE_ERROR("Configure accum control failed, invalid direction."\
+			       "Col: %u Row:%u InDir: %d OutDir: %d\n",Loc.Col, Loc.Row, InDir, OutDir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1075,7 +1077,7 @@ static AieRC _XAie_CoreProcessorBusConfig(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1157,7 +1159,7 @@ AieRC XAie_CoreUcWakeUp(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TType) == 0U) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1190,7 +1192,7 @@ AieRC XAie_CoreUcSleep(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TType) == 0U) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TType);
 		return XAIE_INVALID_TILE;
 	}
 
