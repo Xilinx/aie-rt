@@ -111,7 +111,7 @@ AieRC _XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel,
 {
 	/* For AIE, Acquire and Release Lock IDs must be the same */
 	if((Acq.LockId != Rel.LockId)) {
-		XAIE_ERROR("Lock ID is invalid\n");
+		XAIE_ERROR("Lock ID is invalid: AcqLockId: %u RelLockId: %u\n", Acq.LockId, Rel.LockId);
 		return XAIE_INVALID_LOCK_ID;
 	}
 
@@ -768,7 +768,7 @@ AieRC _XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 			DmaMod->ChProp->DmaChStatus[ChNum].AieDmaChStatus.StartQSize.Mask);
 
 	if(StartQSize > DmaMod->ChProp->StartQSizeMax) {
-		XAIE_ERROR("Invalid start queue size from register\n");
+		XAIE_ERROR("Invalid start queue size from register: StartQSize: %u\n", StartQSize);
 		return XAIE_ERR;
 	}
 

@@ -99,7 +99,7 @@ AieRC _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable)
 		Loc = XAie_TileLoc(C, 0);
 		RC = _XAie_PmSetColumnClockBuffer(DevInst, Loc, Enable);
 		if (RC != XAIE_OK) {
-			XAIE_ERROR("Failed to set partition clock buffers.\n");
+			XAIE_ERROR("Failed to set partition clock buffers. Col: %u Row: %u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 	}
@@ -157,7 +157,7 @@ u8 _XAie_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAIE_ERROR("Cannot find Tile Type\n");
+	XAIE_ERROR("Cannot find Tile Type,Col: %u Row: %u\n", Loc.Col, Loc.Row);
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
@@ -223,7 +223,7 @@ AieRC _XAie_SetPartColShimReset(XAie_DevInst *DevInst, u8 Enable)
 
 		RC = _XAie_SetShimReset(DevInst, Loc, Enable);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to set SHIM resets.\n");
+			XAIE_ERROR("Failed to set SHIM resets.Col: %u Row: %u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 	}
@@ -304,7 +304,8 @@ AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
 			RC = _XAie_TileCtrlSetIsolation(DevInst,
 					XAie_TileLoc(C, R), Dir);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to set partition isolation.\n");
+				XAIE_ERROR("Failed to set partition isolation. Col: %u Row: %u IsolationFlags: %u\n",
+					       C, R, IsolationFlags);
 				return RC;
 			}
 		}
@@ -346,7 +347,7 @@ AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst)
 			RC = XAie_BlockSet32(DevInst, RegAddr, 0,
 					(u32)(CoreMod->ProgMemSize / sizeof(u32)));
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to zeroize partition.\n");
+				XAIE_ERROR("Failed to zeroize partition(program memory). Col: %u Row: %u\n", C, R);
 				return RC;
 			}
 
@@ -356,7 +357,7 @@ AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst)
 			RC = XAie_BlockSet32(DevInst, RegAddr, 0,
 					(u32)(MemMod->Size / sizeof(u32)));
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to zeroize partition.\n");
+				XAIE_ERROR("Failed to zeroize partition(data Memory). Col: %u Row: %u\n", C, R);
 				return RC;
 			}
 		}
@@ -547,7 +548,8 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 
 	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
 			((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
-		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		XAIE_ERROR("Invalid Start Column/Numcols. Args->StartCol: %d Args->NumCols:%d\n",
+				Args->StartCol, Args->NumCols);
 		return XAIE_ERR;
 	}
 
@@ -559,8 +561,8 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 		RC = _XAie_PmSetColumnClockBuffer(DevInst, TileLoc,
 				Args->Enable);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable clock for column: %d\n",
-					TileLoc.Col);
+			XAIE_ERROR("Failed to enable clock for column: Col: %u Row: %u\n",
+					TileLoc.Col, TileLoc.Row);
 			return RC;
 		}
 	}

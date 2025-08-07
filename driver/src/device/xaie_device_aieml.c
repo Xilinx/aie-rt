@@ -77,7 +77,7 @@ u8 _XAieMl_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIEGBL_TILE_TYPE_AIETILE;
 	}
 
-	XAIE_ERROR("Cannot find Tile Type\n");
+	XAIE_ERROR("Cannot find Tile Type. Col: %u Row: %u\n", Loc.Col, Loc.Row);
 
 	return XAIEGBL_TILE_TYPE_MAX;
 }
@@ -177,7 +177,8 @@ AieRC _XAieMl_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
 			RC = _XAie_TileCtrlSetIsolation(DevInst,
 					XAie_TileLoc(C, R), Dir);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to set partition isolation.\n");
+				XAIE_ERROR("Failed to set partition isolation. Col: %u Row: %u IsolationFlags:%u\n",
+						C, R, IsolationFlags);
 				return RC;
 			}
 		}
@@ -227,7 +228,8 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 					MCtrlMod[M].MemZeroisation.Mask,
 					FldVal);
 				if(RC != XAIE_OK) {
-					XAIE_ERROR("Failed to zeroize partition mems.\n");
+					XAIE_ERROR("Failed to zeroize partition mems. Col: %u Row: %u Mods: %u \n",
+							C, R, M);
 					return RC;
 				}
 
@@ -327,7 +329,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 	/* Disbale all the column clock and enable only the requested column clock */
 	RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to set partition clock buffers.\n");
+		XAIE_ERROR("Failed to set partition clock buffers. \n");
 		return RC;
 	}
 
@@ -427,7 +429,7 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 	RC = XAie_MaskWrite32(DevInst, RegAddr, XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_MASK,
 			FldVal);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable module clock control 0\n");
+		XAIE_ERROR("Failed to enable module clock control 0. Col: %u Row: %u\n",Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -439,7 +441,7 @@ static AieRC _XAieMl_PmSetShimClk(XAie_DevInst *DevInst,
 	RC = XAie_MaskWrite32(DevInst, RegAddr, XAIEMLGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_MASK,
 			FldVal);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable module clock control 1\n");
+		XAIE_ERROR("Failed to enable module clock control 1. Col: %u Row: %u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -469,7 +471,8 @@ AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 
 	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
 	   ((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
-		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		XAIE_ERROR("Invalid Start Column/Numcols. Args->StartCol: %d Args->NumCols: %d \n",
+			       Args->StartCol, Args->NumCols);
 		return XAIE_ERR;
 	}
 
@@ -487,7 +490,8 @@ AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 
 		RC = _XAieMl_PmSetShimClk(DevInst, TileLoc, Args->Enable);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to set module clock control.\n");
+			XAIE_ERROR("Failed to set module clock control.Col: %u Row: %u \n",
+					TileLoc.Col, TileLoc.Row);
 			return RC;
 		}
 	}

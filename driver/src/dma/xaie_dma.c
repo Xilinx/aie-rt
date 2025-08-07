@@ -70,13 +70,13 @@ AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 
 	if((DevInst == XAIE_NULL) || (DmaDesc == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc/DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -119,7 +119,7 @@ static AieRC _XAie_DmaLockConfig(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -128,7 +128,7 @@ static AieRC _XAie_DmaLockConfig(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
 	if((Acq.LockId > DmaMod->NumLocks) ||
 			(Acq.LockVal > LockMod->LockValUpperBound) ||
 			(Rel.LockVal > LockMod->LockValUpperBound)) {
-		XAIE_ERROR("Invalid Lock\n");
+		XAIE_ERROR("Invalid Lock. Acq.LockId: %u Acq.LockVal: %d Rel.LockVal: %d\n",Acq.LockId, Acq.LockVal, Rel.LockVal);
 		return XAIE_INVALID_LOCK_ID;
 	}
 
@@ -198,7 +198,7 @@ AieRC XAie_DmaSetPkt(XAie_DmaDesc *DmaDesc, XAie_Packet Pkt)
 {
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -232,13 +232,13 @@ AieRC XAie_DmaSetOutofOrderBdId(XAie_DmaDesc *DmaDesc, u8 OutofOrderBdId)
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->OutofOrderBdId == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DMA  OutofOrderBdId Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -275,13 +275,13 @@ AieRC XAie_DmaSetDoubleBuffer(XAie_DmaDesc *DmaDesc, u64 Addr, XAie_Lock Acq,
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->DoubleBuffering == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature not supported\n");
+		XAIE_ERROR("DMA DoubleBuffering Feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -294,7 +294,7 @@ AieRC XAie_DmaSetDoubleBuffer(XAie_DmaDesc *DmaDesc, u64 Addr, XAie_Lock Acq,
 
 	LockMod = DmaDesc->LockMod;
 	if((Acq.LockId > LockMod->NumLocks) || (Acq.LockId != Rel.LockId)) {
-		XAIE_ERROR("Invalid Lock\n");
+		XAIE_ERROR("Invalid Lock.\n");
 		return XAIE_INVALID_LOCK_ID;
 	}
 
@@ -344,14 +344,14 @@ AieRC XAie_DmaSetAddrLen(XAie_DmaDesc *DmaDesc, u64 Addr, u32 Len)
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(((Addr & DmaMod->BdProp->AddrAlignMask) != 0U) ||
 			((Addr + Len) > DmaMod->BdProp->AddrMax)) {
-		XAIE_ERROR("Invalid Address\n");
+		XAIE_ERROR("Invalid buffer starting Address\n");
 		return XAIE_INVALID_ADDRESS;
 	}
 
@@ -394,17 +394,18 @@ AieRC XAie_DmaSetAddrOffsetLen(XAie_DmaDesc *DmaDesc, XAie_MemInst *MemInst,
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("DMA set address offset failed, Invalid DmaDesc\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if (MemInst == XAIE_NULL) {
-		XAIE_ERROR("DMA set address offset failed, Invalid MemInst\n");
+		XAIE_ERROR("Invalid Arguments, MemInst is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if (Offset >= MemInst->Size || Offset + Len > MemInst->Size) {
-		XAIE_ERROR("DMA set address offset failed, Invalid Offset, Len\n");
+		XAIE_ERROR("Invalid Arguments, Invalid Offset, Len. Offset:%llu Len:%u MemInst->Size:%llu\n",
+				Offset, Len, MemInst->Size);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -412,7 +413,7 @@ AieRC XAie_DmaSetAddrOffsetLen(XAie_DmaDesc *DmaDesc, XAie_MemInst *MemInst,
 	DmaMod = DmaDesc->DmaMod;
 	if(((Addr & DmaMod->BdProp->AddrAlignMask) != 0U) ||
 			((Offset + Len) > DmaMod->BdProp->AddrMax)) {
-		XAIE_ERROR("DMA Set Address Offset failed, Invalid Address Offset\n");
+		XAIE_ERROR("Invalid Arguments, DMA Set Address Offset failed, Invalid Address Offset\n");
 		return XAIE_INVALID_ADDRESS;
 	}
 
@@ -452,7 +453,7 @@ AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 
 	if((DmaDesc == XAIE_NULL) || (Tensor == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc/Tensor is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -462,12 +463,13 @@ AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 		 * calculation is not linear. Have to add a logic to make sure
 		 * we are not accessing above the address range.
 		 */
-		XAIE_ERROR("Invalid Address\n");
+		XAIE_ERROR("Invalid Arguments, Invalid Address\n");
 		return XAIE_INVALID_ADDRESS;
 	}
 
 	if(Tensor->NumDim > DmaMod->NumAddrDim) {
-		XAIE_ERROR("Tensor dimension not supported\n");
+		XAIE_ERROR("Tensor dimension not supported. Tensor->NumDim: %u DmaMod->NumAddrDim: %u\n",
+				Tensor->NumDim,  DmaMod->NumAddrDim);
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -505,7 +507,7 @@ AieRC XAie_DmaSetBdIteration_16(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -539,13 +541,13 @@ AieRC XAie_DmaEnableCompression(XAie_DmaDesc *DmaDesc)
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->Compression == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature not supported\n");
+		XAIE_ERROR("DMA, Compression Feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -575,18 +577,18 @@ AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc, XAie_DmaFifoCounter Counter)
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->FifoMode == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature not supported\n");
+		XAIE_ERROR("DMA, FifoMode Feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
 	if(Counter > XAIE_DMA_FIFO_COUNTER_1) {
-		XAIE_ERROR("Invalid DMA FIFO counter\n");
+		XAIE_ERROR("Invalid DMA FIFO counter. Counter : %u\n", Counter);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -616,13 +618,13 @@ AieRC XAie_DmaGetNumBds(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -655,13 +657,13 @@ AieRC XAie_DmaSetNextBd_16(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(NextBd > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid Next Bd\n");
+		XAIE_ERROR("Invalid Next Bd. NextBd: %u\n", NextBd);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -693,7 +695,7 @@ AieRC XAie_DmaEnableBd(XAie_DmaDesc *DmaDesc)
 {
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -719,7 +721,7 @@ AieRC XAie_DmaDisableBd(XAie_DmaDesc *DmaDesc)
 {
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -752,7 +754,7 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 {
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -767,7 +769,7 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 	}
 	if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen,
 					      &DmaDesc->AxiDesc.BurstLen)) {
-		XAIE_ERROR("Invalid Burst length\n");
+		XAIE_ERROR("Invalid Burst length. BurstLen: %u\n", BurstLen);
 		return XAIE_INVALID_BURST_LENGTH;
 	}
 
@@ -802,13 +804,13 @@ AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->InterleaveMode == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DMA InterleaveMode Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -839,18 +841,18 @@ AieRC XAie_DmaWriteBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(DmaDesc->TileType != DevInst->DevOps->GetTTypefromLoc(DevInst, Loc)) {
-		XAIE_ERROR("Tile type mismatch\n");
+		XAIE_ERROR("Tile type mismatch. Col: %u Row: %u TileType: %u\n", Loc.Col, Loc.Row, DmaDesc->TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum: %u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -887,19 +889,19 @@ AieRC XAie_DmaReadBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 
 	if((DevInst == XAIE_NULL) || (DmaDesc == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc/DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum: %u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -941,30 +943,30 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Reset > DMA_CHANNEL_RESET) {
-		XAIE_ERROR("Invalid DMA channel reset value\n");
+		XAIE_ERROR("Invalid DMA channel reset value. Reset: %u\n", Reset);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMPL) ||
 			(TileType == XAIEGBL_TILE_TYPE_SHIMNOC)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum: %u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1001,18 +1003,18 @@ AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Reset > DMA_CHANNEL_RESET) {
-		XAIE_ERROR("Invalid DMA channel reset value\n");
+		XAIE_ERROR("Invalid DMA channel reset value: Reset :%u\n", Reset);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1063,12 +1065,12 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1079,13 +1081,13 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum: %u \n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1126,12 +1128,12 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1142,13 +1144,13 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum: %u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1190,29 +1192,29 @@ AieRC XAie_DmaChannelPushBdToQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction, Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum:%u \n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum: %u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -1260,24 +1262,24 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum:%u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1358,24 +1360,24 @@ AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum: %u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1406,24 +1408,24 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum:%u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1454,24 +1456,24 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum:%u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1507,25 +1509,25 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir: %u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if (TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type or Direction\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum: %u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1563,13 +1565,13 @@ AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) || (QueueSize == NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst/QueueSize is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1602,19 +1604,19 @@ AieRC XAie_DmaGetBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 
 	if((DevInst == XAIE_NULL) || (Len == NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum: %u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -1725,7 +1727,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance to start queue\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set to start queue\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1735,14 +1737,14 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir:%u\n",Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
 		TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type to start queue\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1758,7 +1760,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 	}
 
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum: %u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -1772,7 +1774,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 	if(DmaQueueDesc->OutOfOrder != XAIE_ENABLE) {
 		StartBd = DmaQueueDesc->StartBd;
 		if(StartBd > DmaMod->NumBds) {
-			XAIE_ERROR("Invalid BD number\n");
+			XAIE_ERROR("Invalid BD number. StartBd:%u\n", StartBd);
 			return XAIE_INVALID_BD_NUM;
 		}
 		RC = DmaMod->BdChValidity(StartBd, ChNum);
@@ -1823,19 +1825,19 @@ AieRC XAie_DmaUpdateBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum: %u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -1875,19 +1877,19 @@ AieRC XAie_DmaUpdateBdAddr_16(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum:%u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 
@@ -1932,13 +1934,13 @@ AieRC XAie_DmaChannelDescInit(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) || (DmaChannelDesc == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc/DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1975,13 +1977,13 @@ AieRC XAie_DmaChannelEnCompression(XAie_DmaChannelDesc *DmaChannelDesc,
 
 	if((DmaChannelDesc == XAIE_NULL) ||
 			(DmaChannelDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaChannelDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaChannelDesc->DmaMod;
 	if(DmaMod->ChProp->HasEnCompression == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature not supported\n");
+		XAIE_ERROR("DMAChannel HasEnCompression Feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2012,13 +2014,13 @@ AieRC XAie_DmaChannelEnOutofOrder(XAie_DmaChannelDesc *DmaChannelDesc,
 
 	if((DmaChannelDesc == XAIE_NULL) ||
 			(DmaChannelDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaChannelDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaChannelDesc->DmaMod;
 	if(DmaMod->ChProp->HasEnOutOfOrder == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature not supported\n");
+		XAIE_ERROR("DmaChannel HasEnOutOfOrder Feature not supported\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2049,13 +2051,13 @@ AieRC XAie_DmaChannelSetControllerId(XAie_DmaChannelDesc *DmaChannelDesc,
 
 	if((DmaChannelDesc == XAIE_NULL) ||
 			(DmaChannelDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaChannelDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaChannelDesc->DmaMod;
 	if(DmaMod->ChProp->HasControllerId == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DmaChannel HasControllerId Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2094,13 +2096,13 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 
 	if((DmaChannelDesc == XAIE_NULL) ||
 			(DmaChannelDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaChannelDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaChannelDesc->DmaMod;
 	if(DmaMod->ChProp->HasFoTMode == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DmaChannel HasFoTMode Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2143,7 +2145,7 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) || (DmaChannelDesc == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaChannelDesc/DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -2153,7 +2155,7 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 	}
 
 	if(Dir >= DMA_MAX) {
-		XAIE_ERROR("Invalid DMA direction\n");
+		XAIE_ERROR("Invalid DMA direction. Dir:%u\n", Dir);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -2163,13 +2165,13 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 	}
 
 	if(DmaChannelDesc->TileType != DevInst->DevOps->GetTTypefromLoc(DevInst, Loc)) {
-		XAIE_ERROR("Tile type mismatch\n");
+		XAIE_ERROR("Tile type mismatch.Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row,DmaChannelDesc->TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[DmaChannelDesc->TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum:%u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -2209,13 +2211,13 @@ AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, XAie_DmaPadTensor *PadTensor)
 	const XAie_DmaMod *DmaMod;
 	if((DmaDesc == XAIE_NULL) || (PadTensor == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc/PadTensor is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->Padding == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DmaDesc Padding Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2250,13 +2252,13 @@ AieRC XAie_DmaSetZeroPadding(XAie_DmaDesc *DmaDesc, u8 Dim,
 	const XAie_DmaMod *DmaMod;
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->Padding == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DMA Padding Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2319,13 +2321,13 @@ AieRC XAie_DmaTlastEnable(XAie_DmaDesc *DmaDesc)
 	const XAie_DmaMod *DmaMod;
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->TlastSuppress == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DMA TlastSuppress Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2353,13 +2355,13 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 	const XAie_DmaMod *DmaMod;
 	if((DmaDesc == XAIE_NULL) ||
 			(DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments\n");
+		XAIE_ERROR("Invalid Arguments, DmaDesc is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(DmaMod->TlastSuppress == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Feature unavailable\n");
+		XAIE_ERROR("DMA TlastSuppress Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
@@ -2390,13 +2392,13 @@ AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -2408,7 +2410,7 @@ AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	}
 
 	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number\n");
+		XAIE_ERROR("Invalid Channel number. ChNum:%u\n", ChNum);
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
@@ -2448,13 +2450,13 @@ AieRC XAie_DmaUpdateBdAddrOff_16(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Of
 	DevInst = MemInst->DevInst;
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
+		XAIE_ERROR("Invalid BD number. BdNum:%u\n", BdNum);
 		return XAIE_INVALID_BD_NUM;
 	}
 	BdBaseAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset);

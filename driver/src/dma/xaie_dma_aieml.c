@@ -1123,7 +1123,7 @@ AieRC _XAieMl_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 			DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.TaskQSize.Lsb,
 			DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.TaskQSize.Mask);
 	if(TaskQSize > DmaMod->ChProp->StartQSizeMax) {
-		XAIE_ERROR("Invalid start queue size from register\n");
+		XAIE_ERROR("Invalid start queue size from register: TaskQSize: %u\n", TaskQSize);
 		return XAIE_ERR;
 	}
 
@@ -1326,7 +1326,7 @@ AieRC _XAieMl_MemTileDmaCheckBdChValidity(u8 BdNum, u8 ChNum)
 		return XAIE_OK;
 	}
 
-	XAIE_ERROR("Invalid BdNum, ChNum combination\n");
+	XAIE_ERROR("Invalid BdNum, ChNum combination. BdNum: %u ChNum: %u\n",BdNum,ChNum);
 	return XAIE_INVALID_ARGS;
 }
 
@@ -1508,7 +1508,9 @@ AieRC _XAieMl_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 	    (Wrap == 0U) ||
 	    (Wrap > (BdProp->IterWrapMax + 1U)) ||
 	    (IterCurr > BdProp->IterCurrMax)) {
-		XAIE_ERROR("Iteration parameters exceed min or max value.\n");
+		XAIE_ERROR("Iteration parameters exceed min or max value."
+				"StepSize:%u Wrap:%u IterCurr:%u MaxIterCurr:%u\n",
+				StepSize,Wrap,IterCurr,BdProp->IterCurrMax);
 		return XAIE_ERR;
 	}
 
