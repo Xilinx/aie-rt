@@ -4223,7 +4223,7 @@ XAie_TileMod Aie2IpuMod[] =
 };
 
 /* Device level operations for aieml */
-XAie_DeviceOps Aie2IpuDevOps =
+const XAie_DeviceOps Aie2IpuDevOps =
 {
 	.IsCheckerBoard = 0U,
 	.TilesInUse = Aie2IpuTilesInUse,

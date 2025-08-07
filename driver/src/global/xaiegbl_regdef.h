@@ -920,18 +920,18 @@ struct XAie_TileMod {
 
 
 struct XAie_DeviceOps {
-	u8 IsCheckerBoard;
+	const u8 IsCheckerBoard;
 	u32 *TilesInUse;
 	u32 *MemInUse;
 	u32 *CoreInUse;
-	u8 (*GetTTypefromLoc)(XAie_DevInst *DevInst, XAie_LocType Loc);
-	AieRC (*SetPartColShimReset)(XAie_DevInst *DevInst, u8 Enable);
-	AieRC (*SetPartColClockAfterRst)(XAie_DevInst *DevInst, u8 Enable);
-	AieRC (*SetPartIsolationAfterRst)(XAie_DevInst *DevInst);
-	AieRC (*PartMemZeroInit)(XAie_DevInst *DevInst);
-	AieRC (*RequestTiles)(XAie_DevInst *DevInst,
+	u8 (*const GetTTypefromLoc)(XAie_DevInst *DevInst, XAie_LocType Loc);
+	AieRC (*const SetPartColShimReset)(XAie_DevInst *DevInst, u8 Enable);
+	AieRC (*const SetPartColClockAfterRst)(XAie_DevInst *DevInst, u8 Enable);
+	AieRC (*const SetPartIsolationAfterRst)(XAie_DevInst *DevInst);
+	AieRC (*const PartMemZeroInit)(XAie_DevInst *DevInst);
+	AieRC (*const RequestTiles)(XAie_DevInst *DevInst,
 			XAie_BackendTilesArray *Args);
-	AieRC (*SetColumnClk)(XAie_DevInst *DevInst,
+	AieRC (*const SetColumnClk)(XAie_DevInst *DevInst,
 			XAie_BackendColumnReq *Args);
 };
 
