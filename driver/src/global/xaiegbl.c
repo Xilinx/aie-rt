@@ -51,11 +51,10 @@
 #define XAIE_ECC_BROADCAST_ID		6U
 
 /************************** Variable Definitions *****************************/
-extern XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
-extern XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
-extern XAie_TileMod Aie2IpuMod[XAIEGBL_TILE_TYPE_MAX];
-extern XAie_TileMod Aie2PMod[XAIEGBL_TILE_TYPE_MAX];
-extern XAie_TileMod Aie2PSMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod Aie2IpuMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod Aie2PMod[XAIEGBL_TILE_TYPE_MAX];
 
 extern const XAie_DeviceOps AieDevOps;
 extern const XAie_DeviceOps AieMlDevOps;

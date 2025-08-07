@@ -3272,7 +3272,7 @@ static const XAie_TileCtrlMod AieShimTileCtrlMod =
  * Depending on the tile type, this data strcuture can be used to access all
  * hardware properties of individual modules.
  */
-XAie_TileMod AieMod[] =
+const XAie_TileMod AieMod[] =
 {
 	{
 		/*

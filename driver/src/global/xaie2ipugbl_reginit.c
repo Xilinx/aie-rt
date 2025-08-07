@@ -4138,7 +4138,7 @@ static const XAie_MemCtrlMod AieMlMemTileMemCtrlMod =
  * Depending on the tile type, this data strcuture can be used to access all
  * hardware properties of individual modules.
  */
-XAie_TileMod Aie2IpuMod[] =
+const XAie_TileMod Aie2IpuMod[] =
 {
 	{
 		/*

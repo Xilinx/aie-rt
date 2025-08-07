@@ -91,7 +91,7 @@ typedef struct XAie_DevProp {
 	u8 DevGen;
 	u8 RowShift;
 	u8 ColShift;
-	XAie_TileMod *DevMod;
+	const XAie_TileMod *DevMod;
 } XAie_DevProp;
 
 /*

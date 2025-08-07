@@ -4090,7 +4090,7 @@ static AieRC _XAie_EventStatusDump(XAie_DevInst *DevInst,
 	XAie_CoreTileStatus *CoreTile;
 	XAie_ShimTileStatus *ShimTile;
 	XAie_MemTileStatus *MemTile;
-	XAie_TileMod *DevMod;
+	const XAie_TileMod *DevMod;
 
 	AieTileStart = DevInst->AieTileRowStart;
 	MemTileStart = DevInst->MemTileRowStart;
