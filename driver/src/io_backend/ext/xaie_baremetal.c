@@ -50,8 +50,6 @@ typedef struct {
 } XAie_BaremetalIO;
 
 /************************** Variable Definitions *****************************/
-static XAie_BaremetalIO BaremetalIO;
-
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -68,7 +66,10 @@ static XAie_BaremetalIO BaremetalIO;
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 {
-	(void)IOInst;
+	if (IOInst != NULL) {
+		free(IOInst);
+	}
+
 	return XAIE_OK;
 }
 
@@ -86,7 +87,11 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
-	XAie_BaremetalIO *IOInst = &BaremetalIO;
+	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)malloc(sizeof(XAie_BaremetalIO));
+	if (IOInst == NULL) {
+		XAIE_ERROR("Failed to allocate Baremetal IO instance\n");
+		return XAIE_ERR;
+	}
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
@@ -560,8 +565,10 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 
 static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 {
-	/* no-op */
-	(void)IOInst;
+	if (IOInst != NULL) {
+		free(IOInst);
+	}
+
 	return XAIE_OK;
 }
 

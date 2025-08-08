@@ -43,8 +43,6 @@ typedef struct {
 } XAie_IpuIO;
 
 /************************** Variable Definitions *****************************/
-static XAie_IpuIO IpuIO;
-
 #define XAIE_IPU_MASKPOLL_COUNT 100
 
 /************************** Function Definitions *****************************/
@@ -63,7 +61,9 @@ static XAie_IpuIO IpuIO;
 *******************************************************************************/
 static AieRC XAie_IpuIO_Finish(void *IOInst)
 {
-	(void)IOInst;
+	if (IOInst != NULL) {
+		free(IOInst);
+	}
 
 	return XAIE_OK;
 }
@@ -82,7 +82,11 @@ static AieRC XAie_IpuIO_Finish(void *IOInst)
 *******************************************************************************/
 static AieRC XAie_IpuIO_Init(XAie_DevInst *DevInst)
 {
-	XAie_IpuIO *IOInst = &IpuIO;
+	XAie_IpuIO *IOInst = (XAie_IpuIO *)malloc(sizeof(XAie_IpuIO));
+	if (IOInst == NULL) {
+		XAIE_ERROR("Failed to allocate IPU IO instance\n");
+		return XAIE_ERR;
+	}
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	DevInst->IOInst = IOInst;
@@ -299,8 +303,10 @@ static AieRC XAie_IpuIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 
 static AieRC XAie_IpuIO_Finish(void *IOInst)
 {
-	/* no-op */
-	(void)IOInst;
+	if (IOInst != NULL) {
+		free(IOInst);
+	}
+
 	return XAIE_OK;
 }
 
