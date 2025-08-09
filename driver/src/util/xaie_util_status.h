@@ -96,7 +96,7 @@ enum DmaStatus_MM2S_enum{
 };
 
 /*Core Status register lookup*/
-static const char* XAie_CoreStatus_Strings[] = {
+static const char* const XAie_CoreStatus_Strings[] = {
     [XAIE_CORE_STATUS_ENABLE_BIT]              = "Enable",
     [XAIE_CORE_STATUS_RESET_BIT]               = "Reset",
     [XAIE_CORE_STATUS_MEM_STALL_S_BIT]         = "Memory_Stall_S",
@@ -120,7 +120,7 @@ static const char* XAie_CoreStatus_Strings[] = {
 };
 
 /*DMA S2MM Status Register lookup*/
-static const char* XAie_DmaS2MMStatus_Strings[] = {
+static const char* const XAie_DmaS2MMStatus_Strings[] = {
     [XAIE_DMA_STATUS_S2MM_STATUS]                         = "Status",
     [XAIE_DMA_STATUS_S2MM_STALLED_LOCK_ACK]               = "Stalled_Lock_Acq",
     [XAIE_DMA_STATUS_S2MM_STALLED_LOCK_REL]               = "Stalled_Lock_Rel",
@@ -141,7 +141,7 @@ static const char* XAie_DmaS2MMStatus_Strings[] = {
 };
 
 /*DMA MM2S Status register lookup*/
-static const char* XAie_DmaMM2SStatus_Strings[] = {
+static const char* const XAie_DmaMM2SStatus_Strings[] = {
     [XAIE_DMA_STATUS_MM2S_STATUS]                       = "Status",
     [XAIE_DMA_STATUS_MM2S_STALLED_LOCK_ACK]             = "Stalled_Lock_Acq",
     [XAIE_DMA_STATUS_MM2S_STALLED_LOCK_REL]             = "Stalled_Lock_Rel",

@@ -31,7 +31,7 @@
 /**************************** Variable Definitions *******************************/
 
 /* Event string lookup table indexed by event number */
-static const char* XAie_EventCoreModStrings[][128] = {
+static const char* const XAie_EventCoreModStrings[][128] = {
 
 	{
 		[XAIEML_EVENTS_MEM_NONE] 			   =   "NONE_MEM",
@@ -290,7 +290,7 @@ static const char* XAie_EventCoreModStrings[][128] = {
 	}
 };
 
-static const char* XAie_EventNoCStrings[] = {
+static const char* const XAie_EventNoCStrings[] = {
 	[XAIEML_EVENTS_PL_NONE]                                    =    "NONE_PL",
 	[XAIEML_EVENTS_PL_TRUE]                                    =    "TRUE_PL",
 	[XAIEML_EVENTS_PL_GROUP_0]                                 =    "GROUP_0_PL",
@@ -421,7 +421,7 @@ static const char* XAie_EventNoCStrings[] = {
 	[XAIEML_EVENTS_PL_DMA_TASK_TOKEN_STALL]                    =    "DMA_TASK_TOKEN_STALL_PL",
 };
 
-static const char* XAie_EventMemTileStrings[] = {
+static const char* const XAie_EventMemTileStrings[] = {
 	[XAIEML_EVENTS_MEM_TILE_NONE]                               =   "NONE_MEM_TILE",
 	[XAIEML_EVENTS_MEM_TILE_TRUE]                               =   "TRUE_MEM_TILE",
 	[XAIEML_EVENTS_MEM_TILE_GROUP_0]                            =   "GROUP_0_MEM_TILE",
