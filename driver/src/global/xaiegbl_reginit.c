@@ -2941,7 +2941,7 @@ static const XAie_EvntMod AiePlEvntMod =
 
 #ifdef XAIE_FEATURE_TIMER_ENABLE
 /* Data structure to capture core and mem module timer properties */
-static XAie_TimerMod AieTileTimerMod[] =
+static const XAie_TimerMod AieTileTimerMod[] =
 {
 	{
 		.TrigEventLowValOff = XAIEGBL_MEM_TIMTRIEVTLOWVAL,
@@ -2964,7 +2964,7 @@ static XAie_TimerMod AieTileTimerMod[] =
 };
 
 /* Data structure to capture PL module timer properties */
-static XAie_TimerMod AiePlTimerMod =
+static const XAie_TimerMod AiePlTimerMod =
 {
 	.TrigEventLowValOff = XAIEGBL_PL_TIMTRIEVTLOWVAL,
 	.TrigEventHighValOff = XAIEGBL_PL_TIMTRIEVTHIGVAL,
@@ -3090,14 +3090,14 @@ static const XAie_TraceMod AiePlTraceMod =
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 /* Data Structure for clock control of PL/NOC tile. */
-static XAie_ClockMod AiePlClockMod =
+static const XAie_ClockMod AiePlClockMod =
 {
 	.ClockRegOff = XAIEGBL_PL_TILCLOCTRL,
 	{XAIEGBL_PL_TILCLOCTRL_NEXTILCLOENA_LSB, XAIEGBL_PL_TILCLOCTRL_NEXTILCLOENA_MASK},
 };
 
 /* Data structure for clock control of AIE tile. */
-static XAie_ClockMod AieTileClockMod =
+static const XAie_ClockMod AieTileClockMod =
 {
 	.ClockRegOff = XAIEGBL_CORE_TILCLOCTRL,
 	{XAIEGBL_CORE_TILCLOCTRL_NEXTILCLOENA_LSB, XAIEGBL_CORE_TILCLOCTRL_NEXTILCLOENA_MASK},

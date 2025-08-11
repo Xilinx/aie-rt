@@ -47,7 +47,7 @@
 static AieRC _XAie_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 		XAie_NpiProtRegReq *Req, u32 *RegVal);
 
-XAie_NpiMod _XAieNpiMod =
+const XAie_NpiMod _XAieNpiMod =
 {
 	.PcsrMaskOff = XAIE_NPI_PCSR_MASK,
 	.PcsrCntrOff = XAIE_NPI_PCSR_CONTROL,
