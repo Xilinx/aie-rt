@@ -61,8 +61,6 @@ extern const XAie_DeviceOps AieMlDevOps;
 extern const XAie_DeviceOps Aie2IpuDevOps;
 extern const XAie_DeviceOps Aie2PDevOps;
 
-extern u8 XAieDevType;
-
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
 #define XAIE_DEV_SINGLE_MOD Aie2IpuMod
 #define XAIE_DEV_SINGLE_DEVOPS Aie2IpuDevOps
@@ -160,39 +158,50 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = XAIE_DEV_SINGLE_MOD;
 		InstPtr->DevProp.DevGen = XAIE_DEV_SINGLE_GEN;
 		InstPtr->DevOps = &XAIE_DEV_SINGLE_DEVOPS;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 #else
 	if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIEML) {
 		InstPtr->DevProp.DevMod = AieMlMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIEML;
 		InstPtr->DevOps = &AieMlDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 	} else if((ConfigPtr->AieGen == XAIE_DEV_GEN_AIE) ||
 			(ConfigPtr->AieGen == XAIE_DEV_GEN_S100) ||
 			(ConfigPtr->AieGen == XAIE_DEV_GEN_S200)) {
 		InstPtr->DevProp.DevMod = AieMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 		InstPtr->DevOps = &AieDevOps;
-		XAieDevType = (u8)ConfigPtr->AieGen;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2IPU) {
 		InstPtr->DevProp.DevMod = Aie2IpuMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;
 		InstPtr->DevOps = &Aie2IpuDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P) {
 		InstPtr->DevProp.DevMod = Aie2PMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P;
 		InstPtr->DevOps = &Aie2PDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P_STRIX_A0){
 		InstPtr->DevProp.DevMod = Aie2PMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P_STRIX_A0;
 		InstPtr->DevOps = &Aie2PDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P_STRIX_B0){
 		InstPtr->DevProp.DevMod = Aie2PMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P_STRIX_B0;
 		InstPtr->DevOps = &Aie2PDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 #endif
 	} else {
 		XAIE_ERROR("Invalid device\n",
 				XAIE_INVALID_DEVICE);
 		return XAIE_INVALID_DEVICE;
+	}
+
+	/* Initialize DevType to default value for all device generations */
+	if (InstPtr->DevType == 0U) {
+		InstPtr->DevType = XAIE_DEV_GENERIC_DEVICE;
 	}
 
 	if(InstPtr->NumCols == 0U) {
