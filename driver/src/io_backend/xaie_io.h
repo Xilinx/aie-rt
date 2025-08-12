@@ -28,6 +28,7 @@
 
 /***************************** Include Files *********************************/
 #include "xaiegbl.h"
+#include "xaie_txn.h"
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_RSC_MGR_CONTIG_FLAG	0x1U
