@@ -52,6 +52,8 @@ typedef struct {
 	XAie_DevInst *DevInst;
 	const XAie_CoreMod *OrigCoreMod;
 	XAie_CoreMod CoreModOverride;
+	const XAie_TileMod *OrigDevMod;  /* Save original DevMod pointer */
+	XAie_TileMod DevModOverride[XAIEGBL_TILE_TYPE_MAX]; /* Modifiable copy */
 } XAie_SimIO;
 
 /************************** Function Definitions *****************************/
@@ -73,8 +75,17 @@ typedef struct {
 static AieRC XAie_SimIO_Finish(void *IOInst)
 {
 	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
-	SimIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = SimIOInst->OrigCoreMod;
-	free(IOInst);
+	XAie_DevInst *DevInst = SimIOInst->DevInst;
+
+	/* Restore the original DevMod pointer */
+	union {
+		const XAie_TileMod **c_ptr;
+		XAie_TileMod **ptr;
+	} devmod_cast;
+	devmod_cast.c_ptr = &DevInst->DevProp.DevMod;
+	*devmod_cast.ptr = (XAie_TileMod *)SimIOInst->OrigDevMod;
+
+	free(SimIOInst);
 	return XAIE_OK;
 }
 
@@ -102,10 +113,31 @@ static AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
-	IOInst->OrigCoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
-	IOInst->CoreModOverride = *IOInst->OrigCoreMod;
-	DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = &IOInst->CoreModOverride;
 	IOInst->DevInst = DevInst;
+
+	/* Save original DevMod and CoreMod pointers */
+	IOInst->OrigDevMod = DevInst->DevProp.DevMod;
+	IOInst->OrigCoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+
+	/* Create a modifiable copy of the entire DevMod array */
+	memcpy(IOInst->DevModOverride, DevInst->DevProp.DevMod,
+	       sizeof(XAie_TileMod) * XAIEGBL_TILE_TYPE_MAX);
+
+	/* Create a modifiable copy of the CoreMod for simulation */
+	IOInst->CoreModOverride = *IOInst->OrigCoreMod;
+
+	/* Point the AIE tile's CoreMod to our override */
+	IOInst->DevModOverride[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = &IOInst->CoreModOverride;
+
+	/* Replace the DevMod pointer to point to our override array */
+	/* Use a union to safely cast away const */
+	union {
+		const XAie_TileMod **c_ptr;
+		XAie_TileMod **ptr;
+	} devmod_cast;
+	devmod_cast.c_ptr = &DevInst->DevProp.DevMod;
+	*devmod_cast.ptr = IOInst->DevModOverride;
+
 	DevInst->IOInst = IOInst;
 	return XAIE_OK;
 }
