@@ -68,20 +68,20 @@ static AieRC _XAie_IntrCtrlL1Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
 
 	if(L1IntrMod == NULL || IntrId >= L1IntrMod->NumIntrIds) {
-		XAIE_ERROR("Invalid module type or interrupt ID\n");
+		XAIE_ERROR("Invalid module type or interrupt ID. IntrId:%u\n", IntrId);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -169,20 +169,20 @@ AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
 
 	if(L1IntrMod == NULL || BroadcastId >= L1IntrMod->NumBroadcastIds) {
-		XAIE_ERROR("Invalid module type or broadcast ID\n");
+		XAIE_ERROR("Invalid module type or broadcast ID. BroadcastId:%u\n",BroadcastId);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -223,13 +223,13 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -237,7 +237,7 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 
 	if(L1IntrMod == NULL || IrqEventId >= L1IntrMod->NumIrqEvents) {
-		XAIE_ERROR("Invalid module type or IRQ event ID\n");
+		XAIE_ERROR("Invalid module type or IRQ event ID, IrqEventId:%u\n", IrqEventId);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -286,24 +286,24 @@ AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
 	if(L1IntrMod == NULL) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid interupt level\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
-		XAIE_ERROR("Invalid channel bitmap\n");
+		XAIE_ERROR("Invalid channel bitmap: ChannelBitMap:%u\n", ChannelBitMap);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -346,24 +346,24 @@ AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
 	if(L1IntrMod == NULL) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid interrupt level\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
-		XAIE_ERROR("Invalid channel bitmap\n");
+		XAIE_ERROR("Invalid channel bitmap, ChannelBitMap:%u\n",ChannelBitMap);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -400,7 +400,7 @@ u8 XAie_EventReadStatusHw(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return 0;
 	}
 
@@ -530,7 +530,7 @@ void XAie_EventClearStatus(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return;
 	}
 
@@ -626,20 +626,20 @@ static AieRC _XAie_IntrCtrlL2Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	L2IntrMod = DevInst->DevProp.DevMod[TileType].L2IntrMod;
 
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L2IntrMod->NumBroadcastIds)) {
-		XAIE_ERROR("Invalid interrupt bitmap\n");
+		XAIE_ERROR("Invalid interrupt bitmap, ChannelBitMap:%u\n",ChannelBitMap);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -809,7 +809,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_EVENT_GROUP_ERRORS_MEM,
 					GroupErrorEnableMask);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to configure group errors in memory module\n");
+				XAIE_ERROR("Failed to configure group errors in memory module, Col:%u Row:%u\n",Loc.Col, Loc.Row);
 				return RC;
 			}
 
@@ -817,7 +817,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_ERROR_BROADCAST_ID,
 					XAIE_EVENT_GROUP_ERRORS_MEM);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to setup error broadcast for memory module\n");
+				XAIE_ERROR("Failed to setup error broadcast for memory module, Col:%u Row:%u\n",Loc.Col, Loc.Row);
 				return RC;
 			}
 
@@ -827,7 +827,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_EVENT_GROUP_ERRORS_0_CORE,
 					GroupErrorEnableMask);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to configure group error in core module\n");
+				XAIE_ERROR("Failed to configure group error in core module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 
@@ -835,7 +835,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_ERROR_BROADCAST_ID,
 					XAIE_EVENT_GROUP_ERRORS_0_CORE);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to setup error broadcast for core module\n");
+				XAIE_ERROR("Failed to setup error broadcast for core module, Col:%u  Row:%u\n",Loc.Col, Loc.Row);
 				return RC;
 			}
 		}
@@ -853,7 +853,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_EVENT_GROUP_ERRORS_MEM_TILE,
 					GroupErrorEnableMask);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to configure group error in mem tile\n");
+				XAIE_ERROR("Failed to configure group error in mem tile, Col:%u MemRow:%u\n",Loc.Col, Loc.Row);
 				return RC;
 			}
 
@@ -861,7 +861,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_ERROR_BROADCAST_ID,
 					XAIE_EVENT_GROUP_ERRORS_MEM_TILE);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to setup error broadcast for mem tile\n");
+				XAIE_ERROR("Failed to setup error broadcast for mem tile,Col:%u MemRow:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 		}
@@ -877,7 +877,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 					XAIE_EVENT_GROUP_ERRORS_PL,
 					GroupErrorEnableMask);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to configure group error in shim tile\n");
+			XAIE_ERROR("Failed to configure group error in shim tile. Col:%u ShimRow:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -885,7 +885,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 				XAIE_ERROR_BROADCAST_ID,
 				XAIE_EVENT_GROUP_ERRORS_PL);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
+			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile. Col:%u ShimRow:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 	}
@@ -982,7 +982,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_Lo
 	AieRC RC;
 
 	if (TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Not a aietile.\n");
+		XAIE_ERROR("Not a aietile.Col:%u Row:%u\n",  Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -995,7 +995,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_Lo
 		   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
 		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in core module\n");
+		XAIE_ERROR("Failed to block broadcasts in core module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -1003,7 +1003,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_Lo
 		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
 		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in memory module\n");
+		XAIE_ERROR("Failed to block broadcasts in memory module. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 	/* Block broadcast 1 and 2 from propagating to north, west, south, east
@@ -1014,14 +1014,14 @@ static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_Lo
 		   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
 		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module\n");
+		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module, Col:%u Row:%u\n",Loc.Col, Loc.Row);
 		return RC;
 	}
 	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
 		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
 		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module\n");
+		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -1049,7 +1049,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psMemTile(XAie_DevInst *DevInst, XAie_Lo
 	AieRC RC;
 
 	if (TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
-		XAIE_ERROR("Not a memtile.\n");
+		XAIE_ERROR("Not a memtile.Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 	/* Block broadcast 0 from propagating to north, east and west
@@ -1061,7 +1061,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psMemTile(XAie_DevInst *DevInst, XAie_Lo
 		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
 		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in mem tile switch A\n");
+		XAIE_ERROR("Failed to block broadcasts in mem tile switch A Col:%u Row:%u\n",Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -1069,7 +1069,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psMemTile(XAie_DevInst *DevInst, XAie_Lo
 		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
 		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in mem tile switch B\n");
+		XAIE_ERROR("Failed to block broadcasts in mem tile switch B, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 	/* Block broadcast 1 and 2 from propagating to north, west, south, east
@@ -1080,14 +1080,14 @@ static AieRC _XAie_ErrorHandlingInitAie2psMemTile(XAie_DevInst *DevInst, XAie_Lo
 		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
 		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module\n");
+		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
 		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
 		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module\n");
+		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -1116,7 +1116,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTileCol0(XAie_DevInst *DevInst, XA
 
 	if ((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 	    (TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Not a shimtile\n");
+		XAIE_ERROR("Not a shimtile, Col:%u Row:%u \n",Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 	if (Loc.Col != 0) {
@@ -1194,7 +1194,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTileLeadCol(XAie_DevInst *DevInst,
 
 	if ((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 	    (TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Not a shimtile\n");
+		XAIE_ERROR("Not a shimtile, Col%u Row:%u\n",Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 	if (Loc.Col != 1) {
@@ -1272,7 +1272,7 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTile(XAie_DevInst *DevInst, XAie_L
 
 	if ((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 	    (TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Not a shimtile\n");
+		XAIE_ERROR("Not a shimtile Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 	if (Loc.Col < 2) {
@@ -1359,13 +1359,13 @@ static AieRC _XAie_ErrorHandlingInitAie2psL1Ctrl(XAie_DevInst *DevInst, XAie_Loc
 	RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
 			XAIE_EVENT_SWITCH_A, BroadcastBitMap);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+		XAIE_ERROR("Failed to block direct broadcasts from AIE array, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 	RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
 			XAIE_EVENT_SWITCH_B, BroadcastBitMap);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+		XAIE_ERROR("Failed to block direct broadcasts from AIE array, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -1375,13 +1375,13 @@ static AieRC _XAie_ErrorHandlingInitAie2psL1Ctrl(XAie_DevInst *DevInst, XAie_Loc
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 			XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
 			XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 	} else {
@@ -1390,25 +1390,25 @@ static AieRC _XAie_ErrorHandlingInitAie2psL1Ctrl(XAie_DevInst *DevInst, XAie_Loc
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 			XAIE_ERROR_BROADCAST_ID);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
 			XAIE_ERROR_BROADCAST_ID);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 			XAIE_ERROR_BROADCAST_ID_UC_EVENT);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
 			XAIE_ERROR_BROADCAST_ID_UC_EVENT);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -1424,14 +1424,14 @@ static AieRC _XAie_ErrorHandlingInitAie2psL1Ctrl(XAie_DevInst *DevInst, XAie_Loc
 	L1IrqA = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc, XAIE_EVENT_SWITCH_A);
 	RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A, L1IrqA);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to configure L1 IRQ line\n");
+		XAIE_ERROR("Failed to configure L1 IRQ line, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
 	L1IrqB = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc, XAIE_EVENT_SWITCH_B);
 	RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_B, L1IrqB);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to configure L1 IRQ line\n");
+		XAIE_ERROR("Failed to configure L1 IRQ line, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -1486,7 +1486,7 @@ static AieRC _XAie_ErrorHandlingInitAie2ps(XAie_DevInst *DevInst)
 				RC = XAie_IntrCtrlL2Enable(DevInst, Loc,
 						XAIE_ERROR_L2_ENABLE);
 				if(RC != XAIE_OK) {
-					XAIE_ERROR("Failed to enable interrupts to L2\n");
+					XAIE_ERROR("Failed to enable interrupts to L2, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 					return RC;
 				}
 
@@ -1560,7 +1560,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1585,7 +1585,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 				   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
 				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to block broadcasts in core module\n");
+				XAIE_ERROR("Failed to block broadcasts in core module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 
@@ -1593,7 +1593,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
 				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to block broadcasts in memory module\n");
+				XAIE_ERROR("Failed to block broadcasts in memory module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 		}
@@ -1608,7 +1608,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
 				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to block broadcasts in mem tile switch A\n");
+				XAIE_ERROR("Failed to block broadcasts in mem tile switch A, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 
@@ -1616,7 +1616,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
 				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to block broadcasts in mem tile switch B\n");
+				XAIE_ERROR("Failed to block broadcasts in mem tile switch B, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 		}
@@ -1634,14 +1634,14 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
 				XAIE_EVENT_SWITCH_A, XAIE_ERROR_BROADCAST_MASK);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
 		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
 				XAIE_EVENT_SWITCH_B, XAIE_ERROR_BROADCAST_MASK);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -1652,14 +1652,14 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				XAIE_ERROR_BROADCAST_ID);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
 				XAIE_ERROR_BROADCAST_ID);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -1670,7 +1670,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				XAIE_ERROR_SHIM_INTR_ID);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
+			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -1691,7 +1691,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				L1BroadcastIdSwA);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to configure L1 IRQ line\n");
+			XAIE_ERROR("Failed to configure L1 IRQ line, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -1700,7 +1700,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_B,
 				L1BroadcastIdSwB);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to configure L1 IRQ line\n");
+			XAIE_ERROR("Failed to configure L1 IRQ line, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 
@@ -1734,14 +1734,14 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 					XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
 					L1BroadcastIdSwB, BroadcastDirSwB);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to block broadcasts in shim tile switch B\n");
+				XAIE_ERROR("Failed to block broadcasts in shim tile switch B, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 
 			RC = XAie_IntrCtrlL2Enable(DevInst, Loc,
 					XAIE_ERROR_L2_ENABLE);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to enable interrupts to L2\n");
+				XAIE_ERROR("Failed to enable interrupts to L2,  Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 		} else {
@@ -1764,7 +1764,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 					XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
 					L1BroadcastIdSwB, BroadcastDirSwB);
 			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to block broadcasts in shim tile switch B\n");
+				XAIE_ERROR("Failed to block broadcasts in shim tile switch B,  Col:%u Row:%u\n", Loc.Col, Loc.Row);
 				return RC;
 			}
 		}
@@ -1773,7 +1773,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 				XAIE_EVENT_SWITCH_A, L1BroadcastIdSwA,
 				BroadcastDirSwA);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to block broadcasts in shim tile switch A\n");
+			XAIE_ERROR("Failed to block broadcasts in shim tile switch A, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 	}
@@ -1809,7 +1809,7 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance. DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 

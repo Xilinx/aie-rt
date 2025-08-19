@@ -721,7 +721,7 @@ static inline u32 _XAie_ReadArrayErrorBroadcastEvent(XAie_DevInst *DevInst,
 	}
 
 	if(BroadcastId >= EvntMod->NumBroadcastIds) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID, BroadcastId: %u\n", BroadcastId);
 		return 0;
 	}
 
@@ -762,20 +762,20 @@ static inline u32 _XAie_Read_L1_IrqEvent(XAie_DevInst *DevInst,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return 0;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return 0;
 	}
 
 	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
 
 	if(L1IntrMod == NULL || IrqId >= L1IntrMod->NumIrqEvents) {
-		XAIE_ERROR("Invalid module type or IRQ event ID\n");
+		XAIE_ERROR("Invalid module type or IRQ event ID. Col:%u Row:%u, IrqId:%u\n", Loc.Col, Loc.Row, IrqId);
 		return 0;
 	}
 
@@ -872,7 +872,7 @@ static inline u8 _XAie_MapGroupErrorsToEventId(XAie_DevInst *DevInst,
 		ErrorBase = (u32)XAIE_EVENT_GROUP_ERRORS_PL;
 		break;
 	default:
-		XAIE_ERROR("Invalid TileType: %d\n", TileType);
+		XAIE_ERROR("Invalid TileType: Col:%u Row:%u ,TileType:%d\n",Loc.Col, Loc.Row, TileType);
 		return 0;
 	};
 	ErrorBase = EvntMod->XAie_EventNumber[ErrorBase];
@@ -916,7 +916,7 @@ static inline u32 _XAie_ReadGroupErrors(XAie_DevInst *DevInst,
 		Events = XAIE_EVENT_GROUP_ERRORS_PL;
 		break;
 	default:
-		XAIE_ERROR("Unknown Tile type: %d\n", TileType);
+		XAIE_ERROR("Unknown Tile type: Col:%u Row:%u TileType:%d\n",Loc.Col, Loc.Row, TileType);
 		return 0;
 	}
 
@@ -966,7 +966,7 @@ static inline void _XAie_GroupErrorControl(XAie_DevInst *DevInst,
 		Events = XAIE_EVENT_GROUP_ERRORS_PL;
 		break;
 	default:
-		XAIE_ERROR("Unknown Tile type: %d\n", TileType);
+		XAIE_ERROR("Unknown Tile type:Col:%u Row:%u TileType:%d\n",Loc.Col, Loc.Row, TileType);
 		return;
 	}
 
@@ -1223,13 +1223,13 @@ static AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 
 	if ((MData->Payload == NULL) ||
 	    (MData->ArraySize == 0U)) {
-		XAIE_ERROR("Invalid error payload buffer or size\n");
+		XAIE_ERROR("Invalid error payload buffer or size, ArraySize:%u\n",MData->ArraySize);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if ((MData->Cols.Num == 0U) ||
 	    ((MData->Cols.Start + MData->Cols.Num) > DevInst->NumCols)) {
-		XAIE_ERROR("Invalid range of columns\n");
+		XAIE_ERROR("Invalid range of columns. NumCols: %d\n",(MData->Cols.Start + MData->Cols.Num));
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1322,7 +1322,7 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 	    (MData->ArraySize == 0U) ||
 	    (MData->Cols.Num == 0U) ||
 	    ((MData->Cols.Start + MData->Cols.Num) > DevInst->NumCols)) {
-		XAIE_ERROR("Invalid DevInst.\n");
+		XAIE_ERROR("Invalid DevInst|ArraySize|NumCols\n");
 		return XAIE_INVALID_ARGS;
 	}
 

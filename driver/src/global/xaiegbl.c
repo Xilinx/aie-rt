@@ -102,7 +102,7 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols)
 {
 	if (DevInst == XAIE_NULL || (DevInst->IsReady != 0U)) {
-		XAIE_ERROR("Invalid Device instance to set part config.\n");
+		XAIE_ERROR("Invalid Device instance to set part config. DevInst is NULL or Isready not set\n");
 		return XAIE_INVALID_DEVICE;
 	}
 
@@ -137,7 +137,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	AieRC RC;
 
 	if((InstPtr == XAIE_NULL) || (ConfigPtr == XAIE_NULL)) {
-		XAIE_ERROR("Invalid input arguments\n",
+		XAIE_ERROR("Invalid input arguments. InstPtr/ConfigPtr is NULL\n",
 				XAIE_INVALID_ARGS);
 		return XAIE_INVALID_ARGS;
 	}
@@ -170,8 +170,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevOps = &Aie2PSDevOps;
 #endif
 	} else {
-		XAIE_ERROR("Invalid device\n",
-				XAIE_INVALID_DEVICE);
+		XAIE_ERROR("Invalid device. AieGen: %d\n",ConfigPtr->AieGen);
 		return XAIE_INVALID_DEVICE;
 	}
 
@@ -181,7 +180,8 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->NumCols = ConfigPtr->NumCols;
 	} else if((u32)InstPtr->StartCol + (u32)InstPtr->NumCols >
 			(u32)ConfigPtr->NumCols) {
-		XAIE_ERROR("Invalid Partition location or size.\n");
+		XAIE_ERROR("Invalid Partition location or size. StartCol: %u numcols:%u\n",
+				InstPtr->StartCol, InstPtr->NumCols);
 		return XAIE_INVALID_DEVICE;
 	}
 
@@ -343,7 +343,7 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance, DevInst is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -374,7 +374,7 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -404,7 +404,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -438,7 +438,7 @@ AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -535,7 +535,7 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -573,13 +573,13 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(Backend >= XAIE_IO_BACKEND_MAX ||
 		_XAie_GetBackendPtr(Backend) == NULL) {
-		XAIE_ERROR("Invalid backend request \n");
+		XAIE_ERROR("Invalid backend request. Backend : %d \n", Backend);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -628,7 +628,7 @@ XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return NULL;
 	}
 
@@ -657,7 +657,7 @@ AieRC XAie_MemFree(XAie_MemInst *MemInst)
 	const XAie_Backend *Backend;
 
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -683,7 +683,7 @@ AieRC XAie_MemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
 	AieRC RC;
 
 	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance, DevInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -710,7 +710,7 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 	const XAie_Backend *Backend;
 
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -737,7 +737,7 @@ AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
 	AieRC RC;
 
 	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance, DevInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -764,7 +764,7 @@ AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 	const XAie_Backend *Backend;
 
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -791,7 +791,7 @@ AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
 	AieRC RC;
 
 	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance, DevInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -821,7 +821,7 @@ AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *
 	AieRC RC;
 
 	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
+		XAIE_ERROR("Invalid device instance, DevInst is NULL\n");
 		return XAIE_ERR;
 	}
 
@@ -847,7 +847,7 @@ AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return NULL;
 	}
 
@@ -868,7 +868,7 @@ void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return 1U;
 	}
 
@@ -904,12 +904,12 @@ AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 		(DevInst->Backend == XAIE_NULL)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst/Backend is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -943,7 +943,7 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 	XAie_DevInst *DevInst;
 
 	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid memory instance\n");
+		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -951,7 +951,7 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 		(DevInst->Backend == XAIE_NULL)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst/Backend is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -973,7 +973,7 @@ AieRC XAie_TurnEccOff(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -996,7 +996,7 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1035,7 +1035,7 @@ AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1062,7 +1062,7 @@ AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1094,7 +1094,7 @@ XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return NULL;
 	}
 
@@ -1114,7 +1114,7 @@ XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst)
 AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst)
 {
 	if(TxnInst == NULL) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid arguments, TxnInst is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1137,7 +1137,7 @@ AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard)
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 		(IsCheckerBoard == NULL)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst or IsCheckerBoard is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1159,7 +1159,7 @@ AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard)
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr)
 {
 	if((DevInst == NULL) || (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1188,7 +1188,7 @@ u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return NULL;
 	}
 
@@ -1207,7 +1207,7 @@ u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 void XAie_FreeSerializedTransaction(void *Ptr)
 {
 	if (Ptr == NULL) {
-		XAIE_ERROR("Invalid argument\n");
+		XAIE_ERROR("Invalid argument, Transaction buffer is NULL\n");
 		return;
 	}
 	_XAie_FreeTxnPtr(Ptr);
@@ -1217,7 +1217,7 @@ AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1267,12 +1267,12 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(PerfInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid arguments\n");
+		XAIE_ERROR("Invalid arguments, Performance instance is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -1283,10 +1283,10 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 		PerfInst->Range = &PartRange;
 	} else if (PerfInst->Range->Num <= 0U ||
 			PerfInst->Range->Num > DevInst->NumCols) {
-		XAIE_ERROR("Invalid range!\n");
+		XAIE_ERROR("Invalid range!: %u\n", PerfInst->Range->Num);
 		return XAIE_INVALID_ARGS;
 	} else if(PerfInst->Range->Start >= DevInst->NumCols) {
-		XAIE_ERROR("Invalid range!\n");
+		XAIE_ERROR("Invalid range!: %u\n", PerfInst->Range->Start);
 		return XAIE_INVALID_ARGS;
 	}
 
