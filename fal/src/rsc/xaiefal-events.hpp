@@ -64,7 +64,8 @@ namespace xaiefal {
 					if (RC != XAIE_OK) {
 						Logger::log(LogLevel::FAL_ERROR) << "combo event " << __func__ << " (" <<
 							(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row <<
-							" Mod=" << Mod <<  " invalid E=" << vInEvents[i] << std::endl;
+							" Mod=" << Mod <<  " invalid E=" << vInEvents[i] <<
+							" (" << XAie_EventGetString(vInEvents[i]) << ")" << std::endl;
 						break;
 					} else {
 						vEvents[i] = vInEvents[i];

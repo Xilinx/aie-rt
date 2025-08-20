@@ -112,9 +112,12 @@ namespace xaiefal {
 					Logger::log(LogLevel::FAL_ERROR) << "perfcount " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 						" Expect Mod= " << Mod <<
-						" StartEvent=" <<StartM << "," << StartE << " " <<
-						" StopEvent=" <<StopM << "," << StopE << " " <<
-						" RstEvent=" <<RstM << "," << RstE << " " <<
+						" StartEvent=" <<StartM << "|" << StartE << " (" <<
+						XAie_EventGetString(StartE) << ") " <<
+						" StopEvent=" <<StopM << "|" << StopE << " (" <<
+						XAie_EventGetString(StartE) << ") " <<
+						" RstEvent=" <<RstM << "|" << RstE << " (" <<
+						XAie_EventGetString(StartE) << ") " <<
 						std::endl;
 				}
 			}

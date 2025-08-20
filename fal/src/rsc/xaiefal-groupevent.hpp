@@ -72,8 +72,8 @@ namespace xaiefal {
 				if (GroupComposition != Comp) {
 					Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 						(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
-						" Mod=" << Mod << "(" <<
-						GroupEvent << ") is reserved with " <<
+						" Mod=" << Mod << " E=" << GroupEvent << " (" <<
+						XAie_EventGetString(GroupEvent) << ") is reserved with " <<
 						GroupComposition << ", request composition is " <<
 						Comp << "." << std::endl;
 					RC = XAIE_INVALID_ARGS;
@@ -110,7 +110,8 @@ namespace xaiefal {
 				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
-					" group event(" << GroupEvent <<
+					" group event=" << GroupEvent <<
+					" (" << XAie_EventGetString(GroupEvent) <<
 					"), invalid handle." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
@@ -145,7 +146,8 @@ namespace xaiefal {
 				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
-					" group event(" << GroupEvent <<
+					" group event=" << GroupEvent <<
+					" (" << XAie_EventGetString(GroupEvent) <<
 					"), invalid handle." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
@@ -197,7 +199,8 @@ namespace xaiefal {
 				Logger::log(LogLevel::FAL_ERROR) << "Group event " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<
 					" Mod=" << Mod <<
-					" group event(" << GroupEvent <<
+					" group event=" << GroupEvent <<
+					" (" << XAie_EventGetString(GroupEvent) <<
 					"), invalid handle." << std::endl;
 				RC = XAIE_INVALID_ARGS;
 			} else {
