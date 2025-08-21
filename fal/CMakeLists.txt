@@ -53,10 +53,6 @@ if (WITH_DOC)
   add_subdirectory (doc)
 endif (WITH_DOC)
 
-if (WITH_TESTS)
-  add_subdirectory (tests)
-endif (WITH_TESTS)
-
 if (WITH_EXAMPLES)
   add_subdirectory (examples)
 endif (WITH_EXAMPLES)
