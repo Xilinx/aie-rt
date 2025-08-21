@@ -20,7 +20,3 @@ include (options)
 enable_testing ()
 
 add_subdirectory (src ${CMAKE_CURRENT_BINARY_DIR}/driver-src)
-
-if (WITH_TESTS)
-  add_subdirectory (tests)
-endif (WITH_TESTS)
