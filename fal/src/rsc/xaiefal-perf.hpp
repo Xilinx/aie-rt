@@ -115,9 +115,9 @@ namespace xaiefal {
 						" StartEvent=" <<StartM << "|" << StartE << " (" <<
 						XAie_EventGetString(StartE) << ") " <<
 						" StopEvent=" <<StopM << "|" << StopE << " (" <<
-						XAie_EventGetString(StartE) << ") " <<
+						XAie_EventGetString(StopE) << ") " <<
 						" RstEvent=" <<RstM << "|" << RstE << " (" <<
-						XAie_EventGetString(StartE) << ") " <<
+						XAie_EventGetString(RstE) << ") " <<
 						std::endl;
 				}
 			}
