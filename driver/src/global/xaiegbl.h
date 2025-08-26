@@ -155,14 +155,16 @@ typedef struct {
 	const XAie_DeviceOps *DevOps; /* Device level operations */
 	XAie_PartitionProp PartProp; /* Partition property */
 	XAie_List TxnList; /* Head of the list of txn buffers */
+	u32 InitialTxnCmdArraySize; /* TXN command array max size to begin with */
 } XAie_DevInst;
 
 /* typedef to capture transaction buffer data */
 typedef struct {
 	u64 Tid;
 	u32 Flags;
-	u32 NumCmds;
-	u32 MaxCmds;
+	u32 NumCmds;	// Actual no of command available in TXN Cmd Array
+	u32 MaxCmds;	// Current allocated size of TXN Cmd Array
+	u32 InitCmds;	// Initial allocated size of TXN Cmd Array
 	u8  NextCustomOp;
 	XAie_TxnCmd *CmdBuf;
 	XAie_List Node;
@@ -817,6 +819,7 @@ XAIE_AIG_EXPORT AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemIns
 XAIE_AIG_EXPORT AieRC XAie_MemDetach(XAie_MemInst *MemInst);
 XAIE_AIG_EXPORT AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_CfgInitialTxnCmdArraySize(XAie_DevInst *DevInst, u32 CmdCount);
 XAIE_AIG_EXPORT AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);
 XAIE_AIG_EXPORT AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);

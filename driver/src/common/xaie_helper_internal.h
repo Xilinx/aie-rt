@@ -41,4 +41,6 @@ u8 _XAie_CheckPrecisionExceeds(u32 Lsb, u8 ValueBitCount, u8 MaxValidBitPos);
 u8 _XAie_CheckPrecisionExceedsForRightShift(u32 Lsb, u32 Mask);
 u8 _XAie_MaxBitsNeeded(u32 value);
 u8 _XAie_CountTrailingZeros(u32 value);
+u32 _XAie_Txn_GetDefTxnInitialCmdArraySize(void);
+AieRC _XAie_Txn_CfgInitialCmdArraySize(XAie_DevInst *DevInst, u32 CmdCount);
 #endif

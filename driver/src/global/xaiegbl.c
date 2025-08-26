@@ -115,6 +115,7 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 	DevInst->BaseAddr = PartBaseAddr;
 	DevInst->StartCol = PartStartCol;
 	DevInst->NumCols = PartNumCols;
+	DevInst->InitialTxnCmdArraySize = _XAie_Txn_GetDefTxnInitialCmdArraySize();
 
 	return XAIE_OK;
 }
@@ -234,6 +235,9 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	} else {
 		InstPtr->EccStatus = XAIE_ENABLE;
 	}
+
+	// Set default initial TXN command array size
+	InstPtr->InitialTxnCmdArraySize = _XAie_Txn_GetDefTxnInitialCmdArraySize();
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
@@ -755,6 +759,30 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 	DevInst->EccStatus = XAIE_ENABLE;
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This should be the first API called by the user to configure the initial
+* transaction command array size to be allocated dynamically. If this API is
+* not called or called with 0 size then the default size of 1024 will be used.
+*
+* @param	DevInst: Device instance pointer.
+* @param	CmdCount: Command count to be allocated.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+******************************************************************************/
+AieRC XAie_CfgInitialTxnCmdArraySize(XAie_DevInst *DevInst, u32 CmdCount)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	return _XAie_Txn_CfgInitialCmdArraySize(DevInst, CmdCount);
 }
 
 /*****************************************************************************/
