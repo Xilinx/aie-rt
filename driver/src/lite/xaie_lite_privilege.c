@@ -326,7 +326,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 		SoftPartOpts.InitOpts = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));
 		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Partition Initialization Failed \n");
+			XAIE_ERROR("Partition Initialization Failed. StartCol:%u NumCols:%u \n",DevPartInfo->StartCol,DevPartInfo->NumCols);
 			return RC;
 		}
 
@@ -342,7 +342,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 	}
 	else
 	{
-		XAIE_ERROR("Invalid Device Partition Soft Partition Info\n");
+		XAIE_ERROR("Invalid Device Partition Soft Partition Info. StartCol:%u Numcols:%u\n",DevPartInfo->StartCol,DevPartInfo->NumCols);
 		return XAIE_INVALID_ARGS;
 	}
 

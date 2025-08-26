@@ -888,7 +888,7 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 {
 	if(PageSize > PAGE_SIZE_MAX)
 	{
-		XAIE_ERROR("PageSize cannot be > PAGE_SIZE_MAX\n");
+		XAIE_ERROR("PageSize cannot be > PAGE_SIZE_MAX. PageSize: %u MaxSize: %u\n",PageSize,PAGE_SIZE_MAX);
 		return XAIE_ERR;
 	}
 

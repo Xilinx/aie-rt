@@ -67,20 +67,20 @@ AieRC XAie_LockAcquire(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type. Col:%u Row:%u TileType:%u\n",Loc.Col,Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 
 	if(Lock.LockId > LockMod->NumLocks) {
-		XAIE_ERROR("Invalid Lock Id\n");
+		XAIE_ERROR("Invalid Lock Id: %u\n", Lock.LockId);
 		return XAIE_INVALID_LOCK_ID;
 	}
 
 	if((Lock.LockVal > LockMod->LockValUpperBound) ||
 			(Lock.LockVal < LockMod->LockValLowerBound)) {
-		XAIE_ERROR("Lock value out of range\n");
+		XAIE_ERROR("Lock value out of range. LockVal:%u\n",Lock.LockVal);
 		return XAIE_INVALID_LOCK_VALUE;
 	}
 
@@ -124,20 +124,20 @@ AieRC XAie_LockRelease(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type. Col:%u Row:%u TileType:%u\n",Loc.Col,Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 
 	if(Lock.LockId > LockMod->NumLocks) {
-		XAIE_ERROR("Invalid Lock Id\n");
+		XAIE_ERROR("Invalid Lock Id:%u\n",Lock.LockId);
 		return XAIE_INVALID_LOCK_ID;
 	}
 
 	if((Lock.LockVal > LockMod->LockValUpperBound) ||
 			(Lock.LockVal < LockMod->LockValLowerBound)) {
-		XAIE_ERROR("Lock value out of range\n");
+		XAIE_ERROR("Lock value out of range. LockVal:%u\n",Lock.LockVal);
 		return XAIE_INVALID_LOCK_VALUE;
 	}
 
@@ -171,14 +171,14 @@ AieRC XAie_LockSetValue(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type. Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 
 	if(Lock.LockId > LockMod->NumLocks) {
-		XAIE_ERROR("Invalid Lock Id\n");
+		XAIE_ERROR("Invalid Lock Id: %u\n", Lock.LockId);
 		return XAIE_INVALID_LOCK_ID;
 	}
 
@@ -214,14 +214,14 @@ AieRC XAie_LockGetValue(XAie_DevInst *DevInst, XAie_LocType Loc, XAie_Lock Lock,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type. Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	LockMod = DevInst->DevProp.DevMod[TileType].LockMod;
 
 	if(Lock.LockId > LockMod->NumLocks) {
-		XAIE_ERROR("Invalid Lock Id\n");
+		XAIE_ERROR("Invalid Lock Id:%u\n", Lock.LockId);
 		return XAIE_INVALID_LOCK_ID;
 	}
 

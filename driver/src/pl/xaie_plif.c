@@ -81,7 +81,7 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -93,7 +93,7 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 */
 	if((PortNum > PlIfMod->MaxByPassPortNum) || (PortNum == 3U) ||
 			(PortNum == 7U)) {
-		XAIE_ERROR("Invalid Port Number\n");
+		XAIE_ERROR("Invalid Port Number,Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -147,13 +147,13 @@ static AieRC _XAie_PlIfDownSzrPortEnableReg(XAie_DevInst *DevInst,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	if((PortNum > PlIfMod->NumDownSzrPorts)) {
-		XAIE_ERROR("Invalid Port Number\n");
+		XAIE_ERROR("Invalid Port Number, Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -209,14 +209,14 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	/* Check Width for validity */
 	if((Width != PLIF_WIDTH_32) && (Width != PLIF_WIDTH_64) &&
 			(Width != PLIF_WIDTH_128)) {
-		XAIE_ERROR("Invalid Width\n");
+		XAIE_ERROR("Invalid Width,Col:%u Row:%u width:%u\n",Loc.Col, Loc.Row, Width);
 		return XAIE_INVALID_PLIF_WIDTH;
 	}
 
@@ -224,7 +224,7 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Setup field mask and field value for aie to pl interface */
 	if(PortNum >= PlIfMod->NumDownSzrPorts) {
-		XAIE_ERROR("Invalid stream port\n");
+		XAIE_ERROR("Invalid stream port,Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -308,14 +308,14 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
 			(TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
 	/* Check Width for validity */
 	if((Width != PLIF_WIDTH_32) && (Width != PLIF_WIDTH_64) &&
 			(Width != PLIF_WIDTH_128)) {
-		XAIE_ERROR("Invalid Width\n");
+		XAIE_ERROR("Invalid Width,Col:%u Row:%u Width:%u\n",Loc.Col, Loc.Row, Width);
 		return XAIE_INVALID_PLIF_WIDTH;
 	}
 
@@ -323,7 +323,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Setup field mask and field value for pl to aie interface */
 	if(PortNum >= PlIfMod->NumDownSzrPorts) {
-		XAIE_ERROR("Invalid stream port\n");
+		XAIE_ERROR("Invalid stream port,Col:%u Row:%u PortNum:%u\n",Loc.Col,Loc.Row, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -612,7 +612,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -621,7 +621,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 				(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_5) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-			XAIE_ERROR("Invalid port number for Mux\n");
+			XAIE_ERROR("Invalid port number for Mux, Col:%u Row:%u PortNum:%u\n", Loc.Col, Loc.Row, PortNum);
 			return XAIE_ERR_STREAM_PORT;
 		}
 
@@ -630,7 +630,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 				(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_6) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-			XAIE_ERROR("Invalid port number for Mux\n");
+			XAIE_ERROR("Invalid port number for Mux,Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 			return XAIE_ERR_STREAM_PORT;
 		}
 
@@ -689,7 +689,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -698,7 +698,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 			(PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_5)) {
-			XAIE_ERROR("Invalid port number\n");
+			XAIE_ERROR("Invalid port number, Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 			return XAIE_ERR_STREAM_PORT;
 		}
 	} else {
@@ -706,7 +706,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 				(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_4) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_5)) {
-			XAIE_ERROR("Invalid port number\n");
+			XAIE_ERROR("Invalid port number,Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 			return XAIE_ERR_STREAM_PORT;
 		}
 		/* Map the port numbers to 0, 1, 2, 3 */
@@ -745,7 +745,7 @@ AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	if((PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-		XAIE_ERROR("Invalid port number\n");
+		XAIE_ERROR("Invalid port number, Col:%u Row:%u PortNum:%u\n", Loc.Col, Loc.Row, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 	}
 
@@ -775,13 +775,13 @@ AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
 		if((PortNum != XAIE_STREAM_SOUTH_PORT_1) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_3)) {
-				XAIE_ERROR("Invalid port number\n", PortNum);
+				XAIE_ERROR("Invalid port number, Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 		return XAIE_ERR_STREAM_PORT;
 		}
 	} else {
 		if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
 				(PortNum != XAIE_STREAM_SOUTH_PORT_3)) {
-					XAIE_ERROR("Invalid port number\n", PortNum);
+					XAIE_ERROR("Invalid port number, Col:%u Row:%u PortNum:%u\n",Loc.Col, Loc.Row, PortNum);
 			return XAIE_ERR_STREAM_PORT;
 		}
 	}

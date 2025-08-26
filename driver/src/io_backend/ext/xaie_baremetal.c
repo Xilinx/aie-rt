@@ -192,7 +192,7 @@ static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 	Ret = XPm_DevIoctl(PM_DEV_AIE, IOCTL_AIE_OPS, (NumCols << 16)
 			      | StartCol, Ops, &Response);
 	if (Ret != XST_SUCCESS) {
-		XAIE_ERROR("Failed to write to privileged register.\n");
+		XAIE_ERROR("Failed to write to privileged register. NumCols: %u StartCol: %u PLM Op ID:%u\n", NumCols, StartCol, Ops);
 		return XAIE_ERR;
 	}
 #endif
@@ -820,14 +820,14 @@ AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 
 	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
 			((Args->StartCol + Args->NumCols - 1U) > PartEndCol) ) {
-		XAIE_ERROR("Invalid Start Column/Numcols \n");
+		XAIE_ERROR("Invalid Start Column/Numcols. StartCol:%u NumCols:%u \n",Args->StartCol, Args->NumCols);
 		return XAIE_ERR;
 	}
 
 	Ops = Args->Enable ? AIE_OPS_ENB_COL_CLK_BUFF: AIE_OPS_DIS_COL_CLK_BUFF;
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->StartCol, Args->NumCols,Ops);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable clock for column\n");
+		XAIE_ERROR("Failed to enable clock for column. StartCol:%u NumCols:%u\n",Args->StartCol, Args->NumCols);
 		return RC;
 	}
 
@@ -873,7 +873,7 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
 						AIE_OPS_DIS_COL_CLK_BUFF);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable clock for column\n");
+		XAIE_ERROR("Failed to enable clock for column. StartCol:%u NumCol:%u\n",DevInst->StartCol,DevInst->NumCols);
 		return RC;
 	}
 
@@ -909,7 +909,7 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->Locs[i].Col, 1U,
 							AIE_OPS_ENB_COL_CLK_BUFF);
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable clock for column\n");
+			XAIE_ERROR("Failed to enable clock for column. Col:%u\n",Args->Locs[i].Col);
 			return RC;
 		}
 

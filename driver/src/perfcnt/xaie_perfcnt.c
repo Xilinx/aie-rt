@@ -74,7 +74,7 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -152,7 +152,7 @@ AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -223,7 +223,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -248,7 +248,7 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/*checking for valid true event number */
 	if(IntStartEvent == XAIE_EVENT_INVALID ||
 			IntStopEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid Event id\n");
+		XAIE_ERROR("Invalid Event id, StartEvent:%u StopEvent:%u\n",IntStartEvent, IntStopEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -317,7 +317,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -406,7 +406,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -473,7 +473,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -585,7 +585,7 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -643,7 +643,7 @@ AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -708,7 +708,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(StartEvent == XAIE_NULL || StopEvent == XAIE_NULL ||
 			ResetEvent == XAIE_NULL) {
-		XAIE_ERROR("Invalid pointers to store Events\n");
+		XAIE_ERROR("Invalid pointers to store Events, StartEvent/StopEvent/ResetEvent is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -816,7 +816,7 @@ AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n",Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -868,7 +868,7 @@ AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -956,7 +956,7 @@ AieRC XAie_MdmPerfCounterGetConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1000,7 +1000,7 @@ AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1143,7 +1143,7 @@ AieRC XAie_MdmPerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1186,7 +1186,7 @@ AieRC XAie_MdmPerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1306,7 +1306,7 @@ AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1356,7 +1356,7 @@ AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Lo
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1425,7 +1425,7 @@ AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module, col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1478,7 +1478,7 @@ AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -1533,7 +1533,7 @@ AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
+		XAIE_ERROR("Tile does not have uC module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_TILE;
 	}
 

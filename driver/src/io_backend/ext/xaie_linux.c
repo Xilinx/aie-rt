@@ -1174,8 +1174,8 @@ static AieRC _XAie_LinuxIO_UpdateShimDmaBdAddrOff(void *IOInst,
 		    AIE_UPDATE_SHIMDMA_DMABUF_BD_ADDR_IOCTL,
 		    &ShimArgs);
 	if (Ret < 0) {
-		XAIE_ERROR("Failed to update shim dma bd addr, %d: %s\n",
-			errno, strerror(errno));
+		XAIE_ERROR("Failed to update shim dma bd addr, %d: %s Tile(%u,%u)\n",
+			errno, strerror(errno),ShimArgs.loc.col, ShimArgs.loc.row);
 		return XAIE_ERR;
 	}
 
@@ -1239,8 +1239,8 @@ static AieRC _XAie_LinuxIO_ConfigShimDmaBd(void *IOInst,
 	}
 
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to configure shim dma bd, %d: %s\n",
-			errno, strerror(errno));
+		XAIE_ERROR("Failed to configure shim dma bd, %d: %s Tile(%u,%u)\n",
+			errno, strerror(errno),Args->Loc.Col,Args->Loc.Row);
 		return XAIE_ERR;
 	}
 
@@ -1349,7 +1349,7 @@ static AieRC _XAie_LinuxIO_RequestTiles(void *IOInst,
 		TilesArray.locs = malloc(TilesArray.num_tiles *
 					 sizeof(TilesArray.locs[0]));
 		if (TilesArray.locs == XAIE_NULL) {
-			XAIE_ERROR("request tiles, failed to allocate memory for tiles\n");
+			XAIE_ERROR("request tiles, failed to allocate memory for tiles. NumTile:%d\n",TilesArray.num_tiles);
 			return XAIE_ERR;
 		}
 
@@ -1460,8 +1460,8 @@ static AieRC _XAie_LinuxIO_SetColumnClock(void *IOInst,
 	Ret = ioctl(LinuxIOInst->PartitionFd, AIE_SET_COLUMN_CLOCK_IOCTL,
 			&ColumnReq);
 	if(Ret != 0) {
-		XAIE_ERROR("Failed to request tiles, %d: %s\n",
-			errno, strerror(errno));
+		XAIE_ERROR("Failed to request tiles, %d: %s StartCol:%u NumCol:%u\n",
+			errno, strerror(errno),Args->StartCol,Args->NumCols);
 		return XAIE_ERR;
 	}
 
