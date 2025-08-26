@@ -8,6 +8,7 @@ maintainers:
   - Gregory Williams <gregory.williams@amd.com>
 
 type: driver
+device_type: aie
 
 properties:
   compatible:
