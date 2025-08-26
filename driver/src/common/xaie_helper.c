@@ -1863,7 +1863,50 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u32 Arg_Offset, u8 Num_BDs)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
-	return Backend->Ops.AddressPatching((void *)DevInst->IOInst, Arg_Offset, Num_BDs);
+
+	if (Backend->Ops.AddressPatching != NULL) {
+		return Backend->Ops.AddressPatching((void *)DevInst->IOInst, Arg_Offset, Num_BDs);
+	} else {
+		XAIE_ERROR("Address Patching function pointer points to NULL\n");
+		return XAIE_NOT_SUPPORTED;
+	}
+
+}
+
+AieRC XAie_WaitUCDMA(XAie_DevInst *DevInst)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (Backend->Ops.WaitUcDMA != NULL) {
+		return Backend->Ops.WaitUcDMA((void *)DevInst->IOInst);
+	} else {
+		XAIE_ERROR("WaitUCDMA function pointer points to NULL\n");
+		return XAIE_NOT_SUPPORTED;
+	}
+}
+
+AieRC XAie_ModeConfig(XAie_DevInst *DevInst, XAie_ModeSelect Mode)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (Backend->Ops.ConfigMode != NULL) {
+		return Backend->Ops.ConfigMode((void *)DevInst->IOInst, Mode);
+	} else {
+		XAIE_ERROR("ConfigMode function pointer points to NULL\n");
+		return XAIE_NOT_SUPPORTED;
+	}
+}
+
+XAie_ModeSelect XAie_GetModeConfig(XAie_DevInst *DevInst)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (Backend->Ops.GetConfigMode != NULL) {
+		return Backend->Ops.GetConfigMode((void *)DevInst->IOInst);
+	} else {
+		XAIE_ERROR("GetConfigMode function pointer points to NULL, hence returned mode is XAIE_INVALID_MODE\n");
+		return XAIE_INVALID_MODE;
+	}
 }
 
 AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
