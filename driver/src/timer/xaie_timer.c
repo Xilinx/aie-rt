@@ -81,7 +81,7 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -145,7 +145,7 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -209,13 +209,13 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if (Reset > XAIE_RESETENABLE) {
-		XAIE_ERROR("Invalid reset value\n");
+		XAIE_ERROR("Invalid reset value:%d\n", Reset);
 		return XAIE_INVALID_ARGS;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -240,7 +240,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/*checking for valid true event number */
 	if(IntEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid Event id\n");
+		XAIE_ERROR("Invalid Event id:%d\n", IntEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -289,7 +289,7 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -364,7 +364,7 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid Tile Type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -375,7 +375,7 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(CycleCnt > XAIE_WAIT_CYCLE_MAX_VAL) {
-		XAIE_ERROR("CycleCnt above max value\n");
+		XAIE_ERROR("CycleCnt above max value:%llu\n", CycleCnt);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -753,7 +753,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 
 	RC = _XAie_SetupBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId1);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to setup broadcast network for timer sync\n");
+		XAIE_ERROR("Failed to setup broadcast network for timer sync, NumTile:%d BcastChnnID1:%d\n", NumTiles, BcastChannelId1);
 		free(Locs);
 		return RC;
 	}
@@ -771,7 +771,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 					BcastChannelId2, ShimBcastEvent);
 		}
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Unable to configure shim broadcast event for timer sync\n");
+			XAIE_ERROR("Unable to configure shim broadcast event for timer sync,Tile{%d,%d}, Bcast ChanId 1:%d Bcast ChanId 2:%d\n",Loc.Col, Loc.Row, BcastChannelId1, BcastChannelId2);
 			free(Locs);
 			return RC;
 		}
@@ -780,7 +780,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 	/* Configure the timer control with the trigger event */
 	RC = _XAie_SetupTimerConfig(DevInst, NumTiles, Locs, BcastChannelId1);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to setup timer reset events\n");
+		XAIE_ERROR("Failed to setup timer reset events,BcastChannelId1:%d\n", BcastChannelId1);
 		free(Locs);
 		return RC;
 	}
@@ -849,7 +849,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 
 	RC = _XAie_SetupBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to setup broadcast network for timer sync\n");
+		XAIE_ERROR("Failed to setup broadcast network for timer sync, BcastChannelId:%d\n", BcastChannelId);
 		free(Locs);
 		return RC;
 	}
@@ -867,7 +867,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 					BcastChannelId + 1, ShimBcastEvent);
 		}
 		if(RC != XAIE_OK) {
-			XAIE_ERROR("Unable to configure shim broadcast event for timer sync\n");
+			XAIE_ERROR("Unable to configure shim broadcast event for timer sync,BcastChannelId:%d\n",BcastChannelId);
 			free(Locs);
 			return RC;
 		}
@@ -876,7 +876,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	/* Configure the timer control with the trigger event */
 	RC = _XAie_SetupTimerConfig(DevInst, NumTiles, Locs, BcastChannelId);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to setup timer reset events\n");
+		XAIE_ERROR("Failed to setup timer reset events,BcastChannelId1:%d\n",BcastChannelId);
 		free(Locs);
 		return RC;
 	}

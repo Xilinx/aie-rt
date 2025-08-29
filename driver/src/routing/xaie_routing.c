@@ -187,7 +187,7 @@ AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* RoutingInstance, 
 	if (RoutingInstance == NULL || row >= RoutingInstance->NumRows ||
 			col >= RoutingInstance->NumCols) {
 		XAIE_ERROR("XAie_dumpSpecificConstraintToPrint backend failed!.Invalid input or "
-				"out of bounds row/col to dumpSpecificConstraintToPrint\n");
+				"out of bounds row/col to dumpSpecificConstraintToPrint. Col:%u Row:%u\n", col, row);
 		return XAIE_ERR;
 	}
 
@@ -1542,7 +1542,12 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 			RC |= XAie_StrmConnCctEnable(DevInst, LastTile, lastDir,
 					lastStream, dirLast, destStream);
 			if (RC != XAIE_OK) {
-				XAIE_ERROR("Routing Failed!. XAie_StrmConnCctEnable Failed!\n");
+				XAIE_ERROR("Routing Failed!. XAie_StrmConnCctEnable Failed! {%d,%d},%s, %d, %s, %d\n",
+				LastTile.Col, LastTile.Row,
+					_XAie_StrmSwPortTypeToString(lastDir),
+					lastStream,
+					_XAie_StrmSwPortTypeToString(dirLast),
+					destStream);
 				return XAIE_ERR;
 			}
 
@@ -1576,7 +1581,8 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 						destStream);
 				if (RC != XAIE_OK) {
 					XAIE_ERROR("Routing Failed!. "
-						"XAie_EnableAieToShimDmaStrmPort Failed!\n");
+						"XAie_EnableAieToShimDmaStrmPort Failed! {%d,%d}\n",
+					LastTile.Col, LastTile.Row);
 					return XAIE_ERR;
 				}
 				_XAie_updatePortAvailabilityForAieToShimDma(routingInstance,
@@ -1663,7 +1669,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 						sourceStream, portDest, destStream);
 			if (RC != XAIE_OK) {
 				XAIE_ERROR("Routing Failed!. "
-					"XAie_EnableAieToShimDmaStrmPort Failed!\n");
+					"XAie_EnableAieToShimDmaStrmPort Failed!{%d,%d}\n",SourceTile.Col, SourceTile.Row);
 				return XAIE_ERR;
 			}
 			/* Create a new routing step */
@@ -1704,7 +1710,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 						SourceTile, sourceStream);
 				if (RC != XAIE_OK) {
 					XAIE_ERROR("Routing Failed!. "
-						"XAie_EnableShimDmaToAieStrmPort Failed!\n");
+						"XAie_EnableShimDmaToAieStrmPort Failed! {%d,%d}\n", SourceTile.Col, SourceTile.Row);
 					return XAIE_ERR;
 				}
 				_XAie_updatePortAvailabilityForShimDmaToAie(routingInstance,
@@ -1773,7 +1779,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 			source.Col, source.Row, sourceBufferID);
 	BDs->sourceBD = sourceBufferID;
 	if (RC != XAIE_OK) {
-		XAIE_ERROR("Buffer Descriptor programming failed!\n");
+		XAIE_ERROR("Buffer Descriptor programming failed!{%d,%d}\n",source.Col,source.Row);
 		return XAIE_ERR;
 	}
 
@@ -1805,7 +1811,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 	BDs->destinationBD = destBufferID;
 	/* Check for errors in the process */
 	if (RC != XAIE_OK) {
-		XAIE_ERROR("Buffer Descriptor programming failed!\n");
+		XAIE_ERROR("Buffer Descriptor programming failed!{%d,%d}\n",destination.Col,destination.Row);
 		return XAIE_ERR;
 	}
 
@@ -2372,7 +2378,7 @@ AieRC XAie_Route(XAie_RoutingInstance *routingInstance,  XAie_RouteConstraints* 
 
 	if (NULL != _XAie_findRouteInRouteDB(Sourceconstraint->routesDB, source, destination)) {
 		XAIE_ERROR("XAie_Route backend failed!. Route has already been "
-				"programmed between source and destination\n");
+				"programmed between source and destination Tile{%d,%d}\n",source.Col,source.Row);
 		return XAIE_ERR;
 	}
 

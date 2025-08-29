@@ -64,7 +64,7 @@ AieRC _XAie_TileCtrlSetIsolation(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Failed to set tile isolation, invalid tile type\n");
+		XAIE_ERROR("Failed to set tile isolation, invalid tile type Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_ERR;
 	}
 

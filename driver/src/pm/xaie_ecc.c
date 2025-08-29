@@ -69,7 +69,7 @@ static AieRC _XAie_EccPerfCntConfig(XAie_DevInst *DevInst, XAie_LocType Loc)
 	RC = XAie_PerfCounterEventValueSet(DevInst, Loc, XAIE_CORE_MOD,
 		XAIE_ECC_PERFCOUNTER_ID, XAIE_ECC_SCRUB_CLOCK_COUNT);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to set performance counter event value\n");
+		XAIE_ERROR("Unable to set performance counter event value, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -78,7 +78,7 @@ static AieRC _XAie_EccPerfCntConfig(XAie_DevInst *DevInst, XAie_LocType Loc)
 		XAIE_ECC_PERFCOUNTER_ID, XAIE_EVENT_PERF_CNT_0_CORE);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
-				" with reset event\n");
+				" with reset event  Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -88,7 +88,7 @@ static AieRC _XAie_EccPerfCntConfig(XAie_DevInst *DevInst, XAie_LocType Loc)
 		(XAie_Events)XAIE_EVENT_TRUE_CORE);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
-				" with start stop event\n");
+				" with start stop event  Col:%u Row:%u\n", Loc.Col, Loc.Row);
 	}
 
 	return XAIE_OK;
@@ -128,7 +128,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	/* Check if tile is shim noc or shim pl */
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMNOC) ||
 		(TileType == XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("ECC cannot be enabled for this tile.\n");
+		XAIE_ERROR("ECC cannot be enabled for this tile.  Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -164,7 +164,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_CORE_MOD,
 		XAIE_EVENT_SWITCH_A, XAIE_BROADCAST_CHANNEL_6, Dir);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to block broadcast from core module\n");
+		XAIE_ERROR("Unable to block broadcast from core module  Col:%u Row:%u\n",Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -173,7 +173,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 		XAIE_EVENT_SWITCH_A, XAIE_BROADCAST_CHANNEL_6,
 		(u8)XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to block broadcast from mem module\n");
+		XAIE_ERROR("Unable to block broadcast from mem module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -181,7 +181,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	RC = XAie_EventBroadcast(DevInst, Loc, XAIE_CORE_MOD,
 		XAIE_BROADCAST_CHANNEL_6, XAIE_EVENT_PERF_CNT_0_CORE);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to broadcast event from core module\n");
+		XAIE_ERROR("Unable to broadcast event from core module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -198,7 +198,7 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	/* Configure Performance counter 0 to generate event to trigger ECC */
 	RC = _XAie_EccPerfCntConfig(DevInst, Loc);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to configure performance counter for ECC\n");
+		XAIE_ERROR("Unable to configure performance counter for ECC Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -240,7 +240,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	/* Check if tile is shim noc or shim pl */
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMNOC) ||
 		(TileType == XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("ECC cannot be enabled for this tile.\n");
+		XAIE_ERROR("ECC cannot be enabled for this tile. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -264,7 +264,7 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	/* Configure Performance counter 0 to generate event to trigger ECC */
 	RC = _XAie_EccPerfCntConfig(DevInst, Loc);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to configure performance counter for ECC\n");
+		XAIE_ERROR("Unable to configure performance counter for ECC Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -333,7 +333,7 @@ static AieRC _XAie_EccPerfCntConfigMemTile(XAie_DevInst *DevInst,
 	RC = XAie_PerfCounterEventValueSet(DevInst, Loc, XAIE_MEM_MOD,
 		XAIE_ECC_PERFCOUNTER_ID, XAIE_ECC_SCRUB_CLOCK_COUNT);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to set performance counter event value\n");
+		XAIE_ERROR("Unable to set performance counter event value Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -343,7 +343,7 @@ static AieRC _XAie_EccPerfCntConfigMemTile(XAie_DevInst *DevInst,
 		XAIE_ECC_PERFCOUNTER_ID));
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
-				" with reset event\n");
+				" with reset event Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
@@ -353,7 +353,7 @@ static AieRC _XAie_EccPerfCntConfigMemTile(XAie_DevInst *DevInst,
 		XAIE_EVENT_TRUE_MEM_TILE);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
-				" with start stop event\n");
+				" with start stop event Col:%u Row:%u\n", Loc.Col, Loc.Row);
 	}
 
 	return XAIE_OK;
@@ -388,7 +388,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	/* Check if tile type is Mem tile */
 	if(TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
-		XAIE_ERROR("ECC cannot be enabled for this tile.\n");
+		XAIE_ERROR("ECC cannot be enabled for this tile. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -407,7 +407,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 	/* Configure Performance counter 0 to generate event to trigger ECC */
 	RC = _XAie_EccPerfCntConfigMemTile(DevInst, Loc);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to configure performance counter for ECC\n");
+		XAIE_ERROR("Unable to configure performance counter for ECC Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 

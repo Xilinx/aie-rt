@@ -70,7 +70,7 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -89,12 +89,12 @@ AieRC XAie_TraceEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
 	if (MappedEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID,MappedEvent:%d\n",MappedEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(SlotId >= TraceMod->NumTraceSlotIds) {
-		XAIE_ERROR("Invalid trace slot index\n");
+		XAIE_ERROR("Invalid trace slot index:%d\n", SlotId);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -146,7 +146,7 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -165,7 +165,7 @@ AieRC XAie_TraceStartEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	MappedEvent = XAie_GetEventNumber(EvntMod, StartEvent);
 	if (MappedEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID, MappedEvent:%d\n", MappedEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -215,7 +215,7 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -234,7 +234,7 @@ AieRC XAie_TraceStopEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	MappedEvent = XAie_GetEventNumber(EvntMod, StopEvent);
 	if (MappedEvent == XAIE_EVENT_INVALID) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID,MappedEvent:%d\n",MappedEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -282,7 +282,7 @@ AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -298,7 +298,7 @@ AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Pkt.PktId > XAIE_PACKET_ID_MAX || Pkt.PktType > XAIE_PACKET_TYPE_MAX)
 	{
-		XAIE_ERROR("Invalid packet type or ID\n");
+		XAIE_ERROR("Invalid packet type or ID, PktID:%d pkttype:%d\n", Pkt.PktId, Pkt.PktType);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -351,7 +351,7 @@ AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -367,7 +367,7 @@ AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Mode > XAIE_TRACE_INST_EXEC ||
 			TraceMod->ModeConfig.Mask == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Invalid trace mode\n");
+		XAIE_ERROR("Invalid trace mode:%d\n", Mode);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -415,7 +415,7 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -480,7 +480,7 @@ AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -550,7 +550,7 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -571,7 +571,7 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	MappedStopEvent = XAie_GetEventNumber(EvntMod, StopEvent);
 	if((MappedStartEvent == XAIE_EVENT_INVALID) ||
 	   (MappedStopEvent == XAIE_EVENT_INVALID)) {
-		XAIE_ERROR("Invalid event ID\n");
+		XAIE_ERROR("Invalid event ID, MappedStartEvent:%d MappedStopEvent:%d\n",MappedStartEvent,MappedStopEvent);
 		return XAIE_INVALID_ARGS;
 	}
 
@@ -624,7 +624,7 @@ AieRC XAie_TraceControlConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -677,7 +677,7 @@ AieRC XAie_TracePktConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 
@@ -776,7 +776,7 @@ AieRC XAie_TraceEventReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
+		XAIE_ERROR("Invalid Tile Type, Tile{%d,%d}, TileType:%d\n",Loc.Col, Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
 

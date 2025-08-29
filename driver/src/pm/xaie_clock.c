@@ -55,12 +55,12 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
+		XAIE_ERROR("Invalid Device Instance, DevInst is NULL\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(NumTiles > (u32)(DevInst->NumRows * DevInst->NumCols)) {
-		XAIE_ERROR("Invalid NumTiles\n");
+		XAIE_ERROR("Invalid NumTiles, NumTile:%u\n", NumTiles);
 		return XAIE_INVALID_ARGS;
 	}
 

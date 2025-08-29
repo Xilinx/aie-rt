@@ -270,7 +270,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 	}
 
 	if (FlagVal > XAIE_DMA_STATUS_S2MM_CURRENT_BD) {
-		XAIE_ERROR("Invalid FlagVal\n");
+		XAIE_ERROR("Invalid FlagVal, FlagVal:%u\n", FlagVal);
 		return XAIE_ERR;
 	}
 
@@ -388,7 +388,7 @@ int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 	}
 
 	if (FlagVal > XAIE_DMA_STATUS_MM2S_CURRENT_BD) {
-		XAIE_ERROR("Invalid FlagVal\n");
+		XAIE_ERROR("Invalid FlagVal, Flagval:%u\n", FlagVal);
 		return XAIE_ERR;
 	}
 
