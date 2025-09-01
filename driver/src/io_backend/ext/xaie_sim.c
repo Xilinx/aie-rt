@@ -331,7 +331,14 @@ static AieRC XAie_SimIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 static AieRC XAie_SimIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr)
 {
-	ess_WriteCmd(Command, Col, Row, CmdWd0, CmdWd1, CmdStr);
+	(void)IOInst;
+	if (CmdStr) {
+		unsigned char buffer[strlen(CmdStr) + 1];
+		strcpy((char *)buffer, CmdStr);
+		ess_WriteCmd(Command, Col, Row, CmdWd0, CmdWd1, buffer);
+	} else {
+		ess_WriteCmd(Command, Col, Row, CmdWd0, CmdWd1, NULL);
+	}
 
 	return XAIE_OK;
 }

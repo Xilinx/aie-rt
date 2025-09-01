@@ -284,6 +284,7 @@ static AieRC XAie_ControlCodeIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32
 	u32 DataAligner = (DATA_SECTION_ALIGNMENT -
 		(ControlCodeInst->UcJobTextSize % DATA_SECTION_ALIGNMENT));
 
+	(void) TimeOutUs;
 
 	if (ControlCodeInst->ControlCodefp != NULL) {
 		if((ControlCodeInst->UcJobSize + ISA_OPSIZE_MASK_POLL_32 +
@@ -623,6 +624,12 @@ static AieRC XAie_ControlCodeIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize) {
 
 
+	if(JobSize > 8192)
+	{
+		XAIE_ERROR("JobSize cannot be > 8192");
+		return XAIE_ERR;
+	}
+
 	XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)DevInst->IOInst;
 	ControlCodeInst->UcbdLabelNum = 0;
 	ControlCodeInst->UcbdDataNum = 0;
@@ -636,8 +643,7 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 	ControlCodeInst->ControlCodedata2fp = fopen(TEMP_ASM_FILE2, "w");
 	ControlCodeInst->ControlCodedata3fp = fopen(TEMP_ASM_FILE3, "w");
 
-	//ControlCodeInst->PageSize = JobSize;
-	ControlCodeInst->PageSize = 8192;
+	ControlCodeInst->PageSize = JobSize;
 	ControlCodeInst->CombineCommands = 0;
 
     if (ControlCodeInst->ControlCodefp == NULL ||

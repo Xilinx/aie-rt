@@ -525,9 +525,9 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 		return XAIE_ERR;
 	}
 
-	while(fgets(buffer, 200U, Fd) != NULL) {
-		if(strstr(buffer, "items) : Stack") != NULL) {
-			sscanf(buffer, "    0x%8x..0x%8x (%*s",
+	while(fgets((char *)buffer, 200U, Fd) != NULL) {
+		if(strstr((char *)buffer, "items) : Stack") != NULL) {
+			sscanf((char *)buffer, "    0x%8x..0x%8x (%*s",
 					&StackSzPtr->start, &StackSzPtr->end);
 			break;
 		}

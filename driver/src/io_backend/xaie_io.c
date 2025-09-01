@@ -45,7 +45,9 @@
 #elif defined (__AIESOCKET__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SOCKET
 #else
-	#define __AIEDEBUG__
+	#ifndef __AIEDEBUG__
+		#define __AIEDEBUG__
+	#endif
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
 #endif
 
