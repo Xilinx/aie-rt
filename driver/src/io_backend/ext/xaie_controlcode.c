@@ -186,6 +186,7 @@ static AieRC XAie_ControlCodeIO_Init(XAie_DevInst *DevInst)
 		return XAIE_ERR;
 	}
 
+	memset(IOInst, 0, sizeof(XAie_ControlCodeIO));
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	IOInst->ScrachpadName = NULL;
