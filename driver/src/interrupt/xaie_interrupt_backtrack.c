@@ -528,7 +528,7 @@ static AieRC _XAie_LBacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 	_XAie_LIntrCtrlL1Ack(DevInst, Loc, Switch, XAIE_ERROR_BROADCAST_MASK);
 
 	for (Loc.Row = XAIE_MEM_TILE_ROW_START;
-	     Loc.Row < (XAIE_MEM_TILE_ROW_START + XAIE_MEM_TILE_NUM_ROWS);
+	     Loc.Row < (XAIE_AIE_TILE_ROW_START);
 	     Loc.Row++)
 	{
 		if (_XAie_LPmIsTileRequested(DevInst, Loc) == XAIE_DISABLE)

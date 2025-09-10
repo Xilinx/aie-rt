@@ -164,6 +164,7 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 
 static inline void _XAie_LCertMemZeroInit(XAie_DevInst *DevInst)
 {
+	(void)DevInst;
 }
 
 /*****************************************************************************/
@@ -314,6 +315,7 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
  *****************************************************************************/
 static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
 {
+	(void)DevInst;
 }
 
 /*****************************************************************************/

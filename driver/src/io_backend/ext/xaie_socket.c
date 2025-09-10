@@ -40,6 +40,10 @@
 
 #endif /* __AIESOCKET__ */
 
+#ifdef __AIGSOCKETCI__
+#include "sleep.h"
+#endif
+
 #include "xaie_helper.h"
 #include "xaie_io.h"
 #include "xaie_io_common.h"

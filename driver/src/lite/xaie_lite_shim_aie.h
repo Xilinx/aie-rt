@@ -176,6 +176,9 @@ static inline u8 _XAie_MapColToIrqId(XAie_DevInst *DevInst, XAie_LocType Loc)
 static inline void _XAie_PrivilegeSetShimClk(XAie_DevInst *DevInst,
 					     XAie_LocType Loc, u8 Enable)
 {
+	(void)DevInst;
+	(void)Loc;
+	(void)Enable;
 }
 #endif /* XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE */
 
