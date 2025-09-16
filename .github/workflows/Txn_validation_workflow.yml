@@ -1,0 +1,70 @@
+name: Transaction binary Validation PR Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  Txn_bin_validation:
+    runs-on: [self-hosted, linux, x64, jenkins-linux-runner]
+    env:
+      JENKINS_URL: "http://172.23.155.96:8080/"
+      JENKINS_USER: "ips-lab"
+      JENKINS_TOKEN: "115d61b0f96a470b614c9f09aacf0d3814"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Run Test suite Transaction binary Validation.
+        run: |
+          jenkinsUrl="${{ env.JENKINS_URL }}"
+          user="${{ env.JENKINS_USER }}"
+          token="${{ env.JENKINS_TOKEN }}"
+          auth="$user:$token"
+          base64AuthInfo=$(echo -n "$auth" | base64)
+          headers="Authorization: Basic $base64AuthInfo"
+
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          aiert_branch="${{ github.base_ref }}"
+          params="AIE_RT_BRANCH_NAME=$aiert_branch&TEST_TYPE=long_regression&PATCH_NUM=$PR_NUMBER"
+
+          # Trigger Jenkins job
+          response=$(curl -i -X POST "$jenkinsUrl/job/Txn_bin_Validation_aie_patchnum/buildWithParameters?$params" \
+            -H "$headers")
+
+          queueUrl=$(echo "$response" | grep -i Location | awk '{print $2}' | tr -d '\r')
+
+          # Poll for build URL
+          while true; do
+            buildInfo=$(curl -s "$queueUrl/api/json" -H "$headers")
+            buildUrl=$(echo "$buildInfo" | jq -r '.executable.url // empty')
+            if [ -n "$buildUrl" ]; then
+              break
+            fi
+            echo "Waiting for job at $queueUrl to start..."
+            sleep 5
+          done
+
+          # Wait for job to complete
+          while true; do
+            status=$(curl -s "$buildUrl/api/json" -H "$headers")
+            building=$(echo "$status" | jq -r '.building')
+            result=$(echo "$status" | jq -r '.result')
+            if [ "$building" = "false" ]; then
+              echo "Job completed with result: $result"
+              break
+            fi
+            echo "Waiting for job at $buildUrl to complete..."
+            sleep 10
+          done
+
+          # Post result comment
+          if [ "$result" = "SUCCESS" ]; then
+            echo "✅ Jenkins validation completed. PR is ready to merge."
+          else
+            echo "❌ Jenkins validation failed. PR will not be merged."
+            exit 1
+          fi
