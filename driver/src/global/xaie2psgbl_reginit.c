@@ -2457,6 +2457,30 @@ static const XAie_ShimClkBufCntr Aie2PSShimClkBufCntr =
 	.ClkBufEnable = {0, 0x1}
 };
 
+/* Register to set Module_Clock_Control_0 */
+static const XAie_ShimModClkCntr0 Aie2PSShimModClkCntr0 =
+{
+        .RegOff = XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0,
+        .RstEnable = XAIE_DISABLE,
+        .StrmSwClkEnable = {XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_LSB,
+                XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_STREAM_SWITCH_CLOCK_ENABLE_MASK},
+        .PlIntClkEnable = {XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_LSB,
+                XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_PL_INTERFACE_CLOCK_ENABLE_MASK},
+        .CteClkEnable = {XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_LSB,
+                XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_CTE_CLOCK_ENABLE_MASK},
+	.UcClkEnable = {XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_UCONTROLLER_CLOCK_ENABLE_LSB,
+		XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0_UCONTROLLER_CLOCK_ENABLE_MASK}
+};
+
+/* Register to set Module_Clock_Control_1 */
+static const XAie_ShimModClkCntr1 Aie2PSShimModClkCntr1 =
+{
+        .RegOff = XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1,
+        .RstEnable = XAIE_DISABLE,
+        .NocModClkEnable = {XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_1_CLOCK_ENABLE_LSB,
+                XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_1_NOC_MODULE_1_CLOCK_ENABLE_MASK}
+};
+
 static const XAie_ShimRstMod Aie2PSShimTileRst =
 {
 	.RegOff = 0,
@@ -2498,12 +2522,16 @@ static const XAie_PlIfMod Aie2PSPlIfMod =
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.ClkBufCntr = &Aie2PSShimClkBufCntr,
 	.ShimTileRst = &Aie2PSShimTileRst,
+	.ModClkCntr0 = &Aie2PSShimModClkCntr0,
+	.ModClkCntr1 = &Aie2PSShimModClkCntr1,
 	.ShimNocNmuSwitchOff = XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG,
 	.ShimNocNmuSwitch0 = {XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG_NMU_0_LSB, XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG_NMU_0_MASK},
 	.ShimNocNmuSwitch1 = {XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG_NMU_1_LSB, XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG_NMU_1_MASK},
 #else
 	.ClkBufCntr = NULL,
 	.ShimTileRst = NULL,
+	.ModClkCntr0 = NULL,
+	.ModClkCntr1 = NULL,
 	.ShimNocNmuSwitchOff = 0U,
 	.ShimNocNmuSwitch0 = {0U, 0U},
 	.ShimNocNmuSwitch1 = {0U, 0U},
@@ -2535,6 +2563,8 @@ static const XAie_PlIfMod Aie2PSShimTilePlIfMod =
 	.ColRst = {0, 0x1},
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.ClkBufCntr = &Aie2PSShimClkBufCntr,
+	.ModClkCntr0 = &Aie2PSShimModClkCntr0,
+	.ModClkCntr1 = &Aie2PSShimModClkCntr1,
 	.ShimTileRst = &Aie2PSShimTileRst,
 	.ShimNocAxiMM = &Aie2PSShimNocAxiMMConfig,
 	.ShimNocNmuSwitchOff = XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG,
@@ -2542,6 +2572,8 @@ static const XAie_PlIfMod Aie2PSShimTilePlIfMod =
 	.ShimNocNmuSwitch1 = {XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG_NMU_1_LSB, XAIE2PSGBL_PL_MODULE_NMU_SWITCHES_CONFIG_NMU_1_MASK},
 #else
 	.ClkBufCntr = NULL,
+	.ModClkCntr0 = NULL,
+	.ModClkCntr1 = NULL,
 	.ShimTileRst = NULL,
 	.ShimNocAxiMM = NULL,
 	.ShimNocNmuSwitchOff = 0U,
@@ -4834,6 +4866,7 @@ XAie_DeviceOps Aie2PSDevOps =
 	.SetAxiMMIsolation = &_XAie2PS_SetAxiMMIsolation,
 	.PartMemZeroInit = &_XAieMl_PartMemZeroInit,
 	.RequestTiles = &_XAieMl_RequestTiles,
+	.SetColumnClk = &_XAie2PS_SetColumnClk,
 #else
 	.SetPartColShimReset = NULL,
 	.SetPartColClockAfterRst = NULL,
@@ -4841,6 +4874,7 @@ XAie_DeviceOps Aie2PSDevOps =
 	.SetAxiMMIsolation = NULL,
 	.PartMemZeroInit = NULL,
 	.RequestTiles = NULL,
+	.SetColumnClk = NULL,
 #endif
 };
 
