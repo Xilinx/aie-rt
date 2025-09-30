@@ -36,9 +36,6 @@
 #include "xaiegbl.h"
 
 /***************************** Macro Definitions *****************************/
-#define XAIE_COMBO_PER_MOD	4U	//for Legacy Devices (Pre-AIE4)
-#define XAIE4_COMBO_PER_MOD	8U	//for AIE4 Device
-
 #define XAIE_EVENT_INVALID		0xFFFFU
 
 #define XAIE_EVENT_GENERATE_ENUM(ENUM)		XAIE_EVENT_##ENUM,
