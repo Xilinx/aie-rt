@@ -1057,7 +1057,7 @@ namespace xaiefal {
 		 * @return Module type, XAIE_ANY_MOD for failure
 		 */
 		XAie_ModuleType estimateModfromIndex(uint8_t TileType, uint32_t Index) {
-			XAie_ModuleType Mod;
+			XAie_ModuleType Mod = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
 
 			switch(TileType) {
 			case XAIEGBL_TILE_TYPE_AIETILE:
