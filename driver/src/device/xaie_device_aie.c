@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -31,10 +32,11 @@
 
 /*
 * This variable captures the generic device value. If S100/S200 device is not
-* available
+* available.
+* NOTE: This global variable is deprecated and is replaced by DevType field in
+* XAie_DevInst structure for thread safety. Use DevInst->DevType instead.
 */
 u8 XAieDevType = XAIE_DEV_GENERIC_DEVICE;
-
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -56,7 +58,6 @@ u8 XAieDevType = XAIE_DEV_GENERIC_DEVICE;
 static AieRC _XAie_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 Enable)
 {
-	AieRC RC;
 	u8 TileType;
 	u32 FldVal;
 	u64 RegAddr;
@@ -67,15 +68,19 @@ static AieRC _XAie_PmSetColumnClockBuffer(XAie_DevInst *DevInst,
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	ClkBufCntr = PlIfMod->ClkBufCntr;
 
+	if (_XAie_CheckPrecisionExceeds(ClkBufCntr->ClkBufEnable.Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	RegAddr = ClkBufCntr->RegOff +
 			XAie_GetTileAddr(DevInst, 0U, Loc.Col);
 	FldVal = XAie_SetField(Enable, ClkBufCntr->ClkBufEnable.Lsb,
 			ClkBufCntr->ClkBufEnable.Mask);
 
-	RC = XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
+	return XAie_MaskWrite32(DevInst, RegAddr, ClkBufCntr->ClkBufEnable.Mask,
 			FldVal);
-
-	return RC;
 }
 
 /*****************************************************************************/
@@ -138,8 +143,8 @@ u8 _XAie_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 		}
 
 		//For S100/S200 column 58 is shim-PL
-		if(XAieDevType == XAIE_DEV_GEN_S200 ||
-				XAieDevType == XAIE_DEV_GEN_S100) {
+		if(DevInst->DevType == XAIE_DEV_GEN_S200 ||
+				DevInst->DevType == XAIE_DEV_GEN_S100) {
 			if((DevInst->StartCol + Loc.Col) == 58U) {
 				return XAIEGBL_TILE_TYPE_SHIMPL;
 			}
@@ -190,6 +195,12 @@ static AieRC _XAie_SetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	ShimTileRst = PlIfMod->ShimTileRst;
+
+	if (_XAie_CheckPrecisionExceeds(ShimTileRst->RstCntr.Lsb,
+			_XAie_MaxBitsNeeded(RstEnable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	RegAddr = ShimTileRst->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
@@ -277,27 +288,20 @@ AieRC _XAie_SetPartColClockAfterRst(XAie_DevInst *DevInst, u8 Enable)
 *		Internal API only.
 *
 ******************************************************************************/
-AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
+AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst)
 {
 	AieRC RC = XAIE_OK;
 
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u8 Dir = 0;
 
-		if(IsolationFlags == XAIE_INIT_ISOLATION) {
-			if(C > 0 && C < (u8)(DevInst->NumCols - 1U))
-				continue;
-			if(C == 0U)
-				Dir |= XAIE_ISOLATE_WEST_MASK;
-			if(C == (u8)(DevInst->NumCols - 1U))
-				Dir |= XAIE_ISOLATE_EAST_MASK;
-		}
-
-		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
-			Dir |= XAIE_ISOLATE_WEST_MASK;
-		}
-		if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
-			Dir |= XAIE_ISOLATE_EAST_MASK;
+		if(C == 0U) {
+			Dir = XAIE_ISOLATE_WEST_MASK;
+		} else if(C == (u8)(DevInst->NumCols - 1U)) {
+			Dir = XAIE_ISOLATE_EAST_MASK;
+		} else {
+			/* No isolation for tiles by default for AIE */
+			continue;
 		}
 
 		for(u8 R = 0; R < DevInst->NumRows; R++) {
@@ -381,7 +385,11 @@ AieRC _XAie_PartMemZeroInit(XAie_DevInst *DevInst)
 *******************************************************************************/
 static void _XAie_PmGateTiles(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
-	for (u8 R = DevInst->NumRows - 1U; R > Loc.Row; R--) {
+	if((DevInst->NumRows == 0 ) || ((DevInst->NumRows - 1U) > UINT8_MAX)){
+		XAIE_ERROR("RowValue range Exceeds U8 Range\n");
+		return;
+	}
+	for (u8 R = (u8)(DevInst->NumRows - 1U); R > Loc.Row; R--) {
 		u8 TileType;
 		u64 RegAddr;
 		const XAie_ClockMod *ClockMod;
@@ -425,6 +433,13 @@ static void _XAie_PmUngateTiles(XAie_DevInst *DevInst, XAie_LocType FromLoc,
 		TileLoc.Row = R;
 		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, TileLoc);
 		ClockMod = DevInst->DevProp.DevMod[TileType].ClockMod;
+
+		if (_XAie_CheckPrecisionExceeds(ClockMod->NextTileClockCntrl.Lsb,
+				_XAie_MaxBitsNeeded(1U), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return;
+		}
+
 		RegAddr = XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col) +
 				ClockMod->ClockRegOff;
 		XAie_MaskWrite32(DevInst, RegAddr,
@@ -451,6 +466,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 
 	if(Args->Locs == NULL) {
 		u32 NumTiles;
+		AieRC RC;
 
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
 		NumTiles =(u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
@@ -458,13 +474,21 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
 				NumTiles);
-		_XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
+		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable clock buffers.\n");
+			return RC;
+		}
 
 		return XAIE_OK;
 	}
 
 	for(u32 i = 0; i < Args->NumTiles; i++) {
 		u8 flag = 0;
+		if(Args->Locs[i].Col >= DevInst->NumCols || Args->Locs[i].Row >= DevInst->NumRows) {
+			XAIE_ERROR("Invalid Tile Location \n");
+			return XAIE_INVALID_TILE;
+		}
 
 		if (Args->Locs[i].Row == 0U) {
 			continue;
@@ -474,7 +498,11 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				Args->Locs[i]);
 
-		for(u8 row = DevInst->NumRows - 1U; row > 0U; row--) {
+		if((DevInst->NumRows == 0 ) || ((DevInst->NumRows - 1U) > UINT8_MAX)){
+			XAIE_ERROR("RowValue range Exceeds U8 Range\n");
+			return XAIE_ERR;
+		}
+		for(u8 row = (u8)(DevInst->NumRows - 1U) ; row > 0U; row--) {
 			u32 CheckTileStatus;
 			/*
 			 * Check for the upper most tile in use in the column
@@ -541,12 +569,12 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 {
 	AieRC RC;
-	u32 TileStatus, NumTiles;
+	u32 StartBit, EndBit;
 
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
 
 	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
-			((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
+			((Args->StartCol + Args->NumCols - 1U) > PartEndCol) ) {
 		XAIE_ERROR("Invalid Start Column/Numcols \n");
 		return XAIE_ERR;
 	}
@@ -565,19 +593,20 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 		}
 	}
 
-	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
-			 XAie_TileLoc((u8)Args->StartCol, 1));
-	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
+	StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
+			 XAie_TileLoc((u8)Args->StartCol, 0));
+	EndBit = _XAie_GetTileBitPosFromLoc(DevInst,
+			 XAie_TileLoc((u8)(Args->StartCol + Args->NumCols), 0));
 
 	if(Args->Enable) {
 		/*
 		 * Set bitmap from start column to Start+Number of columns
 		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				TileStatus, NumTiles);
+				StartBit, EndBit);
 	} else {
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				TileStatus, NumTiles);
+				StartBit, EndBit);
 	}
 
 	return XAIE_OK;

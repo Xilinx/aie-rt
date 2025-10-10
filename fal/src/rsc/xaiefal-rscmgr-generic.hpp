@@ -1,3 +1,8 @@
+/******************************************************************************
+* Copyright (C) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+* SPDX-License-Identifier: MIT
+******************************************************************************/
+
 #pragma once
 
 #include <bitset>
@@ -10,7 +15,6 @@
 
 #define XAIE_TRACE_PER_MOD 1U
 #define XAIE_COMBO_PER_MOD 4U
-#define XAIE_MDMPERF_PER_MOD 1U
 
 #define XAIE_RSC_HEADER_TTYPE_SHIFT	0U
 #define XAIE_RSC_HEADER_TTYPE_MASK	0xF
@@ -191,7 +195,7 @@ namespace xaiefal {
 			StaticOff = getStaticOff(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			StartBit = getStartBit(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
 			MaxRscId = getMaxRsc(RscReq[0].Loc, RscReq[0].Mod, RscReq[0].RscType);
-			NumContigRscs = RscReq.size();
+			NumContigRscs = (uint32_t) RscReq.size();
 			auto Bitmap = RscMaps[TileType].Bitmaps[RscReq[0].RscType];
 
 			for (uint32_t i = 0; i < MaxRscId; i++) {
@@ -269,12 +273,6 @@ namespace xaiefal {
 				uint8_t TType = XAie_GetTileTypefromLoc(dev(), RscReq[i].Loc);
 				auto Bitmap = RscMaps[TType].Bitmaps[RscReq[i].RscType];
 				uint32_t StartBit, rBit, rIndex;
-
-				if (TType == XAIEGBL_TILE_TYPE_MAX) {
-					Logger::log(LogLevel::FAL_ERROR) << __func__ <<
-						" Invalid Tile Type" << std::endl;
-					return XAIE_INVALID_TILE;
-				}
 
 				RscReq[i].RscId = CommonId;
 				StartBit = CommonId + getStartBit(RscReq[i].Loc, RscReq[i].Mod,
@@ -453,14 +451,6 @@ namespace xaiefal {
 				for (RType = 0; RType < XAIE_MAXRSC; RType++) {
 					auto MaxRsc = &RscMaps[TType].MaxRscs[RType];
 					auto Bitmap = RscMaps[TType].Bitmaps[RType];
-
-					/*
-					 * TODO: add support for MDM perfcount
-					 * rsc in Linux driver. Once added we
-					 * remove the below statement
-					 */
-					if (RType == XAIE_MDMPERFCNT)
-						continue;
 
 					for (uint8_t i = 0; i < NumMods; i++) {
 						uint32_t Size, ModOff = 0U;
@@ -769,7 +759,7 @@ namespace xaiefal {
 		 */
 		uint32_t getCommonRscId(std::vector<XAieUserRsc> vRscs) {
 			std::bitset<32> RscStatus;
-			uint32_t MaxRscId;
+			uint32_t MaxRscId = XAIE_RSC_ID_ANY;
 
 			for (auto rsc : vRscs) {
 				uint8_t TType = XAie_GetTileTypefromLoc(dev(), rsc.Loc);
@@ -813,7 +803,7 @@ namespace xaiefal {
 					Mask = (1 << remBits) - 1 ;
 					Temp |= Bitmap->at(sIndex + 1);
 					Temp &= Mask;
-					Temp << (MaxRscId - remBits);
+					Temp = Temp << (MaxRscId - remBits);
 					RscStatus |= Temp;
 				}
 				if ((rBit + MaxRscId) > 32U) {
@@ -823,7 +813,7 @@ namespace xaiefal {
 					Mask = (1 << remBits) - 1 ;
 					Temp |= Bitmap->at(rIndex + 1);
 					Temp &= Mask;
-					Temp << (MaxRscId - remBits);
+					Temp = Temp << (MaxRscId - remBits);
 					RscStatus |= Temp;
 				}
 			}
@@ -1005,14 +995,6 @@ namespace xaiefal {
 				return EventMod->NumGroupEvents;
 
 			}
-			case XAIE_MDMPERFCNT:
-			{
-				if ((XAie_GetNumRows(dev(), TileType) > 0U) &&
-						(Mod == XAIE_PL_MOD))
-					return XAIE_MDMPERF_PER_MOD;
-				else
-					return 0U;
-			}
 			default:
 				return 0U;
 			}
@@ -1057,7 +1039,7 @@ namespace xaiefal {
 		 * @return Module type, XAIE_ANY_MOD for failure
 		 */
 		XAie_ModuleType estimateModfromIndex(uint8_t TileType, uint32_t Index) {
-			XAie_ModuleType Mod;
+			XAie_ModuleType Mod = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
 
 			switch(TileType) {
 			case XAIEGBL_TILE_TYPE_AIETILE:

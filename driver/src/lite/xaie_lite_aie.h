@@ -1,6 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
-* Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.  *
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -32,10 +32,9 @@
 #include "xaie_lite_regdef_aie.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
-#include "xaie_tilectrl.h"
+#include "xaie_lite_util.h"
 
 /************************** Constant Definitions *****************************/
-
 /************************** Function Prototypes  *****************************/
 /*****************************************************************************/
 /**
@@ -101,29 +100,20 @@ static inline void _XAie_LSetPartColShimReset(XAie_DevInst *DevInst,
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
+static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst)
 {
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u64 RegAddr;
 		u32 RegVal = 0;
 
-		if (IsolationFlags == XAIE_INIT_ISOLATION) {
-			if(C > 0 && C < (u8)(DevInst->NumCols - 1))
-                                continue;
-			if(C == 0) {
-				RegVal |= XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
-			}
-			if(C == (u8)(DevInst->NumCols - 1)) {
-				RegVal |= XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
-			}
+		if(C == 0) {
+			RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
+		} else if(C == (u8)(DevInst->NumCols - 1)) {
+			RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
+		} else {
+			/* No isolation for tiles by default for AIE */
+			continue;
 		}
-		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
-			RegVal |= XAIE_ISOLATE_WEST_MASK;
-		}
-		if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
-			RegVal |= XAIE_ISOLATE_EAST_MASK;
-		}
-
 
 		/* Isolate boundrary of SHIM tiles */
 		RegAddr = _XAie_LGetTileAddr(0, C) +
@@ -170,6 +160,11 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 				XAIE_MEM_MOD_DMEM_SIZE);
 		}
 	}
+}
+
+static inline void _XAie_LCertMemZeroInit(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
 }
 
 /*****************************************************************************/
@@ -304,6 +299,59 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 		}
 	}
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+ *
+ * Disable TLAST is not supported on AIE
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
+}
+
+/*****************************************************************************/
+/**
+ *
+ * This API Clears Core register as a part of Clear context.
+ *
+ * @param       DevInst: Device Instance
+ *
+ * @return      None.
+ *
+ * @note        None.
+ *
+ *****************************************************************************/
+static inline void _XAie_ClearCoreReg(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
+}
+
+/*****************************************************************************/
+/**
+ *
+ * This API Stops issueing new AXI-MM commands before context switch
+ * Before context switching Needs to stop new AXI-MM transactions. So
+ * that context switch can be done and no data corruption can happen.
+ *
+ * @param       DevInst: Device Instance
+ *
+ * @return      None.
+ *
+ * @note        None.
+ *
+ *****************************************************************************/
+static inline void _XAie_PauseMem(XAie_DevInst *DevInst)
+{
+        (void)DevInst;
 }
 
 #endif		/* end of protection macro */

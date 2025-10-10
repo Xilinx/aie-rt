@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -30,7 +31,9 @@
 #include "xaie_helper.h"
 #include "xaie_helper_internal.h"
 /*****************************************************************************/
-/************************** Function Definitions *****************************/
+/***************************** Macro Definitions *****************************/
+#define XAIE_BROADCAST_CHANNEL_MASK     0xFFFFU
+
 /*****************************************************************************/
 /**
 * This API marks the bitmap with for the tiles which are clock enabled.

@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -14,7 +15,7 @@
 * <pre>
 * MODIFICATION HISTORY:
 *
-* Ver   Who     Date	Changes
+* Ver   Who     Date        Changes
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   Wendy 05/17/2021  Initial creation
 *
@@ -74,6 +75,14 @@ static AieRC _XAie_PrivilegeSetColReset(XAie_DevInst *DevInst,
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 	RegAddr = PlIfMod->ColRstOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if (_XAie_CheckPrecisionExceeds(PlIfMod->ColRst.Lsb,
+				_XAie_MaxBitsNeeded(RstEnable),
+				MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	FldVal = XAie_SetField(RstEnable,
 			PlIfMod->ColRst.Lsb,
 			PlIfMod->ColRst.Mask);
@@ -143,14 +152,7 @@ static AieRC _XAie_PrivilegeRstPartShims(XAie_DevInst *DevInst)
 		return RC;
 	}
 
-	RC = _XAie_NpiSetShimReset(DevInst, XAIE_DISABLE);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-
-	RC = DevInst->DevOps->SetPartColShimReset(DevInst, XAIE_DISABLE);
-
-	return RC;
+	return _XAie_NpiSetShimReset(DevInst, XAIE_DISABLE);
 }
 
 /*****************************************************************************/
@@ -187,9 +189,25 @@ static AieRC _XAie_PrivilegeSetBlockAxiMmNsuErr(XAie_DevInst *DevInst,
 	ShimNocAxiMM = PlIfMod->ShimNocAxiMM;
 	RegAddr = ShimNocAxiMM->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+        if (_XAie_CheckPrecisionExceeds(ShimNocAxiMM->NsuSlvErr.Lsb,
+                                _XAie_MaxBitsNeeded(BlockSlvEnable),
+                                MAX_VALID_AIE_REG_BIT_INDEX)) {
+                XAIE_ERROR("Check Precision Exceeds Failed\n");
+                return XAIE_ERR;
+        }
+
+
 	FldVal = XAie_SetField(BlockSlvEnable,
 			ShimNocAxiMM->NsuSlvErr.Lsb,
 			ShimNocAxiMM->NsuSlvErr.Mask);
+
+        if (_XAie_CheckPrecisionExceeds(ShimNocAxiMM->NsuDecErr.Lsb,
+                                _XAie_MaxBitsNeeded(BlockDecEnable),
+                                MAX_VALID_AIE_REG_BIT_INDEX)) {
+                XAIE_ERROR("Check Precision Exceeds Failed\n");
+                return XAIE_ERR;
+        }
 	FldVal |= XAie_SetField(BlockDecEnable,
 			ShimNocAxiMM->NsuDecErr.Lsb,
 			ShimNocAxiMM->NsuDecErr.Mask);
@@ -218,7 +236,8 @@ static AieRC _XAie_PrivilegeSetBlockAxiMmNsuErr(XAie_DevInst *DevInst,
 *		This function is internal to this file.
 *
 ******************************************************************************/
-static AieRC _XAie_PrivilegeSetPartBlockAxiMmNsuErr(XAie_DevInst *DevInst,
+static
+AieRC _XAie_PrivilegeSetPartBlockAxiMmNsuErr(XAie_DevInst *DevInst,
 		u8 BlockSlvEnable, u8 BlockDecEnable)
 {
 	AieRC RC = XAIE_OK;
@@ -244,89 +263,6 @@ static AieRC _XAie_PrivilegeSetPartBlockAxiMmNsuErr(XAie_DevInst *DevInst,
 
 /*****************************************************************************/
 /**
-*
-* This API sets the NMU switch configuration for a given SHIM South tile
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM south tile
-* @param	FwdEastEnable: Configuration of switch for NMU 0. XAIE_ENABLE
-*			      to forward NOC to east neighbor. XAIE_DISABLE to
-*			      connect NOC to local NMU 0.
-* @param	FromWestEnable: Configuration of switch for NMU 1. XAIE_ENABLE
-*			       to have NOC accept from west neighbor.
-*			       XAIE_DISABLE to have NOC connected to local NMU
-*			       1.
-*
-* @return       XAIE_OK on success, error code on failure
-******************************************************************************/
-static AieRC _XAie_PrivilegeSetNmuSwitch(XAie_DevInst *DevInst,
-		XAie_LocType Loc, u8 FwdEastEnable, u8 FromWestEnable)
-{
-	const XAie_PlIfMod *PlIfMod;
-	u64 RegAddr;
-	u8 TileType;
-	u32 FldVal;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type.");
-		return XAIE_ERR;
-	}
-
-	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
-	RegAddr = PlIfMod->ShimNocNmuSwitchOff +
-			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	FldVal = XAie_SetField(FwdEastEnable,
-			PlIfMod->ShimNocNmuSwitch0.Lsb,
-			PlIfMod->ShimNocNmuSwitch0.Mask);
-	FldVal |= XAie_SetField(FromWestEnable,
-			PlIfMod->ShimNocNmuSwitch1.Lsb,
-			PlIfMod->ShimNocNmuSwitch1.Mask);
-
-	return XAie_Write32(DevInst, RegAddr, FldVal);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the partitions NMU switch configuration for all SHIM NOCs in
-* the full partition.
-*
-* @param	DevInst: Device Instance
-*
-* @return       XAIE_OK on success, error code on failure
-******************************************************************************/
-static AieRC _XAie_PrivilegeSetPartNmuSwitch(XAie_DevInst *DevInst)
-{
-	AieRC RC = XAIE_OK;
-
-	if (DevInst->StartCol != 0U) {
-		/*
-		 * The only NMU switches that need to be configured
-		 * are in absoulute column 0 and 1.
-		 */
-		XAIE_DBG("Partition does not have start column 0, not configuring NMU switches");
-		return XAIE_OK;
-	}
-
-	RC = _XAie_PrivilegeSetNmuSwitch(DevInst, XAie_TileLoc(0U, DevInst->ShimRow),
-			XAIE_ENABLE, XAIE_DISABLE);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to set switch configuration for column 0");
-		return RC;
-	}
-	RC = _XAie_PrivilegeSetNmuSwitch(DevInst, XAie_TileLoc(1U, DevInst->ShimRow),
-			XAIE_DISABLE, XAIE_ENABLE);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to set switch configuration for column 1");
-		return RC;
-	}
-
-	return RC;
-}
-
-/*****************************************************************************/
-/**
 * This API sets partition NPI protected register enabling
 *
 * @param	DevInst: AI engine partition device instance pointer
@@ -343,7 +279,7 @@ static AieRC _XAie_PrivilegeSetPartProtectedRegs(XAie_DevInst *DevInst,
 {
 	AieRC RC;
 	XAie_NpiProtRegReq NpiProtReq = {0};
-	NpiProtReq.StartCol = DevInst->StartCol;
+
 	NpiProtReq.NumCols = DevInst->NumCols;
 	NpiProtReq.Enable = Enable;
 	RC = _XAie_NpiSetProtectedRegEnable(DevInst, &NpiProtReq);
@@ -421,6 +357,52 @@ static AieRC _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 
 /*****************************************************************************/
 /**
+*
+* This API Enable/Disable interleaving mode for all MemTiles of the partition.
+*
+* @param	DevInst: Device Instance
+* @param	Enable: 0/1 to disable/enable memory interleaving mode
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note		It is not required to check the DevInst as the caller function
+*		should provide the correct value.
+*		Internal API only.
+*
+******************************************************************************/
+static AieRC _XAie_PrivilegeConfigMemInterleaving(XAie_DevInst *DevInst, u8 Enable)
+{
+	AieRC RC;
+	u64 RegAddr;
+	u32 FldVal;
+	const XAie_MemCtrlMod *MCtrlMod;
+	u8 C, R;
+
+	for(C = 0; C < DevInst->NumCols; C++) {
+		for(R = DevInst->MemTileRowStart;
+		    R < (DevInst->MemTileRowStart + DevInst->MemTileNumRows);
+		    R++) {
+			MCtrlMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemCtrlMod;
+			RegAddr = MCtrlMod->MemCtrlRegOff +
+					XAie_GetTileAddr(DevInst, R, C);
+			FldVal = XAie_SetField(Enable,
+					       MCtrlMod->MemInterleaving.Lsb,
+					       MCtrlMod->MemInterleaving.Mask);
+			RC = XAie_MaskWrite32(DevInst, RegAddr,
+					      MCtrlMod->MemInterleaving.Mask,
+					      FldVal);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to config memory interleaving"
+						" for partition.\n");
+				return RC;
+			}
+		}
+	}
+	return RC;
+}
+
+/*****************************************************************************/
+/**
 * This API initializes the AI engine partition
 *
 * @param	DevInst: AI engine partition device instance pointer
@@ -485,6 +467,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
 		}
+
 	}
 
 	if((OptFlags & XAIE_PART_INIT_OPT_SHIM_RST) != 0U) {
@@ -493,20 +476,11 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
 		}
-
-		if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
-			RC = _XAie_PrivilegeSetPartNmuSwitch(DevInst);
-			if(RC != XAIE_OK) {
-				_XAie_PrivilegeSetPartProtectedRegs(DevInst,
-						XAIE_DISABLE);
-				return RC;
-			}
-		}
 	}
 
 	if((OptFlags & XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR) != 0U) {
 		RC = _XAie_PrivilegeSetPartBlockAxiMmNsuErr(DevInst,
-				XAIE_ENABLE, XAIE_ENABLE);
+			XAIE_ENABLE, XAIE_ENABLE);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
@@ -520,13 +494,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	}
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0U) {
-		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
-		if(RC != XAIE_OK) {
-			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
-		}
-	}
-	else {
-		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_CLEAR_ISOLATION);
+		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst);
 		if(RC != XAIE_OK) {
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 		}
@@ -540,27 +508,19 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		}
 	}
 
+	if ((OptFlags & XAIE_PART_INIT_OPT_DISABLE_MEMINTERLEAVING) != 0U) {
+		RC = _XAie_PrivilegeConfigMemInterleaving(DevInst, XAIE_DISABLE);
+		if(RC != XAIE_OK) {
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+			return RC;
+		}
+	}
+
 	RC = _XAie_PrivilegeSetL2ErrIrq(DevInst);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to configure L2 error IRQ channels\n");
 		return RC;
 	}
-
-	/* Enable only the tiles requested in Opts parameter */
-        if(Opts != NULL && Opts->NumUseTiles > 0) {
-                XAie_BackendTilesArray TilesArray;
-
-                TilesArray.NumTiles = Opts->NumUseTiles;
-                TilesArray.Locs = Opts->Locs;
-
-                RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_REQUEST_TILES,
-                (void *)&TilesArray);
-
-                if(RC != XAIE_OK) {
-			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
-                        return RC;
-                }
-        }
 
 	/*
 	 * This is a temporary workaround to unblock rel-v2023.1 and make
@@ -572,15 +532,21 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 			return RC;
 		}
+	}
 
-		for(u32 C = 0; C < DevInst->NumCols; C++) {
-			XAie_LocType Loc;
-			u32 ColClockStatus;
+	/* Enable only the tiles requested in Opts parameter */
+	if(Opts != NULL) {
+		XAie_BackendTilesArray TilesArray;
 
-			Loc = XAie_TileLoc(C, 1);
-			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				       ColClockStatus, DevInst->NumRows - 1);
+		TilesArray.NumTiles = Opts->NumUseTiles;
+		TilesArray.Locs = Opts->Locs;
+
+		RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_REQUEST_TILES,
+		(void *)&TilesArray);
+
+		if(RC != XAIE_OK) {
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+			return RC;
 		}
 	}
 
@@ -661,6 +627,12 @@ AieRC _XAie_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 		return RC;
 	}
 
+	RC = _XAie_PrivilegeConfigMemInterleaving(DevInst, XAIE_ENABLE);
+	if(RC != XAIE_OK) {
+		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+		return RC;
+	}
+
 	RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
 	if(RC != XAIE_OK) {
 		_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
@@ -686,6 +658,7 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args)
 {
 	AieRC RC;
+	/* TODO: Configure previlege registers only for non-AIE devices. */
 	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
 		RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
 		if(RC != XAIE_OK) {
@@ -748,228 +721,57 @@ AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 
 /*****************************************************************************/
 /**
- * *
- * * This API writes to the Dma Pause register of noc to pause/resume the issuing of
- * * new AXI-MM commands on dma channel
- * *
- * * @param	DevInst: Device Instance.
- * * @param	Loc: Location of the Shim tile.
- * * @param	ChNum: Channel number of dma(0 or 1)
- * * @param	Dir: s2mm or mm2s
- * * @param	Pause: Set 1 to pause or 0 to resume
- * *
- * * @return	XAIE_OK on success, Error code on failure.
  *
- * ******************************************************************************/
-AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 Pause)
+ * This API Enable/Disable interleaving mode for all MemTiles of the partition.
+ *
+ * @param	DevInst: Device Instance
+ * @param	Enable: 0/1 to disable/enable memory interleaving mode
+ *
+ * @return       XAIE_OK on success, error code on failure
+ *
+ * @note		It is not required to check the DevInst as the caller function
+ *		should provide the correct value.
+ *		Internal API only.
+ *
+ ******************************************************************************/
+AieRC _XAie_PrivilegeConfigMemInterleavingLoc(XAie_DevInst *DevInst,
+		XAie_BackendTilesEnableArray *Args)
 {
 	AieRC RC;
-	volatile   u64 RegAddr;
-	volatile   u32 Mask, FldVal, Lsb;
-	const struct XAie_DmaMod *NocDma = NULL;
-
-	if (DevInst == NULL) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_ERR;
-	}
-
-	NocDma  = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].DmaMod;
-	if (NocDma == NULL) {
-		XAIE_ERROR("Invalid Nocmod\n");
-		return XAIE_ERR;
-	}
-
-	switch (ChNum) {
-	case 0/*Ch0*/:
-		switch (Dir) {
-		case DMA_S2MM:
-			Mask = NocDma->NocDmaPauseReg->S2mm_0.Mask;
-			Lsb =  NocDma->NocDmaPauseReg->S2mm_0.Lsb;
-			break;
-		case DMA_MM2S:
-			Mask = NocDma->NocDmaPauseReg->Mm2s_0.Mask;
-			Lsb = NocDma->NocDmaPauseReg->Mm2s_0.Lsb;
-			break;
-		default:
-			XAIE_ERROR("Invalid dma direction selected\n");
-		}
-		break;
-	case 1/*Ch1*/:
-	switch (Dir) {
-		case DMA_S2MM:
-			Mask = NocDma->NocDmaPauseReg->S2mm_1.Mask;
-			Lsb = NocDma->NocDmaPauseReg->S2mm_1.Lsb;
-			break;
-		case DMA_MM2S:
-			Mask = NocDma->NocDmaPauseReg->Mm2s_1.Mask;
-			Lsb = NocDma->NocDmaPauseReg->Mm2s_1.Lsb;
-			break;
-		default:
-			XAIE_ERROR("Invalid dma direction selected\n");
-	}
-	break;
-	default:
-		XAIE_ERROR("Invalid dma channel selected\n");
-		return XAIE_ERR;
-	}
-
-	FldVal = XAie_SetField(Pause, Lsb, Mask);
-
-	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable the"
-				"partition protected registers.\n");
-		return RC;
-	}
-
-	if(Loc == XAIE_NULL) {
-		for(u32 col = 0; col < DevInst->NumCols; col++) {
-			XAie_LocType Loc = XAie_TileLoc(col, 0);
-			RegAddr = NocDma->NocDmaPauseReg->RegOff +
-				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-			XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
-		}
-	} else {
-		RegAddr = NocDma->NocDmaPauseReg->RegOff +
-			XAie_GetTileAddr(DevInst, Loc->Row, Loc->Col);
-		XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
-	}
-
-	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to disable the "
-				"partition protected registers. \n");
-		return RC;
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/*
- * *
- * * This API writes to the Dma Pause register of uc to pause/resume the issuing of
- * * new AXI-MM commands on MM2DM/DM2MM
- * *
- * * @param	DevInst: Device Instance
- * * @param	Loc: Location of the Shim tile.
- * * @param	Channel: DM2MM or MM2DM
- * * @param	Pause: Set 1 to pause or 0 to resume
- * *
- * * @return	XAIE_OK on success, Error code on failure.
- *
- * ******************************************************************************/
-AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		UcDmaDir_enum Dir, u8 Pause)
-{
 	u64 RegAddr;
-	AieRC RC = XAIE_OK;
-	u32 Mask, FldVal, Lsb;
-	const struct XAie_UcMod *UcDma = NULL;
-
-	if (DevInst == NULL) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_ERR;
-	}
-
-	UcDma = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].UcMod;
-	if (UcDma == NULL) {
-		XAIE_ERROR("Invalid Ucmod\n");
-		return XAIE_ERR;
-	}
-
-	switch (Dir) {
-	case XAIE_UC_MODULE__DMA_DIR__DM2MM:
-		Mask = UcDma->UcDmaPauseReg->Dm2mm.Mask;
-		Lsb = UcDma->UcDmaPauseReg->Dm2mm.Lsb;
-		break;
-	case XAIE_UC_MODULE__DMA_DIR__MM2DM:
-		Mask = UcDma->UcDmaPauseReg->Mm2dm.Mask;
-		Lsb = UcDma->UcDmaPauseReg->Mm2dm.Lsb;
-		break;
-	default:
-		XAIE_ERROR("Invalid DMA direction\n");
-		return XAIE_INVALID_DMA_DIRECTION;
-	}
-
-	FldVal = XAie_SetField(Pause, Lsb, Mask);
+	u32 FldVal;
+	const XAie_MemCtrlMod *MCtrlMod;
+	u32 i;
 
 	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable the"
-				" partition protected registers.\n");
+		XAIE_ERROR("Failed to configure memory interleaving,"
+				" enable protected registers failed.\n");
 		return RC;
 	}
 
-	if(Loc == XAIE_NULL) {
-		for(u32 col = 0; col < DevInst->NumCols; col++) {
-			XAie_LocType Loc = XAie_TileLoc(col, 0);
-			RegAddr = UcDma->UcDmaPauseReg->RegOff +
-				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-			XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
-		}
-	} else {
-		RegAddr = UcDma->UcDmaPauseReg->RegOff +
-			XAie_GetTileAddr(DevInst, Loc->Row, Loc->Col);
-		XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
-	}
-
-	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to disable the "
-				"partition protected registers.\n");
-		return RC;
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/*
- * *
- * * This API sets the AXIMM Isolation of the partition
- * *
- * * @param	DevInst: Device Instance
- * * @param	IsolationFlags: Directions to block AXIMM
- *			- XAIE_INIT_ISOLATION: Block east and west
- *			- XAIE_INIT_WEST: Block west
- *			- XAIE_INIT_EAST: Block east and west
- * *
- * * @return	XAIE_OK on success, Error code on failure.
- *
- * ******************************************************************************/
-AieRC XAie_PrivilegeSetAxiMMIsolation(XAie_DevInst *DevInst, u8 IsolationFlags)
-{
-	AieRC RC;
-
-	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable the"
-				"partition protected registers.\n");
-		return RC;
-	}
-
-	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
-		RC = DevInst->DevOps->SetAxiMMIsolation(DevInst, IsolationFlags);
-		if(RC!= XAIE_OK) {
-			XAIE_ERROR("Failed to set the AxiMM Isolation\n");
+	MCtrlMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].MemCtrlMod;
+	for (i = 0; i < Args->NumTiles; i++) {
+		RegAddr = MCtrlMod->MemCtrlRegOff +
+			XAie_GetTileAddr(DevInst, Args->Locs[i].Row, Args->Locs[i].Col);
+		FldVal = XAie_SetField(Args->Enable ? XAIE_ENABLE : XAIE_DISABLE,
+				MCtrlMod->MemInterleaving.Lsb,
+				MCtrlMod->MemInterleaving.Mask);
+		RC = XAie_MaskWrite32(DevInst, RegAddr,
+				MCtrlMod->MemInterleaving.Mask,
+				FldVal);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to config memory interleaving, Loc (%d, %d)\n",
+					Args->Locs[i].Row, Args->Locs[i].Col);
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst,
+					XAIE_DISABLE);
 			return RC;
 		}
 	}
 
-	RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to disable the "
-				"partition protected registers.\n");
-		return RC;
-	}
-
-	return RC;
+	return _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
 }
-
 #else /* XAIE_FEATURE_PRIVILEGED_ENABLE */
-
 AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
 	(void)DevInst;
@@ -999,32 +801,12 @@ AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 	(void)Args;
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
-AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		UcDmaDir_enum Dir, u8 Pause)
-{
-	(void)DevInst;
-	(void)Loc;
-	(void)Dir;
-	(void)Pause;
-	return XAIE_FEATURE_NOT_SUPPORTED;
-}
 
-AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 Pause)
+AieRC _XAie_PrivilegeConfigMemInterleavingLoc(XAie_DevInst *DevInst,
+		XAie_BackendTilesEnableArray *Args)
 {
 	(void)DevInst;
-	(void)Loc;
-	(void)ChNum;
-	(void)Dir;
-	(void)Pause;
-	return XAIE_FEATURE_NOT_SUPPORTED;
-}
-
-AieRC XAie_PrivilegeSetAxiMMIsolation(XAie_DevInst *DevInst,
-		u8 IsolationFlags)
-{
-	(void)DevInst;
-	(void)IsolationFlags;
+	(void)Args;
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && !XAIE_FEATURE_LITE */

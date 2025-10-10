@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -36,6 +37,7 @@
 #include "xaie_dma.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaiegbl_regdef.h"
 
 #ifdef XAIE_FEATURE_DMA_ENABLE
@@ -46,6 +48,8 @@
 
 #define XAIE_DMA_CHCTRL_NUM_WORDS			2U
 #define XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US		1000000U
+
+#define XAIE_DMA_PAD_WORDS_MAX				0x3FU /* 6 bits */
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -498,7 +502,7 @@ AieRC XAie_DmaSetMultiDimAddr(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor,
 *		hardware.
 *
 ******************************************************************************/
-AieRC XAie_DmaSetBdIteration_16(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
+AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr)
 {
 	const XAie_DmaMod *DmaMod;
@@ -512,12 +516,6 @@ AieRC XAie_DmaSetBdIteration_16(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 	DmaMod = DmaDesc->DmaMod;
 
 	return DmaMod->SetBdIter(DmaDesc, StepSize, Wrap, IterCurr);
-}
-
-AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
-		u8 IterCurr)
-{
-	return XAie_DmaSetBdIteration_16(DmaDesc, StepSize, (u16)Wrap, IterCurr);
 }
 
 /*****************************************************************************/
@@ -649,7 +647,7 @@ AieRC XAie_DmaGetNumBds(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds)
 *		configure the buffer descriptor field in the hardware.
 *
 ******************************************************************************/
-AieRC XAie_DmaSetNextBd_16(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
+AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 {
 	const XAie_DmaMod *DmaMod;
 
@@ -669,11 +667,6 @@ AieRC XAie_DmaSetNextBd_16(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 	DmaDesc->BdEnDesc.UseNxtBd = EnableNextBd;
 
 	return XAIE_OK;
-}
-
-AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
-{
-	return XAie_DmaSetNextBd_16(DmaDesc, (u16)NextBd, EnableNextBd);
 }
 
 /*****************************************************************************/
@@ -764,14 +757,26 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 	if (!DmaDesc->DmaMod->AxiBurstLenCheck) {
 		XAIE_ERROR("Invalid AxiBurstLenCheck pointer\n");
 		return XAIE_INVALID_API_POINTER;
-	}
-	if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen,
-					      &DmaDesc->AxiDesc.BurstLen)) {
+	} else if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen)) {
 		XAIE_ERROR("Invalid Burst length\n");
 		return XAIE_INVALID_BURST_LENGTH;
 	}
 
 	DmaDesc->AxiDesc.SMID = Smid;
+	switch(BurstLen) {
+		case 4:
+			DmaDesc->AxiDesc.BurstLen = 0;
+			break;
+		case 8:
+			DmaDesc->AxiDesc.BurstLen = 1;
+			break;
+		case 16:
+			DmaDesc->AxiDesc.BurstLen = 2;
+			break;
+		case 32:
+			DmaDesc->AxiDesc.BurstLen = 3;
+			break;
+	}
 	DmaDesc->AxiDesc.AxQos = Qos;
 	DmaDesc->AxiDesc.AxCache = Cache;
 	DmaDesc->AxiDesc.SecureAccess = Secure;
@@ -832,7 +837,7 @@ AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaWriteBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
@@ -857,12 +862,6 @@ AieRC XAie_DmaWriteBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	return DmaMod->WriteBd(DevInst, DmaDesc, Loc, BdNum);
 }
 
-AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u16 BdNum)
-{
-	return XAie_DmaWriteBd_16(DevInst, DmaDesc, Loc, (u16)BdNum);
-}
-
 /*****************************************************************************/
 /**
 *
@@ -879,7 +878,7 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaReadBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
@@ -907,12 +906,6 @@ AieRC XAie_DmaReadBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	DmaDesc->DmaMod = DmaMod;
 
 	return DmaMod->ReadBd(DevInst, DmaDesc, Loc, BdNum);
-}
-
-AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u16 BdNum)
-{
-	return XAie_DmaReadBd_16(DevInst, DmaDesc, Loc, (u16)BdNum);
 }
 
 /*****************************************************************************/
@@ -971,6 +964,11 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->Reset.Lsb,
+			_XAie_MaxBitsNeeded((u32)Reset), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	Val = XAie_SetField(Reset, DmaMod->ChProp->Reset.Lsb,
 			DmaMod->ChProp->Reset.Mask);
@@ -1024,16 +1022,16 @@ AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
 		if (RC != XAIE_OK) {
 			return RC;
 		}
-	}
 
+	}
 	/* Reset S2MM */
 	for(u8 i = 0U; i < DmaMod->NumChannels; i++) {
 		RC = XAie_DmaChannelReset(DevInst, Loc, i, DMA_S2MM, Reset);
 		if (RC != XAIE_OK) {
 			return RC;
 		}
-	}
 
+	}
 	return  XAIE_OK;
 }
 
@@ -1087,6 +1085,12 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(ChNum > DmaMod->NumChannels) {
 		XAIE_ERROR("Invalid Channel number\n");
 		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->PauseStream.Lsb,
+			_XAie_MaxBitsNeeded(Pause), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	Value = XAie_SetField(Pause, DmaMod->ChProp->PauseStream.Lsb,
@@ -1152,6 +1156,12 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->PauseMem.Lsb,
+			_XAie_MaxBitsNeeded(Pause), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	Value = XAie_SetField(Pause, DmaMod->ChProp->PauseMem.Lsb,
 			DmaMod->ChProp->PauseMem.Mask);
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -1180,7 +1190,7 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 *		channel.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelPushBdToQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
 {
 	AieRC RC;
@@ -1227,12 +1237,6 @@ AieRC XAie_DmaChannelPushBdToQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	return XAie_Write32(DevInst, Addr + (u64)(DmaMod->ChProp->StartBd.Idx * 4U),
 			BdNum);
-}
-
-AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
-{
-	return XAie_DmaChannelPushBdToQueue_16(DevInst, Loc, ChNum, Dir, (u16)BdNum);
 }
 
 /*****************************************************************************/
@@ -1283,7 +1287,7 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u32)((u8)Dir * (u32)DmaMod->ChIdxOffset * DmaMod->NumChannels);
 
 	return XAie_MaskWrite32(DevInst,
 			Addr + (u64)(DmaMod->ChProp->Enable.Idx * 4U),
@@ -1391,7 +1395,7 @@ AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Loc: Location of AIE Tile
 * @param	ChNum: Channel number of the DMA.
 * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
-* @param	Status - Value of Channel Status Register
+* @param        Status - Value of Channel Status Register
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -1430,6 +1434,7 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	return DmaMod->GetChannelStatus(DevInst, Loc, DmaMod, ChNum,
 			Dir, Status);
 }
+
 /*****************************************************************************/
 /**
 *
@@ -1439,11 +1444,11 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Loc: Location of AIE Tile
 * @param	ChNum: Channel number of the DMA.
 * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
-* @param	TimeOutUs - Minimum timeout value in micro seconds.
+* @param        TimeOutUs - Minimum timeout value in micro seconds.
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
@@ -1479,7 +1484,61 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
 	}
 
-	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs);
+	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs,
+		XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on Shim DMA channel to be completed.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param        TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, u32 TimeOutUs)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAIE_ERROR("Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if(TimeOutUs == 0U) {
+		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
+	}
+
+	return DmaMod->WaitforDone(DevInst, Loc, DmaMod, ChNum, Dir, TimeOutUs,
+		XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -1517,13 +1576,12 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if (TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type or Direction\n");
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-
 	if(ChNum > DmaMod->NumChannels) {
 		XAIE_ERROR("Invalid Channel number\n");
 		return XAIE_INVALID_CHANNEL_NUM;
@@ -1535,7 +1593,66 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if (DmaMod->WaitforBdTaskQueue) {
 		return DmaMod->WaitforBdTaskQueue(DevInst, Loc, DmaMod, ChNum, Dir,
-			TimeOutUs);
+			TimeOutUs, XAIE_DISABLE);
+	} else {
+		XAIE_ERROR("WaitForBdTaskQueue is not supported/implemented\n");
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API is used to wait on DMA channel task queue till its free with atleast
+* one task or till the timeout.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param    TimeOutUs - Minimum timeout value in micro seconds.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note     This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs)
+{
+	u8 TileType;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAIE_ERROR("Invalid DMA direction\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	if(TimeOutUs == 0U) {
+		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
+	}
+
+	if (DmaMod->WaitforBdTaskQueue) {
+		return DmaMod->WaitforBdTaskQueue(DevInst, Loc, DmaMod, ChNum, Dir,
+			TimeOutUs, XAIE_ENABLE);
 	} else {
 		XAIE_ERROR("WaitForBdTaskQueue is not supported/implemented\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
@@ -1580,83 +1697,6 @@ AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This API reads the length of the buffer descriptor in the dma module.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE Tile
-* @param	Len: Stores the Length of all the BDs in bytes.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Returns 0 if the Buffer Descriptor Valid bit is 0.
-*
-******************************************************************************/
-AieRC XAie_DmaGetBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
-		u16 BdNum)
-{
-	u8 TileType;
-	u64 RegAddr;
-	u32 RegVal, Valid;
-	AieRC RC;
-	const XAie_DmaMod *DmaMod;
-
-	if((DevInst == XAIE_NULL) || (Len == NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
-		return XAIE_INVALID_BD_NUM;
-	}
-
-	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
-		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->BdEn->ValidBd.Idx * 4U;
-	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-
-	Valid = XAie_GetField(RegVal, DmaMod->BdProp->BdEn->ValidBd.Lsb,
-			DmaMod->BdProp->BdEn->ValidBd.Mask);
-	if(Valid == 1U) {
-		RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset
-			+ XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-			DmaMod->BdProp->BufferLen.Idx * 4U;
-		RC = XAie_Read32(DevInst, RegAddr, &RegVal);
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-
-		*Len = (XAie_GetField(RegVal, DmaMod->BdProp->BufferLen.Lsb,
-			DmaMod->BdProp->BufferLen.Mask) +
-			DmaMod->BdProp->LenActualOffset)
-			<< XAIE_DMA_32BIT_TXFER_LEN;
-	}
-	else {
-		*Len = 0;
-	}
-	return XAIE_OK;
-}
-
-AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
-		u16 BdNum)
-{
-	return XAie_DmaGetBdLen_16(DevInst, Loc, Len, (u16)BdNum);
-}
-
-/*****************************************************************************/
-/**
-*
 * This API pushes a Buffer Descriptor number, configures repeat count and token
 * status to start channel queue.
 *
@@ -1676,7 +1716,7 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 *		This API doesn't support out of order.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelSetStartQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue)
 {
@@ -1685,14 +1725,6 @@ AieRC XAie_DmaChannelSetStartQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	return XAie_DmaChannelSetStartQueueGeneric(DevInst, Loc, ChNum, Dir,
 			&DmaQueueDesc);
-}
-
-AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
-		u8 EnTokenIssue)
-{
-	return XAie_DmaChannelSetStartQueue_16(DevInst, Loc, ChNum, Dir,
-			(u16)BdNum, RepeatCount, EnTokenIssue);
 }
 
 /*****************************************************************************/
@@ -1786,6 +1818,15 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->StartQueueBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+	if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->StartBd.Lsb,
+			_XAie_MaxBitsNeeded(StartBd), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+		_XAie_CheckPrecisionExceeds(DmaMod->ChProp->RptCount.Lsb,
+			_XAie_MaxBitsNeeded(DmaQueueDesc->RepeatCount - 1U), MAX_VALID_AIE_REG_BIT_INDEX) ||
+		_XAie_CheckPrecisionExceeds(DmaMod->ChProp->EnToken.Lsb,
+			_XAie_MaxBitsNeeded(DmaQueueDesc->EnTokenIssue), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	Val = XAie_SetField(StartBd, DmaMod->ChProp->StartBd.Lsb,
 			DmaMod->ChProp->StartBd.Mask) |
@@ -1799,114 +1840,6 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 	return XAie_Write32(DevInst, Addr, Val);
 }
 
-/*****************************************************************************/
-/**
-*
-* This API updates the length of the buffer descriptor in the dma module.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE Tile
-* @param	Len: Length of BD in bytes.
-* @param	BdNum: Hardware BD number to be written to.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		This API accesses the hardware directly and does not operate
-*		on software descriptor.
-******************************************************************************/
-AieRC XAie_DmaUpdateBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
-		u16 BdNum)
-{
-	const XAie_DmaMod *DmaMod;
-	u32 AdjustedLen;
-	u8 TileType;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
-		return XAIE_INVALID_BD_NUM;
-	}
-
-	AdjustedLen = (Len >> XAIE_DMA_32BIT_TXFER_LEN) -
-		DmaMod->BdProp->LenActualOffset;
-
-
-	return DmaMod->UpdateBdLen(DevInst, DmaMod, Loc, AdjustedLen, BdNum);
-}
-
-AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
-		u16 BdNum)
-{
-	return XAie_DmaUpdateBdLen_16(DevInst, Loc, Len, (u16)BdNum);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API updates the address of the buffer descriptor in the dma module.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE Tile
-* @param	Addr: Buffer address
-* @param	BdNum: Hardware BD number to be written to.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		This API accesses the hardware directly and does not operate
-*		on software descriptor.
-******************************************************************************/
-AieRC XAie_DmaUpdateBdAddr_16(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
-		u16 BdNum)
-{
-	const XAie_DmaMod *DmaMod;
-	u8 TileType;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
-		return XAIE_INVALID_BD_NUM;
-	}
-
-	if(((Addr & DmaMod->BdProp->AddrAlignMask) != 0U) ||
-			(Addr > DmaMod->BdProp->AddrMax)) {
-		XAIE_ERROR("Invalid Address\n");
-		return XAIE_INVALID_ADDRESS;
-	}
-
-	Addr = Addr >> DmaMod->BdProp->AddrAlignShift;
-
-	return DmaMod->UpdateBdAddr(DevInst, DmaMod, Loc, Addr, BdNum);
-}
-
-AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
-		u16 BdNum)
-{
-	return XAie_DmaUpdateBdAddr_16(DevInst, Loc, Addr, (u16)BdNum);
-}
 /*****************************************************************************/
 /**
 *
@@ -2059,6 +1992,12 @@ AieRC XAie_DmaChannelSetControllerId(XAie_DmaChannelDesc *DmaChannelDesc,
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
+	if (_XAie_CheckPrecisionExceedsForRightShift(DmaMod->ChProp->ControllerId.Lsb,
+			DmaMod->ChProp->ControllerId.Mask)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	if(ControllerId > DmaMod->ChProp->ControllerId.Mask >>
 			DmaMod->ChProp->ControllerId.Lsb) {
 		XAIE_ERROR("Invalid ControllerId: %d\n", ControllerId);
@@ -2116,7 +2055,6 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 
 /*****************************************************************************/
 /**
-=======
 * This API configures the Dma channel descriptor fields in the hardware for a
 * particular tile location. This includes FoT mode, Controller id, out of order
 * and Compression/Decompression.
@@ -2177,6 +2115,17 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
+		if (_XAie_CheckPrecisionExceeds(DmaMod->ChProp->ControllerId.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->ControllerId), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+			_XAie_CheckPrecisionExceeds(DmaMod->ChProp->FoTMode.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->FoTMode), MAX_VALID_AIE_REG_BIT_INDEX) ||
+			_XAie_CheckPrecisionExceeds(DmaMod->ChProp->EnOutofOrder.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->EnOutofOrderId), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+			_XAie_CheckPrecisionExceeds(DmaMod->ChProp->EnCompression.Lsb,
+				_XAie_MaxBitsNeeded(DmaChannelDesc->EnCompression), MAX_VALID_AIE_REG_BIT_INDEX)){
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 	Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, (DmaMod->ChProp->EnOutofOrder.Lsb),
 			(DmaMod->ChProp->EnOutofOrder.Mask)) |
 		XAie_SetField(DmaChannelDesc->EnCompression, (DmaMod->ChProp->EnCompression.Lsb),
@@ -2217,6 +2166,23 @@ AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, XAie_DmaPadTensor *PadTensor)
 	if(DmaMod->Padding == XAIE_FEATURE_UNAVAILABLE) {
 		XAIE_ERROR("Feature unavailable\n");
 		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	/*
+	 * Check for before and after padding values overflow.
+	 * The max number of words that can be padded for dimension 0, 1 and 2
+	 * are 6 bits, 5 bits and 4 bits wide, respectively.
+	 */
+	for(u8 i = 0U; i < PadTensor->NumDim; i++) {
+		u8 Before = PadTensor->PadDesc[i].Before;
+		u8 After = PadTensor->PadDesc[i].After;
+		if((After > (XAIE_DMA_PAD_WORDS_MAX >> i)) ||
+				(Before > (XAIE_DMA_PAD_WORDS_MAX >> i))) {
+			XAIE_ERROR("Padding for dimension %d must be less "
+					"than %d\n", i,
+					XAIE_DMA_PAD_WORDS_MAX >> i);
+			return XAIE_INVALID_ARGS;
+		}
 	}
 
 	for(u8 i = 0U; i < PadTensor->NumDim; i++) {
@@ -2371,6 +2337,184 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 /*****************************************************************************/
 /**
 *
+* This API reads the length of the buffer descriptor in the dma module.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	Len: Stores the Length of all the BDs in bytes.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Returns 0 if the Buffer Descriptor Valid bit is 0.
+*
+******************************************************************************/
+AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
+		u16 BdNum)
+{
+	u8 TileType;
+	u64 RegAddr;
+	u32 RegVal, Valid;
+	AieRC RC;
+	const XAie_DmaMod *DmaMod;
+
+	if((DevInst == XAIE_NULL) || (Len == NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		return XAIE_INVALID_BD_NUM;
+	}
+
+	RegAddr = (u64)(DmaMod->BaseAddr + BdNum * (u64)DmaMod->IdxOffset) +
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->BdProp->BdEn->ValidBd.Idx * 4U;
+	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+		if (_XAie_CheckPrecisionExceedsForRightShift(DmaMod->BdProp->BdEn->ValidBd.Lsb,
+				DmaMod->BdProp->BdEn->ValidBd.Mask)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
+	Valid = XAie_GetField(RegVal, DmaMod->BdProp->BdEn->ValidBd.Lsb,
+			DmaMod->BdProp->BdEn->ValidBd.Mask);
+	if(Valid == 1U) {
+		RegAddr = (u64)(DmaMod->BaseAddr + BdNum * (u64)DmaMod->IdxOffset)
+			+ XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+			DmaMod->BdProp->BufferLen.Idx * 4U;
+		RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+		if(RC != XAIE_OK) {
+			return RC;
+		}
+
+			if (_XAie_CheckPrecisionExceedsForRightShift(DmaMod->BdProp->BufferLen.Lsb,
+					DmaMod->BdProp->BufferLen.Mask)) {
+				XAIE_ERROR("Check Precision Exceeds Failed\n");
+				return XAIE_ERR;
+			}
+		*Len = (XAie_GetField(RegVal, DmaMod->BdProp->BufferLen.Lsb,
+			DmaMod->BdProp->BufferLen.Mask) +
+			DmaMod->BdProp->LenActualOffset)
+			<< XAIE_DMA_32BIT_TXFER_LEN;
+	}
+	else {
+		*Len = 0;
+	}
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API updates the length of the buffer descriptor in the dma module.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	Len: Length of BD in bytes.
+* @param	BdNum: Hardware BD number to be written to.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API accesses the hardware directly and does not operate
+*		on software descriptor.
+******************************************************************************/
+AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
+		u16 BdNum)
+{
+	const XAie_DmaMod *DmaMod;
+	u32 AdjustedLen;
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		return XAIE_INVALID_BD_NUM;
+	}
+
+	AdjustedLen = (Len >> XAIE_DMA_32BIT_TXFER_LEN) -
+		DmaMod->BdProp->LenActualOffset;
+
+
+	return DmaMod->UpdateBdLen(DevInst, DmaMod, Loc, AdjustedLen, BdNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API updates the address of the buffer descriptor in the dma module.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	Addr: Buffer address
+* @param	BdNum: Hardware BD number to be written to.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API accesses the hardware directly and does not operate
+*		on software descriptor.
+******************************************************************************/
+AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
+		u16 BdNum)
+{
+	const XAie_DmaMod *DmaMod;
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		return XAIE_INVALID_BD_NUM;
+	}
+
+	if(((Addr & DmaMod->BdProp->AddrAlignMask) != 0U) ||
+			(Addr > DmaMod->BdProp->AddrMax)) {
+		XAIE_ERROR("Invalid Address\n");
+		return XAIE_INVALID_ADDRESS;
+	}
+
+	Addr = Addr >> DmaMod->BdProp->AddrAlignShift;
+
+	return DmaMod->UpdateBdAddr(DevInst, DmaMod, Loc, Addr, BdNum);
+}
+
+/*****************************************************************************/
+/**
+*
 * This API configure the pad value for DMA MM2S Channel.
 *
 * @param	DevInst: Device Instance.
@@ -2379,6 +2523,8 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 * @param	PadValue: 32-bit pad value.
 *
 * @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
 *
 ******************************************************************************/
 AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
@@ -2418,63 +2564,89 @@ AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 	return XAie_Write32(DevInst, Addr, PadValue);
 }
 
-/*****************************************************************************/
-/**
-* This API updates the address of the buffer descriptor in the dma module.
-*
-* @param	MemInst: Memory Instance
-* @param	Loc: Location of AIE Tile
-* @param	Offset: Buffer offset
-* @param	BdNum: Hardware BD number to be written to.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		This API updates BD for linux specifically.
-******************************************************************************/
-AieRC XAie_DmaUpdateBdAddrOff_16(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
-		u16 BdNum)
+
+/* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 
+ * TODO: Need to revert these changes later*/
+AieRC XAie_DmaGetNumBdsPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc,
+	u8 ChNum, XAie_DmaDirection Dir, u8 *NumBds)
 {
-	const XAie_DmaMod *DmaMod;
-	XAie_ShimDmaBdArgs Args;
-	XAie_DevInst *DevInst;
-	u64 BdBaseAddr, Addr;
-	u8 TileType;
-
-	if(MemInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid Memory Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	DevInst = MemInst->DevInst;
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-	if(BdNum > DmaMod->NumBds) {
-		XAIE_ERROR("Invalid BD number\n");
-		return XAIE_INVALID_BD_NUM;
-	}
-	BdBaseAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset);
-	Addr = BdBaseAddr + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-
-	Args.NumBdWords = 1U;
-	Args.BdWords = &Offset;
-	Args.Loc = Loc;
-	Args.BdNum = BdNum;
-	Args.Addr = Addr;
-	Args.MemInst = MemInst;
-
-	return XAie_RunOp(DevInst, XAIE_BACKEND_OP_UPDATE_SHIM_DMA_BD_ADDR,
-			  (void *)&Args);
+	(void) DevInst;
+	(void) Loc;
+	(void) ChNum;
+	(void) Dir;
+	(void) NumBds;
+	
+	return XAIE_OK;
 }
-
-AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
-		u16 BdNum)
+AieRC XAie_DmaSetNextBdPvtBuffPool(XAie_DmaDesc *DmaDesc, 
+	u8 ChNum, XAie_DmaDirection Dir, u16 NextBd, u8 EnableNextBd)
 {
-	return XAie_DmaUpdateBdAddrOff_16(MemInst, Loc, Offset,	(u16)BdNum);
+	(void) DmaDesc;
+	(void) ChNum;
+	(void) Dir;
+	(void) NextBd;
+	(void) EnableNextBd;
+
+	return XAIE_OK;
+}
+AieRC XAie_DmaWriteBdPvtBuffPool(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+	XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
+{
+	(void) DevInst;
+	(void) DmaDesc;
+	(void) Loc;
+	(void) ChNum;
+	(void) Dir;
+	(void) BdNum;
+
+	return XAIE_OK;
+}
+AieRC XAie_DmaReadBdPvtBuffPool(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+	XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
+{
+	(void) DevInst;
+	(void) DmaDesc;
+	(void) Loc;
+	(void) ChNum;
+	(void) Dir;
+	(void) BdNum;
+
+	return XAIE_OK;
+}
+AieRC XAie_DmaGetBdLenPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc, 
+	u8 ChNum, XAie_DmaDirection Dir, u32 *Len,	u16 BdNum)
+{
+	(void) DevInst;
+	(void) Loc;
+	(void) ChNum;
+	(void) Dir;
+	(void) Len;
+	(void) BdNum;
+
+	return XAIE_OK;
+}
+AieRC XAie_DmaUpdateBdLenPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc,
+	u8 ChNum, XAie_DmaDirection Dir, u32 Len, u16 BdNum)
+{
+	(void) DevInst;
+	(void) Loc;
+	(void) ChNum;
+	(void) Dir;
+	(void) Len;
+	(void) BdNum;
+
+	return XAIE_OK;
+}
+AieRC XAie_DmaUpdateBdAddrPvtBuffPool(XAie_DevInst *DevInst, XAie_LocType Loc,
+	u8 ChNum, XAie_DmaDirection Dir, u64 Addr,	u16 BdNum)
+{
+	(void) DevInst;
+	(void) Loc;
+	(void) ChNum;
+	(void) Dir;
+	(void) Addr;
+	(void) BdNum;
+	return XAIE_OK;
 }
 
 #endif /* XAIE_FEATURE_DMA_ENABLE */

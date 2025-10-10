@@ -50,7 +50,7 @@ namespace xaiefal {
 			} else {
 				PortIntf = PIntf;
 				PortType = PType;
-				PortNum = PNum;
+				PortNum = static_cast<uint8_t>(PNum);
 				State.Configured = 1;
 				RC = XAIE_OK;
 			}
@@ -158,7 +158,7 @@ namespace xaiefal {
 		AieRC _start() {
 			AieRC RC;
 
-			RC = XAie_EventSelectStrmPort(dev(), Loc, vRscs[0].RscId,
+			RC = XAie_EventSelectStrmPort(dev(), Loc, static_cast<uint8_t>(vRscs[0].RscId),
 					PortIntf, PortType, PortNum);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::FAL_ERROR) << "Stream port select " << __func__ << " (" <<
@@ -170,7 +170,7 @@ namespace xaiefal {
 		AieRC _stop() {
 			AieRC RC;
 
-			RC = XAie_EventSelectStrmPortReset(dev(), Loc, vRscs[0].RscId);
+			RC = XAie_EventSelectStrmPortReset(dev(), Loc, static_cast<uint8_t>(vRscs[0].RscId));
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::FAL_ERROR) << "Stream port select " << __func__ << " (" <<
 					(uint32_t)Loc.Col << "," << (uint32_t)Loc.Row << ")" <<

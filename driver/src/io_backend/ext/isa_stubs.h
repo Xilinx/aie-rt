@@ -1,7 +1,7 @@
-/* SPDX-License-Identifier: Apache License 2.0 */
-/*
- * Copyright (c) 2023 Advanced Micro Devices, Inc. All rights reserved.
- */
+/******************************************************************************
+* Copyright (C) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+* SPDX-License-Identifier: MIT
+******************************************************************************/
 
 #ifndef _ISA_STUBS_H_
 #define _ISA_STUBS_H_
@@ -45,7 +45,7 @@
 #define ISA_OPCODE_MASK_POLL_32 0x14
 #define ISA_OPCODE_TRACE 0x15
 #define ISA_OPCODE_NOP 0x16
-#define ISA_OPCODE_SAVE_TIMESTAMPS 0x1c
+
 
 // Operation sizes
 

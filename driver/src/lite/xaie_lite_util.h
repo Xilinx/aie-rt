@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2022 AMD.  All rights reserved.
+* Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -46,12 +46,13 @@
 typedef struct {
 	u32 S2MMStatus;
 	u32 MM2SStatus;
-} XAie_DmaStatus;
+} XAie_LDmaStatus;
 
 /* Data structure to capture the core tile status */
 typedef struct {
-	XAie_DmaStatus dma[XAIE_TILE_DMA_NUM_CH];
-	u32	EventStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
+	XAie_LDmaStatus dma[XAIE_TILE_DMA_NUM_CH];
+	u32 EventCoreModStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
+	u32 EventMemModStatus[XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS];
 	u32 CoreStatus;
 	u32 ProgramCounter;
 	u32 StackPtr;
@@ -62,7 +63,7 @@ typedef struct {
 /* Data structure to capture the mem tile status */
 #if (XAIE_DEV_SINGLE_GEN != XAIE_DEV_GEN_AIE)
 typedef struct {
-	XAie_DmaStatus dma[XAIE_MEM_TILE_DMA_NUM_CH];
+	XAie_LDmaStatus dma[XAIE_MEM_TILE_DMA_NUM_CH];
 	u32 EventStatus[XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS];
 	u8 LockValue[XAIE_MEM_TILE_NUM_LOCKS];
 } XAie_Mem_Tile_Status;
@@ -70,7 +71,7 @@ typedef struct {
 
 /* Data structure to capture the shim tile status */
 typedef struct {
-	XAie_DmaStatus dma[XAIE_SHIM_DMA_NUM_CH];
+	XAie_LDmaStatus dma[XAIE_SHIM_DMA_NUM_CH];
 	u32 EventStatus[XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS];
 	u8 LockValue[XAIE_SHIM_NUM_LOCKS];
 } XAie_Shim_Tile_Status;

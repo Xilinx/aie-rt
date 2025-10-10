@@ -332,6 +332,10 @@ namespace xaiefal {
 		XAie_ModuleType EndMod; /**< module type of the ending modile on the channel */
 		std::vector<XAie_LocType> vLocs; /**< tiles on the channel */
 	private:
+		/**
+		 * TODO: Following function will not be required.
+		 * Bitmap will be moved to device driver
+		 */
 		static AieRC setRscs(std::shared_ptr<XAieDevHandle> Dev,
 				const std::vector<XAie_LocType> &vL,
 				XAie_ModuleType startM, XAie_ModuleType endM,

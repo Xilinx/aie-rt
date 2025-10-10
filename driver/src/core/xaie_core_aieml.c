@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -25,6 +26,8 @@
 #include "xaie_feature_config.h"
 
 #ifdef XAIE_FEATURE_CORE_ENABLE
+
+#include "xaie_helper_internal.h"
 
 /************************** Constant Definitions *****************************/
 
@@ -73,6 +76,12 @@ AieRC _XAieMl_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 Mask, Value;
 	u64 RegAddr;
 
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreCtrl->CtrlEn.Lsb,
+			_XAie_MaxBitsNeeded(1U),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
 	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlEn.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
@@ -100,24 +109,36 @@ AieRC _XAieMl_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 ******************************************************************************/
 AieRC _XAieMl_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut, const struct XAie_CoreMod *CoreMod)
+		u32 TimeOut, const struct XAie_CoreMod *CoreMod, u8 BusyPoll)
 {
 	u32 Mask, Value;
 	u64 RegAddr;
+	AieRC Status = XAIE_OK;
 
 	Mask = CoreMod->CoreSts->Done.Mask;
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreSts->Done.Lsb,
+				_XAie_MaxBitsNeeded(1U),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	Value = (u32)(1U << CoreMod->CoreSts->Done.Lsb);
 
 	RegAddr = CoreMod->CoreSts->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
-			XAIE_OK) {
-		XAIE_DBG("Status poll time out\n");
+	if (BusyPoll != XAIE_ENABLE){
+		Status = XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut);
+	} else {
+		Status = XAie_MaskPollBusy(DevInst, RegAddr, Mask, Value, TimeOut);
+	}
+
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Core Wait Done poll time out\n");
 		return XAIE_CORE_STATUS_TIMEOUT;
 	}
 
-	return XAIE_OK;
+	return Status;
 }
 
 /*****************************************************************************/

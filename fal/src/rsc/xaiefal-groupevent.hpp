@@ -137,7 +137,7 @@ namespace xaiefal {
 		 * references list, if the list is empty after removal, it
 		 * will reset the group event configuration.
 		 */
-		AieRC stopHandle(const XAieGroupEventHandle *Hid) {
+		AieRC stopHandle(const XAieGroupEventHandle * Hid) {
 			AieRC RC = XAIE_OK;
 
 			auto H = Handles.find(Hid);
@@ -189,7 +189,7 @@ namespace xaiefal {
 		 * references list, if the list is empty after removal, it
 		 * will release the group event resource.
 		 */
-		AieRC removeHandle(const XAieGroupEventHandle *Hid) {
+		AieRC removeHandle(const XAieGroupEventHandle * Hid) {
 			AieRC RC = XAIE_OK;
 
 			auto H = Handles.find(Hid);
@@ -317,7 +317,7 @@ namespace xaiefal {
 					sizeof(DevHd->XAieGroupEventMapPl[0]);
 			}
 			for (i = 0; i < EIdsTotal; i++) {
-				if (Event == EIds[i]) {
+				if (Event == static_cast<XAie_Events>(EIds[i])) {
 					RscId = i;
 					break;
 				}

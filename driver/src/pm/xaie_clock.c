@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -59,7 +60,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(NumTiles > (u32)(DevInst->NumRows * DevInst->NumCols)) {
+	if(NumTiles > (u32)((u32)DevInst->NumRows * (u32)DevInst->NumCols)) {
 		XAIE_ERROR("Invalid NumTiles\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -95,8 +96,7 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 *
 * @return	XAIE_ENABLE if a tile is in use, otherwise XAIE_DISABLE.
 *
-* @note		This API does not check clock values, it will check internal
-* 		data structure.
+* @note		This API is supposed to be called internal only.
 *******************************************************************************/
 u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
@@ -155,7 +155,7 @@ AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols,
 	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
 
 	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
-	   ((StartCol + NumCols - 1) > PartEndCol) ) {
+	   ((StartCol + NumCols - 1U) > PartEndCol) ) {
 
 		XAIE_ERROR("Invalid Start Column/Numcols \n");
 		return XAIE_INVALID_ARGS;

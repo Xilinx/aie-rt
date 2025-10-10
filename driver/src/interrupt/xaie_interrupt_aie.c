@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -12,7 +13,14 @@
 * This file contains AIE specific interrupt routines which are not exposed to
 * the user.
 *
-******************************************************************************/
+* <pre>
+*  MODIFICATION HISTORY:
+*
+*  Ver   Who     Date     Changes
+*  ----- ------  -------- -----------------------------------------------------
+*  </pre>
+*
+*********************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"

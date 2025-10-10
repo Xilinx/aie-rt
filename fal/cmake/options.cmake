@@ -1,5 +1,6 @@
 ###############################################################################
-# Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+# Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+# Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 # SPDX-License-Identifier: MIT
 #
 ###############################################################################
@@ -66,14 +67,8 @@ if (NOT WITH_BUILD_XAIEDRV)
   option (WITH_XAIEDRV_FIND "Find libxaiegnine depends" ON)
 else()
   if ("${PROJECT_SYSTEM}" STREQUAL "linux")
-    if (NOT ${_host} STREQUAL ${_target})
-      option (WITH_AIEDRV_LINUX "Build with cross compile linux backend" ON)
-      option (WITH_AIEDRV_LIBMETAL "Build with libmetal backend" OFF)
-      if (WITH_AIEDRV_LIBMETAL)
-        set (AIEDRV_BACKEND -D__AIEMETAL__)
-      elseif (WITH_AIEDRV_LINUX)
-        set (AIEDRV_BACKEND -D__AIELINUX__)
-      endif (WITH_AIEDRV_LIBMETAL)
+    if (NOT ${_host} STREQUAL ${_target})      
+    message(FATAL_ERROR "Linux and Metal backends are not supported")
     endif(NOT ${_host} STREQUAL ${_target})
   else()
     option (WITH_AIEDRV_BAREMETAL "Build with baremetal backend" ON)

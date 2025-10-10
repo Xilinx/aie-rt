@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -35,6 +36,7 @@
 		.StartCol = (_StartCol), \
 		.NumCols = (_NumCols), \
 		.NumRows = (XAIE_NUM_ROWS), \
+		.L2PreserveMem = 0, \
 	}
 
 #if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
@@ -43,6 +45,15 @@
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 #include "xaie_lite_aieml.h"
 #include "xaie_lite_shim_aie.h"
+#include "xaie_lite_shim_aieml.h"
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
+#include "xaie_lite_aieml.h"
+#include "xaie_lite_shim_aie2ipu.h"
+#elif ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) || \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0) || \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0))
+#include "xaie_lite_aieml.h"
+#include "xaie_lite_shim_aie2p.h"
 #else
 #include <xaie_custom_device.h>
 #endif
@@ -51,6 +62,9 @@
 	"[AIE ERROR] %s():%d: %s", __func__, __LINE__, __VA_ARGS__
 
 #ifdef XAIE_ENABLE_INPUT_CHECK
+#ifdef _ENABLE_IPU_LX6_
+#include <printf.h>
+#endif
 #define XAIE_ERROR_RETURN(ERRCON, RET, ...) {	\
 	if (ERRCON) {				\
 		printf(__VA_ARGS__);		\
@@ -63,8 +77,11 @@
 
 /************************** Variable Definitions *****************************/
 /************************** Function Prototypes  *****************************/
-AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
-AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_IsPartitionIdle(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u8 Enable);
+XAIE_AIG_EXPORT AieRC XAie_ClearCoreReg(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_PauseMem(XAie_DevInst *DevInst);
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/

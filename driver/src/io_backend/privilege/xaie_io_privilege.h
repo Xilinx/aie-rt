@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -25,7 +26,6 @@
 #define XAIE_IO_PRIVILEGE_H
 
 /***************************** Include Files *********************************/
-#include "xaie_dma_aie2ps.h"
 #include "xaiegbl.h"
 #include "xaie_io_privilege.h"
 
@@ -35,11 +35,8 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args);
 AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		XAie_BackendColumnReq *Args);
-AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		UcDmaDir_enum Dir, u8 Pause);
-AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 Pause);
-AieRC XAie_Privi2egeSetAxiMMIsolation(XAie_DevInst *DevInst, u8 IsolationFlags);
+AieRC _XAie_PrivilegeConfigMemInterleavingLoc(XAie_DevInst *DevInst,
+		XAie_BackendTilesEnableArray *Args);
 #endif /* XAIE_IO_PRIVILEGE_H */
 
 /** @} */

@@ -606,7 +606,8 @@ namespace xaiefal {
 		}
 	};
 
-	struct XAieRscGetRscsWrapper {
+	class XAieRscGetRscsWrapper {
+		public:
 		XAieRscGetRscsWrapper() = delete;
 		XAieRscGetRscsWrapper(std::shared_ptr<XAieRsc> &Rsc,
 				std::vector<XAieUserRsc> &Rscs) {

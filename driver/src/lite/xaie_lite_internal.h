@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2022 - 2023 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -36,6 +37,15 @@
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 #include "xaie_lite_aieml.h"
 #include "xaie_lite_shim_aie.h"
+#include "xaie_lite_shim_aieml.h"
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
+#include "xaie_lite_aieml.h"
+#include "xaie_lite_shim_aie2ipu.h"
+#elif ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) || \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0) || \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0))
+#include "xaie_lite_aieml.h"
+#include "xaie_lite_shim_aie2p.h"
 #else
 #include <xaie_custom_device.h>
 #endif
@@ -79,9 +89,8 @@ static inline u8 _XAie_LGetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	if(Loc.Row == 0U) {
 		return _XAie_LGetShimTTypefromLoc(DevInst, Loc);
-	} else if(Loc.Row >= XAIE_MEM_TILE_ROW_START &&
-			(Loc.Row < (XAIE_MEM_TILE_ROW_START +
-				    XAIE_MEM_TILE_NUM_ROWS))) {
+	} else if(Loc.Row > 0 &&
+			(Loc.Row < (XAIE_AIE_TILE_ROW_START))) {
 		return XAIEGBL_TILE_TYPE_MEMTILE;
 	} else if (Loc.Row >= XAIE_AIE_TILE_ROW_START &&
 			(Loc.Row < (XAIE_AIE_TILE_ROW_START +

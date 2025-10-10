@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -18,7 +19,7 @@
 #include "xaiegbl.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
-
+#include "xaie_helper_internal.h"
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
@@ -53,6 +54,12 @@ static void _XAie_RstSetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegAddr = ShimTileRst->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if (_XAie_CheckPrecisionExceeds(ShimTileRst->RstCntr.Lsb,
+			_XAie_MaxBitsNeeded(RstEnable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return;
+	}
 	FldVal = XAie_SetField(RstEnable,
 			ShimTileRst->RstCntr.Lsb,
 			ShimTileRst->RstCntr.Mask);
@@ -84,6 +91,10 @@ static void _XAie_RstSetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC _XAie_RstShims(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols)
 {
+	if(StartCol + NumCols > UINT8_MAX){
+		XAIE_ERROR(" Columns Exceed Max Range\n");
+		return XAIE_ERR;
+	}
 	for (u8 C = StartCol; C < (StartCol + NumCols); C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 

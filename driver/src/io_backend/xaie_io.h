@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -27,6 +28,8 @@
 
 /***************************** Include Files *********************************/
 #include "xaiegbl.h"
+#include "xaie_txn.h"
+
 /***************************** Macro Definitions *****************************/
 #define XAIE_RSC_MGR_CONTIG_FLAG	0x1U
 /****************************** Type Definitions *****************************/
@@ -49,7 +52,7 @@ typedef enum {
 	XAIE_BACKEND_OP_UPDATE_NPI_ADDR,
 	XAIE_BACKEND_OP_SET_COLUMN_CLOCK,
 	XAIE_BACKEND_OP_PERFORMANCE_UTILIZATION,
-	XAIE_BACKEND_OP_UPDATE_SHIM_DMA_BD_ADDR,
+	XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG,
 } XAie_BackendOpCode;
 
 /*
@@ -86,6 +89,15 @@ typedef struct XAie_BackendColumnReq {
 	u32 NumCols;
 	u8 Enable;
 } XAie_BackendColumnReq;
+
+/*
+ * Typedef for structure for tiles array with enable/disable flag for all of them
+ */
+typedef struct XAie_BackendTilesEnableArray {
+	XAie_LocType *Locs;
+	u32 NumTiles;
+	u8 Enable;
+} XAie_BackendTilesEnableArray;
 
 /* Typedef to capture shimdma Bd arguments */
 typedef struct XAie_ShimDmaBdArgs {
@@ -124,15 +136,12 @@ typedef struct XAie_ShimDmaBdArgs {
  * MemAttach    : Backend operation to attach memory to AI engine device.
  * MemDetach    : Backend operation to detach memory from AI engine device
  * GetTid	: Backend operation to get unique thread id.
- * GetPartFd   : Backend operation to get unique partition fd.
  * SubmitTxn	: Backend operation to submit transaction.
  */
 typedef struct XAie_BackendOps {
 	AieRC (*Init)(XAie_DevInst *DevInst);
 	AieRC (*Finish)(void *IOInst);
 	AieRC (*Write32)(void *IOInst, u64 RegOff, u32 Value);
-	AieRC (*PrivilegeWrite32)(u32 StartCol, u32 NumCols,
-				  u32 Ops);
 	AieRC (*Read32)(void *IOInst,  u64 RegOff, u32 *Data);
 	AieRC (*MaskWrite32)(void *IOInst, u64 RegOff, u32 Mask, u32 Value);
 	AieRC (*MaskPoll)(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
@@ -143,27 +152,19 @@ typedef struct XAie_BackendOps {
 			u32 CmdWd1, const char *CmdStr);
 	AieRC (*RunOp)(void *IOInst, XAie_DevInst *DevInst,
 		     XAie_BackendOpCode Op, void *Arg);
-	AieRC (*AddressPatching)(void *IOInst, u32 Arg_Offset, u8 Num_BDs);
+	AieRC (*AddressPatching)(void *IOInst, u8 Arg_Offset, u8 Num_BDs);
 	XAie_MemInst* (*MemAllocate)(XAie_DevInst *DevInst, u64 Size,
 			XAie_MemCacheProp Cache);
 	AieRC (*MemFree)(XAie_MemInst *MemInst);
-	AieRC (*MemFreeVAddr)(XAie_DevInst *DevInst, void *VAddr);
 	AieRC (*MemSyncForCPU)(XAie_MemInst *MemInst);
-	AieRC (*MemSyncForCPUVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 	AieRC (*MemSyncForDev)(XAie_MemInst *MemInst);
-	AieRC (*MemSyncForDevVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
-	AieRC (*MemGetDevAddrFromVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
 	AieRC (*MemAttach)(XAie_MemInst *MemInst, u64 MemHandle);
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
 	u64 (*GetTid)(void);
-	int (*GetPartFd)(void *IOInst);
 	AieRC (*SubmitTxn)(void *IOInst, XAie_TxnInst *TxnInst);
 	void* (*GetShimDmaBdConfig)(XAie_ShimDmaBdArgs *Args);
 	u64 (*GetAttr)(void *IOInst, XAie_BackendAttrType Type);
 	AieRC (*SetAttr)(void *IOInst, XAie_BackendAttrType Type, u64 AttrVal);
-	AieRC (*GetPartitionList)(XAie_DevInst *DevInst);
-	AieRC (*SetPadInteger)(void *IOInst, char* BuffName, u32 BuffSize);
-	AieRC (*SetPadString)(void *IOInst, char* BuffName, char* BuffBlobPath);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */

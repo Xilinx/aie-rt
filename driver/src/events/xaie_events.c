@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -63,24 +64,19 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 RegAddr;
-	u32 RegOffset, FldVal, FldMask;
+	u32 RegOffset, FldVal, FldMask, EventVal;
 	u8 TileType;
 	u16 MappedEvent;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	if ((DevInst->DevOps == NULL) ||
-	    (DevInst->DevOps->GetTTypefromLoc == NULL)) {
-		TileType = XAIEGBL_TILE_TYPE_MAX;
-	} else {
-		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	}
-
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
 		XAIE_ERROR("Invalid tile type\n");
 		return XAIE_INVALID_TILE;
@@ -93,18 +89,30 @@ AieRC XAie_EventGenerate(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if (Module == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+
 	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
-	if (MappedEvent == XAIE_EVENT_INVALID) {
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	EventVal -= EvntMod->EventMin;
+	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
+	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	RegOffset = EvntMod->GenEventRegOff;
 	FldMask = EvntMod->GenEvent.Mask;
+	if (_XAie_CheckPrecisionExceeds(EvntMod->GenEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent, EvntMod->GenEvent.Lsb, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -146,10 +154,13 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	u64 RegAddr;
 	u32 RegOffset, FldVal, FldMask, Event1Mask, Event2Mask;
+	u32 Event1Val, Event2Val;
 	u8 TileType, Event1Lsb, Event2Lsb;
 	u16 MappedEvent1, MappedEvent2;
 	const XAie_EvntMod *EvntMod;
 
+	Event1Val = (u32)Event1;
+	Event2Val = (u32)Event2;
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	RC = XAie_CheckModule(DevInst, Loc, Module);
@@ -162,9 +173,14 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
-
+	if (_XAie_CheckPrecisionExceeds(((u8)(ComboId) * (u32)EvntMod->ComboConfigOff),
+			_XAie_MaxBitsNeeded(EvntMod->ComboConfigMask),
+			MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegOffset = EvntMod->ComboCtrlRegOff;
-	FldMask = EvntMod->ComboConfigMask << ((u8)ComboId * EvntMod->ComboConfigOff);
+	FldMask = EvntMod->ComboConfigMask << ((u8)ComboId * (u32)EvntMod->ComboConfigOff);
 	FldVal = XAie_SetField(Op, (u8)ComboId * EvntMod->ComboConfigOff, FldMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
@@ -178,10 +194,20 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_OK;
 	}
 
-	MappedEvent1 = XAie_GetEventNumber(EvntMod, Event1);
-	MappedEvent2 = XAie_GetEventNumber(EvntMod, Event2);
-	if ((MappedEvent1 == XAIE_EVENT_INVALID) ||
-	    (MappedEvent2 == XAIE_EVENT_INVALID)) {
+	if(Event1Val < EvntMod->EventMin || Event1Val > EvntMod->EventMax ||
+		Event2Val < EvntMod->EventMin || Event2Val > EvntMod->EventMax)
+	{
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	Event1Val -= EvntMod->EventMin;
+	Event2Val -= EvntMod->EventMin;
+	MappedEvent1 = EvntMod->XAie_EventNumber[Event1Val];
+	MappedEvent2 = EvntMod->XAie_EventNumber[Event2Val];
+	if(MappedEvent1 == XAIE_EVENT_INVALID ||
+			MappedEvent2 == XAIE_EVENT_INVALID)
+	{
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -191,6 +217,13 @@ static AieRC _XAie_EventComboControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Event2Lsb = ((u8)ComboId * 2U + 1U) * EvntMod->ComboEventOff;
 	Event1Mask = EvntMod->ComboEventMask << Event1Lsb;
 	Event2Mask = EvntMod->ComboEventMask << Event2Lsb;
+	if (_XAie_CheckPrecisionExceeds(Event1Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent1), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+		_XAie_CheckPrecisionExceeds(Event2Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent2), MAX_VALID_AIE_REG_BIT_INDEX)){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(MappedEvent1, Event1Lsb, Event1Mask) |
 		 XAie_SetField(MappedEvent2, Event2Lsb, Event2Mask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -295,6 +328,11 @@ AieRC XAie_EventGetComboEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0];
 	}
 
+	if(EventMod->ComboEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
+	}
+
 	*Event = (XAie_Events)EventMod->ComboEventBase;
 	return RC;
 }
@@ -352,7 +390,6 @@ AieRC XAie_EventComboReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 			Event = XAIE_EVENT_NONE_MEM;
 		}
 	}
-
 	return _XAie_EventComboControl(DevInst, Loc, Module, ComboId,
 			XAIE_EVENT_COMBO_E1_AND_E2, Event, Event);
 }
@@ -435,6 +472,13 @@ static AieRC _XAie_EventSelectStrmPortConfig(XAie_DevInst *DevInst,
 				(SelectId % EvntMod->StrmPortSelectIdsPerReg);
 	PortMstrSlvMask = EvntMod->PortMstrSlvMask << (8U *
 				(SelectId % EvntMod->StrmPortSelectIdsPerReg));
+	if (_XAie_CheckPrecisionExceeds((u8)PortIdLsb,
+			_XAie_MaxBitsNeeded(PortIdx), MAX_VALID_AIE_REG_BIT_INDEX)  ||
+		_XAie_CheckPrecisionExceeds((u8)PortMstrSlvLsb,
+			_XAie_MaxBitsNeeded((u32)PortIntf), MAX_VALID_AIE_REG_BIT_INDEX)){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(PortIdx, PortIdLsb, PortIdMask) |
 		 XAie_SetField(PortIntf, PortMstrSlvLsb, PortMstrSlvMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -517,6 +561,7 @@ AieRC XAie_EventSelectStrmPortReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+
 	if (TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 		Port = CORE;
 	} else if (TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
@@ -582,6 +627,11 @@ AieRC XAie_EventGetIdlePortEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	}
 
+	if(EventMod->PortIdleEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
+	}
+
 	*Event = (XAie_Events)EventMod->PortIdleEventBase;
 
 	return RC;
@@ -641,6 +691,11 @@ static AieRC _XAie_EventSelectDmaChannelConfig(XAie_DevInst *DevInst,
 	ChannelDirLsb = EvntMod->DmaChannelMM2SOff * (u32)DmaDir;
 	ChannelIdLsb = (u32)(EvntMod->DmaChannelIdOff * SelectId) + ChannelDirLsb;
 	ChannelIdMask = (u32)EvntMod->DmaChannelIdMask << ChannelIdLsb;
+	if (_XAie_CheckPrecisionExceeds(ChannelIdLsb,
+			_XAie_MaxBitsNeeded(ChannelNum), MAX_VALID_AIE_REG_BIT_INDEX)){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	FldVal = XAie_SetField(ChannelNum, ChannelIdLsb, ChannelIdMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -757,11 +812,12 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u64 RegAddr;
-	u32 RegOffset;
+	u32 RegOffset, EventVal;
 	u8 TileType;
 	u16 MappedEvent;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	RC = XAie_CheckModule(DevInst, Loc, Module);
@@ -780,7 +836,13 @@ static AieRC _XAie_EventBroadcastConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	EventVal -= EvntMod->EventMin;
+	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
@@ -883,8 +945,8 @@ AieRC XAie_EventBroadcastReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		} else {
 			Event = XAIE_EVENT_NONE_MEM;
 		}
-	}
 
+	}
 	return _XAie_EventBroadcastConfig(DevInst, Loc, Module, BroadcastId,
 			Event);
 }
@@ -966,8 +1028,8 @@ AieRC XAie_EventBroadcastBlockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
-			    (u32)(DirShift * EvntMod->BroadcastSwBlockOff) +
-			    (u8)Switch * EvntMod->BroadcastSwOff;
+			    (u32)((u32)DirShift * EvntMod->BroadcastSwBlockOff) +
+			    (u8)Switch * (u32)EvntMod->BroadcastSwOff;
 		RegAddr   = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		RC = XAie_Write32(DevInst, RegAddr, (u32)(XAIE_ENABLE << BroadcastId));
@@ -1056,8 +1118,8 @@ AieRC XAie_EventBroadcastBlockMapDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		RegOffset = EvntMod->BaseBroadcastSwBlockRegOff +
-			    (u32)(DirShift * EvntMod->BroadcastSwBlockOff) +
-			    (u8)Switch * EvntMod->BroadcastSwOff;
+			    (u32)((u32)DirShift * EvntMod->BroadcastSwBlockOff) +
+			    (u8)Switch * (u32)EvntMod->BroadcastSwOff;
 		RegAddr   = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		RC = XAie_Write32(DevInst, RegAddr, ChannelBitMap);
@@ -1146,8 +1208,8 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		RegOffset = EvntMod->BaseBroadcastSwUnblockRegOff +
-			    (u32)(DirShift * EvntMod->BroadcastSwUnblockOff) +
-			    (u8)Switch * EvntMod->BroadcastSwOff;
+			    (u32)((u32)DirShift * EvntMod->BroadcastSwUnblockOff) +
+			    (u8)Switch * (u32)EvntMod->BroadcastSwOff;
 		RegAddr   = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			    RegOffset;
 		RC = XAie_Write32(DevInst, RegAddr, (u32)(XAIE_ENABLE << BroadcastId));
@@ -1157,65 +1219,6 @@ AieRC XAie_EventBroadcastUnblockDir(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API reads enabled mask of events in a group event in the given
-* module.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of AIE Tile
-* @param	Module: Module of tile.
-*			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD,
-*			for Mem tile - XAIE_MEM_MOD.
-* @param	GroupEvent: Group event ID.
-* @param	GroupBitMap: Bit mask.
-
-* @return	XAIE_OK on success, error code on failure.
-*
-******************************************************************************/
-AieRC XAie_EventGroupReadConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events GroupEvent, u32 *GroupBitMap)
-{
-	AieRC RC;
-	u64 RegAddr;
-	u32 RegOffset;
-	u8 TileType;
-	const XAie_EvntMod *EvntMod;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-
-	RC = XAie_CheckModule(DevInst, Loc, Module);
-	if(RC != XAIE_OK) {
-		return XAIE_INVALID_ARGS;
-	}
-
-	if (Module == XAIE_PL_MOD) {
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	} else {
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
-	}
-
-	for(u32 Index = 0; Index < EvntMod->NumGroupEvents; Index++) {
-		if(GroupEvent == EvntMod->Group[Index].GroupEvent) {
-			RegOffset = EvntMod->BaseGroupEventRegOff +
-				    ((u32)EvntMod->Group[Index].GroupOff * 4U);
-			RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-					RegOffset;
-
-			RC = XAie_Read32(DevInst, RegAddr, GroupBitMap);
-			if (RC != XAIE_OK) {
-				XAIE_ERROR("Group Event read failed: %d\n", RC);
-			}
-			return XAIE_OK;
-		}
-	}
-
-	XAIE_ERROR("Invalid group event ID\n");
-	return XAIE_INVALID_ARGS;
 }
 
 /*****************************************************************************/
@@ -1276,6 +1279,7 @@ static AieRC _XAie_EventGroupConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 				FldVal = XAie_SetField(GroupBitMap, 0U,
 					 EvntMod->Group[Index].GroupMask);
 			}
+
 			RC = XAie_Write32(DevInst, RegAddr, FldVal);
 			if(RC != XAIE_OK) {
 				return RC;
@@ -1397,12 +1401,13 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 Trigger)
 {
 	AieRC RC;
-	u32 FldVal;
+	u32 FldVal, EventVal;
 	u64 RegAddr;
 	u8 TileType;
 	u16 HwEvent;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
@@ -1426,7 +1431,7 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
 		XAIE_ERROR("Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -1436,11 +1441,19 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Event, &HwEvent);
+	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, (XAie_Events)EventVal,
+				&HwEvent);
 	if (RC != XAIE_OK) {
 		return RC;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds(EvntMod->EdgeDetectEvent.Lsb,
+			_XAie_MaxBitsNeeded(HwEvent), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(EvntMod->EdgeDetectTrigger.Lsb,
+			_XAie_MaxBitsNeeded(Trigger), MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = (XAie_SetField(HwEvent, EvntMod->EdgeDetectEvent.Lsb,
 			EvntMod->EdgeDetectEvent.Mask) |
 		XAie_SetField(Trigger, EvntMod->EdgeDetectTrigger.Lsb,
@@ -1451,7 +1464,6 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	return XAie_Write32(DevInst, RegAddr, FldVal);
 }
-
 /*****************************************************************************/
 /**
 *
@@ -1496,6 +1508,11 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	if(Valid == XAIE_DISABLE) {
+		if (_XAie_CheckPrecisionExceeds(EvntMod->PCValid.Lsb,
+				_XAie_MaxBitsNeeded(Valid), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField(Valid, EvntMod->PCValid.Lsb,
 				EvntMod->PCValid.Mask);
 
@@ -1513,6 +1530,13 @@ static AieRC _XAie_EventPCConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 			return RC;
 		}
 	} else {
+		if ((_XAie_CheckPrecisionExceeds(EvntMod->PCAddr.Lsb,
+				_XAie_MaxBitsNeeded(PCAddr), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			_XAie_CheckPrecisionExceeds(EvntMod->PCValid.Lsb,
+				_XAie_MaxBitsNeeded(Valid), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField(PCAddr, EvntMod->PCAddr.Lsb,
 				EvntMod->PCAddr.Mask) |
 			 XAie_SetField(Valid, EvntMod->PCValid.Lsb,
@@ -1643,13 +1667,15 @@ AieRC XAie_EventPCReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 PCEventId)
 * @note
 *
 ******************************************************************************/
-AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent)
 {
 	AieRC RC;
 	u8 TileType;
+	u32 EventVal;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
@@ -1672,26 +1698,19 @@ AieRC XAie_EventLogicalToPhysicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
-
-	/* Getting the true event number from the enum to array mapping */
-	*HwEvent = XAie_GetEventNumber(EvntMod, Event);
-	if(*HwEvent == XAIE_EVENT_INVALID) {
+	/* check if the event passed as input is corresponding to the module */
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid Event id\n");
 		return XAIE_INVALID_ARGS;
 	}
 
+	/* Subtract the module offset from event number */
+	EventVal -= EvntMod->EventMin;
+
+	/* Getting the true event number from the enum to array mapping */
+	*HwEvent = EvntMod->XAie_EventNumber[EventVal];
+
 	return XAIE_OK;
-}
-
-AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, XAie_Events Event, u16 *HwEvent)
-{
-	u16 HwEvent_16;
-	AieRC RC;
-
-	HwEvent_16 = (u16)*HwEvent;
-	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Event, &HwEvent_16);
-	*HwEvent = (u8)HwEvent_16;
-	return RC;
 }
 
 /*****************************************************************************/
@@ -1709,7 +1728,7 @@ AieRC XAie_EventLogicalToPhysicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note
 *
 ******************************************************************************/
-AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent)
 {
 	AieRC RC;
@@ -1740,7 +1759,7 @@ AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 	}
 
 	for(u32 i = EvntMod->EventMin; i <= EvntMod->EventMax; i++) {
-		if(EvntMod->XAie_EventNumber[i] == HwEvent) {
+		if(EvntMod->XAie_EventNumber[i - EvntMod->EventMin] == HwEvent) {
 			*EnumEvent = (XAie_Events)i;
 			return XAIE_OK;
 		}
@@ -1748,12 +1767,6 @@ AieRC XAie_EventPhysicalToLogicalConv_16(XAie_DevInst *DevInst, XAie_LocType Loc
 	XAIE_ERROR("Could not convert Physical event:%u to Logical event.\n", HwEvent);
 
 	return XAIE_INVALID_ARGS;
-}
-AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
-		XAie_ModuleType Module, u16 HwEvent, XAie_Events *EnumEvent)
-{
-	return XAie_EventPhysicalToLogicalConv_16(DevInst, Loc,	Module,
-						  (u16)HwEvent, EnumEvent);
 }
 
 /*****************************************************************************/
@@ -1765,7 +1778,7 @@ AieRC XAie_EventPhysicalToLogicalConv(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	Loc: Location of AIE Tile
 * @param	Module: Module of tile.
 *			for AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			for Shim tile - XAIE_PL_MOD.
+*			for Shim tile - XAIE_PL_MOD,
 *			for Mem tile - XAIE_MEM_MOD.
 * @param	Events: List of XAie_Events.
 * @param	Status: Buffer to return status of event.
@@ -1807,7 +1820,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
-	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, Module, Events,
+	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, Module, Events,
 								&PhyEvent);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Invalid event ID\n");
@@ -1821,7 +1834,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
-	*Status =  (u8)(RegVal >> (PhyEvent % 32U)) & 1U;
+	*Status =  (u8)((RegVal >> (PhyEvent % 32U)) & 1U);
 
 	return XAIE_OK;
 }
@@ -1870,6 +1883,11 @@ AieRC XAie_EventGetUserEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	} else {
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
+	}
+
+	if(EventMod->UserEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
 	}
 
 	*Event = (XAie_Events)EventMod->UserEventBase;

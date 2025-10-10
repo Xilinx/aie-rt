@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -33,7 +34,7 @@
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 #include "xaie_helper.h"
-#include "xaie_helper_internal.h"
+#include "xaie_lite_internal.h"
 
 /***************************** Macro Definitions *****************************/
 #define XAIE_ISOLATE_EAST_MASK	(1U << 3)
@@ -92,6 +93,35 @@ static void _XAie_PrivilegeSetPartColClkBuf(XAie_DevInst *DevInst,
 
 		_XAie_PrivilegeSetColClkBuf(DevInst, Loc, Enable);
 	}
+}
+
+/*****************************************************************************/
+/**
+*
+*  This API modifies column clock and shim clk control registers for the requested columns.
+*  Caller may request subset of columns from a partition.
+*
+* @param        DevInst: Device Instance
+* @param        StartCol: Starting column
+* @param        NumCols: Number of columns
+* @param        Enable: Enable/Disable
+*
+* @return       XAIE_OK
+******************************************************************************/
+AieRC XAie_SetColumnClk(XAie_DevInst *DevInst, u8 Enable)
+{	
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
+	for(u32 C = 0; C < DevInst->NumCols; C++) {
+		XAie_LocType Loc = XAie_TileLoc(C, 0);
+
+		//This modifies column clk which affects all the aie and mem tile in the column.
+		_XAie_PrivilegeSetColClkBuf(DevInst, Loc, Enable);
+		//This modifies the clk in the shim tile
+		_XAie_PrivilegeSetShimClk(DevInst, Loc, Enable);
+	}
+	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
+
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -276,79 +306,18 @@ static void _XAie_PrivilegeSetL2IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 static void _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 {
-	XAie_LocType Loc = XAie_LPartGetNextNocTile(DevInst,
-			XAie_TileLoc(0, 0));
+	XAie_LocType Rloc = {0, 0};
 
-	for(; Loc.Col < DevInst->NumCols;
-		Loc = XAie_LPartGetNextNocTile(DevInst, Loc)) {
+	for (;Rloc.Col < DevInst->NumCols; Rloc.Col++) {
+		u8 TileType = _XAie_LGetShimTTypefromLoc(DevInst, Rloc);
 
-		_XAie_PrivilegeSetL2IrqId(DevInst, Loc,
-				_XAie_MapColToIrqId(DevInst, Loc));
+		if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC)
+			continue;
+		_XAie_PrivilegeSetL2IrqId(DevInst, Rloc,
+				_XAie_MapColToIrqId(DevInst, Rloc));
 	}
 }
 
-/*****************************************************************************/
-/**
-* This API initializes the AI engine Soft partition
-*
-* @param	DevInst: AI engine partition device instance pointer
-* @param	Opts: Initialization options
-* @param	DevPartInfo Device Partition information.
-*
-* @return       XAIE_OK
-*
-* @note		This operation does the following steps to initialize an AI
-*		engine partition:
-*		- Clock gate all columns
-*		- Reset Columns
-*		- Ungate all Columns
-*		- Remove columns reset
-*		- Reset shims
-*		- Setup AXI MM not to return errors for AXI decode or slave
-*		  errors, raise events instead.
-*		- ungate all columns
-*		- Setup partition isolation on device parition
-*		- zeroize memory if it is requested
-*
-*******************************************************************************/
-AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
-									XAie_DevicePartInfo *DevPartInfo)
-{
-	XAie_PartInitOpts SoftPartOpts;
-	AieRC RC;
-	u8 IsolationFlags;
-
-	memset(&SoftPartOpts,0, sizeof(SoftPartOpts));
-
-	if (DevPartInfo->StartCol <= DevInst->StartCol &&
-		DevPartInfo->NumCols >= DevInst->NumCols) {
-		/*Isolation for soft Partition is cleared*/
-		SoftPartOpts.InitOpts = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));
-		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Partition Initialization Failed \n");
-			return RC;
-		}
-
-		if(DevPartInfo->BaseAddr == DevInst->BaseAddr) {
-			IsolationFlags |= XAIE_INIT_WEST_ISOLATION;
-		}
-		if((DevInst->BaseAddr + XAie_GetTileAddr(DevInst, 0U, DevInst->NumCols - 1)) ==
-			( DevPartInfo->BaseAddr + XAie_GetTileAddr(DevInst, 0U, (DevPartInfo->NumCols - 1)))) {
-			IsolationFlags |= XAIE_INIT_EAST_ISOLATION;
-		}
-		_XAie_LSetPartIsolationAfterRst(DevInst, IsolationFlags);
-
-	}
-	else
-	{
-		XAIE_ERROR("Invalid Device Partition Soft Partition Info\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	return RC;
-
-}
 /*****************************************************************************/
 /**
 * This API initializes the AI engine partition
@@ -375,7 +344,6 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 {
 	u32 OptFlags;
-	AieRC RC;
 
 	XAIE_ERROR_RETURN((DevInst == NULL || DevInst->NumCols > XAIE_NUM_COLS),
 		XAIE_INVALID_ARGS,
@@ -409,7 +377,7 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0) {
-		_XAie_LSetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
+		_XAie_LSetPartIsolationAfterRst(DevInst);
 	}
 
 	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0) {
@@ -422,26 +390,14 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 		/* Disbale all the column clock and enable only the requested column clock */
 		_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
 
-#ifndef __AIEIPU__
-		/* Clear the TilesInuse bitmap to reflect the current status */
-		for(u32 C = 0; C < DevInst->NumCols; C++) {
-			XAie_LocType Loc;
-			u32 ColClockStatus;
-
-			Loc = XAie_TileLoc(C, 1);
-			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-
-			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-					ColClockStatus, DevInst->NumRows - 1);
-		}
-#endif
-
 		/* Ungate the tiles that is requested */
 		for(u32 i = 0; i < Opts->NumUseTiles; i++)
 		{
-#ifndef __AIEIPU__
-			u32 ColClockStatus;
-#endif
+
+			if(Opts->Locs[i].Col >= DevInst->NumCols || Opts->Locs[i].Row >= DevInst->NumRows) {
+				XAIE_ERROR("Invalid Tile Location\n");
+				return XAIE_INVALID_TILE;
+			}
 
 			if(Opts->Locs[i].Row == 0) {
 				continue;
@@ -449,36 +405,14 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			/*
 			* Check if column clock buffer is already enabled and continue
 			*/
-#ifndef __AIEIPU__
-			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
-					Opts->Locs[i]);
-			if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
-				continue;
-			}
-#endif
 			_XAie_PrivilegeSetColClkBuf(DevInst, Opts->Locs[i], XAIE_ENABLE);
-#ifndef __AIEIPU__
-			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-					ColClockStatus, DevInst->NumRows - 1);
-		}
-	}
-	else {
-			for(u32 C = 0; C < DevInst->NumCols; C++) {
-			XAie_LocType Loc;
-			u32 ColClockStatus;
-
-			Loc = XAie_TileLoc(C, 1);
-			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-
-			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-					ColClockStatus, DevInst->NumRows - 1);
-#endif
 
 		}
 	}
 
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
 
+	_XAie_DisableTlast(DevInst);
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
 
 	return XAIE_OK;
@@ -511,6 +445,9 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 		XAIE_INVALID_ARGS,
 		XAIE_ERROR_MSG("Partition teardown failed, invalid partition instance\n"));
 
+        /* Clearing core registers before disabling clock */
+        XAie_ClearCoreReg(DevInst);
+
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
@@ -526,6 +463,8 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
 	_XAie_LPartMemZeroInit(DevInst);
+
+	_XAie_LCertMemZeroInit(DevInst);
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
 
@@ -606,6 +545,9 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 {
 	AieRC RC;
 
+	/* Clearing core registers before disabling clock */
+	XAie_ClearCoreReg(DevInst);
+
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_ENABLE);
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_DISABLE);
@@ -620,7 +562,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 
 	_XAie_PrivilegeSetPartColClkBuf(DevInst, XAIE_ENABLE);
 
-	_XAie_LSetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
+	_XAie_LSetPartIsolationAfterRst(DevInst);
 
 	RC = _XAie_LPartDataMemZeroInit(DevInst);
 	if (RC != XAIE_OK)
@@ -629,6 +571,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
 
 	_XAie_LNpiSetPartProtectedReg(DevInst, XAIE_DISABLE);
+
 
 	return XAIE_OK;
 }

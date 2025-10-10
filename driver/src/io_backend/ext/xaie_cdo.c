@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -377,6 +378,9 @@ static AieRC XAie_CdoIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
 			return _XAie_PrivilegeSetColumnClk(DevInst,
 					(XAie_BackendColumnReq *)Arg);
+		case XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG:
+			return _XAie_PrivilegeConfigMemInterleavingLoc(DevInst,
+					(XAie_BackendTilesEnableArray *)Arg);
 		default:
 			XAIE_ERROR("CDO backend doesn't support operation"
 					" %u.\n", Op);
@@ -559,11 +563,8 @@ const XAie_Backend CdoBackend =
 	.Ops.MemAttach = XAie_CdoMemAttach,
 	.Ops.MemDetach = XAie_CdoMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
-	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 	.Ops.AddressPatching = NULL,
-	.Ops.SetPadInteger = NULL,
-	.Ops.SetPadString = NULL,
 };
 
 /** @} */

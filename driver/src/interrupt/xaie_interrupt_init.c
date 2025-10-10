@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -30,8 +31,8 @@
 #include <stdlib.h>
 
 #include "xaie_clock.h"
-#include "xaie_feature_config.h"
 #include "xaie_reset_aie.h"
+#include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaie_helper_internal.h"
 #include "xaie_interrupt.h"
@@ -92,7 +93,7 @@ static AieRC _XAie_IntrCtrlL1Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset +
-					(u8)Switch * L1IntrMod->SwOff;
+					(u32)((u8)Switch * (u32)L1IntrMod->SwOff);
 
 	return XAie_Write32(DevInst, RegAddr,(u32)(XAIE_ENABLE << IntrId));
 }
@@ -186,7 +187,7 @@ AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	RegOffset = L1IntrMod->BaseIrqRegOff +(u32)((u8)Switch * L1IntrMod->SwOff);
+	RegOffset = L1IntrMod->BaseIrqRegOff +(u32)((u8)Switch * (u32)L1IntrMod->SwOff);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_Write32(DevInst, RegAddr, BroadcastId);
@@ -216,11 +217,13 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 RegAddr;
 	u32 RegOffset, EventMask, FldVal;
+	u32 EventVal;
 	u8 TileType, EventLsb;
 	u16 MappedEvent;
 	const XAie_L1IntrMod *L1IntrMod;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
@@ -241,14 +244,34 @@ AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	EventVal -= EvntMod->EventMin;
+	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
 	}
 
-	RegOffset = L1IntrMod->BaseIrqEventRegOff + (u32)((u8)Switch * L1IntrMod->SwOff);
+	RegOffset = L1IntrMod->BaseIrqEventRegOff + (u32)((u8)Switch * (u32)L1IntrMod->SwOff);
+
+	if((IrqEventId * L1IntrMod->IrqEventOff) > UCHAR_MAX) {
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_ERR;
+	}
+
 	EventLsb = IrqEventId * L1IntrMod->IrqEventOff;
+
+	if ((_XAie_CheckPrecisionExceeds(EventLsb,
+			_XAie_MaxBitsNeeded(L1IntrMod->BaseIrqEventMask), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(EventLsb,
+			_XAie_MaxBitsNeeded(MappedEvent), MAX_VALID_AIE_REG_BIT_INDEX))){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	EventMask = L1IntrMod->BaseIrqEventMask << EventLsb;
 	FldVal = XAie_SetField(MappedEvent, EventLsb, EventMask);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -302,13 +325,19 @@ AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds(L1IntrMod->NumBroadcastIds,
+			_XAie_MaxBitsNeeded(XAIE_ENABLE),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
 		XAIE_ERROR("Invalid channel bitmap\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	RegOffset = L1IntrMod->BaseBroadcastBlockRegOff +
-						(u32)((u8)Switch * L1IntrMod->SwOff);
+						(u32)((u8)Switch * (u32)L1IntrMod->SwOff);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_Write32(DevInst, RegAddr, ChannelBitMap);
@@ -362,243 +391,22 @@ AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds(L1IntrMod->NumBroadcastIds,
+			_XAie_MaxBitsNeeded(XAIE_ENABLE),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L1IntrMod->NumBroadcastIds)) {
 		XAIE_ERROR("Invalid channel bitmap\n");
 		return XAIE_INVALID_ARGS;
 	}
 
 	RegOffset = L1IntrMod->BaseBroadcastUnblockRegOff +
-						(u32)((u8)Switch * L1IntrMod->SwOff);
+						(u32)((u8)Switch * (u32)L1IntrMod->SwOff);
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
 
 	return XAie_Write32(DevInst, RegAddr, ChannelBitMap);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the status an event.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE tile.
-* @param	Module: Module type.
-* @param	Event: Physical event ID.
-*
-* @return	True is event was asserted, otherwise false.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-u8 XAie_EventReadStatusHw(XAie_DevInst *DevInst,
-		XAie_LocType Loc, XAie_ModuleType Module, u8 Event)
-{
-	AieRC RC;
-	u64 RegAddr;
-	u32 RegOff, RegVal = 0;
-	u8 TileType;
-	const XAie_EvntMod *EvntMod;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
-		return 0;
-	}
-
-	RC = XAie_CheckModule(DevInst, Loc, Module);
-	if(RC != XAIE_OK) {
-		return 0;
-	}
-
-	if (Module == XAIE_PL_MOD) {
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	} else {
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
-	}
-
-	RegOff = EvntMod->BaseStatusRegOff + (((u32)Event / (u32)32U) * (u32)4U);
-	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
-	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
-	if(RC != XAIE_OK) {
-		return 0;
-	}
-
-	RegVal = (u8)((RegVal >> ((u32)Event % (u32)32U)) & (u32)1U);
-
-	return (u8)RegVal;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API clears the status of first-level interrupt controller.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE tile.
-* @param	Switch: Broadcast switch.
-* @param	ChannelBitMap: Bitmap of channel statues to be cleared.
-*
-* @return	None.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-void XAie_IntrCtrlL1Ack(XAie_DevInst *DevInst,
-			XAie_LocType Loc, XAie_BroadcastSw Switch,
-			u32 ChannelBitMap)
-{
-	const XAie_L1IntrMod *L1Mod;
-	u8 TileType;
-	u64 RegAddr;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if ((TileType != XAIEGBL_TILE_TYPE_SHIMPL) &&
-	    (TileType != XAIEGBL_TILE_TYPE_SHIMNOC)) {
-		return;
-	}
-
-	L1Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMPL].L1IntrMod;
-	if (L1Mod == NULL) {
-		return;
-	}
-	RegAddr = (u64)L1Mod->BaseStatusRegOff + ((u64)L1Mod->SwOff * (u64)Switch) +
-		  XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	(void)XAie_Write32(DevInst, RegAddr, ChannelBitMap);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API return the bitmap value of second level interrupts channels enabled.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE Tile.
-*
-* @return	Channel bitmap.
-*
-* @note		Internal Only.
-*
-******************************************************************************/
-u32 XAie_IntrCtrlL2Mask(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	const XAie_L2IntrMod *L2Mod;
-	u8 TileType;
-	u64 RegAddr;
-	u32 MaskVal = 0;
-	AieRC RC;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		return 0;
-	}
-
-	L2Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
-	if (L2Mod == NULL) {
-		return 0;
-	}
-	RegAddr = L2Mod->MaskRegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	RC = XAie_Read32(DevInst, RegAddr, &MaskVal);
-	if (RC != XAIE_OK) {
-		MaskVal = 0;
-	}
-
-	return MaskVal;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API clears the event status.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE tile.
-* @param	Module: Module type.
-* @param	Event: Physical event ID.
-*
-* @return	None.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-void XAie_EventClearStatus(XAie_DevInst *DevInst,
-		XAie_LocType Loc, XAie_ModuleType Module, u8 Event)
-{
-	AieRC RC;
-	u64 RegAddr;
-	u32 RegOff, RegVal;
-	u8 TileType;
-	const XAie_EvntMod *EvntMod;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_MAX) {
-		XAIE_ERROR("Invalid tile type\n");
-		return;
-	}
-
-	RC = XAie_CheckModule(DevInst, Loc, Module);
-	if(RC != XAIE_OK) {
-		return;
-	}
-
-	if (Module == XAIE_PL_MOD) {
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	} else {
-		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
-	}
-
-	RegOff = EvntMod->BaseStatusRegOff + (u32)(((u32)Event / (u32)32U) * (u32)4U);
-	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
-
-	RegVal = (u32)((u32)1UL << ((u32)Event % (u32)32U));
-	(void)XAie_Write32(DevInst, RegAddr, RegVal);
-
-	return;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the status of first-level interrupt controller.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE tile.
-* @param	Switch: Broadcast switch.
-*
-* @return	Status first-level interrupt controller.
-*
-* @note		Internal only.
-*
-******************************************************************************/
-u32 XAie_IntrCtrlL1Status(XAie_DevInst *DevInst,
-			XAie_LocType Loc, XAie_BroadcastSw Switch)
-{
-	const XAie_L1IntrMod *L1Mod;
-	u8 TileType;
-	u64 RegAddr;
-	u32 StatusVal = 0;
-	AieRC RC;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	switch (TileType) {
-	case XAIEGBL_TILE_TYPE_SHIMPL:
-	case XAIEGBL_TILE_TYPE_SHIMNOC:
-	      L1Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMPL].L1IntrMod;
-	      break;
-	default:
-	      XAIE_ERROR("No L1Ctrl. Not a NOC or PL tile\n");
-	      return 0;
-	}
-
-	if (L1Mod == NULL) {
-		return 0;
-	}
-	RegAddr = (u64)L1Mod->BaseStatusRegOff + ((u64)L1Mod->SwOff * (u64)Switch) +
-		  XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	RC = XAie_Read32(DevInst, RegAddr, &StatusVal);
-	if (RC != XAIE_OK) {
-		StatusVal = 0;
-	}
-
-	return StatusVal;
 }
 
 /*****************************************************************************/
@@ -637,6 +445,12 @@ static AieRC _XAie_IntrCtrlL2Config(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	L2IntrMod = DevInst->DevProp.DevMod[TileType].L2IntrMod;
+
+	if ((_XAie_CheckPrecisionExceeds(L2IntrMod->NumBroadcastIds,
+			_XAie_MaxBitsNeeded(XAIE_ENABLE),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 
 	if(ChannelBitMap >= (u32)(XAIE_ENABLE << L2IntrMod->NumBroadcastIds)) {
 		XAIE_ERROR("Invalid interrupt bitmap\n");
@@ -677,83 +491,6 @@ AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This API returns L2status.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of AIE Tile
-*
-* @return	L2Status or 0 incase of error.
-*
-* @note		None.
-*
-******************************************************************************/
-u32 XAie_IntrCtrlL2Status(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	const XAie_L2IntrMod *L2Mod;
-	u8 TileType;
-	u64 RegAddr;
-	u32 Status = 0;
-	AieRC RC;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		return 0;
-	}
-
-	L2Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
-	if (L2Mod == NULL) {
-		return 0;
-	}
-	RegAddr = L2Mod->StatusRegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	RC = XAie_Read32(DevInst, RegAddr, &Status);
-	if (RC != XAIE_OK) {
-		Status = 0;
-	}
-
-	return Status;
-
-}
-
-/*****************************************************************************/
-/**
-*
-* This API ACKs the L2 controller. i.e Write to L2 Status register with a bitmap.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of AIE Tile
-* @param	Status: Bitmap of status to ack.
-*
-* @return	L2Status or 0 incase of error.
-*
-* @note		None.
-*
-******************************************************************************/
-AieRC XAie_IntrCtrlL2Ack(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Status)
-{
-	const XAie_L2IntrMod *L2Mod;
-	u8 TileType;
-	u64 RegAddr;
-	AieRC RC;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
-		return XAIE_FEATURE_NOT_SUPPORTED;
-	}
-
-	L2Mod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
-	if (L2Mod == NULL) {
-		return XAIE_FEATURE_NOT_SUPPORTED;
-	}
-	RegAddr = L2Mod->StatusRegOff + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-	RC = XAie_Write32(DevInst, RegAddr, Status);
-	return RC;
-}
-
-
-
-/*****************************************************************************/
-/**
-*
 * This API disables interrupts to second level interrupt controller.
 *
 * @param	DevInst: Device Instance
@@ -786,14 +523,24 @@ AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 {
 	AieRC RC;
-	u32 GroupErrorEnableMask;
+	u32 GroupErrorEnableMask, GroupEvent;;
 	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
 	XAie_LocType Loc;
 
+	if(((DevInst->MemTileRowStart + DevInst->MemTileNumRows) > UCHAR_MAX) ||
+			((DevInst->AieTileRowStart + DevInst->AieTileNumRows) > UCHAR_MAX )){
+		XAIE_ERROR("Invalid TileEnd instance\n");
+		return XAIE_ERR;
+	}
 	MemTileStart = DevInst->MemTileRowStart;
 	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
 	AieRowStart = DevInst->AieTileRowStart;
 	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+
+	/*
+	 * TBD: EVENT list have to be revisited and if possible redunat event should be removed.
+	 */
+        GroupEvent = (u32)XAIE_EVENT_GROUP_ERRORS_PL;
 
 	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
 		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
@@ -870,11 +617,12 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 		 * Shim tile only needs to setup error notification with first
 		 * level interrupt controller.
 		 */
+
 		Loc = XAie_TileLoc(Col, DevInst->ShimRow);
 		GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
 								XAIE_PL_MOD);
 		RC = XAie_EventGroupControl(DevInst, Loc, XAIE_PL_MOD,
-					XAIE_EVENT_GROUP_ERRORS_PL,
+					(XAie_Events)GroupEvent,
 					GroupErrorEnableMask);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to configure group error in shim tile\n");
@@ -883,7 +631,7 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 
 		RC = XAie_IntrCtrlL1Event(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				XAIE_ERROR_BROADCAST_ID,
-				XAIE_EVENT_GROUP_ERRORS_PL);
+				(XAie_Events)GroupEvent);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
 			return RC;
@@ -895,21 +643,26 @@ static AieRC _XAie_GroupErrorInit(XAie_DevInst *DevInst)
 
 /*****************************************************************************/
 /**
- * This API calls API to Configure Error halt register with group Error0. This
- * will put core in halt state if any group error0 occurs.
- *
- * @param	DevInst: Device Instance
- *
- * @return       XAIE_OK on success, error code on failure.
- *
- * @note	 This function is used internally only.
- *
- ******************************************************************************/
+* This API calls API to Configure Error halt register with group Error0. This
+* will put core in halt state if any group error0 occurs.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		This function is used internally only.
+*
+******************************************************************************/
 static AieRC _XAie_ErrorHandlingEventHaltCore(XAie_DevInst *DevInst)
 {
 	AieRC RC;
 	u8 AieRowStart, AieRowEnd;
 
+
+	if((DevInst->AieTileRowStart + DevInst->AieTileNumRows) > UCHAR_MAX ){
+		XAIE_ERROR("Invalid MemTileEnd instance\n");
+		return XAIE_ERR;
+	}
 	AieRowStart = DevInst->AieTileRowStart;
 	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
 
@@ -931,6 +684,7 @@ static AieRC _XAie_ErrorHandlingEventHaltCore(XAie_DevInst *DevInst)
 	}
 	return XAIE_OK;
 }
+
 
 /*****************************************************************************/
 /**
@@ -963,593 +717,27 @@ static AieRC _XAie_FindNextNoCTile(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 /*****************************************************************************/
 /**
-*
-* This API configures broadcast network for AIE tile in AIE2PS.
-*
-* @param	DevInst: Device Instance
-*
-* @Loc		Location of SHIM tile.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		internal only
-*
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	u32 BroadcastBitMap, BroadcastBlockDir;
-	AieRC RC;
-
-	if (TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Not a aietile.\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Block broadcast 0 from propagating to north, east and west
-	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_WEST;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
-		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in core module\n");
-		return RC;
-	}
-
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in memory module\n");
-		return RC;
-	}
-	/* Block broadcast 1 and 2 from propagating to north, west, south, east
-	 */
-	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
-		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module\n");
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module\n");
-		return RC;
-	}
-
-	return 0;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API configures broadcast network for Mem tile in AIE2PS.
-*
-* @param	DevInst: Device Instance
-*
-* @Loc		Location of SHIM tile.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		internal only
-*
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2psMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	u32 BroadcastBitMap, BroadcastBlockDir;
-	AieRC RC;
-
-	if (TileType != XAIEGBL_TILE_TYPE_MEMTILE) {
-		XAIE_ERROR("Not a memtile.\n");
-		return XAIE_INVALID_TILE;
-	}
-	/* Block broadcast 0 from propagating to north, east and west
-	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_WEST;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in mem tile switch A\n");
-		return RC;
-	}
-
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
-		   XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in mem tile switch B\n");
-		return RC;
-	}
-	/* Block broadcast 1 and 2 from propagating to north, west, south, east
-	 */
-	BroadcastBitMap = XAIE_ERROR_BROADCAST_ID_UC_EVENT |
-			  XAIE_ERROR_BROADCAST_ID_USER_EVENT1;
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module\n");
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
-		   BroadcastBitMap, XAIE_EVENT_BROADCAST_ALL);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module\n");
-		return RC;
-	}
-
-	return 0;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API configures broadcast network for SHIM tile for coli 0.
-*
-* @param	DevInst: Device Instance
-*
-* @Loc		Location of SHIM tile.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		internal only
-*
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2psShimTileCol0(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	u32 BroadcastBitMap, BroadcastBlockDir;
-	AieRC RC;
-
-	if ((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
-	    (TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Not a shimtile\n");
-		return XAIE_INVALID_TILE;
-	}
-	if (Loc.Col != 0) {
-		XAIE_ERROR("Col shoule be 0.\n");
-		return XAIE_INVALID_TILE;
-	}
-	/* For Col 0, propagate broadcast 2 east only
-	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	/* For Col 0, block broadcast 0,1 in all directions
-	 */
-	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			BroadcastBitMap,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			BroadcastBitMap,
-			XAIE_EVENT_BROADCAST_ALL);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-
-	return 0;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API configures broadcast network for SHIM tile for lead col.
-* Lead column for aie2ps is assumed to be Col 1.
-*
-* @param	DevInst: Device Instance
-*
-* @Loc		Location of SHIM tile.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		internal only
-*
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2psShimTileLeadCol(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	u32 BroadcastBitMap, BroadcastBlockDir;
-	AieRC RC;
-
-	if ((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
-	    (TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Not a shimtile\n");
-		return XAIE_INVALID_TILE;
-	}
-	if (Loc.Col != 1) {
-		XAIE_ERROR("Lead col should be 1.\n");
-		return XAIE_INVALID_TILE;
-	}
-	/* For column 1, propagate broadcast for 0,1 to west.
-	 */
-	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			BroadcastBitMap, BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in switch A Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			BroadcastBitMap, BroadcastBlockDir);
-
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts in switch B Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	/* For column 1, block broadcast for id 2 in all directions
-	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			XAIE_EVENT_BROADCAST_ALL);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-
-	return 0;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API configures broadcast network for SHIM tile for Non-lead, non 0 Col.
-* Lead column for aie2ps is assumed to be Col 1.
-*
-* @param	DevInst: Device Instance
-*
-* @Loc		Location of SHIM tile.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		internal only
-*
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2psShimTile(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	u32 BroadcastBitMap, BroadcastBlockDir;
-	AieRC RC;
-
-	if ((TileType != XAIEGBL_TILE_TYPE_SHIMNOC) &&
-	    (TileType != XAIEGBL_TILE_TYPE_SHIMPL)) {
-		XAIE_ERROR("Not a shimtile\n");
-		return XAIE_INVALID_TILE;
-	}
-	if (Loc.Col < 2) {
-		XAIE_ERROR("Col should be > 1.\n");
-		return XAIE_INVALID_TILE;
-	}
-	/* Block broadcast 0,1 in all directions
-	 */
-	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			BroadcastBitMap,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			BroadcastBitMap,
-			XAIE_EVENT_BROADCAST_ALL);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	/* Propagate broadcast 2 west only
-	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			BroadcastBlockDir);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-		return RC;
-	}
-
-	return 0;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API configures L1 ctrl for AIE2PS.
-*
-* @param	DevInst: Device Instance
-*
-* @Loc		Location of L1 SHIM tile.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		internal only
-*
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2psL1Ctrl(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	AieRC RC;
-	u8 TileType;
-	u8 L1IrqA, L1IrqB;
-	u32 BroadcastBitMap;
-	const XAie_L1IntrMod *L1IntrMod;
-
-	/*
-	 * Block direct broadcast from AIE array to the
-	 * broadcast network in shim tiles.
-	 */
-	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
-	RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
-			XAIE_EVENT_SWITCH_A, BroadcastBitMap);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
-		return RC;
-	}
-	RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
-			XAIE_EVENT_SWITCH_B, BroadcastBitMap);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
-		return RC;
-	}
-
-	if (Loc.Col == 1) {
-		/* Enable l1 ctrl for broadcast 2
-		 */
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
-			return RC;
-		}
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
-			return RC;
-		}
-	} else {
-		/* Enable l1 ctrl for broadcast 0 and 1
-		 */
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
-			return RC;
-		}
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
-			return RC;
-		}
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
-			return RC;
-		}
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable interrupts to L1\n");
-			return RC;
-		}
-
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
-	if (L1IntrMod == NULL) {
-		XAIE_ERROR("Invalid module type\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	L1IrqA = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc, XAIE_EVENT_SWITCH_A);
-	RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A, L1IrqA);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to configure L1 IRQ line\n");
-		return RC;
-	}
-
-	L1IrqB = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc, XAIE_EVENT_SWITCH_B);
-	RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_B, L1IrqB);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to configure L1 IRQ line\n");
-		return RC;
-	}
-
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API configures broadcast network to deliver error events as interrupts in
-* NPI. When error occurs, interrupt is raised on NPI interrupt line #5, 6, 7, 8.
-*
-* @param	DevInst: Device Instance
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		This API assumes the whole AIE2PS as a single partition and the
-*		following broadcast channels to be available. To avoid conflicts,
-*		it is the user's responsibility to make sure none of the below
-*		channels are being used.
-*			* Broadcast channel #0, 1, 2 in AIE array tiles.
-*			* NPI interrupt line #5, 6, 7, 8.
-*		Currently, this API only supports Linux UIO, CDO, and debug
-*		backends.
-*
-*		This function is internal only
-******************************************************************************/
-static AieRC _XAie_ErrorHandlingInitAie2ps(XAie_DevInst *DevInst)
-{
-	AieRC RC;
-	u8 TileType;
-	XAie_LocType Loc;
-
-	for (Loc.Col = 0; Loc.Col < DevInst->NumCols; Loc.Col++) {
-		for (Loc.Row = 0; Loc.Row < DevInst->NumRows; Loc.Row++) {
-
-			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
-				continue;
-			}
-
-			TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-
-			switch (TileType) {
-			case XAIEGBL_TILE_TYPE_SHIMNOC:
-			case XAIEGBL_TILE_TYPE_SHIMPL:
-				RC = _XAie_ErrorHandlingInitAie2psL1Ctrl(DevInst, Loc);
-				if (RC != XAIE_OK) {
-					XAIE_ERROR("Failed to config L1 ctrl [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
-					return RC;
-				}
-				RC = XAie_IntrCtrlL2Enable(DevInst, Loc,
-						XAIE_ERROR_L2_ENABLE);
-				if(RC != XAIE_OK) {
-					XAIE_ERROR("Failed to enable interrupts to L2\n");
-					return RC;
-				}
-
-
-				switch (Loc.Col) {
-				case 1:
-					RC = _XAie_ErrorHandlingInitAie2psShimTileLeadCol(DevInst, Loc);
-					if (RC != XAIE_OK)
-						return RC;
-					break;
-				case 0:
-					RC = _XAie_ErrorHandlingInitAie2psShimTileCol0(DevInst, Loc);
-					if (RC != XAIE_OK)
-						return RC;
-
-					break;
-				default:
-					RC = _XAie_ErrorHandlingInitAie2psShimTile(DevInst, Loc);
-					if (RC != XAIE_OK)
-						return RC;
-					break;
-				}
-				break;
-			case XAIEGBL_TILE_TYPE_AIETILE:
-				RC = _XAie_ErrorHandlingInitAie2psAieTile(DevInst, Loc);
-				if (RC != XAIE_OK) {
-					return RC;
-				}
-				break;
-			case XAIEGBL_TILE_TYPE_MEMTILE:
-				RC = _XAie_ErrorHandlingInitAie2psMemTile(DevInst, Loc);
-				if (RC != XAIE_OK)
-					return RC;
-				break;
-			}
-		}
-	}
-
-	return XAIE_OK;
-}
-/*****************************************************************************/
-/**
-*
-* This API configures broadcast network to deliver error events as interrupts in
-* NPI. When error occurs, interrupt is raised on NPI interrupt line #5. Also it
-* configure error halt register, to put core in halt if any group error0 occurs
-*
-* @param	DevInst: Device Instance
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		This API assumes the whole AIE as a single partition and the
-*		following broadcast channels to be available. To avoid conflicts,
-*		it is the user's responsibility to make sure none of the below
-*		channels are being used.
-*			* Broadcast channel #0 in AIE array tiles.
-*			* Switch A L1 IRQ 16.
-*			* NPI interrupt line #5.
-*		Currently, this API only supports Linux UIO, CDO, and debug
-*		backends.
-*
-*		This function is internal only.
-******************************************************************************/
+ *
+ * This API configures broadcast network to deliver error events as interrupts in
+ * NPI. When error occurs, interrupt is raised on NPI interrupt line #5. Also it
+ * configure error halt register, to put core in halt if any group error0 occurs
+ *
+ * @param        DevInst: Device Instance
+ *
+ * @return       XAIE_OK on success, error code on failure.
+ *
+ * @note         This API assumes the whole AIE as a single partition and the
+ *               following broadcast channels to be available. To avoid conflicts,
+ *               it is the user's responsibility to make sure none of the below
+ *               channels are being used.
+ *                       * Broadcast channel #0 in AIE array tiles.
+ *                       * Switch A L1 IRQ 16.
+ *                       * NPI interrupt line #5.
+ *               Currently, this API only supports CDO, and debug
+ *               backends.
+ *
+ *               This function is internal only.
+ ******************************************************************************/
 static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 {
 	AieRC RC;
@@ -1564,6 +752,12 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
+	if(((DevInst->MemTileRowStart + DevInst->MemTileNumRows) > UCHAR_MAX) ||
+			((DevInst->AieTileRowStart + DevInst->AieTileNumRows) > UCHAR_MAX )){
+		XAIE_ERROR("Invalid Tile instance\n");
+		return XAIE_ERR;
+	}
+
 	MemTileStart = DevInst->MemTileRowStart;
 	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
 	AieRowStart = DevInst->AieTileRowStart;
@@ -1572,8 +766,8 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 	for(Loc.Col = 0; Loc.Col < DevInst->NumCols; Loc.Col++) {
 		/* Setup error broadcasts to SOUTH from memory and core module */
 		BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
-				  (u8)XAIE_EVENT_BROADCAST_EAST |
-				  (u8)XAIE_EVENT_BROADCAST_WEST;
+			(u8)XAIE_EVENT_BROADCAST_EAST |
+			(u8)XAIE_EVENT_BROADCAST_WEST;
 		BroadcastDirSwB = BroadcastDirSwA;
 
 		for(Loc.Row = AieRowStart; Loc.Row < AieRowEnd; Loc.Row++) {
@@ -1582,16 +776,16 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 			}
 
 			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-				   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
-				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
+					XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
+					XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Failed to block broadcasts in core module\n");
 				return RC;
 			}
 
 			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
+					XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
+					XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Failed to block broadcasts in memory module\n");
 				return RC;
@@ -1605,16 +799,16 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 			}
 
 			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
+					XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
+					XAIE_ERROR_BROADCAST_ID, BroadcastDirSwA);
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Failed to block broadcasts in mem tile switch A\n");
 				return RC;
 			}
 
 			RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-				   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
-				   XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
+					XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
+					XAIE_ERROR_BROADCAST_ID, BroadcastDirSwB);
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Failed to block broadcasts in mem tile switch B\n");
 				return RC;
@@ -1673,7 +867,6 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 			XAIE_ERROR("Failed to enable interrupts to L1\n");
 			return RC;
 		}
-
 		/*
 		 * Compute the broadcast line number on which L1 interrupt
 		 * controller must generate error interrupts.
@@ -1686,7 +879,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		}
 
 		L1BroadcastIdSwA = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc,
-					XAIE_EVENT_SWITCH_A);
+				XAIE_EVENT_SWITCH_A);
 
 		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A,
 				L1BroadcastIdSwA);
@@ -1696,7 +889,7 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 		}
 
 		L1BroadcastIdSwB = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc,
-					XAIE_EVENT_SWITCH_B);
+				XAIE_EVENT_SWITCH_B);
 		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_B,
 				L1BroadcastIdSwB);
 		if(RC != XAIE_OK) {
@@ -1714,8 +907,8 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 			XAie_LocType NextLoc;
 
 			BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
-					  (u8)XAIE_EVENT_BROADCAST_SOUTH |
-					  (u8)XAIE_EVENT_BROADCAST_WEST;
+				(u8)XAIE_EVENT_BROADCAST_SOUTH |
+				(u8)XAIE_EVENT_BROADCAST_WEST;
 			BroadcastDirSwB = (u8)XAIE_EVENT_BROADCAST_ALL;
 
 			/*
@@ -1750,13 +943,13 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 			RC = _XAie_FindNextNoCTile(DevInst, Loc, &NextLoc);
 			if (RC != XAIE_OK) {
 				BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
-						  (u8)XAIE_EVENT_BROADCAST_SOUTH |
-						  (u8)XAIE_EVENT_BROADCAST_EAST;
+					(u8)XAIE_EVENT_BROADCAST_SOUTH |
+					(u8)XAIE_EVENT_BROADCAST_EAST;
 				BroadcastDirSwB = BroadcastDirSwA;
 			} else {
 				BroadcastDirSwA = (u8)XAIE_EVENT_BROADCAST_NORTH |
-						  (u8)XAIE_EVENT_BROADCAST_SOUTH |
-						  (u8)XAIE_EVENT_BROADCAST_WEST;
+					(u8)XAIE_EVENT_BROADCAST_SOUTH |
+					(u8)XAIE_EVENT_BROADCAST_WEST;
 				BroadcastDirSwB = BroadcastDirSwA;
 			}
 
@@ -1779,30 +972,30 @@ static AieRC _XAie_ErrorHandlingInitAie(XAie_DevInst *DevInst)
 	}
 
 	return XAIE_OK;
+
 }
+
 /*****************************************************************************/
 /**
-*
-* This API configures broadcast network to deliver error events as interrupts in
-* NPI. When error occurs, interrupt is raised on NPI interrupt line #5-7. Also it
-* configure error halt register, to put core in halt if any group error0 occurs
-*
-* @param	DevInst: Device Instance
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		This API assumes the whole AIE as a single partition and the
-*		following broadcast channels to be available. To avoid conflicts,
-*		it is the user's responsibility to make sure none of the below
-*		channels are being used.
-*			* Broadcast channel #0 in AIE1&2 array tiles.
-*			* Broadcast channel #0,1,2 in AIE2PS.
-*			* Switch A L1 IRQ 16. For AIE1&2
-*			* NPI interrupt line #5 for AIE1 and 2
-*			* NPI interrupt line #5, 6, 7, 8. for AIE2PS.
-*		Currently, this API only supports Linux UIO, CDO, and debug
-*		backends.
-******************************************************************************/
+ *
+ * This API configures broadcast network to deliver error events as interrupts in
+ * NPI. When error occurs, interrupt is raised on NPI interrupt line #5-7. Also it
+ * configure error halt register, to put core in halt if any group error0 occurs
+ *
+ * @param        DevInst: Device Instance
+ *
+ * @return       XAIE_OK on success, error code on failure.
+ *
+ * @note         This API assumes the whole AIE as a single partition and the
+ *               following broadcast channels to be available. To avoid conflicts,
+ *               it is the user's responsibility to make sure none of the below
+ *               channels are being used.
+ *                       * Broadcast channel #0 in AIE1&2 array tiles.
+ *                       * Switch A L1 IRQ 16. For AIE1&2
+ *                       * NPI interrupt line #5 for AIE1 and 2
+ *               Currently, this API only supports CDO, and debug
+ *               backends.
+ ******************************************************************************/
 AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 {
 	AieRC RC;
@@ -1813,14 +1006,7 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	switch (DevInst->DevProp.DevGen) {
-	case XAIE_DEV_GEN_AIE2PS:
-		RC = _XAie_ErrorHandlingInitAie2ps(DevInst);
-		break;
-	default:
-		RC = _XAie_ErrorHandlingInitAie(DevInst);
-		break;
-	}
+	RC = _XAie_ErrorHandlingInitAie(DevInst);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to set Broadcast network: %d\n", RC);
 		return RC;
@@ -1840,5 +1026,7 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 
 	return XAIE_OK;
 }
+
 #endif /* XAIE_FEATURE_INTR_INIT_ENABLE */
+
 /** @} */
