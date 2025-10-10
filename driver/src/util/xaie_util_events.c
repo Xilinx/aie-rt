@@ -1,6 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
-* Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.  *
+* Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -30,6 +30,7 @@
 
 /**************************** Variable Definitions *******************************/
 /* Event string lookup table indexed by event number */
+
 static const char *XAie_EventStrings[] = {
 	XAIE_EVENT_GENERATE_CORE_MOD(ENUM_STRING)
 	XAIE_EVENT_GENERATE_MEM_MOD(ENUM_STRING)

@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -42,13 +43,14 @@
 
 /***************************** Include Files *********************************/
 #include "xaiegbl_defs.h"
+#include "xaiegbl_dynlink.h"
 #include "xaie_feature_config.h"
 
 /************************** Constant Definitions *****************************/
 #define XAIE_LOCK_WITH_NO_VALUE		(-1)
 #define XAIE_PACKET_ID_MAX		0x1FU
 #define XAIE_PACKET_TYPE_MAX		0x7U
-#define XAIE_TILES_BITMAP_SIZE	  32U
+#define XAIE_TILES_BITMAP_SIZE          32U
 
 #define XAIE_TRANSACTION_ENABLE_AUTO_FLUSH	0b1U
 #define XAIE_TRANSACTION_DISABLE_AUTO_FLUSH	0b0U
@@ -58,17 +60,21 @@
 #define XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR	(1U << 2)
 #define XAIE_PART_INIT_OPT_ISOLATE		(1U << 3)
 #define XAIE_PART_INIT_OPT_ZEROIZEMEM		(1U << 4)
+#define XAIE_PART_INIT_OPT_DISABLE_MEMINTERLEAVING	(1U << 6)
 #define XAIE_PART_INIT_OPT_DEFAULT	(XAIE_PART_INIT_OPT_COLUMN_RST | \
 		XAIE_PART_INIT_OPT_SHIM_RST | \
 		XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR | \
 		XAIE_PART_INIT_OPT_ISOLATE)
 
-#define XAIE_INIT_ISOLATION			0
-#define XAIE_CLEAR_ISOLATION			1
-#define XAIE_INIT_WEST_ISOLATION		2
-#define XAIE_INIT_EAST_ISOLATION		4
-#define XAIE_PERF_CORE_NUM_CYCLES		2U
-
+/* Migrated from AIE-CONTROLLER */
+#define OP_LIST(OP) \
+        OP(TRANSACTION_OP) \
+        OP(WAIT_OP) \
+        OP(PENDINGBDCOUNT_OP) \
+        OP(DBGPRINT_OP) \
+        OP(PATCHBD_OP) \
+        OP(TRANSACTION_V2_OP)
+#define GENERATE_ENUM(ENUM) e_##ENUM,
 /**************************** Type Definitions *******************************/
 typedef struct XAie_TileMod XAie_TileMod;
 typedef struct XAie_DeviceOps XAie_DeviceOps;
@@ -85,19 +91,18 @@ typedef struct XAie_DevProp {
 	u8 DevGen;
 	u8 RowShift;
 	u8 ColShift;
-	XAie_TileMod *DevMod;
+	const XAie_TileMod *DevMod;
 } XAie_DevProp;
 
 /*
  * This typedef captures all the IO Backends supported by the driver
  */
 typedef enum {
-	XAIE_IO_BACKEND_METAL, /* Linux backend. Default backend of driver. */
 	XAIE_IO_BACKEND_SIM,   /* Ess simulation backend */
 	XAIE_IO_BACKEND_CDO,   /* Cdo generation backend */
 	XAIE_IO_BACKEND_BAREMETAL, /* Baremetal backend */
 	XAIE_IO_BACKEND_DEBUG, /* IO debug backend */
-	XAIE_IO_BACKEND_LINUX, /* Linux kernel backend */
+	XAIE_IO_BACKEND_IPU, /* IPU Backend */
 	XAIE_IO_BACKEND_SOCKET, /* Socket backend */
 	XAIE_IO_BACKEND_CONTROLCODE,
 	XAIE_IO_BACKEND_MAX
@@ -139,28 +144,19 @@ typedef struct {
 	u8 AieTileRowStart; /* Aie tile starting row in the partition */
 	u8 AieTileNumRows;  /* Number of aie tile rows in the partition */
 	u8 IsReady;
-	u8 IsProd;	/*Baremetal production environment*/
 	u8 EccStatus;		/* Ecc On/Off status of the partition */
+	u8 L2PreserveMem;    /*Set or Clear to preserve L2 Memory Data */
+	u8 PmLoadingActive; /*To keep track of of PM Loading is active or not*/
+	u8 DevType;         /* Device type for thread-safe device-specific logic (replaces global XAieDevType) */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be
 				     setup to AIE prop during intialization*/
-	XAie_DeviceOps *DevOps; /* Device level operations */
+	const XAie_DeviceOps *DevOps; /* Device level operations */
 	XAie_PartitionProp PartProp; /* Partition property */
 	XAie_List TxnList; /* Head of the list of txn buffers */
-	XAie_List PartitionList;
+	u32 InitialTxnCmdArraySize; /* TXN command array max size to begin with */
 } XAie_DevInst;
-
-/* typedef to capture transaction buffer data */
-typedef struct {
-	u64 Tid;
-	u32 Flags;
-	u32 NumCmds;
-	u32 MaxCmds;
-	u8  NextCustomOp;
-	XAie_TxnCmd *CmdBuf;
-	XAie_List Node;
-} XAie_TxnInst;
 
 /* enum to capture cache property of allocate memory */
 typedef enum {
@@ -209,15 +205,6 @@ typedef struct {
 	u8 Num;
 } XAie_Range;
 
-/* This typedef captures partition information available in the kernel */
-typedef struct {
-	XAie_Range ColRange;
-	u32 PartitionId;
-	u32 Uid;
-	int PartitionFd;
-	XAie_List Node;
-}XAie_PartitionList;
-
 /*
  * This typedef contains the attributes for an AIE partition initialization
  * options. The structure is used by the AI engine partition initialization
@@ -228,18 +215,6 @@ typedef struct XAie_PartInitOpts {
 	u32 NumUseTiles; /* Number of tiles to use */
 	u32 InitOpts; /* AI engine partition initialization options */
 } XAie_PartInitOpts;
-
-/*
- *
- * This typedef contains the attributes for AIE partiton/ device partition
- *
- */
-typedef struct XAie_DevicePartInfo {
-	u8 StartCol;  /* Absolute start column of the partition */
-	u8 NumCols;   /* Number of cols allocated to the partition */
-	u64 BaseAddr;
-} XAie_DevicePartInfo;
-
 
 /*
  * This enum contains all the Stream Switch Port types. These enums are used to
@@ -282,8 +257,8 @@ typedef struct {
 } XAie_DmaTensor;
 
 typedef struct {
-	u16 LockAcqId;
-	u16 LockRelId;
+	u8 LockAcqId;
+	u8 LockRelId;
 	u8 LockAcqEn;
 	s8 LockAcqVal;
 	u8 LockAcqValEn;
@@ -455,6 +430,7 @@ typedef enum{
 	XAIE_INVALID_LOCK_VALUE,
 	XAIE_LOCK_RESULT_FAILED,
 	XAIE_INVALID_DMA_DESC,
+	XAIE_NOT_SUPPORTED,
 	XAIE_INVALID_ADDRESS,
 	XAIE_FEATURE_NOT_SUPPORTED,
 	XAIE_INVALID_BURST_LENGTH,
@@ -481,13 +457,6 @@ typedef enum {
 	XAIE_RESETDISABLE,
 	XAIE_RESETENABLE,
 } XAie_Reset;
-
-/* This enum is used to identify the different types of memories in uc module */
-typedef enum {
-	XAIE_PROGRAM_MEMORY,
-	XAIE_PRIVATE_DATA_MEMORY,
-	XAIE_MODULE_DATA_MEMORY,
-} XAie_UcMemType;
 
 /* Data structure to capture lock id and value */
 typedef struct {
@@ -520,79 +489,30 @@ typedef struct {
 } XAie_ErrorPayload;
 
 /*
+ * Data structure to provide Error information to Host
+ * ErrorCount: Total Number of valid payloads returned.
+ * ReturnCode: Return success or Insufficient Buffer error to host.
+ * Payload: Array of Error Payload Structure.
+ */
+typedef struct {
+	u32 ErrorCount;
+	u32 ReturnCode;
+	XAie_ErrorPayload *Payload;
+} XAie_ErrorInfo;
+
+
+/*
  * Data structure to capture metadata required for backtracking errors.
- * IsNextInfoValid: Set when error backtracking was discontinued due to limited
- *		    size of Payload buffer.
- * NextTile: Location of tile where backtracking was discontinued.
- * NextModule: Module of tile where backtracking was discontinued.
- * Payload: Pointer to buffer capturing array of error payloads.
+ * ErrInfo: Pointer to buffer capturing array of error payloads and .
  * ArraySize: Array size of payload buffer. Value corresponds to total number of
  *	      XAie_ErrorPayload structs.
- * ErrorCount: total number of valid payloads returned.
  * Cols: Range of columns to be backtracked.
  */
 typedef struct {
-	u8 IsNextInfoValid;
-	XAie_LocType NextTile;
-	XAie_ModuleType NextModule;
-	XAie_ErrorPayload *Payload;
+	XAie_ErrorInfo *ErrInfo;
 	u32 ArraySize;
-	u32 ErrorCount;
 	XAie_Range Cols;
 } XAie_ErrorMetaData;
-
-typedef struct {
-	uint8_t Major;
-	uint8_t Minor;
-	uint8_t DevGen;
-	uint8_t NumRows;
-	uint8_t NumCols;
-	uint8_t NumMemTileRows;
-	uint32_t NumOps;
-	uint32_t TxnSize;
-} XAie_TxnHeader;
-
-typedef struct {
-	uint8_t Op;
-	uint8_t Col;
-	uint8_t Row;
-} XAie_OpHdr;
-
-typedef struct {
-	XAie_OpHdr OpHdr;
-	uint64_t RegOff;
-	uint32_t Value;
-	uint32_t Size;
-} XAie_Write32Hdr;
-
-typedef struct {
-	XAie_OpHdr OpHdr;
-	uint64_t RegOff;
-	uint32_t Value;
-	uint32_t Mask;
-	uint32_t Size;
-} XAie_MaskWrite32Hdr;
-
-typedef struct {
-	XAie_OpHdr OpHdr;
-	uint64_t RegOff;
-	uint32_t Value;
-	uint32_t Mask;
-	uint32_t Size;
-} XAie_MaskPoll32Hdr;
-
-typedef struct {
-	XAie_OpHdr OpHdr;
-	uint8_t Col;
-	uint8_t Row;
-	uint32_t RegOff;
-	uint32_t Size;
-} XAie_BlockWrite32Hdr;
-
-typedef struct {
-	XAie_OpHdr OpHdr;
-	uint32_t Size;
-} XAie_CustomOpHdr;
 
 /*
  * Typedef for enum of AIE backend attribute type
@@ -600,11 +520,6 @@ typedef struct {
 typedef enum {
 	XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE,
 } XAie_BackendAttrType;
-
-typedef enum {
-	XAIE_CORE_ACTIVE_CYCLE,
-	XAIE_CORE_TOTAL_CYCLE
-} XAie_PerfUtilCycle;
 
 /*
  * This typedef contains members necessary to store the tile location and
@@ -629,60 +544,42 @@ typedef struct {
 
 
 /**************************** Function prototypes ***************************/
-AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
-AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
-AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
-AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
-		XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo);
-AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
-AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
-AieRC XAie_Finish(XAie_DevInst *DevInst);
-AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
-XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
+XAIE_AIG_EXPORT AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
+XAIE_AIG_EXPORT AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
+XAIE_AIG_EXPORT AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_Finish(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
+XAIE_AIG_EXPORT XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache);
-AieRC XAie_MemFree(XAie_MemInst *MemInst);
-AieRC XAie_MemFreeVAddr(XAie_DevInst *DevInst, void *VAddr);
-AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
-AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
-AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
-AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
-void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
-u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
-AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
-AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
-                u64 VAddr, u64 Size, XAie_MemCacheProp Cache, u64 MemHandle);
-AieRC XAie_MemDetach(XAie_MemInst *MemInst);
-AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
-AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
-AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);
-AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
-XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
-u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
-		u8 NumConsumers, u32 Flags);
-AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
-AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
-AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
-AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
-AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
-AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
-                XAie_BackendAttrType AttrType, u64 AttrVal);
-AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 PageSize);
-void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
-AieRC XAie_WaitTaskCompleteToken(XAie_DevInst *DevInst,
-                        uint16_t Column, uint16_t Row, uint32_t Channel, uint8_t NumTokens);
-AieRC XAie_StartNewJob(XAie_DevInst *DevInst);
-AieRC XAie_EndPage(XAie_DevInst *DevInst);
-AieRC XAie_EndJob(XAie_DevInst *DevInst);
-AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp);
-AieRC XAie_ControlCodeAddAnnotation(XAie_DevInst *DevInst,
-                        u32 Id, const char *Name, const char *Description);
-AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad);
-AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
-AieRC XAie_EnquirePartitions(XAie_DevInst *DevInst);
-int XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId);
-AieRC XAie_DestroyPartitionList(XAie_DevInst *DevInst);
-AieRC XAie_GetPartitionFdList(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_MemFree(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DAddr,
+		u64 VAddr, u64 Size, XAie_MemCacheProp Cache, u64 MemHandle);
+XAIE_AIG_EXPORT AieRC XAie_MemDetach(XAie_MemInst *MemInst);
+XAIE_AIG_EXPORT AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard);
+XAIE_AIG_EXPORT AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr);
+XAIE_AIG_EXPORT AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range);
+XAIE_AIG_EXPORT AieRC XAie_ConfigBackendAttr(XAie_DevInst *InstPtr,
+		XAie_BackendAttrType AttrType, u64 AttrVal);
+XAIE_AIG_EXPORT AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 JobSize);
+XAIE_AIG_EXPORT void XAie_CloseControlCodeFile(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_StartNextJob(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
+XAIE_AIG_EXPORT AieRC XAie_ConfigMemInterleaving(XAie_DevInst *DevInst,
+		XAie_LocType *Locs, u32 NumTiles, u8 Enable);
+
+/* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 
+ * TODO: Need to revert these changes later*/
+XAIE_AIG_EXPORT AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad);
+XAIE_AIG_EXPORT AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp);
 /*****************************************************************************/
 /*
 *
@@ -855,13 +752,10 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 *
 *******************************************************************************/
 #define XAie_ErrorMetadataInit(Mdata, _Buffer, _Size)			\
+	((XAie_ErrorInfo *)(_Buffer))->Payload = (void *)_Buffer + sizeof(XAie_ErrorInfo); \
 	XAie_ErrorMetaData Mdata = {					\
-		.IsNextInfoValid = 0,					\
-		.NextTile = {0, 0},					\
-		.NextModule = 0,					\
-		.Payload = (XAie_ErrorPayload *) (_Buffer),		\
-		.ArraySize = (_Size) / sizeof(XAie_ErrorPayload),	\
-		.ErrorCount = 0U,					\
+		.ErrInfo = (XAie_ErrorInfo *) (_Buffer),		\
+		.ArraySize = _Size,					\
 		.Cols = {0, 0},						\
 	}
 
@@ -922,7 +816,7 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 *
 *******************************************************************************/
 
-#define XAie_GetCol_BaseAddr(BaseAddr, StartCol, ColShift)	      \
+#define XAie_GetCol_BaseAddr(BaseAddr, StartCol, ColShift)              \
 	(BaseAddr + (StartCol << ColShift))
 
 #endif	/* end of protection macro */

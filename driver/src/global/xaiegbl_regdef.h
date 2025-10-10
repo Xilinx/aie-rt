@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -75,42 +76,6 @@ typedef struct {
 } XAie_RegBdFldAttr;
 
 /**
- *  * This typedef contains the attributes for the uC module Dma pause register.
- *  */
-typedef struct {
-	u32 RegOff;		/**< Register offset */
-	XAie_RegFldAttr Mm2dm;	/**< Mm2dm field attributes */
-	XAie_RegFldAttr Dm2mm;	/**< Dm2mm field attributes */
-} XAie_RegUcDmaPause;
-
-/**
- *  * This typedef contains the attributes for the Uc module axi-mm dma outstanding transaction register.
- *  */
-typedef struct {
-	u32 RegOff;
-	XAie_RegFldAttr UcModuleToArray;
-	XAie_RegFldAttr UcDMAToNMU;
-} XAie_RegUcDmaOutsTxn;
-
-/**
- *  * This typedef contains the attributes for the Noc module axi-mm dma outstanding transaction register.
- *  */
-typedef struct {
-	u32 RegOff;
-	XAie_RegFldAttr NoCModuleToNMU;
-} XAie_RegNocDmaOutsTxn;
-/**
- *  * This typedef contains the attributes for the Noc module Dma pause register.
- *  */
-typedef struct {
-	u32 RegOff;		/**< Register offset */
-	XAie_RegFldAttr Mm2s_1;	/**< Mm2s_1 field attributes */
-	XAie_RegFldAttr Mm2s_0;	/**< Mm2s_0 field attributes */
-	XAie_RegFldAttr S2mm_1;	/**< S2mm_1 field attributes */
-	XAie_RegFldAttr S2mm_0;	/**< S2mm_0 field attributes */
-} XAie_RegNocDmaPause;
-
-/**
  * This typedef contains the attributes for the uC module Core control register.
 */
 typedef struct {
@@ -123,10 +88,10 @@ typedef struct {
  * This typedef contains the attributes for the uC module Core status register.
  */
 typedef struct {
-	u32 RegOff;		/**< Register offset */
-	u32 Mask;		/**< Core status register Mask */
-	XAie_RegFldAttr Intr;	/**< Interrupt value field attributes */
-	XAie_RegFldAttr Sleep;	/**< Sleep value field attributes */
+	u32 RegOff;			/**< Register offset */
+	u32 Mask;			/**< Core status register Mask */
+	XAie_RegFldAttr Intr;		/**< Interrupt value field attributes */
+	XAie_RegFldAttr Sleep;		/**< Sleep value field attributes */
 } XAie_RegUcCoreSts;
 
 /**
@@ -299,7 +264,7 @@ typedef struct XAie_CoreMod {
 	AieRC (*ConfigureDone)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			const struct XAie_CoreMod *CoreMod);
 	AieRC (*WaitForDone)(XAie_DevInst *DevInst, XAie_LocType Loc,
-			u32 TimeOut, const struct XAie_CoreMod *CoreMod);
+			u32 TimeOut, const struct XAie_CoreMod *CoreMod, u8 BusyPoll);
 	AieRC (*ReadDoneBit)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			u8 *DoneBit, const struct XAie_CoreMod *CoreMod);
 	AieRC (*Enable)(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -307,53 +272,6 @@ typedef struct XAie_CoreMod {
 	AieRC (*GetCoreStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			u32 *CoreStatus, const struct XAie_CoreMod *CoreMod);
 } XAie_CoreMod;
-
-/*
- * This typedef contains the attributes for shim uC MDM performance counter
- * event setting register
- */
-typedef struct {
-	u8 MaxEventId;
-	u32 RegOff;
-	u32 Mask;
-} XAie_RegUcMdmPerfEvents;
-
-/*
- * This typedef contains the attributes for shim uC MDM performance counter
- * control register
- */
-typedef struct {
-	u32 RegOff;
-	XAie_RegFldAttr Clear;
-	XAie_RegFldAttr Start;
-	XAie_RegFldAttr Stop;
-	XAie_RegFldAttr Sample;
-	XAie_RegFldAttr Reset;
-} XAie_RegUcMdmPerfCtrl;
-
-/*
- * This typedef contains the attributes for shim uC MDM performance counter
- * status register
- */
-typedef struct {
-	u32 RegOff;
-	XAie_RegFldAttr Full;
-	XAie_RegFldAttr Overflow;
-} XAie_RegUcMdmPerfSts;
-
-/*
- * This typedef contains the attributes for shim uC Microblaze Debug Module (MDM)
- */
-typedef struct {
-	u32 PerfCntReadRegOff;
-	u32 PerfCntWriteRegOff;
-	const XAie_RegUcMdmPerfEvents *PerfEvents;
-	const XAie_RegUcMdmPerfCtrl *PerfCtrl;
-	const XAie_RegUcMdmPerfSts *PerfSts;
-	u8 NumEventCounters;
-	u8 NumLatencyCounters;
-	u8 CounterWidth;
-} XAie_UcMdm;
 
 /*
  * The typedef contains the attributes of uC Modules
@@ -367,23 +285,14 @@ typedef struct XAie_UcMod {
 	u32 PrivDataMemSize;
 	u32 DataMemAddr;
 	u32 DataMemSize;
-	u32 DataMemUcOffset;
-	u32 MemPrivilegedOffset;
 	const XAie_RegUcCoreCtrl *CoreCtrl;
 	const XAie_RegUcCoreSts *CoreSts;
-	const XAie_RegUcDmaOutsTxn *UcDmaOutstandingReg;
-	const XAie_RegUcDmaPause  *UcDmaPauseReg;
-	const XAie_UcMdm *UcMdm;
 	AieRC (*Wakeup)(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const struct XAie_UcMod *UcMod);
 	AieRC (*Sleep)(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const struct XAie_UcMod *UcMod);
 	AieRC (*GetCoreStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 *CoreStatus, const struct XAie_UcMod *UcMod);
-	AieRC (*UcDmaPause)(XAie_DevInst *DevInst, XAie_LocType *Loc,
-		u32 ChNum, u8 Pause, const struct XAie_UcMod *UcMod);
-	AieRC (*GetUcDmaAxiMmOutstandingTxn)(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const struct XAie_UcMod *UcMod, u32 *Status);
 } XAie_UcMod;
 
 /*
@@ -510,7 +419,6 @@ typedef struct {
 	XAie_AieMlDmaDimProp DmaDimProp[4U];
 	XAie_AieMlDmaDimProp Iter;
 	XAie_RegBdFldAttr IterCurr;
-	XAie_RegBdFldAttr StepSize_Zero;
 } XAie_AieMlAddressMode;
 
 /*
@@ -529,13 +437,9 @@ typedef struct {
 	XAie_RegBdFldAttr D0_PadBefore;
 	XAie_RegBdFldAttr D0_PadAfter;
 	XAie_RegBdFldAttr D1_PadBefore;
-	XAie_RegBdFldAttr D1_PadBeforeHigh;
 	XAie_RegBdFldAttr D1_PadAfter;
-	XAie_RegBdFldAttr D1_PadAfterHigh;
 	XAie_RegBdFldAttr D2_PadBefore;
-	XAie_RegBdFldAttr D2_PadBeforeHigh;
 	XAie_RegBdFldAttr D2_PadAfter;
-	XAie_RegBdFldAttr D2_PadAfterHigh;
 } XAie_DmaBdPad;
 
 /*
@@ -634,7 +538,7 @@ typedef struct {
  */
 struct XAie_DmaMod {
 	u8  NumBds;
-	u16  NumLocks;
+	u8  NumLocks;
 	u8  ChIdxOffset;
 	u8  NumAddrDim;
 	u8  DoubleBuffering;
@@ -654,8 +558,6 @@ struct XAie_DmaMod {
 	u32 ChStatusBase;
 	u32 ChStatusOffset;
 	u32 PadValueBase;
-	const XAie_RegNocDmaPause *NocDmaPauseReg;
-	const XAie_RegNocDmaOutsTxn *NocDmaOutstandingReg;
 	const XAie_DmaBdProp *BdProp;
 	const XAie_DmaChProp *ChProp;
 	void (*DmaBdInit)(XAie_DmaDesc *Desc);
@@ -675,10 +577,10 @@ struct XAie_DmaMod {
 			XAie_DmaDirection Dir, u8 *PendingBd);
 	AieRC (*WaitforDone)(XAie_DevInst *DevINst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
-			XAie_DmaDirection Dir, u32 TimeOutUs);
+			XAie_DmaDirection Dir, u32 TimeOutUs, u8 BusyPoll);
 	AieRC (*WaitforBdTaskQueue)(XAie_DevInst *DevINst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
-			XAie_DmaDirection Dir, u32 TimeOutUs);
+			XAie_DmaDirection Dir, u32 TimeOutUs, u8 BusyPoll);
 	AieRC (*BdChValidity)(u8 BdNum, u8 ChNum);
 	AieRC (*UpdateBdLen)(XAie_DevInst *DevInst, const XAie_DmaMod *DmaMod,
 			XAie_LocType Loc, u32 Len, u16 BdNum);
@@ -687,11 +589,7 @@ struct XAie_DmaMod {
 	AieRC (*GetChannelStatus)(XAie_DevInst *DevInst, XAie_LocType Loc,
 			const XAie_DmaMod *DmaMod, u8 ChNum,
 			XAie_DmaDirection Dir, u32 *Status);
-	AieRC (*AxiBurstLenCheck)(u8 BurstLen, u8 *AxiBurstLen);
-	AieRC (*NocDmaPause)(XAie_DevInst *DevInst, XAie_LocType *Loc, u8 ChNum,
-		       XAie_DmaDirection Dir, u8 Pause, const struct XAie_DmaMod *DmaMod);
-	AieRC (*GetNocDmaAxiMmOutstandingTxn)(XAie_DevInst *DevInst, XAie_LocType Loc,
-		       const XAie_DmaMod *DmaMod, u32 *Status);
+	AieRC (*AxiBurstLenCheck)(u8 BurstLen);
 };
 
 /*
@@ -760,21 +658,18 @@ typedef struct {
 	u32 DownSzrByPassOff;
 	u32 ShimNocMuxOff;
 	u32 ShimNocDeMuxOff;
-	u32 ShimNocNmuSwitchOff;
 	u32 ColRstOff;
 	u8  NumUpSzrPorts;
 	u8  MaxByPassPortNum;
 	u8  NumDownSzrPorts;
-	const XAie_RegFldAttr *UpSzr32_64Bit;
+	const XAie_RegFldAttr	*UpSzr32_64Bit;
 	const XAie_RegFldAttr *UpSzr128Bit;
-	const XAie_RegFldAttr *DownSzr32_64Bit;
+	const XAie_RegFldAttr	*DownSzr32_64Bit;
 	const XAie_RegFldAttr *DownSzr128Bit;
 	const XAie_RegFldAttr *DownSzrEn;
 	const XAie_RegFldAttr *DownSzrByPass;
 	const XAie_RegFldAttr *ShimNocMux;
 	const XAie_RegFldAttr *ShimNocDeMux;
-	const XAie_RegFldAttr ShimNocNmuSwitch0;
-	const XAie_RegFldAttr ShimNocNmuSwitch1;
 	const XAie_ShimClkBufCntr *ClkBufCntr; /* Shim clock buffer control configuration */
 	XAie_RegFldAttr ColRst; /* Tile column reset configuration */
 	const XAie_ShimRstMod *ShimTileRst; /* SHIM tile reset enable configuration */
@@ -797,7 +692,7 @@ typedef struct {
  * document.
  */
 struct XAie_LockMod {
-	u16  NumLocks;		/* Number of lock in the module */
+	u8  NumLocks;		/* Number of lock in the module */
 	s8  LockValUpperBound; 	/* Upper bound of the lock value */
 	s8  LockValLowerBound; 	/* Lower bound of the lock value */
 	u32 BaseAddr;		/* Base address of the lock module */
@@ -809,10 +704,10 @@ struct XAie_LockMod {
 	const XAie_RegFldAttr *LockInit; /* Lock intialization reg attributes */
 	AieRC (*Acquire)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
-			XAie_Lock Lock, u32 TimeOut);
+			XAie_Lock Lock, u32 TimeOut, u8 BusyPoll);
 	AieRC (*Release)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
-			XAie_Lock Lock, u32 TimeOut);
+			XAie_Lock Lock, u32 TimeOut, u8 BusyPoll);
 	AieRC (*SetValue)(XAie_DevInst *DevInst,
 			const struct XAie_LockMod *LockMod, XAie_LocType Loc,
 			XAie_Lock Lock);
@@ -825,7 +720,7 @@ struct XAie_LockMod {
 typedef struct XAie_PerfMod {
 	u8 MaxCounterVal;       /* Maximum counter value per module */
 	u8 StartStopShift;      /* Shift for start stop perf ctrl reg */
-	u8 ResetShift;	  /* Shift for reset perf ctrl reg */
+	u8 ResetShift;          /* Shift for reset perf ctrl reg */
 	u8 PerfCounterOffsetAdd;/* Add to calc perf cntrl offset for counter */
 	u32 PerfCtrlBaseAddr;   /* Perf counter ctrl register offset address */
 	u32 PerfCtrlOffsetAdd;  /* Add this val for next Perf counter ctrl reg*/
@@ -913,9 +808,9 @@ typedef struct XAie_EvntMod {
 typedef struct XAie_TimerMod {
 	u32 TrigEventLowValOff;  /* Timer trigger evel low val register offset */
 	u32 TrigEventHighValOff; /* Timer trigger evel high val register offset */
-	u32 LowOff;	      /* Timer low value Register offset */
-	u32 HighOff;	     /* Timer high value Register offset */
-	u32 CtrlOff;	     /* Timer control Register offset */
+	u32 LowOff;              /* Timer low value Register offset */
+	u32 HighOff;             /* Timer high value Register offset */
+	u32 CtrlOff;             /* Timer control Register offset */
 	const XAie_RegFldAttr CtrlReset; /* Timer control reset field */
 	const XAie_RegFldAttr CtrlResetEvent; /* Timer control reset event field */
 } XAie_TimerMod;
@@ -949,10 +844,8 @@ typedef struct XAie_ClockMod {
  * controller.
  */
 typedef struct XAie_L1IntrMod {
-	u32 BaseMaskRegOff;
 	u32 BaseEnableRegOff;
 	u32 BaseDisableRegOff;
-	u32 BaseStatusRegOff;
 	u32 BaseIrqRegOff;
 	u32 BaseIrqEventRegOff;
 	u32 BaseIrqEventMask;
@@ -973,10 +866,8 @@ typedef struct XAie_L1IntrMod {
  * controller.
  */
 typedef struct XAie_L2IntrMod {
-	u32 MaskRegOff;
 	u32 EnableRegOff;
 	u32 DisableRegOff;
-	u32 StatusRegOff;
 	u32 IrqRegOff;
 	u8 NumBroadcastIds;
 	u8 NumNoCIntr;
@@ -994,30 +885,15 @@ typedef struct XAie_TileCtrlMod{
 	u8 IsolateDefaultOn;
 } XAie_TileCtrlMod;
 
-
-/*
- * This typedef contains the attributes for AxiMM Control
- */
-typedef struct XAie_AxiMMTileCtrlMod {
-	u32 TileCtrlAxiMMRegOff;
-	XAie_RegFldAttr AxiMMIsolateEast; /**< Isolate AXI-MM from east**/
-	XAie_RegFldAttr AxiMMIsolateWest; /**< Isolate AXI-MM from west**/
-} XAie_AxiMMTileCtrlMod;
-
 /*
  * This typedef contains the attributes for memory control module
  */
 typedef struct XAie_MemCtrlMod{
 	u32 MemCtrlRegOff;		/**< memory control reg offset */
 	XAie_RegFldAttr MemZeroisation;	/**< memory zeroisation field */
+	XAie_RegFldAttr MemInterleaving;	/**< memory interleaving field,
+						  This will be used only for memtile memory control register */
 } XAie_MemCtrlMod;
-
-/*
- * This structure captures all attributes related to resource manager.
- */
-struct XAie_ResourceManager {
-	u32 **Bitmaps;
-};
 
 /*
  * This typedef contains all the modules for a Tile type
@@ -1038,43 +914,26 @@ struct XAie_TileMod {
 	const XAie_L1IntrMod *L1IntrMod;
 	const XAie_L2IntrMod *L2IntrMod;
 	const XAie_TileCtrlMod *TileCtrlMod;
-	const XAie_AxiMMTileCtrlMod *AxiMMTileCtrlMod;
 	const XAie_MemCtrlMod *MemCtrlMod;
 	const XAie_UcMod *UcMod;
 };
 
 
 struct XAie_DeviceOps {
-	u8 IsCheckerBoard;
+	const u8 IsCheckerBoard;
 	u32 *TilesInUse;
 	u32 *MemInUse;
 	u32 *CoreInUse;
-	u8 (*GetTTypefromLoc)(XAie_DevInst *DevInst, XAie_LocType Loc);
-	AieRC (*SetPartColShimReset)(XAie_DevInst *DevInst, u8 Enable);
-	AieRC (*SetPartColClockAfterRst)(XAie_DevInst *DevInst, u8 Enable);
-	AieRC (*SetPartIsolationAfterRst)(XAie_DevInst *DevInst, u8 ClearIsolation);
-	AieRC (*SetAxiMMIsolation)(XAie_DevInst* DevInst, u8 IsolationFlags);
-	AieRC (*PartMemZeroInit)(XAie_DevInst *DevInst);
-	AieRC (*RequestTiles)(XAie_DevInst *DevInst,
+	u8 (*const GetTTypefromLoc)(XAie_DevInst *DevInst, XAie_LocType Loc);
+	AieRC (*const SetPartColShimReset)(XAie_DevInst *DevInst, u8 Enable);
+	AieRC (*const SetPartColClockAfterRst)(XAie_DevInst *DevInst, u8 Enable);
+	AieRC (*const SetPartIsolationAfterRst)(XAie_DevInst *DevInst);
+	AieRC (*const PartMemZeroInit)(XAie_DevInst *DevInst);
+	AieRC (*const RequestTiles)(XAie_DevInst *DevInst,
 			XAie_BackendTilesArray *Args);
-	AieRC (*SetColumnClk)(XAie_DevInst *DevInst,
+	AieRC (*const SetColumnClk)(XAie_DevInst *DevInst,
 			XAie_BackendColumnReq *Args);
 };
-
-static inline u16 XAie_GetEventNumber(const struct XAie_EvntMod *EventMod, XAie_Events EventId)
-{
-	if ((EventMod ==NULL) ||
-	    (EventMod->XAie_EventNumber == NULL)) {
-		return XAIE_EVENT_INVALID;
-	}
-	if ((EventId < EventMod->EventMin) ||
-	    (EventId > EventMod->EventMax) ||
-	    ((EventId != EventMod->EventMin) && (EventMod->XAie_EventNumber[(u32)EventId] == 0))) {
-		return XAIE_EVENT_INVALID;
-	}
-
-	return EventMod->XAie_EventNumber[(u32)EventId];
-}
 
 #endif
 

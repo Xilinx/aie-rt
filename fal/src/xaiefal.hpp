@@ -1,6 +1,8 @@
 // Copyright(C) 2020 - 2021 by Xilinx, Inc. All rights reserved.
 // SPDX-License-Identifier: MIT
 
+#pragma warning (disable : 4146 4244)
+
 #include <fstream>
 #include <functional>
 #include <vector>

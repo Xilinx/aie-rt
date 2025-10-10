@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (c) 2021 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -24,6 +25,7 @@
 /***************************** Include Files *********************************/
 #ifdef __AIESOCKET__
 
+#undef _POSIX_C_SOURCE
 #define  _POSIX_C_SOURCE 200112L
 
 #include <errno.h>
@@ -37,6 +39,10 @@
 #include <unistd.h>
 
 #endif /* __AIESOCKET__ */
+
+#ifdef __AIGSOCKETCI__
+#include "sleep.h"
+#endif
 
 #include "xaie_helper.h"
 #include "xaie_io.h"
@@ -119,6 +125,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	if(Fd == NULL){
 		XAIE_ERROR("Unable to open file to read port number of "
 				"simulator, %d: %s\n", errno, strerror(errno));
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -127,6 +134,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 		fclose(Fd);
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 			errno, strerror(errno));
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -138,6 +146,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 		fclose(Fd);
 		XAIE_ERROR("Memory allocation failedi. Unable to read port"
 				" number\n");
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -146,6 +155,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 		fclose(Fd);
 		free(PortNum);
 		XAIE_ERROR("Failed to read port number from file\n");
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -158,9 +168,15 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
+	/*
+	 * TODO: get address from env variable instead of hardcoding it to
+	 * localhost.
+	 */
 	ret = getaddrinfo("localhost", PortNum, &hints, &slist);
 	if(ret != 0) {
 		XAIE_ERROR("get addr info failed. ec %s\n", gai_strerror(ret));
+		free(PortNum);
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -179,6 +195,9 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 
 	if(p == NULL) {
 		XAIE_ERROR("failed to connect to sim\n");
+		freeaddrinfo(slist);
+		free(PortNum);
+		free(IOInst);  /* Fix memory leak */
 		return XAIE_ERR;
 	}
 
@@ -567,6 +586,9 @@ static AieRC XAie_SocketIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
 			return _XAie_PrivilegeSetColumnClk(DevInst,
 					(XAie_BackendColumnReq *)Arg);
+		case XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG:
+			return _XAie_PrivilegeConfigMemInterleavingLoc(DevInst,
+					(XAie_BackendTilesEnableArray *)Arg);
 		default:
 			XAIE_ERROR("Socket backend does not support operation "
 					"%d\n", Op);
@@ -749,11 +771,8 @@ const XAie_Backend SocketBackend =
 	.Ops.MemAttach = XAie_SocketMemAttach,
 	.Ops.MemDetach = XAie_SocketMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
-	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 	.Ops.AddressPatching = NULL,
-	.Ops.SetPadInteger = NULL,
-	.Ops.SetPadString = NULL,
 };
 
 /** @} */

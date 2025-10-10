@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: MIT
 ###############################################################################
 
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.16.3)
 
 list (APPEND CMAKE_MODULE_PATH
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/platforms")
 
-project (xaiengine VERSION 3.8)
+project (xaiengine VERSION 3.2)
 
 include (CheckIncludeFiles)
 include (CheckCSourceCompiles)
@@ -19,9 +19,4 @@ include (options)
 
 enable_testing ()
 
-set(ENV{UTEST_BUILD} "ON")
 add_subdirectory (src ${CMAKE_CURRENT_BINARY_DIR}/driver-src)
-
-if (WITH_TESTS)
-  add_subdirectory (tests)
-endif (WITH_TESTS)

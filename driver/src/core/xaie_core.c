@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -34,10 +35,10 @@
 #include "xaie_core.h"
 #include "xaie_events.h"
 #include "xaie_feature_config.h"
-#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_CORE_ENABLE
 
+#include "xaie_helper_internal.h"
 /************************** Constant Definitions *****************************/
 #define XAIETILE_CORE_STATUS_DEF_WAIT_USECS 500U
 
@@ -63,12 +64,13 @@
 *
 ******************************************************************************/
 static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut, u32 Mask, u32 Value)
+		u32 TimeOut, u32 Mask, u32 Value, u8 BusyPoll)
 {
 
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	u8 TileType;
+	AieRC Status = XAIE_OK;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
@@ -84,18 +86,21 @@ static AieRC _XAie_CoreWaitStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}
 
-
 	RegAddr = CoreMod->CoreSts->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	if(XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut) !=
-			XAIE_OK) {
+	if (BusyPoll != XAIE_ENABLE){
+		Status = XAie_MaskPoll(DevInst, RegAddr, Mask, Value, TimeOut);
+	} else {
+		Status = XAie_MaskPollBusy(DevInst, RegAddr, Mask, Value, TimeOut);
+	}
+
+	if (Status != XAIE_OK) {
 		XAIE_DBG("Status poll time out\n");
 		return XAIE_CORE_STATUS_TIMEOUT;
 	}
 
-	return XAIE_OK;
-
+	return Status;
 }
 
 /*****************************************************************************/
@@ -214,6 +219,11 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	}
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreCtrl->CtrlRst.Lsb,
+			_XAie_MaxBitsNeeded(1U),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
 	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlRst.Lsb);
 	RegAddr = CoreMod->CoreCtrl->RegOff +
@@ -279,7 +289,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
@@ -307,7 +317,51 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
 	}
 
-	return CoreMod->WaitForDone(DevInst, Loc, TimeOut, CoreMod);
+	return CoreMod->WaitForDone(DevInst, Loc, TimeOut, CoreMod, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/*
+*
+* This API implements a blocking wait function to check the core to be in
+* done state for a AIE tile. API comes out of the loop when core status
+* changes to done or the timeout elapses, whichever happens first.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
+*		be set to 500us. The TimeOut value passed is per tile.
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_CoreWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
+{
+	u8 TileType;
+	const XAie_CoreMod *CoreMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+
+	/* TimeOut passed by the user is per Core */
+	if(TimeOut == 0U) {
+		/* Set timeout to default value */
+		TimeOut = XAIETILE_CORE_STATUS_DEF_WAIT_USECS;
+	}
+
+	return CoreMod->WaitForDone(DevInst, Loc, TimeOut, CoreMod, XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -323,7 +377,7 @@ AieRC XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u32 TimeOut)
 *		be set to 500us. The TimeOut value passed is per tile.
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		None.
+* @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
 AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -342,7 +396,44 @@ AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreSts->En.Mask;
 	Value = (u32)(0U << CoreMod->CoreSts->En.Lsb);
-	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value);
+	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value,
+				XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/*
+*
+* This API implements a blocking wait function to check the core to be in
+* disable state for a AIE tile. API comes out of the loop when core status
+* changes to disable or the timeout elapses, whichever happens first.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param	TimeOut: TimeOut in usecs. If set to 0, the default timeout will
+*		be set to 500us. The TimeOut value passed is per tile.
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API in context of TXN flow will be a busy poll wait.
+*
+******************************************************************************/
+AieRC XAie_CoreWaitForDisableBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u32 TimeOut)
+{
+	const XAie_CoreMod *CoreMod;
+	u32 Mask;
+	u32 Value;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
+	Mask = CoreMod->CoreSts->En.Mask;
+	Value = (u32)(0U << CoreMod->CoreSts->En.Lsb);
+	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value,
+				XAIE_ENABLE);
 }
 
 /*****************************************************************************/
@@ -642,7 +733,7 @@ AieRC XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	DevInst: Device Instance
 * @param	Loc: Location of the AIE tile.
 * @param	CoreStatus: Pointer to store the status from the core status
-		register.
+                register.
 * @return	XAIE_OK on success, Error code on failure.
 *
 * @note		None.
@@ -695,7 +786,7 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u8 TileType;
 	u16 MEvent1, MEvent0, MSStepEvent, MResumeCoreEvent;
-	u32 RegVal;
+	u32 RegVal, Event0Val, Event1Val, SingleStepEventVal, ResumeCoreEventVal;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	const XAie_EvntMod *EvntMod;
@@ -712,20 +803,53 @@ AieRC XAie_CoreConfigDebugControl1(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
+	Event0Val = (u32)Event0;
+	Event1Val = (u32)Event1;
+	SingleStepEventVal = (u32)SingleStepEvent;
+	ResumeCoreEventVal = (u32)ResumeCoreEvent;
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
-	MEvent0 = XAie_GetEventNumber(EvntMod, Event0);
-	MEvent1 = XAie_GetEventNumber(EvntMod, Event1);
-	MSStepEvent = XAie_GetEventNumber(EvntMod, SingleStepEvent);
-	MResumeCoreEvent = XAie_GetEventNumber(EvntMod, ResumeCoreEvent);
-
-	if((MEvent0 == XAIE_EVENT_INVALID) ||
-	   (MEvent1 == XAIE_EVENT_INVALID) ||
-	   (MSStepEvent == XAIE_EVENT_INVALID) ||
-	   (MResumeCoreEvent == XAIE_EVENT_INVALID)) {
+	if((Event0Val < EvntMod->EventMin || Event0Val > EvntMod->EventMax) ||
+				(Event1Val < EvntMod->EventMin ||
+				 Event1Val > EvntMod->EventMax) ||
+				(SingleStepEventVal < EvntMod->EventMin ||
+				 SingleStepEventVal > EvntMod->EventMax) ||
+				(ResumeCoreEventVal < EvntMod->EventMin ||
+				 ResumeCoreEventVal > EvntMod->EventMax)) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
+	}
+
+	Event0Val -= EvntMod->EventMin;
+	Event1Val -= EvntMod->EventMin;
+	SingleStepEventVal -= EvntMod->EventMin;
+	ResumeCoreEventVal -= EvntMod->EventMin;
+
+	MEvent0 = EvntMod->XAie_EventNumber[Event0Val];
+	MEvent1 = EvntMod->XAie_EventNumber[Event1Val];
+	MSStepEvent = EvntMod->XAie_EventNumber[SingleStepEventVal];
+	MResumeCoreEvent = EvntMod->XAie_EventNumber[ResumeCoreEventVal];
+
+	if((MEvent0 == XAIE_EVENT_INVALID) ||
+			(MEvent1 == XAIE_EVENT_INVALID) ||
+			(MSStepEvent == XAIE_EVENT_INVALID) ||
+			(MResumeCoreEvent == XAIE_EVENT_INVALID)) {
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugHaltCoreEvent0.Lsb,
+			_XAie_MaxBitsNeeded(MEvent0),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugHaltCoreEvent1.Lsb,
+			_XAie_MaxBitsNeeded(MEvent1),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugSStepCoreEvent.Lsb,
+			_XAie_MaxBitsNeeded(MSStepEvent),MAX_VALID_AIE_REG_BIT_INDEX)) ||
+			(_XAie_CheckPrecisionExceeds(CoreMod->CoreDebug->DebugResumeCoreEvent.Lsb,
+			_XAie_MaxBitsNeeded(MResumeCoreEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	RegVal = XAie_SetField(MEvent0,
@@ -807,11 +931,12 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u8 TileType;
 	u16 MappedEvent;
-	u32 Mask, Value;
+	u32 Mask, Value, EventVal;
 	u64 RegAddr;
 	const XAie_CoreMod *CoreMod;
 	const XAie_EvntMod *EvntMod;
 
+	EventVal = (u32)Event;
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
@@ -827,7 +952,13 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
-	MappedEvent = XAie_GetEventNumber(EvntMod, Event);
+	if(EventVal < EvntMod->EventMin || EventVal > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid event ID\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	EventVal -= EvntMod->EventMin;
+	MappedEvent = EvntMod->XAie_EventNumber[EventVal];
 	if(MappedEvent == XAIE_EVENT_INVALID) {
 		XAIE_ERROR("Invalid event ID\n");
 		return XAIE_INVALID_ARGS;
@@ -839,6 +970,12 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Mask = CoreMod->CoreEvent->EnableEvent.Mask |
 		CoreMod->CoreEvent->DisableEventOccurred.Mask |
 		CoreMod->CoreEvent->EnableEventOccurred.Mask;
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreEvent->EnableEvent.Lsb,
+			_XAie_MaxBitsNeeded(MappedEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	Value = (u32)(MappedEvent << CoreMod->CoreEvent->EnableEvent.Lsb);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
@@ -846,18 +983,18 @@ AieRC XAie_CoreConfigureEnableEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 /*****************************************************************************/
 /*
- *
- * This API writes to the Error Halt Event register to halt the core
- * bit.
- *
- * @param	DevInst: Device Instance
- * @param	Loc: Location of the AIE tile.
- * @param	Event: Event to halt the aie core
- * @return       XAIE_OK on success, Error code on failure.
- *
- * @note	 None.
- *
- ******************************************************************************/
+*
+* This API writes to the Error Halt Event register to halt the core
+* bit.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the AIE tile.
+* @param        Event: Event to halt the aie core
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note         None.
+*
+******************************************************************************/
 AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_Events Event)
 {
@@ -873,18 +1010,18 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
+        TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+        if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+                XAIE_ERROR("Invalid Tile Type\n");
+                return XAIE_INVALID_TILE;
+        }
 
 	EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[XAIE_CORE_MOD];
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		EvntMod->ErrorHaltRegOff;
 
-	RC = XAie_EventLogicalToPhysicalConv_16(DevInst, Loc, XAIE_CORE_MOD,
+	RC = XAie_EventLogicalToPhysicalConv(DevInst, Loc, XAIE_CORE_MOD,
 			Event, &HwEvent);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Invalid event ID\n");
@@ -934,63 +1071,21 @@ AieRC XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc)
 /*****************************************************************************/
 /*
 *
-* This API clears event occurred status.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of the aie tile.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		None.
-*
-******************************************************************************/
-AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
-		XAie_LocType Loc)
-{
-	u8 TileType;
-	u32 Mask, Value;
-	u64 RegAddr;
-	const XAie_CoreMod *CoreMod;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
-
-	RegAddr = CoreMod->CoreEvent->EnableEventOff +
-		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
-
-	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask;
-	Value = 1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb;
-
-	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
-}
-
-/*****************************************************************************/
-/*
-*
 * This API configures the core accumulator control register to specify the
 * direction of cascade stream.
 *
-* @param	DevInst: Device Instance
-* @param	Loc: Location of the aie tile.
-* @param	InDir: Input direction. Valid values: NORTH, WEST
-* @param	OutDir: Output direction. Valid values: SOUTH, EAST
+* @param       DevInst: Device Instance
+* @param       Loc: Location of the aie tile.
+* @param       InDir: Input direction. Valid values: NORTH, WEST
+* @param       OutDir: Output direction. Valid values: SOUTH, EAST
 *
-* @return	XAIE_OK on success, Error code on failure.
+* @return      XAIE_OK on success, Error code on failure.
+*
+* @note                None.
 *
 ******************************************************************************/
 AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
-	       XAie_LocType Loc, StrmSwPortType InDir, StrmSwPortType OutDir)
+               XAie_LocType Loc, StrmSwPortType InDir, StrmSwPortType OutDir)
 {
 	u8 TileType;
 	const XAie_CoreMod *CoreMod;
@@ -1033,6 +1128,16 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 	 *  * For input , 0 == NORTH, 1 == WEST
 	 *  * For output, 0 == SOUTH, 1 == EAST
 	 */
+
+	if ((_XAie_CheckPrecisionExceeds(AccumCtrl->CascadeInput.Lsb,
+			_XAie_MaxBitsNeeded(((u8)InDir - (u8)SOUTH) % 2U),
+			MAX_VALID_AIE_REG_BIT_INDEX))  ||
+			(_XAie_CheckPrecisionExceeds(AccumCtrl->CascadeOutput.Lsb,
+			_XAie_MaxBitsNeeded(((u8)OutDir - (u8)SOUTH) % 2U),
+			MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(((u8)InDir - (u8)SOUTH) % 2U,
 			AccumCtrl->CascadeInput.Lsb,
 			AccumCtrl->CascadeInput.Mask) |
@@ -1041,6 +1146,56 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 			AccumCtrl->CascadeOutput.Mask);
 
 	return XAie_Write32(DevInst, RegAddr, RegVal);
+}
+
+/*****************************************************************************/
+/*
+*
+* This API clears event occurred status.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the aie tile.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
+		XAie_LocType Loc)
+{
+	u8 TileType;
+	u32 Mask, Value;
+	u64 RegAddr;
+	const XAie_CoreMod *CoreMod;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_AIETILE) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
+
+	RegAddr = CoreMod->CoreEvent->EnableEventOff +
+		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	if ((_XAie_CheckPrecisionExceeds(CoreMod->CoreEvent->DisableEventOccurred.Lsb,
+			_XAie_MaxBitsNeeded(1U),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
+	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask;
+	Value = (u32)(1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb);
+
+	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
 
 /*****************************************************************************/
@@ -1087,6 +1242,12 @@ static AieRC _XAie_CoreProcessorBusConfig(XAie_DevInst *DevInst,
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds(ProcBusCtrl->CtrlEn.Lsb,
+			_XAie_MaxBitsNeeded(Enable),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	RegMask = ProcBusCtrl->CtrlEn.Mask;
 	RegVal = XAie_SetField(Enable, ProcBusCtrl->CtrlEn.Lsb, RegMask);
 	RegAddr = ProcBusCtrl->RegOff +
@@ -1131,73 +1292,6 @@ AieRC XAie_CoreProcessorBusDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 	return _XAie_CoreProcessorBusConfig(DevInst, Loc, XAIE_DISABLE);
 }
 
-#ifdef XAIE_FEATURE_UC_ENABLE
-/*****************************************************************************/
-/*
-*
-* This API wakes uc core up.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of the shim tile.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		None.
-*
-******************************************************************************/
-AieRC XAie_CoreUcWakeUp(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TType;
-	const struct XAie_UcMod *UcMod;
-
-	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TType) == 0U) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	UcMod = DevInst->DevProp.DevMod[TType].UcMod;
-	return UcMod->Wakeup(DevInst, Loc, UcMod);
-}
-
-/*****************************************************************************/
-/*
-*
-* This API puts uc core to sleep.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of the shim tile.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		None.
-*
-******************************************************************************/
-AieRC XAie_CoreUcSleep(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TType;
-	const struct XAie_UcMod *UcMod;
-
-	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TType) == 0U) {
-		XAIE_ERROR("Invalid Tile Type\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	UcMod = DevInst->DevProp.DevMod[TType].UcMod;
-	return UcMod->Sleep(DevInst, Loc, UcMod);
-}
-#endif /*XAIE_FEATURE_UC_ENABLE*/
 #endif /* XAIE_FEATURE_CORE_ENABLE */
 
 /** @} */

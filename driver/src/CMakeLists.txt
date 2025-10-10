@@ -1,28 +1,10 @@
-# Copyright (C) 2023 Advanced Micro Devices, Inc.. All rights reserved.
+###############################################################################
+# Copyright (C) 2022-2023, Advanced Micro Devices, Inc. All Rights Reserved.
 # SPDX-License-Identifier: MIT
-cmake_minimum_required(VERSION 3.15)
+###############################################################################
 
-file(GLOB_RECURSE  SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/*/*.c"  "${CMAKE_CURRENT_SOURCE_DIR}/*/*/*.c")
-
-file(GLOB_RECURSE  HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/*/*.h"  "${CMAKE_CURRENT_SOURCE_DIR}/*/*/*.h")
-
-if (NOT "$ENV{UTEST_BUILD}" STREQUAL "ON")
-project(aienginev2)
-
-find_package(common)
-include_directories(${CMAKE_BINARY_DIR}/include/xaiengine)
-
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xaiengine.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
-
-file(COPY ${HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/xaiengine)
-
-add_library(aienginev2 STATIC ${SOURCES})
-
-set_target_properties(aienginev2 PROPERTIES LINKER_LANGUAGE C)
-target_compile_options(aienginev2 PRIVATE -Wall -Wextra -D__AIEBAREMETAL__)
-
-else ()
-project(xaiengine LANGUAGES C VERSION 3.8)
+cmake_minimum_required(VERSION 3.16.3)
+project(xaiengine LANGUAGES C VERSION 3.5)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -30,20 +12,50 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
+# Define a custom option to control whether the library is built as a shared or static library
+option(XAIENGINE_BUILD_SHARED "Build xaiengine as a shared library" ON)
+
+file(
+  GLOB_RECURSE
+  SRCS
+  "${CMAKE_CURRENT_SOURCE_DIR}/*/*.c"
+  "${CMAKE_CURRENT_SOURCE_DIR}/*/*/*.c"
+  )
+
+file(
+  GLOB_RECURSE
+  HDRS
+  "${CMAKE_CURRENT_SOURCE_DIR}/*/*.h"
+  "${CMAKE_CURRENT_SOURCE_DIR}/*/*/*.h"
+  )
+
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xaiengine.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/)
 
-file(COPY ${HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME})
+file(COPY ${HDRS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME})
 
-add_library(
-  ${PROJECT_NAME}
-  SHARED
-  ${SOURCES}
+if(XAIENGINE_BUILD_SHARED)
+  # Build the library as a shared library
+  add_library(
+    ${PROJECT_NAME}
+    SHARED
+    ${SRCS}
   )
+else()
+  # Build the library as a static library
+  add_library(
+    ${PROJECT_NAME}
+    STATIC
+    ${SRCS}
+  )
+endif()
+
 target_include_directories(
   ${PROJECT_NAME}
-  PRIVATE
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}>
+  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
   )
 set_target_properties(
   ${PROJECT_NAME}
@@ -54,23 +66,18 @@ set_target_properties(
   ${PROJECT_VERSION_MAJOR}
   )
 
-if (LINUX_BACKEND)
-        list(APPEND IO_BACKEND -D__AIELINUX__)
-endif (LINUX_BACKEND)
-if (METAL_BACKEND)
-        list(APPEND IO_BACKEND -D__AIEMETAL__)
-endif (METAL_BACKEND)
 if (SOCKET_BACKEND)
-        list(APPEND IO_BACKEND -D__AIESOCKET__)
+	list(APPEND IO_BACKEND -D__AIESOCKET__)
 endif (SOCKET_BACKEND)
 if (DEBUG_BACKEND)
-        list(APPEND IO_BACKEND -D__AIEDEBUG__)
+	list(APPEND IO_BACKEND -D__AIEDEBUG__)
 endif (DEBUG_BACKEND)
-if (SIM_BACKEND)
-	list(APPEND IO_BACKEND -D__AIESIM__)
-endif (SIM_BACKEND)
 
 if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE
+   /wd4018 /wd4024 /wd4047 /wd4061 /wd4100 /wd4200 /wd4206 /wd4242 /wd4244 /wd4267 /wd4388 /wd4389 /wd4431 /wd4668 /wd4701 /wd4710 /wd4711 /wd4716
+   /wd4820 /wd4996 /wd5045
+   )
   target_compile_options(${PROJECT_NAME} PRIVATE /Wall -DXAIE_FEATURE_MSVC ${IO_BACKEND})
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra ${IO_BACKEND})
@@ -80,7 +87,7 @@ include(GNUInstallDirs)
 
 install(
   FILES
-  ${HEADERS}
+  ${HDRS}
   DESTINATION
   ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
   )
@@ -102,10 +109,31 @@ install(
   LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 
-install(
-  EXPORT ${PROJECT_NAME}-targets
-  NAMESPACE ${PROJECT_NAME}::
-  COMPONENT runtime
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+if (NOT DEFINED NPU)
+  install(
+    EXPORT ${PROJECT_NAME}-targets
+    NAMESPACE ${PROJECT_NAME}::
+    COMPONENT runtime
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    )
+endif()
+
+# Support Find Package
+include(CMakePackageConfigHelpers)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/config.in
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake @ONLY
   )
-endif ()
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+  VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion
+  )
+
+if (NOT DEFINED NPU)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake
+        COMPONENT runtime DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    )
+endif()

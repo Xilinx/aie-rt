@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -18,6 +19,7 @@
 #include "xaie_helper.h"
 #include "xaie_npi.h"
 #include "xaiegbl.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 
@@ -41,6 +43,8 @@
 #define XAIEML_NPI_PROT_REG_CNTR_FIRSTCOL_LSB		1U
 #define XAIEML_NPI_PROT_REG_CNTR_LASTCOL_MSK		0x00007F00U
 #define XAIEML_NPI_PROT_REG_CNTR_LASTCOL_LSB		8U
+
+#define XAIE_NPI_IRQ_REG				0x00000030U
 
 #define XAIEML_COL_MASK	(0x7FU << 25)
 /****************************** Type Definitions *****************************/
@@ -83,11 +87,17 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 {
 	u32 CFirst, CLast, NumCols;
 
-	if ((Req->StartCol + Req->NumCols) > (DevInst->StartCol + DevInst->NumCols) ||
+	if ((Req->StartCol + Req->NumCols) > DevInst->NumCols ||
 	    (Req->StartCol != 0U  && Req->NumCols == 0U)) {
 		XAIE_ERROR("Invalid columns (%u, %u) for protected regs.\n",
 				Req->StartCol, Req->NumCols);
 		return XAIE_INVALID_ARGS;
+	}
+
+	if (_XAie_CheckPrecisionExceeds(_XAieMlNpiMod.ProtRegEnable.Lsb,
+			_XAie_MaxBitsNeeded(Req->Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
 	}
 
 	*RegVal = XAie_SetField(Req->Enable, _XAieMlNpiMod.ProtRegEnable.Lsb,
@@ -104,8 +114,20 @@ static AieRC _XAieMl_NpiSetProtectedRegField(XAie_DevInst *DevInst,
 
 	CLast = CFirst + NumCols - 1U;
 
+	if (_XAie_CheckPrecisionExceeds(_XAieMlNpiMod.ProtRegFirstCol.Lsb,
+			_XAie_MaxBitsNeeded(CFirst), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
+
 	*RegVal |= XAie_SetField(CFirst, _XAieMlNpiMod.ProtRegFirstCol.Lsb,
 				_XAieMlNpiMod.ProtRegFirstCol.Mask);
+
+	if (_XAie_CheckPrecisionExceeds(_XAieMlNpiMod.ProtRegLastCol.Lsb,
+			_XAie_MaxBitsNeeded(CLast), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	*RegVal |= XAie_SetField(CLast, _XAieMlNpiMod.ProtRegLastCol.Lsb,
 				_XAieMlNpiMod.ProtRegLastCol.Mask);
 

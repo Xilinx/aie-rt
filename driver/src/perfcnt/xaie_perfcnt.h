@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -28,50 +29,33 @@
 #include "xaie_helper.h"
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
+#include "xaiegbl_defs.h"
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, u32 *CounterVal);
-AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, u64 *Offset);
-AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, XAie_Events StartEvent,
 		XAie_Events StopEvent);
-AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, XAie_Events ResetEvent);
-AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, u32 CounterVal);
-AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, u32 EventVal);
-AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter);
-AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter);
-AieRC XAie_PerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter);
-AieRC XAie_PerfCounterEventValueReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterEventValueReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter);
-AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter, XAie_Events *StartEvent,
 		XAie_Events *StopEvent, XAie_Events *ResetEvent);
-AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events *Event);
-AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 *CounterVal);
-AieRC XAie_MdmPerfCounterGetConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *NumEvntCounter, u8 *NumLatCounter, u8 *CounterWidth);
-AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *CounterStatus);
-AieRC XAie_MdmPerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *UcEvents);
-AieRC XAie_MdmPerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_MdmPerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 *CounterVal);
-AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *UcEvents);
-AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 SampleEnable);
-AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc);
 #endif		/* end of protection macro */

@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -47,7 +48,7 @@ AieRC _XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *PendingBd);
 AieRC _XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
-		u32 TimeOutUs);
+		u32 TimeOutUs, u8 BusyPoll);
 AieRC _XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const XAie_DmaMod *DmaMod, u8 ChNum, XAie_DmaDirection Dir,
 		u32 *Status);
@@ -63,6 +64,6 @@ AieRC _XAie_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		u16 BdNum);
 AieRC _XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr);
-AieRC _XAie_AxiBurstLenCheck(u8 BurstLen, u8 *AxiBurstLen);
+AieRC _XAie_AxiBurstLenCheck(u8 BurstLen);
 #endif /* XAIE_DMA_AIE_H */
 /** @} */

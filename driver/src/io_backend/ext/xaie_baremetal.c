@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -26,24 +27,19 @@
 
 #ifdef __AIEBAREMETAL__
 
-#ifdef XAIE_PROD
-#include "pm_init.h"
-#include "xpm_defs.h"
-#endif
 #include "sleep.h"
 #include "xil_cache.h"
 #include "xil_io.h"
 #include "xil_types.h"
 #include "xstatus.h"
+
 #endif
 
 #include "xaie_helper.h"
-#include "xaie_helper_internal.h"
 #include "xaie_io.h"
 #include "xaie_io_common.h"
 #include "xaie_io_privilege.h"
 #include "xaie_npi.h"
-#include "btree4.h"
 
 #ifdef __AIEBAREMETAL__
 
@@ -51,27 +47,10 @@
 typedef struct {
 	u64 BaseAddr;
 	u64 NpiBaseAddr;
-	struct btree4 btree;
 } XAie_BaremetalIO;
 
+/************************** Variable Definitions *****************************/
 /************************** Function Definitions *****************************/
-
-static int XAie_BaremetalIO_MemInst_Compare(void *a, void *b)
-{
-	XAie_MemInst *MemA = (XAie_MemInst *)a;
-	XAie_MemInst *MemB = (XAie_MemInst *)b;
-	uint64_t VAddrA = (uint64_t)MemA->VAddr;
-	uint64_t VAddrB = (uint64_t)MemB->VAddr;
-	uint64_t VAddrBEnd = VAddrB + MemB->Size;
-
-	if (VAddrA < VAddrB) {
-		return -1;
-	} else if (VAddrA >= VAddrBEnd) {
-		return 1;
-	}
-	return 0;
-}
-
 /*****************************************************************************/
 /**
 *
@@ -87,13 +66,10 @@ static int XAie_BaremetalIO_MemInst_Compare(void *a, void *b)
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 {
-	XAie_BaremetalIO *Baremetal_IOInst = (XAie_BaremetalIO *)IOInst;
-
-	if (Baremetal_IOInst->btree.root) {
-		XAIE_ERROR("Trying to free IOInst while Meminsts exists.\n");
-		return XAIE_ERR;
+	if (IOInst != NULL) {
+		free(IOInst);
 	}
-	free(IOInst);
+
 	return XAIE_OK;
 }
 
@@ -111,34 +87,15 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 *******************************************************************************/
 static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
-	XAie_BaremetalIO *IOInst;
-#ifdef XAIE_PROD
-	static XIpiPsu IpiInst;
-	int Ret;
-#endif
-
-	IOInst = (XAie_BaremetalIO *)malloc(sizeof(*IOInst));
-	if(IOInst == NULL) {
-		XAIE_ERROR("Baremetal backend init failed. failed to allocate memory\n");
+	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)malloc(sizeof(XAie_BaremetalIO));
+	if (IOInst == NULL) {
+		XAIE_ERROR("Failed to allocate Baremetal IO instance\n");
 		return XAIE_ERR;
 	}
 
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
-	BTREE4_INIT(&IOInst->btree, XAie_BaremetalIO_MemInst_Compare);
-	DevInst->IOInst = (void *)IOInst;
-
-#if defined(XAIE_PROD)
-	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIEML) {
-		DevInst->IsProd = 1U;
-
-		Ret = XAie_PmInit(&IpiInst);
-		if (Ret != XST_SUCCESS) {
-			XAIE_ERROR("Failed to initialize PM\n");
-			return Ret;
-		}
-	}
-#endif
+	DevInst->IOInst = IOInst;
 
 	return XAIE_OK;
 }
@@ -162,40 +119,6 @@ static AieRC XAie_BaremetalIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 	XAie_BaremetalIO *BaremetalIOInst = (XAie_BaremetalIO *)IOInst;
 
 	Xil_Out32(BaremetalIOInst->BaseAddr + RegOff, Value);
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the memory IO function to write 32bit data to the specified address
-* using PLM.
-*
-* @param	IOInst: IO instance pointer
-* @param	StartCol: Start column of the partition.
-* @param	NumCols: Number of columns in the partition.
-* @param	Ops: Operation ID to pass to PLM.
-*
-* @return	None.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
-						u32 NumCols, u32 Ops)
-{
-#if defined(XAIE_PROD)
-	u32 Response;
-	int Ret;
-
-	Ret = XPm_DevIoctl(PM_DEV_AIE, IOCTL_AIE_OPS, (NumCols << 16)
-			      | StartCol, Ops, &Response);
-	if (Ret != XST_SUCCESS) {
-		XAIE_ERROR("Failed to write to privileged register.\n");
-		return XAIE_ERR;
-	}
-#endif
 
 	return XAIE_OK;
 }
@@ -373,8 +296,6 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		XAie_MemCacheProp Cache)
 {
 	XAie_MemInst *MemInst;
-	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)DevInst->IOInst;
-	int Ret;
 
 	(void)Cache;
 	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
@@ -383,29 +304,21 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 		return NULL;
 	}
 
-	MemInst->VAddr = (void *)aligned_alloc(16, Size);
+	MemInst->VAddr = (void *)malloc(Size);
 	if(MemInst->VAddr == NULL) {
 		XAIE_ERROR("malloc failed\n");
 		free(MemInst);
 		return NULL;
 	}
-	MemInst->DevAddr = (u64)(uintptr_t)MemInst->VAddr;
+	MemInst->DevAddr = (u64)MemInst->VAddr;
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
-	Ret = btree4_insert(&IOInst->btree, MemInst);
-	if (Ret)
-		goto free_meminst;
 	/*
 	 * TODO: Cache is not handled at the moment for baremetal. The allocated
 	 * memory is always cached.
 	 */
 
 	return MemInst;
-
-free_meminst:
-	free(MemInst->VAddr);
-	free(MemInst);
-	return NULL;
 }
 
 /*****************************************************************************/
@@ -422,25 +335,10 @@ free_meminst:
 *******************************************************************************/
 static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 {
-	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)MemInst->DevInst->IOInst;
-	btree4_delete(&IOInst->btree, MemInst);
 	free(MemInst->VAddr);
 	free(MemInst);
 
 	return XAIE_OK;
-}
-
-static AieRC XAie_BaremetalMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
-{
-	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)DevInst->IOInst;
-	XAie_MemInst MemInst;
-	XAie_MemInst *Node;
-
-	MemInst.VAddr = VAddr;
-	MemInst.Size = 0;
-
-	Node = btree4_search(&IOInst->btree, &MemInst);
-	return XAie_MemFree(Node);
 }
 
 /*****************************************************************************/
@@ -459,15 +357,6 @@ static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	Xil_DCacheInvalidateRange((intptr_t)MemInst->VAddr,
 			(intptr_t)MemInst->Size);
-
-	return XAIE_OK;
-}
-
-static AieRC XAie_BaremetalMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
-					      uint64_t Size)
-{
-	(void)DevInst;
-	Xil_DCacheInvalidateRange((intptr_t)VAddr, (intptr_t)Size);
 
 	return XAIE_OK;
 }
@@ -492,15 +381,6 @@ static AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
-static AieRC XAie_BaremetalMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
-					 uint64_t Size)
-{
-	(void)DevInst;
-	Xil_DCacheFlushRange((intptr_t)VAddr, (intptr_t)Size);
-
-	return XAIE_OK;
-}
-
 static AieRC XAie_BaremetalMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
 	(void)MemInst;
@@ -511,15 +391,6 @@ static AieRC XAie_BaremetalMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static AieRC XAie_BaremetalMemDetach(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
-	return XAIE_OK;
-}
-
-static AieRC XAie_BaremetalMemGetDevAddrFromVAddr(XAie_DevInst *DevInst,
-						  void *VAddr,
-						  uint64_t *DevAddr)
-{
-	(void)DevInst;
-	*DevAddr = (uint64_t)VAddr;
 	return XAIE_OK;
 }
 
@@ -617,315 +488,6 @@ static AieRC _XAie_BaremetalIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 
 /*****************************************************************************/
 /**
-* This API initializes the AI engine partition via PLM
-*
-* @param	DevInst: AI engine partition device instance pointer
-* @param	Opts: Initialization options
-*
-* @return       XAIE_OK on success, error code on failure
-*
-* @note		This operation does the following steps to initialize an AI
-*		engine partition:
-*		- Clock gate all columns
-*		- Reset Columns
-*		- Ungate all Columns
-*		- Remove columns reset
-*		- Reset shims
-*		- Setup AXI MM not to return errors for AXI decode or slave
-*		  errors, raise events instead.
-*		- ungate all columns
-*		- Setup partition isolation.
-*		- zeroize memory if it is requested
-*
-*******************************************************************************/
-static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
-						 XAie_PartInitOpts *Opts)
-{
-	AieRC RC = XAIE_OK;
-#ifdef XAIE_PROD
-	u32 OptFlags;
-
-	if(Opts != NULL) {
-		OptFlags = Opts->InitOpts;
-	} else {
-		OptFlags = XAIE_PART_INIT_OPT_DEFAULT;
-	}
-
-	if((OptFlags & XAIE_PART_INIT_OPT_COLUMN_RST) != 0U) {
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols, AIE_OPS_COL_RST);
-	}
-
-	if((OptFlags & XAIE_PART_INIT_OPT_SHIM_RST) != 0U) {
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-					    DevInst->NumCols, AIE_OPS_SHIM_RST);
-	}
-
-	if((OptFlags & XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR) != 0U) {
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-					    DevInst->NumCols,
-					    AIE_OPS_ENB_AXI_MM_ERR_EVENT);
-	}
-
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols,
-				    AIE_OPS_ENB_COL_CLK_BUFF);
-
-	if ((OptFlags & XAIE_PART_INIT_OPT_ISOLATE) != 0U) {
-		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-	}
-	else {
-		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_CLEAR_ISOLATION);
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-	}
-
-	if ((OptFlags & XAIE_PART_INIT_OPT_ZEROIZEMEM) != 0U) {
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-					    DevInst->NumCols,
-					    AIE_OPS_ALL_MEM_ZEROIZATION);
-	}
-
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
-				    AIE_OPS_SET_L2_CTRL_NPI_INTR);
-
-	/* Enable only the tiles requested in Opts parameter */
-	if(Opts != NULL) {
-		XAie_BackendTilesArray TilesArray;
-
-		TilesArray.NumTiles = Opts->NumUseTiles;
-		TilesArray.Locs = Opts->Locs;
-
-		RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_REQUEST_TILES,
-		(void *)&TilesArray);
-
-		if(RC != XAIE_OK) {
-			return RC;
-		}
-	}
-
-	/*
-	 * This is a temporary workaround to unblock rel-v2023.1 and make
-	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
-	 */
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
-		if (RC != XAIE_OK) {
-			return RC;
-		}
-
-		for(u32 C = 0; C < DevInst->NumCols; C++) {
-			XAie_LocType Loc;
-			u32 ColClockStatus;
-
-			Loc = XAie_TileLoc(C, 1);
-			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				       ColClockStatus, DevInst->NumRows - 1);
-		}
-	}
-
-#endif
-	return RC;
-}
-
-/*****************************************************************************/
-/**
-* This API tears down the AI engine partition
-*
-* @param	DevInst: AI engine partition device instance pointer
-* @param	Opts: Initialization options
-*
-* @return       XAIE_OK on success, error code on failure
-*
-* @note		This operation does the following steps to initialize an AI
-*		engine partition:
-*		- Clock gate all columns
-*		- Reset Columns
-*		- Ungate all columns
-*		- Reset shims
-*		- Remove columns reset
-*		- Ungate all columns
-*		- Zeroize memories
-*		- Clock gate all columns
-*
-*******************************************************************************/
-static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
-{
-	AieRC RC = XAIE_OK;
-
-#if defined(XAIE_PROD)
-
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols, AIE_OPS_COL_RST);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Column reset failed!\n");
-		return RC;
-	}
-
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols, AIE_OPS_SHIM_RST);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Shim reset failed!\n");
-		return RC;
-	}
-
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols,
-				    AIE_OPS_ENB_COL_CLK_BUFF);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Column Ungating failed!\n");
-		return RC;
-	}
-
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-				    DevInst->NumCols,
-				    AIE_OPS_ALL_MEM_ZEROIZATION);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Memory Zeroization failed!\n");
-		return RC;
-	}
-
-
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-		RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
-		if (RC != XAIE_OK) {
-			return RC;
-		}
-	} else {
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
-					    DevInst->NumCols,
-					    AIE_OPS_DIS_COL_CLK_BUFF);
-		if (RC != XAIE_OK) {
-			XAIE_ERROR("Column Gating failed!\n");
-		}
-	}
-#endif
-
-	return RC;
-}
-
-AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
-					      XAie_BackendColumnReq *Args)
-{
-#if defined(XAIE_PROD)
-	AieRC RC;
-
-	u32 TileStatus, NumTiles, Ops;
-	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
-
-	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
-			((Args->StartCol + Args->NumCols - 1U) > PartEndCol) ) {
-		XAIE_ERROR("Invalid Start Column/Numcols \n");
-		return XAIE_ERR;
-	}
-
-	Ops = Args->Enable ? AIE_OPS_ENB_COL_CLK_BUFF: AIE_OPS_DIS_COL_CLK_BUFF;
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->StartCol, Args->NumCols,Ops);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable clock for column\n");
-		return RC;
-	}
-
-	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
-			XAie_TileLoc((u8)Args->StartCol, 1));
-	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
-
-	if(Args->Enable) {
-		/*
-		 * Set bitmap from start column to Start+Number of columns
-		 */
-		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				TileStatus, NumTiles);
-	} else {
-		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				TileStatus, NumTiles);
-	}
-#endif
-	return XAIE_OK;
-}
-
-AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
-					      XAie_BackendTilesArray *Args)
-{
-#if defined(XAIE_PROD)
-	AieRC RC;
-	u32 SetTileStatus;
-
-	if(Args->Locs == NULL) {
-		u32 NumTiles;
-		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
-		NumTiles = (u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
-
-		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
-		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
-				     NumTiles);
-
-		return _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
-							AIE_OPS_ENB_COL_CLK_BUFF);
-	}
-
-	/* Disbale all the column clock and enable only the requested column clock */
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
-						AIE_OPS_DIS_COL_CLK_BUFF);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to enable clock for column\n");
-		return RC;
-	}
-
-	/* Clear the TilesInuse bitmap to reflect the current status */
-	for(u32 C = 0; C < DevInst->NumCols; C++) {
-		XAie_LocType Loc;
-		u32 ColClockStatus;
-
-		Loc = XAie_TileLoc((u8)C, 1U);
-		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, (u32)(DevInst->NumRows - 1U));
-	}
-
-	for(u32 i = 0; i < Args->NumTiles; i++) {
-		u32 ColClockStatus;
-		/*
-	         * Shim rows are enabled by default, skip shim row
-		 */
-		if (Args->Locs[i].Row == 0U) {
-			continue;
-		}
-		/*
-		 * Check if column clock buffer is already enabled and continue
-		 * Get bitmap position from first row after shim
-		 */
-		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
-				XAie_TileLoc(Args->Locs[i].Col, 1));
-		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
-			continue;
-		}
-
-		RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->Locs[i].Col, 1U,
-							AIE_OPS_ENB_COL_CLK_BUFF);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to enable clock for column\n");
-			return RC;
-		}
-
-		/*
-		 * Set bitmap for entire column, row 1 to last row.
-		 * Shim row is already set, so use NumRows-1
-		 */
-		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-			ColClockStatus, (u32)(DevInst->NumRows - 1U));
-	}
-#endif
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
 *
 * This is the function to run backend operations
 *
@@ -970,29 +532,13 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			break;
 		}
 		case XAIE_BACKEND_OP_REQUEST_TILES:
-			if (DevInst->IsProd == 1U &&
-					DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
-				return _XAie_BaremetalIO_PrivilegeRequestTiles(DevInst,
-						(XAie_BackendTilesArray *)Arg);
-
-			} else {
-				return _XAie_PrivilegeRequestTiles(DevInst,
-						(XAie_BackendTilesArray *)Arg);
-			}
+			return _XAie_PrivilegeRequestTiles(DevInst,
+					(XAie_BackendTilesArray *)Arg);
 		case XAIE_BACKEND_OP_PARTITION_INITIALIZE:
-			if (DevInst->IsProd == 1U) {
-				return _XAie_BaremetalIO_PrivilegeInitPart(DevInst,
-						(XAie_PartInitOpts *)Arg);
-			} else {
-				return _XAie_PrivilegeInitPart(DevInst,
+			return _XAie_PrivilegeInitPart(DevInst,
 					(XAie_PartInitOpts *)Arg);
-			}
 		case XAIE_BACKEND_OP_PARTITION_TEARDOWN:
-			if (DevInst->IsProd == 1U) {
-				return _XAie_BaremetalIO_PrivilegeTeardownPart(DevInst);
-			} else {
-				return _XAie_PrivilegeTeardownPart(DevInst);
-			}
+			return _XAie_PrivilegeTeardownPart(DevInst);
 		case XAIE_BACKEND_OP_UPDATE_NPI_ADDR:
 		{
 			XAie_BaremetalIO *BaremetalIOInst =
@@ -1001,15 +547,11 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 			break;
 		}
 		case XAIE_BACKEND_OP_SET_COLUMN_CLOCK:
-		{
-			if (DevInst->IsProd == 1U && DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE) {
-				return _XAie_BaremetalIO_PrivilegeSetColumnClk(DevInst,
-						(XAie_BackendColumnReq *)Arg);
-			} else {
-				return _XAie_PrivilegeSetColumnClk(DevInst,
-						(XAie_BackendColumnReq *)Arg);
-			}
-		}
+			return _XAie_PrivilegeSetColumnClk(DevInst,
+					(XAie_BackendColumnReq *)Arg);
+		case XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG:
+			return _XAie_PrivilegeConfigMemInterleavingLoc(DevInst,
+					(XAie_BackendTilesEnableArray *)Arg);
 		default:
 			XAIE_ERROR("Baremetal backend doesn't support operation"
 					" %d\n", Op);
@@ -1023,8 +565,10 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 
 static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 {
-	/* no-op */
-	(void)IOInst;
+	if (IOInst != NULL) {
+		free(IOInst);
+	}
+
 	return XAIE_OK;
 }
 
@@ -1119,40 +663,15 @@ static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
-static AieRC XAie_BaremetalMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
-{
-	(void)DevInst;
-	(void)VAddr;
-	return XAIE_ERR;
-}
-
 static AieRC XAie_BaremetalMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
 	return XAIE_ERR;
 }
 
-static AieRC XAie_BaremetalMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
-					      uint64_t Size)
-{
-	(void)DevInst;
-	(void)VAddr;
-	(void)Size;
-	return XAIE_ERR;
-}
-
 static AieRC XAie_BaremetalMemSyncForDev(XAie_MemInst *MemInst)
 {
 	(void)MemInst;
-	return XAIE_ERR;
-}
-
-static AieRC XAie_BaremetalMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
-					      uint64_t Size)
-{
-	(void)DevInst;
-	(void)VAddr;
-	(void)Size;
 	return XAIE_ERR;
 }
 
@@ -1169,16 +688,6 @@ static AieRC XAie_BaremetalMemDetach(XAie_MemInst *MemInst)
 	return XAIE_ERR;
 }
 
-static AieRC XAie_BaremetalMemGetDevAddrFromVAddr(XAie_DevInst *DevInst,
-						  void *VAddr,
-						  uint64_t *DevAddr)
-{
-	(void)DevInst;
-	(void)VAddr;
-	(void)DevAddr;
-	return XAIE_ERR;
-}
-
 static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		XAie_BackendOpCode Op, void *Arg)
 {
@@ -1186,15 +695,6 @@ static AieRC XAie_BaremetalIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	(void)DevInst;
 	(void)Op;
 	(void)Arg;
-	return XAIE_FEATURE_NOT_SUPPORTED;
-}
-
-static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
-						u32 NumCols, u32 Ops)
-{
-	(void) StartCol;
-	(void) NumCols;
-	(void) Ops;
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
 
@@ -1225,26 +725,18 @@ const XAie_Backend BaremetalBackend =
 	.Ops.MaskWrite32 = XAie_BaremetalIO_MaskWrite32,
 	.Ops.MaskPoll = XAie_BaremetalIO_MaskPoll,
 	.Ops.BlockWrite32 = XAie_BaremetalIO_BlockWrite32,
-	.Ops.PrivilegeWrite32 = _XAie_BaremetalIO_PrivilegeWrite32,
 	.Ops.BlockSet32 = XAie_BaremetalIO_BlockSet32,
 	.Ops.CmdWrite = XAie_BaremetalIO_CmdWrite,
 	.Ops.RunOp = XAie_BaremetalIO_RunOp,
 	.Ops.MemAllocate = XAie_BaremetalMemAllocate,
 	.Ops.MemFree = XAie_BaremetalMemFree,
-	.Ops.MemFreeVAddr = XAie_BaremetalMemFreeVAddr,
 	.Ops.MemSyncForCPU = XAie_BaremetalMemSyncForCPU,
-	.Ops.MemSyncForCPUVAddr = XAie_BaremetalMemSyncForCPUVAddr,
 	.Ops.MemSyncForDev = XAie_BaremetalMemSyncForDev,
-	.Ops.MemSyncForDevVAddr = XAie_BaremetalMemSyncForDevVAddr,
-	.Ops.MemGetDevAddrFromVAddr = XAie_BaremetalMemGetDevAddrFromVAddr,
 	.Ops.MemAttach = XAie_BaremetalMemAttach,
 	.Ops.MemDetach = XAie_BaremetalMemDetach,
 	.Ops.GetTid = XAie_IODummyGetTid,
-	.Ops.GetPartFd = XAie_IODummyGetPartFd,
 	.Ops.SubmitTxn = NULL,
 	.Ops.AddressPatching = NULL,
-	.Ops.SetPadInteger = NULL,
-	.Ops.SetPadString = NULL,
 };
 
 /** @} */

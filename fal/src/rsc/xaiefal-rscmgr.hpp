@@ -1,3 +1,8 @@
+/******************************************************************************
+* Copyright (C) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
+* SPDX-License-Identifier: MIT
+******************************************************************************/
+
 #pragma once
 
 #include <fstream>
@@ -5,15 +10,10 @@
 #include <vector>
 #include <xaiengine.h>
 
-#ifdef FAL_LINUX
-#define BACKEND	XAieRscMgrLinux
-#include <xaiefal/rsc/xaiefal-rscmgr-linux.hpp>
-#else
 #define BACKEND	XAieRscMgrGeneric
 #include <xaiefal/rsc/xaiefal-rscmgr-generic.hpp>
-#endif /* FAL_LINUX */
 
-#define XAIE_ERROR_BCAST_ID	0U
+#define XAIE_FAL_ERROR_BCAST_ID	0U
 #define XAIE_ECC_BCAST_ID	6U
 #define XAIE_ECC_PERFCNT_ID 	0U
 
@@ -52,7 +52,6 @@ namespace xaiefal {
 			case XAIE_TRACECTRL:
 			case XAIE_PCEVENT:
 			case XAIE_SSEVENT:
-			case XAIE_MDMPERFCNT:
 			{
 				RC = Rsc.getRscs(vRequests);
 				if (RC != XAIE_OK) {
@@ -376,7 +375,7 @@ namespace xaiefal {
 				* dev()->NumCols;
 			vRscs.resize(NumRscs);
 
-			vRscs[0].RscId = XAIE_ERROR_BCAST_ID;
+			vRscs[0].RscId = XAIE_FAL_ERROR_BCAST_ID;
 			RC = Backend->requestBc(vRscs, true);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::FAL_WARN) << "Unable to reserve " <<

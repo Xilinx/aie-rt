@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -29,8 +30,8 @@
 /************************** Enum *********************************************/
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
+XAIE_AIG_EXPORT AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		u32 NumTiles);
-AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol,
+XAIE_AIG_EXPORT AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol,
 		u32 NumCols, u8 Enable);
 #endif		/* end of protection macro */

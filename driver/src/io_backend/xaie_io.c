@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -26,16 +27,12 @@
 ******************************************************************************/
 /***************************** Include Files *********************************/
 #include "xaie_feature_config.h"
-#include "xaie_io_internal.h"
 #include "xaie_helper.h"
 #include "xaie_io.h"
+#include "xaie_io_internal.h"
 
 /************************** Constant Definitions *****************************/
-#if defined (__AIELINUX__)
-	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_LINUX
-#elif defined (__AIEMETAL__)
-	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_METAL
-#elif defined (__AIESIM__)
+#if defined (__AIESIM__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SIM
 #elif defined (__AIECDO__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CDO
@@ -43,23 +40,17 @@
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_CONTROLCODE
 #elif defined (__AIEBAREMETAL__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_BAREMETAL
+#elif defined (__AIEIPU__)
+	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_IPU
 #elif defined (__AIESOCKET__)
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_SOCKET
 #else
-	#define __AIEDEBUG__
+	#ifndef __AIEDEBUG__
+		#define __AIEDEBUG__
+	#endif
 	#define XAIE_DEFAULT_BACKEND XAIE_IO_BACKEND_DEBUG
 #endif
 
-#if defined (__AIELINUX__)
-	#define LINUXBACKEND &LinuxBackend
-#else
-	#define LINUXBACKEND NULL
-#endif
-#if defined (__AIEMETAL__)
-	#define METALBACKEND &MetalBackend
-#else
-	#define METALBACKEND NULL
-#endif
 #if defined (__AIESIM__) || defined (__AIEDEBUG__)
 	#define SIMBACKEND &SimBackend
 #else
@@ -80,6 +71,11 @@
 #else
 	#define BAREMETALBACKEND NULL
 #endif
+#if defined (__AIEIPU__)
+	#define IPUBACKEND &IpuBackend
+#else
+	#define IPUBACKEND NULL
+#endif
 #if defined (__AIESOCKET__)
 	#define SOCKETBACKEND &SocketBackend
 #else
@@ -92,23 +88,21 @@
 #endif
 
 /************************** Variable Definitions *****************************/
-extern const XAie_Backend MetalBackend;
 extern const XAie_Backend SimBackend;
 extern const XAie_Backend CdoBackend;
 extern const XAie_Backend BaremetalBackend;
 extern const XAie_Backend DebugBackend;
-extern const XAie_Backend LinuxBackend;
+extern const XAie_Backend IpuBackend;
 extern const XAie_Backend SocketBackend;
 extern const XAie_Backend ControlCodeBackend;
 
 static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
-	METALBACKEND,
 	SIMBACKEND,
 	CDOBACKEND,
 	BAREMETALBACKEND,
 	DEBUGBACKEND,
-	LINUXBACKEND,
+	IPUBACKEND,
 	SOCKETBACKEND,
 	CONTROLCODEBACKEND,
 };
@@ -117,37 +111,8 @@ static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 /*****************************************************************************/
 /**
 *
-* This is the api used to get the partition list from the kernel.
-*
-* @param        DevInst - Device instance pointer.
-*
-* @return       XAIE_OK on success and error code on failure.
-*
-* @note         Internal Only.
-*
-******************************************************************************/
-AieRC XAie_GetPartitionList(XAie_DevInst *DevInst)
-{
-        AieRC RC;
-        const XAie_Backend *Backend = IOBackend[XAIE_DEFAULT_BACKEND];
-
-        RC = Backend->Ops.GetPartitionList(DevInst);
-        if(RC != XAIE_OK) {
-                return RC;
-        }
-
-        DevInst->Backend = Backend;
-
-        XAIE_DBG("Initialized with backend %d\n", Backend->Type);
-
-        return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
 * This is the api initialize global IO instance. The default IO backend is
-* libmetal.
+* debug backend.
 *
 * @param	DevInst - Device instance pointer.
 *

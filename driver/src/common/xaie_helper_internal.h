@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2024 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -15,7 +15,6 @@
 #define XAIE_HELPER_INTERNAL_H
 
 /***************************** Include Files *********************************/
-#include "xaiegbl_regdef.h"
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
 AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
@@ -32,14 +31,16 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst);
 XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst);
 u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		u32 Flags);
+u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
+		u32 Flags);
 AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst);
 AieRC _XAie_TxnFree(XAie_TxnInst *Inst);
 void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst);
 void _XAie_FreeTxnPtr(void *Ptr);
-void _XAie_AppendPartitionToList(XAie_DevInst *DevInst, XAie_PartitionList *PartInst);
-AieRC _XAie_DestroyPartitionFdList(XAie_DevInst *DevInst);
-AieRC _XAie_PrintPartitionList(XAie_DevInst *DevInst);
-int _XAie_MatchPartitionList(XAie_DevInst *DevInst, u32 PartitionId);
-AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv);
-AieRC _XAie_PmSetPartitionClock(XAie_DevInst *DevInst, u8 Enable);
+u8 _XAie_CheckPrecisionExceeds(u32 Lsb, u8 ValueBitCount, u8 MaxValidBitPos);
+u8 _XAie_CheckPrecisionExceedsForRightShift(u32 Lsb, u32 Mask);
+u8 _XAie_MaxBitsNeeded(u32 value);
+u8 _XAie_CountTrailingZeros(u32 value);
+u32 _XAie_Txn_GetDefTxnInitialCmdArraySize(void);
+AieRC _XAie_Txn_CfgInitialCmdArraySize(XAie_DevInst *DevInst, u32 CmdCount);
 #endif

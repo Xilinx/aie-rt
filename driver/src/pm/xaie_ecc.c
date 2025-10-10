@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -148,7 +149,8 @@ AieRC _XAie_EccOnDM(XAie_DevInst *DevInst, XAie_LocType Loc)
 	 * memory. Configure ECC scrubbing event register for mem module
 	 * with broadcast 6 event.
 	 */
-	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_BROADCAST_6_MEM];
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_BROADCAST_6_MEM -
+			EvntMod->EventMin];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -249,7 +251,8 @@ AieRC _XAie_EccOnPM(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			CoreMod->EccEvntRegOff;
-	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT_0_CORE];
+	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT_0_CORE -
+			EvntMod->EventMin];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -398,7 +401,7 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 			MemMod->EccEvntRegOff;
 	RegVal = EvntMod->XAie_EventNumber[(u32)XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
-			XAIE_ECC_PERFCOUNTER_ID];
+			XAIE_ECC_PERFCOUNTER_ID - EvntMod->EventMin];
 	RC = XAie_Write32(DevInst, RegAddr, RegVal);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -415,4 +418,4 @@ AieRC _XAie_EccOnMemTile(XAie_DevInst *DevInst, XAie_LocType Loc)
 }
 
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && XAIE_FEATURE_PERFCOUNT_ENABLE &&
-	* XAIE_FEATURE_EVENTS_ENABLE */
+	* XAIE_FEATURE_EVENTS_ENABLE && XAIE_FEATURE_RSC_ENABLE */

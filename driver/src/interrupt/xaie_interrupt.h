@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -34,49 +35,32 @@
 /**************************** Type Definitions *******************************/
 #define XAIE_ERROR_BROADCAST_ID			0x0U
 #define XAIE_ERROR_BROADCAST_MASK		0x1U
-
-#define XAIE_ERROR_BROADCAST_ID_UC_EVENT	0x1U
-#define XAIE_ERROR_BROADCAST_ID_USER_EVENT1	0x2U
-
 #define XAIE_ERROR_SHIM_INTR_ID			0x10U
 #define XAIE_ERROR_SHIM_INTR_MASK		0x10000U
 #define XAIE_ERROR_NPI_INTR_ID			0x1U
 #define XAIE_ERROR_L2_ENABLE			0x3FU
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_IntrCtrlL1Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IntrId);
-AieRC XAie_IntrCtrlL1Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IntrId);
-AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1IrqSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 BroadcastId);
-AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1Event(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u8 IrqEventId, XAie_Events Event);
-AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1BroadcastBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u32 ChannelBitMap);
-AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL1BroadcastUnblock(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_BroadcastSw Switch, u32 ChannelBitMap);
-u32 XAie_IntrCtrlL1Status(XAie_DevInst *DevInst,
-			XAie_LocType Loc, XAie_BroadcastSw Switch);
-u32 XAie_IntrCtrlL2Mask(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL2Enable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
-u32 XAie_IntrCtrlL2Status(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap);
-AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
-void XAie_DisableErrorInterrupts(u8 IrqId);
-AieRC XAie_IntrCtrlL2Ack(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Status);
-
-AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT void XAie_DisableErrorInterrupts(u8 IrqId);
+XAIE_AIG_EXPORT void XAie_ClearErrorInterrupts(u8 IrqId);
+XAIE_AIG_EXPORT u32 XAie_LIntrCtrlL2Status(XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData);
-void XAie_IntrCtrlL1Ack(XAie_DevInst *DevInst,
-			XAie_LocType Loc, XAie_BroadcastSw Switch,
-			u32 ChannelBitMap);
-u8 XAie_EventReadStatusHw(XAie_DevInst *DevInst,
-		XAie_LocType Loc, XAie_ModuleType Module, u8 Event);
-void XAie_EventClearStatus(XAie_DevInst *DevInst,
-		XAie_LocType Loc, XAie_ModuleType Module, u8 Event);
-
 #endif		/* end of protection macro */
-/** @} */

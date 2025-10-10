@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -28,13 +29,6 @@ static inline u64 XAie_IODummyGetTid(void)
 {
 	return 0;
 }
-
-static inline int XAie_IODummyGetPartFd(void *IOInst)
-{
-	(void)IOInst;
-	return -1;
-}
-
 
 void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args);

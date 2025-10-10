@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -34,14 +35,15 @@
 #include <string.h>
 
 #include "xaie_elfloader.h"
+#include "xaie_core_aie.h"
 #include "xaie_feature_config.h"
 #include "xaie_ecc.h"
 #include "xaie_mem.h"
 
 #ifdef XAIE_FEATURE_ELF_ENABLE
 /************************** Constant Definitions *****************************/
-#define XAIESIM_CMDIO_CMD_SETSTACK	0U
-#define XAIESIM_CMDIO_CMD_LOADSYM	1U
+#define XAIESIM_CMDIO_CMD_SETSTACK       0U
+#define XAIESIM_CMDIO_CMD_LOADSYM        1U
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -136,7 +138,7 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * CardDir can have values of 4, 5, 6 or 7 for valid data memory
 	 * addresses..
 	 */
-	CardDir = (u8)(Addr / CoreMod->DataMemSize);
+	CardDir = (u8)((Addr / CoreMod->DataMemSize) & 0xFFU);
 
 	RowParity = Loc.Row % 2U;
 	/*
@@ -242,7 +244,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * memory out of Progsec will not result in a segmentation
 	 * fault.
 	 */
-	return XAie_BlockWrite32(DevInst, Addr, (u32 *)SectionPtr,
+	return XAie_BlockWrite32(DevInst, Addr, (u32 *)(uintptr_t)SectionPtr,
 			(Phdr->p_memsz + 4U - 1U) / 4U);
 }
 
@@ -416,7 +418,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 	const Elf32_Phdr *Phdr;
 	const unsigned char *SectionPtr;
 
-	Ehdr = (const Elf32_Ehdr *) ElfMem;
+	Ehdr = (const Elf32_Ehdr *) (uintptr_t)ElfMem;
 	_XAie_PrintElfHdr(Ehdr);
 
 	/* For AIE, turn ECC Off before program memory load */
@@ -426,7 +428,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	for(u32 phnum = 0U; phnum < Ehdr->e_phnum; phnum++) {
-		Phdr = (Elf32_Phdr*) (ElfMem + sizeof(*Ehdr) +
+		Phdr = (Elf32_Phdr*)(uintptr_t) (ElfMem + sizeof(*Ehdr) +
 				phnum * sizeof(*Phdr));
 		_XAie_PrintProgSectHdr(Phdr);
 		if(Phdr->p_type == (u32)PT_LOAD) {
@@ -518,13 +520,14 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 
 	Fd = fopen(MapPtr, "r");
 	if(Fd == NULL) {
-		XAIE_WARN("Invalid Map file\n");
-		return XAIE_OK;
+		XAIE_ERROR("Invalid Map file, %d: %s\n",
+			errno, strerror(errno));
+		return XAIE_ERR;
 	}
 
-	while(fgets(buffer, 200U, Fd) != NULL) {
-		if(strstr(buffer, "items) : Stack") != NULL) {
-			sscanf(buffer, "    0x%8x..0x%8x (%*s",
+	while(fgets((char *)buffer, 200U, Fd) != NULL) {
+		if(strstr((char *)buffer, "items) : Stack") != NULL) {
+			sscanf((char *)buffer, "    0x%8x..0x%8x (%*s",
 					&StackSzPtr->start, &StackSzPtr->end);
 			break;
 		}
@@ -561,7 +564,6 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 *		Above flags can be passed individually or ORed together.
 * @param	LoadSym: Load symbols from .map file. This argument is valid
 * 		when __AIESIM__ is defined.
-*
 * @return	XAIE_OK on success and error code for failure.
 *
 * @note		The user is responsible to pass valid section pointers and
@@ -580,7 +582,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 
 	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid device instance\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -595,7 +597,6 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAIE_ERROR("Invalid ElfPtr\n");
 		return XAIE_INVALID_ARGS;
 	}
-
 #ifdef __AIESIM__
 	/*
 	 * The code under this macro guard is used in simulation mode only.
@@ -642,10 +643,11 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 			return RC;
 		}
 	}
-#endif
+#else
 	(void)LoadSym;
+#endif
 
-	Fd = fopen(ElfPtr, "r");
+	Fd = fopen(ElfPtr, "rb");
 	if(Fd == XAIE_NULL) {
 		XAIE_ERROR("Unable to open elf file, %d: %s\n",
 				errno, strerror(errno));
@@ -812,7 +814,7 @@ AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Addr = CoreMod->ProgMemHostOffset + TgtAddr +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	return XAie_BlockWrite32(DevInst, Addr, (const u32 *)SectionPtr,
+	return XAie_BlockWrite32(DevInst, Addr, (const u32 *)(uintptr_t)SectionPtr,
 			(Size + 4U - 1U) / 4U);
 }
 

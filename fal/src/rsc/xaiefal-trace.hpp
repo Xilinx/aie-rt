@@ -79,7 +79,7 @@ namespace xaiefal {
 				for (uint32_t i = 0; i < TraceSlotBits.size(); i++) {
 					if (TraceSlotBits.test(i) == 0) {
 						TraceSlotBits.set(i);
-						Slot = i;
+						Slot = static_cast<uint8_t>(i);
 						RC = XAIE_OK;
 						break;
 					}
@@ -165,7 +165,9 @@ namespace xaiefal {
 		 * @return XAIE_OK for success, error code for failure
 		 */
 		AieRC setCntrEvent(XAie_Events StartE, XAie_Events StopE) {
-			XAie_ModuleType StartM, StopM;
+			XAie_ModuleType StartM = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
+			XAie_ModuleType StopM = static_cast<XAie_ModuleType>(XAIE_MOD_ANY);
+
 			AieRC RC;
 
 			Logger::log(LogLevel::FAL_DEBUG) << __func__ << " " <<
@@ -258,6 +260,7 @@ namespace xaiefal {
 		 * @return supported max trace events
 		 */
 		uint32_t getMaxTraceEvents() const {
+			// TODO: It is better to get from C driver.
 			return 8;
 		}
 		/**
@@ -267,7 +270,7 @@ namespace xaiefal {
 		 * @return number of reserved events.
 		 */
 		uint32_t getReservedTraceEvents() const {
-			return TraceSlotBits.count();
+			return static_cast<uint32_t>(TraceSlotBits.count());
 		}
 		/**
 		 * This function returns the trace control start event broadcast
@@ -323,7 +326,7 @@ namespace xaiefal {
 		}
 
 		uint32_t getAvailManagedRscs() {
-			return TraceSlotBits.size() - TraceSlotBits.count();
+			return static_cast<uint32_t>(TraceSlotBits.size() - TraceSlotBits.count());
 		}
 		XAieRscType getManagedRscsType() {
 			return XAIE_TRACEEVENT;
@@ -342,8 +345,8 @@ namespace xaiefal {
 			RC = AieHd->rscMgr()->request(*this);
 			if (RC != XAIE_OK) {
 				Logger::log(LogLevel::FAL_ERROR) << "trace control " << __func__ << " (" <<
-						static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
-						") Mod=" << Mod <<" failed to reserve." << std::endl;
+							static_cast<uint32_t>(Loc.Col) << "," << static_cast<uint32_t>(Loc.Row) <<
+							") Mod=" << Mod <<" failed to reserve." << std::endl;
 			}
 			if (RC == XAIE_OK && StartMod != Mod) {
 				std::vector<XAie_LocType> vL;
@@ -436,7 +439,7 @@ namespace xaiefal {
 			if (RC == XAIE_OK) {
 				RC = XAie_TraceEventList(dev(), Loc, Mod,
 						vE.data(), vSlot.data(),
-						vE.size());
+						static_cast<uint32_t>(vE.size()));
 			}
 			if (RC == XAIE_OK) {
 				RC = XAie_TracePktConfig(dev(), Loc, Mod, Pkt);

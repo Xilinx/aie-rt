@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2020 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -23,6 +24,8 @@
 #ifndef XAIECORE_AIE_H
 #define XAIECORE_AIE_H
 /***************************** Include Files *********************************/
+#include <stdlib.h>
+#include <string.h>
 #include "xaie_helper.h"
 /************************** Function Prototypes  *****************************/
 AieRC _XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc,
@@ -30,7 +33,7 @@ AieRC _XAie_CoreConfigureDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC _XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const struct XAie_CoreMod *CoreMod);
 AieRC _XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 TimeOut, const struct XAie_CoreMod *CoreMod);
+		u32 TimeOut, const struct XAie_CoreMod *CoreMod, u8 BusyPoll);
 AieRC _XAie_CoreReadDoneBit(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *DoneBit, const struct XAie_CoreMod *CoreMod);
 AieRC _XAie_CoreGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,

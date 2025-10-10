@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -50,25 +51,30 @@
 #define XAIE_ECC_BROADCAST_ID		6U
 
 /************************** Variable Definitions *****************************/
-extern XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
-extern XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
-extern XAie_TileMod Aie2PSMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod Aie2IpuMod[XAIEGBL_TILE_TYPE_MAX];
+extern const XAie_TileMod Aie2PMod[XAIEGBL_TILE_TYPE_MAX];
 
-extern XAie_DeviceOps AieDevOps;
-extern XAie_DeviceOps AieMlDevOps;
-extern XAie_DeviceOps Aie2PSDevOps;
+extern const XAie_DeviceOps AieDevOps;
+extern const XAie_DeviceOps AieMlDevOps;
+extern const XAie_DeviceOps Aie2IpuDevOps;
+extern const XAie_DeviceOps Aie2PDevOps;
 
-extern u8 XAieDevType;
-
-#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
+#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU
+#define XAIE_DEV_SINGLE_MOD Aie2IpuMod
+#define XAIE_DEV_SINGLE_DEVOPS Aie2IpuDevOps
+#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML
 #define XAIE_DEV_SINGLE_MOD AieMlMod
 #define XAIE_DEV_SINGLE_DEVOPS AieMlDevOps
+#elif ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) ||       \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0) || \
+		(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0))
+#define XAIE_DEV_SINGLE_MOD Aie2PMod
+#define XAIE_DEV_SINGLE_DEVOPS Aie2PDevOps
 #elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
 #define XAIE_DEV_SINGLE_MOD AieMod
 #define XAIE_DEV_SINGLE_DEVOPS AieDevOps
-#elif XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2PS
-#define XAIE_DEV_SINGLE_MOD Aie2PSMod
-#define XAIE_DEV_SINGLE_DEVOPS Aie2PSDevOps
 #else
 #ifdef XAIE_DEV_SINGLE_GEN
 #error "Unsupported device defined."
@@ -109,6 +115,7 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 	DevInst->BaseAddr = PartBaseAddr;
 	DevInst->StartCol = PartStartCol;
 	DevInst->NumCols = PartNumCols;
+	DevInst->InitialTxnCmdArraySize = _XAie_Txn_GetDefTxnInitialCmdArraySize();
 
 	return XAIE_OK;
 }
@@ -152,27 +159,50 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->DevProp.DevMod = XAIE_DEV_SINGLE_MOD;
 		InstPtr->DevProp.DevGen = XAIE_DEV_SINGLE_GEN;
 		InstPtr->DevOps = &XAIE_DEV_SINGLE_DEVOPS;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 #else
 	if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIEML) {
 		InstPtr->DevProp.DevMod = AieMlMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIEML;
 		InstPtr->DevOps = &AieMlDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 	} else if((ConfigPtr->AieGen == XAIE_DEV_GEN_AIE) ||
 			(ConfigPtr->AieGen == XAIE_DEV_GEN_S100) ||
 			(ConfigPtr->AieGen == XAIE_DEV_GEN_S200)) {
 		InstPtr->DevProp.DevMod = AieMod;
 		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE;
 		InstPtr->DevOps = &AieDevOps;
-		XAieDevType = (u8)ConfigPtr->AieGen;
-	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2PS) {
-		InstPtr->DevProp.DevMod = Aie2PSMod;
-		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2PS;
-		InstPtr->DevOps = &Aie2PSDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2IPU) {
+		InstPtr->DevProp.DevMod = Aie2IpuMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2IPU;
+		InstPtr->DevOps = &Aie2IpuDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P) {
+		InstPtr->DevProp.DevMod = Aie2PMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P;
+		InstPtr->DevOps = &Aie2PDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P_STRIX_A0){
+		InstPtr->DevProp.DevMod = Aie2PMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P_STRIX_A0;
+		InstPtr->DevOps = &Aie2PDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
+	} else if(ConfigPtr->AieGen == XAIE_DEV_GEN_AIE2P_STRIX_B0){
+		InstPtr->DevProp.DevMod = Aie2PMod;
+		InstPtr->DevProp.DevGen = XAIE_DEV_GEN_AIE2P_STRIX_B0;
+		InstPtr->DevOps = &Aie2PDevOps;
+		InstPtr->DevType = (u8)ConfigPtr->AieGen;
 #endif
 	} else {
 		XAIE_ERROR("Invalid device\n",
 				XAIE_INVALID_DEVICE);
 		return XAIE_INVALID_DEVICE;
+	}
+
+	/* Initialize DevType to default value for all device generations */
+	if (InstPtr->DevType == 0U) {
+		InstPtr->DevType = XAIE_DEV_GENERIC_DEVICE;
 	}
 
 	if(InstPtr->NumCols == 0U) {
@@ -194,9 +224,20 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->MemTileNumRows = ConfigPtr->MemTileNumRows;
 	InstPtr->AieTileRowStart = ConfigPtr->AieTileRowStart;
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
-	InstPtr->EccStatus = XAIE_ENABLE;
 	InstPtr->TxnList.Next = NULL;
-	InstPtr->IsProd = 0U;
+
+	if ((InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P) ||
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
+		(InstPtr->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0)) {
+		InstPtr->EccStatus = XAIE_DISABLE;
+
+	} else {
+		InstPtr->EccStatus = XAIE_ENABLE;
+	}
+
+	// Set default initial TXN command array size
+	InstPtr->InitialTxnCmdArraySize = _XAie_Txn_GetDefTxnInitialCmdArraySize();
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
@@ -210,107 +251,6 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 }
 
 #if !defined(XAIE_FEATURE_LITE) && defined(XAIE_FEATURE_PRIVILEGED_ENABLE)
-/*****************************************************************************/
-/**
-*
-* This is the API to initialize the AI engine soft partition. It will initialize the
-* AI engine partition hardware.
-*	   Soft parition is like a subset of a partition. It is same as the partition
-		but isolation will not be there in the boundary. Isolation will be there only
-			on device parititon.
-
-* @param	DevInst: Global AIE device instance pointer.
-* @param	Opts: AI engine partition initialization options.
-* @param    DevPartInfo: Device Partition Info.
-*			If @Opts is NULL, it will do the default options without
-*			clock gating. The default options will:
-*			* reset columns,
-*			* reset shims,
-*			* set to block NOC AXI MM decode and slave errors
-*			* setup isolation
-*			If @Opts is not NULL, it will follow the set bits of the
-*			InitOpts field, the available options are as follows:
-*			* XAIE_PART_INIT_OPT_DEFAULT
-*			* XAIE_PART_INIT_OPT_COLUMN_RST
-*			* XAIE_PART_INIT_OPT_SHIM_RST
-*			* XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR
-*			* XAIE_PART_INIT_OPT_ISOLATE
-*			* XAIE_PART_INIT_OPT_ZEROIZEMEM (not on by default)
-*
-* @return	XAIE_OK on success and error code on failure.
-*
-******************************************************************************/
-AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo)
-{
-	XAie_PartInitOpts SoftPartOpts;
-	AieRC RC;
-	u32 OptFlags;
-	u8 IsolationFlags = XAIE_CLEAR_ISOLATION;
-	memset(&SoftPartOpts, 0, sizeof(SoftPartOpts));
-
-	if(Opts != NULL) {
-		OptFlags = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));
-	} else {
-		OptFlags = (XAIE_PART_INIT_OPT_DEFAULT & (~XAIE_PART_INIT_OPT_ISOLATE));
-	}
-
-	if (DevPartInfo->StartCol <= DevInst->StartCol &&
-		DevPartInfo->NumCols >= DevInst->NumCols) {
-		/*Isolation for soft Partition is cleared*/
-		SoftPartOpts.InitOpts = OptFlags;
-		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Partition Initialization Failed \n");
-			return RC;
-		}
-		/*
-		 * Enable the col clock to set partition isolation. Col clock
-		 * has been disabled in XAie_PartitionInitialize() which causes
-		 * board reboot if we set partition isolation. This is work
-		 * around to un-block 2025.1 release.
-		 */
-		if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-			RC = _XAie_PmSetPartitionClock(DevInst, XAIE_ENABLE);
-
-			for(u32 C = 0; C < DevInst->NumCols; C++) {
-				XAie_LocType Loc;
-				u32 ColClockStatus;
-
-				Loc = XAie_TileLoc(C, 1);
-				ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-				_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-					       ColClockStatus, DevInst->NumRows - 1);
-			}
-		}
-		if(DevPartInfo->BaseAddr == DevInst->BaseAddr) {
-			IsolationFlags |= XAIE_INIT_WEST_ISOLATION;
-		}
-		if((DevInst->BaseAddr + XAie_GetTileAddr(DevInst, 0u, (DevInst->NumCols - 1))) ==
-			(DevPartInfo->BaseAddr + XAie_GetTileAddr(DevInst, 0u, (DevPartInfo->NumCols - 1)))) {
-			IsolationFlags |= XAIE_INIT_EAST_ISOLATION;
-		}
-		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, IsolationFlags);
-
-		if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
-			RC = _XAie_PmSetPartitionClock(DevInst, XAIE_DISABLE);
-
-			for(u32 C = 0; C < DevInst->NumCols; C++) {
-				XAie_LocType Loc;
-				u32 ColClockStatus;
-
-				Loc = XAie_TileLoc(C, 1);
-				ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
-				_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-					       ColClockStatus, DevInst->NumRows - 1);
-			}
-		}
-	}
-	else {
-		return XAIE_INVALID_ARGS;
-	}
-
-	return RC;
-}
 /*****************************************************************************/
 /**
 *
@@ -393,7 +333,7 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 *
 * The API clears partition context
 *
-* @param	DevInst: Global AIE device instance pointer.
+* @param        DevInst: Global AIE device instance pointer.
 *
 * @return       XAIE_OK on success and error code on failure.
 *
@@ -442,79 +382,8 @@ AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
-	return DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
+	return DevInst->DevOps->SetPartIsolationAfterRst(DevInst);
 
-}
-
-/*****************************************************************************/
-/**
- *
- * This is the API to setup the Partition List, the Partition information of
-* all partitions and will append to a list.
-*
-* @param	DevInst: Global AIE device instance pointer.
-*
-* @return	XAIE_OK on success and error code on failure.
-*
-******************************************************************************/
-AieRC XAie_GetPartitionFdList(XAie_DevInst *DevInst)
-{
-	AieRC RC;
-
-	RC = XAie_GetPartitionList(DevInst);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to get partition List\n");
-		return XAIE_ERR;
-	}
-
-	RC = _XAie_PrintPartitionList(DevInst);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to print partition list\n");
-		return XAIE_ERR;
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-* This is the API to destroy the partition list, it is going to destroy all the
-* partitions information which are present in the list.
-*
-* @param	DevInst: Global AIE device instance pointer.
-*
-* @return	XAIE_OK on success and error code on failure.
-*
-******************************************************************************/
-AieRC XAie_DestroyPartitionList(XAie_DevInst *DevInst)
-{
-	AieRC RC;
-
-	RC = _XAie_DestroyPartitionFdList(DevInst);
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to destroy the partition List\n");
-		return XAIE_ERR;
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-** This is the API to get a particular partition from the partition list based
-* on the partition id given by the user, it is going to return the partition
-* fd
-
-**
-* @param	DevInst: Global AIE device instance pointer.
-*
-* @return	Partition Fd on  success and negetive values on failure.
-*
-******************************************************************************/
-int XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId)
-{
-	return  _XAie_MatchPartitionList(DevInst, PartitionId);
 }
 
 /*****************************************************************************/
@@ -543,7 +412,6 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 	_XAie_TxnResourceCleanup(DevInst);
 
 	CurrBackend = DevInst->Backend;
-	DevInst->IsProd = 0U;
 	RC = CurrBackend->Ops.Finish(DevInst->IOInst);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to close backend instance.\n");
@@ -585,7 +453,6 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 
 	/* Release resources for current backend */
 	CurrBackend = DevInst->Backend;
-	DevInst->IsProd = 0U;
 	RC = CurrBackend->Ops.Finish((void *)(DevInst->IOInst));
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to close backend instance."
@@ -669,35 +536,6 @@ AieRC XAie_MemFree(XAie_MemInst *MemInst)
 /*****************************************************************************/
 /**
 *
-* This is the memory function to free the memory
-*
-* @param	DevInst: Device instance pointer.
-* @param	VAddr: Virtual address to free.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-*******************************************************************************/
-AieRC XAie_MemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
-{
-	const XAie_Backend *Backend;
-	AieRC RC;
-
-	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
-		return XAIE_ERR;
-	}
-
-	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemFreeVAddr ?
-		Backend->Ops.MemFreeVAddr(DevInst, VAddr) :
-		XAIE_FEATURE_NOT_SUPPORTED;
-
-	return RC;
-}
-
-/*****************************************************************************/
-/**
-*
 * This is the memory function to sync the memory for CPU
 *
 * @param	MemInst: Memory instance pointer.
@@ -722,36 +560,6 @@ AieRC XAie_MemSyncForCPU(XAie_MemInst *MemInst)
 /*****************************************************************************/
 /**
 *
-* This is the memory function to sync the memory for CPU
-*
-* @param	DevInst: Device instance pointer.
-* @param	VAddr: Virtual address to sync.
-* @param	size: size in bytes to sync.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-*******************************************************************************/
-AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
-{
-	const XAie_Backend *Backend;
-	AieRC RC;
-
-	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
-		return XAIE_ERR;
-	}
-
-	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemSyncForCPUVAddr ?
-		Backend->Ops.MemSyncForCPUVAddr(DevInst, VAddr, size) :
-		XAIE_FEATURE_NOT_SUPPORTED;
-
-	return RC;
-}
-
-/*****************************************************************************/
-/**
-*
 * This is the memory function to sync the memory for device
 *
 * @param	MemInst: Memory instance pointer.
@@ -771,66 +579,6 @@ AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst)
 	Backend = MemInst->DevInst->Backend;
 
 	return Backend->Ops.MemSyncForDev(MemInst);
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the memory function to sync the memory for device
-*
-* @param	DevInst: Device instance pointer.
-* @param	VAddr: Virtual address to sync.
-* @param	size: size in bytes to sync.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-*******************************************************************************/
-AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
-{
-	const XAie_Backend *Backend;
-	AieRC RC;
-
-	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
-		return XAIE_ERR;
-	}
-
-	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemSyncForDevVAddr ?
-		Backend->Ops.MemSyncForDevVAddr(DevInst, VAddr, size) :
-		XAIE_FEATURE_NOT_SUPPORTED;
-
-	return RC;
-}
-
-/*****************************************************************************/
-/**
-*
-* This is the memory function to get DevAddr from VAddr
-*
-* @param	DevInst: Device instance pointer.
-* @param	VAddr: Virtual address.
-* @param	DevAddr: DevAddr pointer where the result is writen to.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-*******************************************************************************/
-AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr)
-{
-	const XAie_Backend *Backend;
-	AieRC RC;
-
-	if(DevInst == XAIE_NULL) {
-		XAIE_ERROR("Invalid device instance\n");
-		return XAIE_ERR;
-	}
-
-	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemGetDevAddrFromVAddr ?
-		Backend->Ops.MemGetDevAddrFromVAddr(DevInst, VAddr, DevAddr) :
-		XAIE_FEATURE_NOT_SUPPORTED;
-
-	return RC;
 }
 
 /*****************************************************************************/
@@ -964,7 +712,7 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 * should be called before calling elf loader to disable ECC. ECC configuration
 * is done from elf loader.
 *
-* @param	DevInst: Device Instance
+* @param        DevInst: Device Instance
 *
 * @return       XAIE_OK on success
 *
@@ -987,7 +735,7 @@ AieRC XAie_TurnEccOff(XAie_DevInst *DevInst)
 * This API enables the ECC flag in the Device Instance of the partition. ECC
 * configuration is done from elf loader.
 *
-* @param	DevInst: Device Instance
+* @param        DevInst: Device Instance
 *
 * @return       XAIE_OK on success
 *
@@ -1000,125 +748,17 @@ AieRC XAie_TurnEccOn(XAie_DevInst *DevInst)
 		return XAIE_INVALID_ARGS;
 	}
 
+	if ((DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2IPU) ||
+		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P) ||
+		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_A0) ||
+		(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2P_STRIX_B0)) {
+		XAIE_ERROR("ECC feature not supported\n");
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
 	DevInst->EccStatus = XAIE_ENABLE;
 
 	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API starts the execution of the driver in transaction mode. All the
-* resulting I/O operations are stored in an internally managed buffer. The user
-* has to explicitly submit the transaction for the driver to execute the I/O
-* operations to configure the device. The transaction instance allocated by this
-* API is tied to the thread ID of the executing context. SubmitTransaction API
-* must be called from the same context with NULL for the TxnInst parameter.
-*
-* @param	DevInst: Device instance pointer.
-* @param	Flags: Flags passed by the user.
-*			XAIE_TRANSACTION_ENABLE/DISBALE_AUTO_FLUSH
-*
-* @return	XAIE_OK on success and error code on failure.
-*
-* @note		If the ENABLE_AUTO_FLUSH flag is set, the driver will
-*		automatically flush the transaction buffer when an API results
-*		in Read/MaskPoll/BlockWrite/BlockSet/CmdWrite/RunOp operation.
-*		If the DISABLE_AUTO_FLUSH flag is set, the driver will return an
-*		error when an API results in Read/MaskPoll/CmdWrite/RunOp
-*		operation. In both cases, the user has to call
-*		XAie_SubmitTransaction API to flush all the pending I/O
-*		operations stored in the command buffer.
-*
-******************************************************************************/
-AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags)
-{
-	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	return _XAie_Txn_Start(DevInst, Flags);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API executes all the pending I/O operations stored in the command buffer.
-* The transaction instance returned by the StartTransaction API is tied to the
-* thread ID of the executing context. If TxnInst is NULL, the transaction
-* instance is automatically fetched using the thread ID of the current context.
-* If the TxnInst is not NULL, the transaction instance passed by the user is
-* executed.
-*
-* @param	DevInst: Device instance pointer.
-* @param	TxnInst: Transaction instance pointer.
-*
-* @return	XAIE_OK on success and Error code or failure.
-*
-******************************************************************************/
-AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
-{
-	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	return _XAie_Txn_Submit(DevInst, TxnInst);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API copies an existing transaction instance and returns a copy of the
-* instance with all the commands for users to save the commands and use them
-* at a later point.
-*
-* @param	DevInst: Device instance pointer.
-*
-* @return	Pointer to copy of transaction instance on success and NULL
-*		on error.
-*
-* @note		The copy of the transaction instance must be explicitly freed
-*		using the XAie_FreeTransactionInstance API. If Auto flush was
-*		enabled during the creating of the initial transaction, the
-*		instance returned by this API will not have the commands that
-*		are already flushed. The transaction instance must be exported
-*		before it is submitted as the XAie_SubmitTransaction API will
-*		free all the resources associated with it.
-*
-******************************************************************************/
-XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst)
-{
-	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return NULL;
-	}
-
-	return _XAie_TxnExport(DevInst);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API releases the memory resources used by exported transaction instance.
-*
-* @param	TxnInst: Existing Transaction instance
-*
-* @return	XAIE_OK on success or error code on failure.
-*
-******************************************************************************/
-AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst)
-{
-	if(TxnInst == NULL) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	return _XAie_TxnFree(TxnInst);
 }
 
 /*****************************************************************************/
@@ -1169,63 +809,6 @@ AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr)
 
 /*****************************************************************************/
 /**
-*
-* This API copies an existing transaction instance and returns a copy of the
-* instance with all the commands for users to save the commands and use them
-* at a later point.
-*
-* @param	DevInst: Device instance pointer.
-* @param	NumConsumers: Number of consumers for the generated
-*		transactions (Unused for now)
-* @param	Flags: Flags (Unused for now)
-*
-* @return	Pointer to copy of transaction instance on success and NULL
-*		on error.
-*
-******************************************************************************/
-u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
-		u8 NumConsumers, u32 Flags)
-{
-	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return NULL;
-	}
-
-	return _XAie_TxnExportSerialized(DevInst, NumConsumers, Flags);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API deallocates the memory allocated for the serialized transaction
-* buffer.
-*
-* @param	Ptr: Pointer to the transaction buffer.
-*
-******************************************************************************/
-void XAie_FreeSerializedTransaction(void *Ptr)
-{
-	if (Ptr == NULL) {
-		XAIE_ERROR("Invalid argument\n");
-		return;
-	}
-	_XAie_FreeTxnPtr(Ptr);
-}
-
-AieRC XAie_ClearTransaction(XAie_DevInst* DevInst)
-{
-	if((DevInst == XAIE_NULL) ||
-		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	return _XAie_ClearTransaction(DevInst);
-}
-
-/*****************************************************************************/
-/**
 * This function configures the attribute for the backend.
 *
 * @param	DevInst: Device instance pointer.
@@ -1251,7 +834,6 @@ AieRC XAie_ConfigBackendAttr(XAie_DevInst *DevInst,
 *
 * @param	DevInst: Device instance pointer.
 * @param	PerfInst: Performance instance pointer.
-*
 * @return	XAIE_OK on success and error code on failure.
 *
 * @note		If Range in PerfInst is NULL, all the columns in the partition
@@ -1279,7 +861,8 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	if(PerfInst->Range == XAIE_NULL) {
 		PartRange.Start = DevInst->StartCol;
 		PartRange.Num = DevInst->NumCols;
-		XAIE_DBG("Start Col: %d\tnum: %d\n", PartRange.Start, PartRange.Num);
+		XAIE_DBG("Start Col: %d\tnum: %d\n",
+				PartRange.Start, PartRange.Num);
 		PerfInst->Range = &PartRange;
 	} else if (PerfInst->Range->Num <= 0U ||
 			PerfInst->Range->Num > DevInst->NumCols) {
@@ -1300,7 +883,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	/*
 	 * PerfInst->UtilSize will contain the number of elements hereforth.
 	 */
-	PerfInst->UtilSize = (u32)(PerfInst->UtilSize / sizeof(XAie_Occupancy));
+	PerfInst->UtilSize =(u32)(PerfInst->UtilSize/sizeof(XAie_Occupancy));
 
 	/*
 	 * By default kernel utilization is captured over a time interval of
@@ -1308,10 +891,10 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	 */
 	if(PerfInst->TimeInterval_ms == 0U) {
 		XAIE_WARN("Capturing for 1ms as minimum time interval is 1ms!\n");
-		PerfInst->TimeInterval_ms = 1U;
+		PerfInst->TimeInterval_ms = 1;
 	} else if(PerfInst->TimeInterval_ms > 3000U) {
 		XAIE_WARN("Capturing for 3000ms as maximum time interval is 3000ms!\n");
-		PerfInst->TimeInterval_ms = 3000U;
+		PerfInst->TimeInterval_ms = 3000;
 	}
 
 	RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_PERFORMANCE_UTILIZATION,
@@ -1323,4 +906,75 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 
 	return XAIE_OK;
 }
-/** @} */
+
+/*****************************************************************************/
+/**
+ *
+ * This API is to enable/disable memory interleaving mode in all MemTiles of AI
+ * engine partition.
+ *
+ * @param	DevInst - Global AIE device instance pointer.
+ * @param	Locs - Pointer to tiles locatations
+ * @param	NumTiles - Number of tiles
+ * @param	Enable - 0/1 to Disable/Enable memory interleaving.
+ *
+ * @return	XAIE_OK on success and error code on failure.
+ *
+ * @note		None.
+ *
+ ******************************************************************************/
+AieRC XAie_ConfigMemInterleaving(XAie_DevInst *DevInst,
+		XAie_LocType *Locs, u32 NumTiles, u8 Enable)
+{
+	AieRC RC;
+	XAie_BackendTilesEnableArray Tiles;
+	u32 i;
+
+	if((DevInst == XAIE_NULL) ||
+	   (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Verify Locations */
+	for (i = 0; i < NumTiles; i++) {
+		if ((Locs[i].Row < DevInst->MemTileRowStart) ||
+		    (Locs[i].Row > (DevInst->MemTileRowStart + DevInst->MemTileNumRows)) ||
+		    (Locs[i].Col > DevInst->NumCols)) {
+			XAIE_ERROR("Wrong Location of tile Loc (%d, %d)\n",
+					Locs[i].Row, Locs[i].Col);
+			return XAIE_INVALID_TILE;
+		}
+	}
+
+	Tiles.Locs = Locs;
+	Tiles.NumTiles = NumTiles;
+	Tiles.Enable = Enable;
+
+	RC = XAie_RunOp(DevInst, XAIE_BACKEND_OP_CONFIG_MEM_INTRLVNG,
+			(void *)&Tiles);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Failed to configure memory interleaving.\n");
+		return RC;
+	}
+
+	return XAIE_OK;
+}
+
+/* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 
+ * TODO: Need to revert these changes later*/
+AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad) 
+{
+	(void) DevInst;
+	(void) Scrachpad;
+
+	return XAIE_OK;
+}
+AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp)
+{
+	(void) DevInst;
+	(void) Timestamp;
+	return XAIE_OK;
+}
+
+/** @}@} */

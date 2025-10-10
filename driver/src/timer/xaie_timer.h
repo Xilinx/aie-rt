@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -30,19 +31,19 @@
 /************************** Enum *********************************************/
 
 /************************** Function Prototypes  *****************************/
-AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u32 LowEventValue, u32 HighEventValue);
-AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module);
-AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event,
 		XAie_Reset Reset);
-AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 *TimerVal);
-AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 CycleCnt);
-AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1,
+XAIE_AIG_EXPORT AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId);
+XAIE_AIG_EXPORT AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1,
 		u8 BcastChannelId2);
-AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId);
 
 #endif		/* end of protection macro */

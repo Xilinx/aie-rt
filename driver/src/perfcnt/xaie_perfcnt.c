@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -27,15 +28,16 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
-#include "xaie_events.h"
 #include "xaie_feature_config.h"
-#include "xaie_helper_internal.h"
 #include "xaie_perfcnt.h"
+#include "xaie_events.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PERFCOUNT_ENABLE
 
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /* This API reads the given performance counter for the given tile.
@@ -111,7 +113,7 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
         for (u8 C = 0; C < NumCounter; C++) {
                 /* Add offset address based on Counter and read */
                 RC |= XAie_Read32(DevInst,
-                        CounterRegAddr + ((Counter)*PerfMod->PerfCounterOffsetAdd),
+                        CounterRegAddr + ((Counter)*(u32)PerfMod->PerfCounterOffsetAdd),
                         CounterVal + C);
         }
         return RC;
@@ -178,7 +180,7 @@ AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Compute perf counter offest address */
 	CounterBaseAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 						PerfMod->PerfCounterBaseAddr;
-	*Offset = CounterBaseAddr + (Counter * PerfMod->PerfCounterOffsetAdd);
+	*Offset = CounterBaseAddr + (Counter * (u32)PerfMod->PerfCounterOffsetAdd);
 
 	return RC;
 }
@@ -241,9 +243,20 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
+	/* check if the event passed as input is corresponding to the module */
+	if(StartEvent < EvntMod->EventMin || StartEvent > EvntMod->EventMax ||
+		StopEvent < EvntMod->EventMin || StopEvent > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid Event id\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Subtract the module offset from event number */
+	StartEvent -= EvntMod->EventMin;
+	StopEvent -= EvntMod->EventMin;
+
 	/* Getting the true event number from the enum to array mapping */
-	IntStartEvent = XAie_GetEventNumber(EvntMod, StartEvent);
-	IntStopEvent = XAie_GetEventNumber(EvntMod, StopEvent);
+	IntStartEvent = EvntMod->XAie_EventNumber[StartEvent];
+	IntStopEvent = EvntMod->XAie_EventNumber[StopEvent];
 
 	/*checking for valid true event number */
 	if(IntStartEvent == XAIE_EVENT_INVALID ||
@@ -262,9 +275,28 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegOffset = PerfMod->PerfCtrlBaseAddr +
 				(Counter / 2U * PerfMod->PerfCtrlOffsetAdd);
 	/* Compute mask for performance control register */
+	if (_XAie_CheckPrecisionExceeds((PerfMod->StartStopShift * (Counter % 2U)),
+			_XAie_MaxBitsNeeded(PerfMod->Start.Mask | PerfMod->Stop.Mask),
+			MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldMask = (PerfMod->Start.Mask | PerfMod->Stop.Mask) <<
 				(PerfMod->StartStopShift * (Counter % 2U));
 	/* Compute value to be written to the performance control register */
+	if ((_XAie_CheckPrecisionExceeds(
+			PerfMod->Start.Lsb + (PerfMod->StartStopShift * (Counter % 2U)),
+			_XAie_MaxBitsNeeded(IntStartEvent), MAX_VALID_AIE_REG_BIT_INDEX))  ||
+		(_XAie_CheckPrecisionExceeds((PerfMod->StartStopShift * (Counter % 2U)),
+			_XAie_MaxBitsNeeded(PerfMod->Start.Mask), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(
+			PerfMod->Stop.Lsb + (PerfMod->StartStopShift * (Counter % 2U)),
+			_XAie_MaxBitsNeeded(IntStopEvent), MAX_VALID_AIE_REG_BIT_INDEX)) ||
+		(_XAie_CheckPrecisionExceeds(PerfMod->StartStopShift * (Counter % 2U),
+			_XAie_MaxBitsNeeded(PerfMod->Stop.Mask), MAX_VALID_AIE_REG_BIT_INDEX))){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(IntStartEvent,
 		PerfMod->Start.Lsb + (PerfMod->StartStopShift * (Counter % 2U)),
 		PerfMod->Start.Mask << (PerfMod->StartStopShift * (Counter % 2U)))|
@@ -335,8 +367,17 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
+	/* check if the event passed as input is corresponding to the module */
+	if(ResetEvent < EvntMod->EventMin || ResetEvent > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid Event id: %d\n", ResetEvent);
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Subtract the module offset from event number */
+	ResetEvent -= EvntMod->EventMin;
+
 	/* Getting the true event number from the enum to array mapping */
-	IntResetEvent = XAie_GetEventNumber(EvntMod, ResetEvent);
+	IntResetEvent = EvntMod->XAie_EventNumber[ResetEvent];
 
 	/*checking for valid true event number */
 	if(IntResetEvent == XAIE_EVENT_INVALID) {
@@ -354,9 +395,22 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	ResetRegOffset = PerfMod->PerfCtrlResetBaseAddr;
 
 	/* Compute mask for performance control register */
+	if (_XAie_CheckPrecisionExceeds(PerfMod->ResetShift * (u32)(Counter),
+			_XAie_MaxBitsNeeded(PerfMod->Reset.Mask),MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	ResetFldMask = PerfMod->Reset.Mask <<
 					(PerfMod->ResetShift * (Counter));
 	/* Compute value to be written to the performance control register */
+	if ((_XAie_CheckPrecisionExceeds(
+			PerfMod->Reset.Lsb + (PerfMod->ResetShift * (u32)(Counter)),
+			_XAie_MaxBitsNeeded(IntResetEvent), MAX_VALID_AIE_REG_BIT_INDEX))  ||
+		(_XAie_CheckPrecisionExceeds((PerfMod->ResetShift * (Counter)),
+			_XAie_MaxBitsNeeded(PerfMod->Reset.Mask), MAX_VALID_AIE_REG_BIT_INDEX))){
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	ResetFldVal = XAie_SetField(IntResetEvent,
 		PerfMod->Reset.Lsb + (PerfMod->ResetShift * Counter),
 		PerfMod->Reset.Mask << (PerfMod->ResetShift * Counter));
@@ -430,7 +484,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	CounterRegOffset = PerfMod->PerfCounterBaseAddr +
-					((Counter)*PerfMod->PerfCounterOffsetAdd);
+					((u32)(Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
 	CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
@@ -497,7 +551,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	CounterRegOffset = (PerfMod->PerfCounterEvtValBaseAddr) +
-				((Counter)*PerfMod->PerfCounterOffsetAdd);
+				((u32)(Counter)*PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
 	CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -575,6 +629,7 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	AieRC RC;
 	u8 TileType;
+	u32 ResetEvent;
 	const XAie_EvntMod *EvntMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -601,12 +656,15 @@ AieRC XAie_PerfCounterResetControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
+	/* Since first event of all modules is NONE event, using it to reset */
+	ResetEvent = EvntMod->EventMin;
+
 	/*
 	 * Currently calling the external api, later it can be factorized to
 	 * remove redundant checks.
 	 */
 	return XAie_PerfCounterResetControlSet(DevInst, Loc, Module, Counter,
-			(XAie_Events)EvntMod->EventMin);
+			(XAie_Events)ResetEvent);
 }
 
 /*****************************************************************************/
@@ -657,6 +715,12 @@ AieRC XAie_PerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
+	}
+
+
+	if(EvntMod->EventMin > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
 	}
 
 	/* Since first event of all modules is NONE event, using it to reset */
@@ -756,6 +820,11 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return RC;
 	}
 
+	if (_XAie_CheckPrecisionExceeds(PerfMod->StartStopShift / 2U,
+			_XAie_MaxBitsNeeded(StartStopEvent & PerfMod->Stop.Mask), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegEvent = (StartStopEvent & PerfMod->Stop.Mask) >>
 			PerfMod->StartStopShift / 2U;
 	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, (u16)RegEvent,
@@ -831,727 +900,13 @@ AieRC XAie_PerfCounterGetEventBase(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EventMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
 	}
 
+	if(EventMod->PerfCntEventBase > XAIE_EVENT_LAST){
+		XAIE_ERROR("Invalid Event type\n");
+		return XAIE_ERR;
+	}
 	*Event = (XAie_Events)EventMod->PerfCntEventBase;
 
 	return RC;
 }
 
-/*****************************************************************************/
-/**
-*
-* This API returns the whole set of performance counter values in the shim
-* uC MDM module. Counters are read sequentially, first event counters then
-* latency counters which store more than one value.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	CounterVal: Pointer to store counter values, expected to be
-*			    large enough for all counter values.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Counter widths of greater than 32 bits not supported
-******************************************************************************/
-AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 *CounterVal)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, Index, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) || (CounterVal == NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	if(UcMdm->CounterWidth != 32U) {
-		XAIE_ERROR("Only counter widths of 32 bits supported\n");
-		return XAIE_ERR;
-	}
-
-	/* Reset counter access to first counter */
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
-			UcMdm->PerfCtrl->Reset.Mask) ;
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to reset register access\n");
-		return RC;
-	}
-
-	/* Read event counters */
-	Index = 0;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCntReadRegOff;
-	for(u8 i = 0; i < UcMdm->NumEventCounters; i++) {
-		RC = XAie_Read32(DevInst, Offset, CounterVal + Index);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to read event register %d\n", i);
-			return RC;
-		}
-		Index++;
-	}
-
-	/* Read latency counters */
-	for(u8 i = 0; i < UcMdm->NumLatencyCounters; i++) {
-		for (u8 j = 0; j < 4U; j ++) {
-			RC = XAie_Read32(DevInst, Offset, CounterVal + Index);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to read %d register latency counter %d\n",
-						j, i);
-				return RC;
-			}
-			Index++;
-		}
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the configuration of the MDM performance counters including
-* how many latency and event counters and counter width
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	NumEvntCounter: Pointer to store number of event counters
-* @param	NumLatCounter: Pointer to store number of latency counters
-* @param	CounterWidth: Pointer to store counter width
-*
-* @return	XAIE_OK on success, error code on failure.
-******************************************************************************/
-AieRC XAie_MdmPerfCounterGetConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *NumEvntCounter, u8 *NumLatCounter, u8 *CounterWidth)
-{
-	u8 TileType;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) || (NumEvntCounter == NULL) ||
-			(NumLatCounter == NULL) || (CounterWidth == NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	*NumEvntCounter = UcMdm->NumEventCounters;
-	*NumLatCounter = UcMdm->NumLatencyCounters;
-	*CounterWidth = UcMdm->CounterWidth;
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the whole set of performance counter statuses in the shim
-* uC MDM module. Counters are read sequentially, first event counters then
-* latency counters.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	CounterStatus: Pointer to store counter status, expected to be
-*			       large enough for all counter statuses.
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Counter widths of greater than 32 bits not supported
-******************************************************************************/
-AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *CounterStatus)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, TotalCounters, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) || (CounterStatus == NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Reset counter access to first counter */
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
-			UcMdm->PerfCtrl->Reset.Mask) ;
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to reset register access\n");
-		return RC;
-	}
-
-	/* Read counter status */
-	TotalCounters = UcMdm->NumEventCounters + UcMdm->NumLatencyCounters;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfSts->RegOff;
-	for(u8 i = 0; i < TotalCounters; i++) {
-		u32 RegVal;
-
-		RC = XAie_Read32(DevInst, Offset, &RegVal);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to read status of register %d\n", i);
-			return RC;
-		}
-
-		CounterStatus[i] = (u8)RegVal;
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the whole set of performance counter event control registers in
-* uC MDM module. Counters are written to sequentially, first event counters then
-* latency counters.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	UcEvents: Pointer to array of events to program counters
-* @param	Reset: If reset is true, all control registers will be reset
-*		       - XAIE_DISABLE to disable reset
-*		       - XAIE_ENABLE to enable reset
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Internal only
-******************************************************************************/
-AieRC _XAie_MdmPerfCounterControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *UcEvents, u8 Reset)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, TotalCounters, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	/* Expect caller to check valid tiletype */
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Reset counter access to first counter */
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
-			UcMdm->PerfCtrl->Reset.Mask) ;
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to reset register access\n");
-		return RC;
-	}
-
-	/* Write counter event control registers */
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfEvents->RegOff;
-	TotalCounters = UcMdm->NumEventCounters + UcMdm->NumLatencyCounters;
-	for(u8 i = 0; i < TotalCounters; i++) {
-		if (Reset == XAIE_ENABLE) {
-			RC = XAie_Write32(DevInst, Offset, 0U);
-		} else {
-			RC = XAie_Write32(DevInst, Offset, UcEvents[i]);
-		}
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to write event control for register %d\n",
-					i);
-			return RC;
-		}
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the whole set of performance counter event control registers in
-* uC MDM module. Counters are written to sequentially, first event counters then
-* latency counters.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	UcEvents: Pointer to array of events to program counters
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Counter widths of greater than 32 bits not supported
-******************************************************************************/
-AieRC XAie_MdmPerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *UcEvents)
-{
-	u8 TileType, TotalCounters;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) || (UcEvents == NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	TotalCounters = UcMdm->NumEventCounters + UcMdm->NumLatencyCounters;
-	for(u8 i = 0; i < TotalCounters; i++) {
-		if (UcEvents[i] > UcMdm->PerfEvents->MaxEventId) {
-			XAIE_ERROR("Invalid uC Event ID for counter %d\n", i);
-			return XAIE_INVALID_ARGS;
-		}
-	}
-
-	return _XAie_MdmPerfCounterControlConfig(DevInst, Loc, UcEvents,
-			XAIE_DISABLE);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API resets the whole set of performance counter event control registers in
-* uC MDM module. Counters are written to sequentially, first event counters then
-* latency counters.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Counter widths of greater than 32 bits not supported
-******************************************************************************/
-AieRC XAie_MdmPerfCounterControlReset(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	u8 TileType;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	return _XAie_MdmPerfCounterControlConfig(DevInst, Loc, NULL,
-			XAIE_ENABLE);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the whole set of performance counter registers in uC MDM module.
-* Counters are written to sequentially, first event counters then latency
-* counters.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	CounterVal: Pointer to array of counter valuues
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Counter widths of greater than 32 bits not supported
-******************************************************************************/
-AieRC XAie_MdmPerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 *CounterVal)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, Index, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	if(UcMdm->CounterWidth != 32U) {
-		XAIE_ERROR("Only counter widths of 32 bits supported\n");
-		return XAIE_ERR;
-	}
-
-	/* Reset counter access to first counter */
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
-			UcMdm->PerfCtrl->Reset.Mask) ;
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to reset register access\n");
-		return RC;
-	}
-
-	/* Write event counter registers */
-	Index = 0;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfEvents->RegOff;
-	for(u8 i = 0; i < UcMdm->NumEventCounters; i++) {
-		RC = XAie_Write32(DevInst, Offset, CounterVal[Index]);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to write to event counter register %d\n",
-					i);
-			return RC;
-		}
-		Index++;
-	}
-
-	/* Write latency counter registers */
-	for(u8 i = 0U; i < UcMdm->NumLatencyCounters; i++) {
-		for(u8 j = 0U; j < 4U; j++) {
-			RC = XAie_Write32(DevInst, Offset, CounterVal[Index]);
-			if(RC != XAIE_OK) {
-				XAIE_ERROR("Failed to write to latency counter register %d\n",
-						i);
-				return RC;
-			}
-			Index++;
-		}
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API resets the whole set of performance counter registers in uC MDM module.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-*
-* @return	XAIE_OK on success, error code on failure.
-*
-* @note		Counter widths of greater than 32 bits not supported
-******************************************************************************/
-AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Reset counters through control register */
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	return XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Clear.Lsb) &
-			UcMdm->PerfCtrl->Clear.Mask);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API returns the values of the event control registers.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	UcEvents: Pointer to store configuration of event control registers.
-*			  Expected to be large enough to store for all counters.
-*
-* @return	XAIE_OK on success, error code on failure.
-******************************************************************************/
-AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 *UcEvents)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, TotalCounters, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) || (UcEvents == NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Reset counter access to first counter */
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
-			UcMdm->PerfCtrl->Reset.Mask) ;
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to reset register access\n");
-		return RC;
-	}
-
-	/* Read counter event control registers */
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfEvents->RegOff;
-	TotalCounters = UcMdm->NumEventCounters + UcMdm->NumLatencyCounters;
-	for(u8 i = 0; i < TotalCounters; i++) {
-		u32 RegVal;
-
-		RC = XAie_Read32(DevInst, Offset, &RegVal);
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Failed to read event control for register %d\n",
-					i);
-			return RC;
-		}
-		UcEvents[i] = (u8)(RegVal & 0xFFU);
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the start bit in the uC MDM performance command register.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-*
-* @return	XAIE_OK on success, error code on failure.
-******************************************************************************/
-AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Start counters using the control register */
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	return XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Start.Lsb) &
-			UcMdm->PerfCtrl->Start.Mask);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the stop bit in the uC MDM performance command register. If
-* SampleEnable is also set, sample bit will be set.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-* @param	SampleEnable: If XAIE_ENABLE command will also be issued
-*			      to sample counters. XAIE_DISABLE to just stop
-*			      counters.
-*
-* @return	XAIE_OK on success, error code on failure.
-******************************************************************************/
-AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 SampleEnable)
-{
-	AieRC RC;
-	u64 Offset;
-	u32 FldVal, Mask;
-	u8 TileType, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Stop counters using the control register */
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-
-	Mask = UcMdm->PerfCtrl->Stop.Mask;
-	FldVal = 1U << UcMdm->PerfCtrl->Stop.Lsb;
-	/* If sample enabled, also set sample bit */
-	if (SampleEnable) {
-		Mask |= UcMdm->PerfCtrl->Sample.Mask;
-		FldVal |= 1U << UcMdm->PerfCtrl->Sample.Lsb;
-	}
-
-	return XAie_Write32(DevInst, Offset, FldVal & Mask);
-}
-
-/*****************************************************************************/
-/**
-*
-* This API sets the sample bit in the uC MDM performance command register.
-*
-* @param	DevInst: Device Instance
-* @param	Loc: Location of SHIM Tile
-*
-* @return	XAIE_OK on success, error code on failure.
-******************************************************************************/
-AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc)
-{
-	AieRC RC;
-	u64 Offset;
-	u8 TileType, Priv;
-	const XAie_UcMdm *UcMdm;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid arguments\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
-		XAIE_ERROR("Tile does not have uC module\n");
-		return XAIE_INVALID_TILE;
-	}
-
-	/* Check uC memory privileged is not set */
-	RC = _XAie_IsUcPrivilegedSet(DevInst, Loc, &Priv);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-	if (Priv != 0U) {
-		XAIE_ERROR("Memory privilged bit is set, cannot access MDM\n");
-		return XAIE_ERR;
-	}
-
-	/* Stop counters using the control register */
-	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
-	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		UcMdm->PerfCtrl->RegOff;
-	return XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Sample.Lsb) &
-			UcMdm->PerfCtrl->Sample.Mask);
-}
 #endif /* XAIE_FEATURE_PERFCOUNT_ENABLE */

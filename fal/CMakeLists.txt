@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+# Copyright (C) 2021 Xilinx, Inc.  All rights reserved.
 # SPDX-License-Identifier: MIT
 #
 ###############################################################################
@@ -52,10 +52,6 @@ add_subdirectory (src)
 if (WITH_DOC)
   add_subdirectory (doc)
 endif (WITH_DOC)
-
-if (WITH_TESTS)
-  add_subdirectory (tests)
-endif (WITH_TESTS)
 
 if (WITH_EXAMPLES)
   add_subdirectory (examples)

@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -34,85 +35,46 @@
 
 /***************************** Include Files *********************************/
 #include <limits.h>
+#include <stdio.h>
 #include <stddef.h>
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
 #include "xaie_core.h"
 #include "xaie_dma.h"
 #include "xaie_locks.h"
-/************************** Variable Definitions *****************************/
-/**
- * Defines the available log levels.
- * The levels are ordered by severity. A higher value means more verbose logging.
- */
-typedef enum {
-    XAIE_LOG_LEVEL_FATAL = 0,
-    XAIE_LOG_LEVEL_ERROR,
-    XAIE_LOG_LEVEL_WARN,
-    XAIE_LOG_LEVEL_INFO,
-    XAIE_LOG_LEVEL_DEBUG,
-    XAIE_LOG_LEVEL_TRACE
-} XAieLogLevel;
-
-extern XAieLogLevel AieLogLevel;
 
 /***************************** Macro Definitions *****************************/
-#define container_of(ptr, type, member)	({					\
-		void *__ptr = ptr;						\
-		__ptr == NULL ? NULL : (type *)(__ptr - offsetof(type, member));	\
-	})
 #define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
 				(u32)(1U << (u64)(pos) % (sizeof((bitmap)[0]) * 8U)))
 
-#define XAIE_FATAL(...) \
-    do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_FATAL) \
-            XAie_Log(stderr, "[AIE FATAL]", __func__, __LINE__, __VA_ARGS__); \
-    } while(0)
+#define XAIE_ERROR(...)							      \
+	do {								      \
+		XAie_Log((FILE*)(uintptr_t)stderr, "[AIE ERROR]", __func__, __LINE__,	      \
+				__VA_ARGS__);				      \
+	} while(0)
 
-#define XAIE_ERROR(...) \
-    do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_ERROR) \
-            XAie_Log(stderr, "[AIE ERROR]", __func__, __LINE__, __VA_ARGS__); \
-    } while(0)
+#define XAIE_WARN(...)							      \
+	do {								      \
+		XAie_Log((FILE*)(uintptr_t)stderr, "[AIE WARNING]", __func__, __LINE__,	      \
+				__VA_ARGS__);				      \
+	} while(0)
 
-#define XAIE_WARN(...) \
-    do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_WARN) \
-            XAie_Log(stdout, "[AIE WARNING]", __func__, __LINE__, __VA_ARGS__); \
-    } while(0)
+#ifdef XAIE_DEBUG
 
-#define XAIE_INFO(...) \
-    do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_INFO) \
-            XAie_Log(stdout, "[AIE INFO]", __func__, __LINE__, __VA_ARGS__); \
-    } while(0)
+#define XAIE_DBG(...)							      \
+	do {								      \
+		XAie_Log(stdout, "[AIE DEBUG]", __func__, __LINE__,	      \
+				__VA_ARGS__);				      \
+	} while(0)
 
-#define XAIE_DBG(...) \
-    do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_DEBUG) \
-            XAie_Log(stdout, "[AIE DEBUG]", __func__, __LINE__, __VA_ARGS__); \
-    } while(0)
-
-#define XAIE_TRACE(...) \
-    do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_TRACE) \
-            XAie_Log(stdout, "[AIE TRACE]", __func__, __LINE__, __VA_ARGS__); \
-    } while(0)
-
-#if  defined(__microblaze__)
-#define PRINT xil_printf
-#define UINTPTR_T (uintptr_t)
-#define U32_FORMAT "%ld"
 #else
-#define PRINT printf
-#define UINTPTR_T
-#define U32_FORMAT "%d"
-#endif
+
+#define XAIE_DBG(DevInst, ...) {}
+
+#endif /* XAIE_DEBUG */
 
 /* Compute offset of field within a structure */
-#define XAIE_OFFSET_OF(structure, member) \
-	((uintptr_t)&(((structure *)0)->member))
+#define XAIE_OFFSET_OF(structure, member) offsetof(structure, member)
 
 /* Compute a pointer to a structure given a pointer to one of its fields */
 #define XAIE_CONTAINER_OF(ptr, structure, member) \
@@ -126,6 +88,12 @@ extern XAieLogLevel AieLogLevel;
 
 /* Generate value with a set bit at given Index */
 #define BIT(Index)		(1 << (Index))
+
+/*as AIE address space is 32bit , the max valid bit index will be 31*/
+#define MAX_VALID_AIE_REG_BIT_INDEX 32
+#define MAX_VALID_U8_BIT_INDEX 8
+#define MAX_VALID_U16_BIT_INDEX 16
+
 
 /*
  * __attribute is not supported for windows. remove it conditionally.
@@ -185,11 +153,20 @@ typedef struct {
 * @param	C: Column
 * @return	TileAddr
 *
+* @note		Internal API only.
+*
 ******************************************************************************/
 static inline u64 XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
 {
 	return (((u64)R & 0xFFU) << DevInst->DevProp.RowShift) |
 		(((u64)C & 0xFFU) << DevInst->DevProp.ColShift);
+}
+
+
+
+static inline u64 _XAie_GetTileAddr(XAie_DevInst *DevInst, u8 R, u8 C)
+{
+	return XAie_GetTileAddr(DevInst, R, C);
 }
 
 /*****************************************************************************/
@@ -220,38 +197,50 @@ static inline u32 first_set_bit(u64 Value)
 	return Index;
 }
 
-void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
-		const char *Format, ...);
-u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
-AieRC XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
-                XAie_ModuleType Module);
-AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
-                XAie_LocType *Locs);
-AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
+/* Private Functions (can be called by AIE Internal Driver Only */
+void BuffHexDump(char* buff,u32 size);
+
+/* Private Functions used by Public Headers. Need to be discussed as not to export Private API's  */
+XAIE_AIG_EXPORT u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
+XAIE_AIG_EXPORT AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+		XAie_LocType *Locs);
+XAIE_AIG_EXPORT u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
+XAIE_AIG_EXPORT u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
+
+/* this below  Functions will be removed , once other teams migrate to above listed functions  */
+XAIE_AIG_EXPORT u8 _XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
+XAIE_AIG_EXPORT AieRC _XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
+		XAie_ModuleType Module);
+XAIE_AIG_EXPORT AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
+		XAie_LocType *Locs);
+XAIE_AIG_EXPORT u32 _XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
+XAIE_AIG_EXPORT u32 _XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
+
+/*Public functions. Need to by discussed why it should be public */
 AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data);
 AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value);
 AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs);
+AieRC XAie_MaskPollBusy(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
+		u32 TimeOutUs);
 AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 			u32 Size);
 AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size);
+void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
+		const char *Format, ...);
+AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
+AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr);
-void BuffHexDump(char* buff,u32 size);
-int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
-AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
-AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u32 Arg_Offset, u8 Num_BDs);
-AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg);
-AieRC XAie_SetPadInteger(XAie_DevInst *DevInst, char* BuffName, u32 BuffSize);
-AieRC XAie_SetPadString(XAie_DevInst *DevInst, char* BuffName, char* BuffBlobPath);
-u32 XAie_GetNumRows(XAie_DevInst *DevInst, u8 TileType);
-u32 XAie_GetStartRow(XAie_DevInst *DevInst, u8 TileType);
-AieRC XAie_PrintDmaStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_DmaMod *DmaMod);
-AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_DmaMod *DmaMod, u8 BdWordCount);
-AieRC XAie_DmaStatusDump(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols);
-AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status);
-AieRC XAie_GetPartitionList(XAie_DevInst *DevInst);
-u8 XAie_IsUcModulePresent(XAie_DevInst* DevInst, u8 TileType);
-void XAie_LoggerInit(const char *AieLevelEnv);
+
+/* Public Functions. Later this should be moved to xaiegbl.h. Also functions should be moved to xaiegbl.c */
+XAIE_AIG_EXPORT AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
+
+
+XAIE_AIG_EXPORT AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u8 Arg_Offset, u8 Num_BDs);
+XAIE_AIG_EXPORT AieRC XAie_WaitTct(XAie_DevInst *DevInst, uint16_t Column, uint16_t Row, uint32_t Channel, uint8_t NumTokens);
+
 #endif		/* end of protection macro */
 /** @} */

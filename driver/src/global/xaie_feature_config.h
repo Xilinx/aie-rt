@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2021-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -41,7 +42,6 @@
 *    * XAIE_FEATURE_SS_ENABLE: AIE stream switch APIs
 *    * XAIE_FEATURE_EVENTS_ENABLE: AIE events APIs
 *    * XAIE_FEATURE_ELF_ENABLE: AIE ELF loader APIs
-*    * XAIE_FEATURE_UC_ENABLE: AIE SHIM microcontroller APIs
 *    * XAIE_FEATURE_INTR_INIT_ENABLE: AIE interrupt network initialization APIs
 *    * XAIE_FEATURE_UTIL_ENABLE: AIE Utility APIs
 *
@@ -57,6 +57,7 @@
 #ifndef XAIE_FEATURE_CONFIG_H
 #define XAIE_FEATURE_CONFIG_H
 
+#ifndef XAIE_FEATURE_MSVC
 #ifndef XAIE_FEATURE_APP_BASIC
 #ifndef XAIE_FEATURE_PRIVILEGED
 #ifndef XAIE_FEATURE_ALL
@@ -65,6 +66,22 @@
 #endif
 #endif
 #endif
+#endif
+
+#ifdef XAIE_FEATURE_MSVC
+#define XAIE_FEATURE_CORE_ENABLE
+#define XAIE_FEATURE_DMA_ENABLE
+#define XAIE_FEATURE_LOCK_ENABLE
+#define XAIE_FEATURE_DATAMEM_ENABLE
+#define XAIE_FEATURE_PRIVILEGED_ENABLE
+#define XAIE_FEATURE_INTR_BTRK_ENABLE
+#define XAIE_FEATURE_PERFCOUNT_ENABLE
+#define XAIE_FEATURE_TIMER_ENABLE
+#define XAIE_FEATURE_TRACE_ENABLE
+#define XAIE_FEATURE_SS_ENABLE
+#define XAIE_FEATURE_EVENTS_ENABLE
+#endif
+
 
 #ifdef XAIE_FEATURE_APP_BASIC
 #define XAIE_FEATURE_CORE_ENABLE
@@ -91,12 +108,10 @@
 #define XAIE_FEATURE_EVENTS_ENABLE
 #define XAIE_FEATURE_CORE_ENABLE
 #define XAIE_FEATURE_ELF_ENABLE
-#define XAIE_FEATURE_UC_ENABLE
 #define XAIE_FEATURE_INTR_INIT_ENABLE
 #define XAIE_FEATURE_INTR_BTRK_ENABLE
 #define XAIE_FEATURE_UTIL_ENABLE
 #define XAIE_FEATURE_UTIL_STATUS_ENABLE
-#define XAIE_FEATURE_ROUTING_ENABLE
 #endif /* XAIE_FEATURE_FULL */
 
 #if defined(XAIE_FEATURE_INTR_INIT_ENABLE) ||	\

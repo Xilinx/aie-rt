@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -29,6 +30,7 @@
 #include "xaie_plif.h"
 #include "xaiegbl_defs.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 
 #ifdef XAIE_FEATURE_PL_ENABLE
 
@@ -55,7 +57,7 @@
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0, 1, 2, 4, 5, 6)
+* @param        PortNum: Stream Port Number (0, 1, 2, 4, 5, 6)
 * @param	Enable: XAIE_DISABLE for disable, XAIE_ENABLE for enable
 *
 * @return	XAIE_OK on success, Error code on failure.
@@ -103,6 +105,11 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	Mask = PlIfMod->DownSzrByPass[PortNum].Mask;
+	if (_XAie_CheckPrecisionExceeds(PlIfMod->DownSzrByPass[PortNum].Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Enable, PlIfMod->DownSzrByPass[PortNum].Lsb,
 			Mask);
 
@@ -121,7 +128,7 @@ static AieRC _XAie_PlIfBliBypassConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-7)
+* @param        PortNum: Stream Port Number (0-7)
 * @param	Enable: XAIE_DISABLE for disable, XAIE_ENABLE for enable
 *
 * @return	XAIE_OK on success, Error code on failure.
@@ -159,6 +166,11 @@ static AieRC _XAie_PlIfDownSzrPortEnableReg(XAie_DevInst *DevInst,
 
 	/* Enable or Disable stream port in PL2ME downsizer enable register */
 	Mask = PlIfMod->DownSzrEn[PortNum].Mask;
+	if (_XAie_CheckPrecisionExceeds(PlIfMod->DownSzrEn[PortNum].Lsb,
+			_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	FldVal = XAie_SetField(Enable, PlIfMod->DownSzrEn[PortNum].Lsb, Mask);
 
 	/* Compute register address */
@@ -177,7 +189,7 @@ static AieRC _XAie_PlIfDownSzrPortEnableReg(XAie_DevInst *DevInst,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-5)
+* @param        PortNum: Stream Port Number (0-5)
 * @param	Width: Supported widths are 32, 64 and 128
 *		(PLIF_WIDTH_32/64/128)
 * @param	Enable: XAIE_ENABLE or XAIE_DISABLE
@@ -237,6 +249,12 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 */
 		Idx = PortNum / 2U;
 		FldMask = PlIfMod->UpSzr128Bit[Idx].Mask;
+
+		if (_XAie_CheckPrecisionExceeds(PlIfMod->UpSzr128Bit[Idx].Lsb,
+				_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField(Enable,
 				PlIfMod->UpSzr128Bit[Idx].Lsb,
 				FldMask);
@@ -246,6 +264,12 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 * Field Value has to be set to 1 for 64 Bit interface
 		 * and 0 for 32 Bit interface
 		 */
+
+		if (_XAie_CheckPrecisionExceeds(PlIfMod->UpSzr32_64Bit[PortNum].Lsb,
+				_XAie_MaxBitsNeeded((u8)Width >> (u8)XAIE_PLIF_WIDTH_64SHIFT), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField((u8)Width >> (u8)XAIE_PLIF_WIDTH_64SHIFT,
 				PlIfMod->UpSzr32_64Bit[PortNum].Lsb,
 				FldMask);
@@ -270,7 +294,7 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-7)
+* @param        PortNum: Stream Port Number (0-7)
 * @param	Width: Supported widths are 32, 64 and 128
 *		(PLIF_WIDTH_32/64/128)
 * @param	Enable: XAIE_ENABLE or XAIE_DISABLE
@@ -297,6 +321,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 RegOff;
 	u64 RegAddr;
 	u64 DwnSzrEnRegAddr;
+	u32 TempPortNum;
 	const XAie_PlIfMod *PlIfMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -336,6 +361,12 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 */
 		Idx = PortNum / 2U;
 		FldMask = PlIfMod->DownSzr128Bit[Idx].Mask;
+
+		if (_XAie_CheckPrecisionExceeds(PlIfMod->DownSzr128Bit[Idx].Lsb,
+				_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField(Enable,
 				PlIfMod->DownSzr128Bit[Idx].Lsb,
 				FldMask);
@@ -346,6 +377,12 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 * and 0 for 32 Bit interface. Width is shifted to move 64(2^6)
 		 * to LSB. When width is 32, the shift results in 0.
 		 */
+
+		if (_XAie_CheckPrecisionExceeds(PlIfMod->DownSzr32_64Bit[PortNum].Lsb,
+				_XAie_MaxBitsNeeded((u8)Width >> (u8)XAIE_PLIF_WIDTH_64SHIFT), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		FldVal = XAie_SetField((u8)Width >> (u8)XAIE_PLIF_WIDTH_64SHIFT,
 				PlIfMod->DownSzr32_64Bit[PortNum].Lsb,
 				FldMask);
@@ -357,14 +394,31 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	 * downsizer enable register.
 	 */
 	DwnSzrEnMask = PlIfMod->DownSzrEn[PortNum].Mask;
+
+	if (_XAie_CheckPrecisionExceeds(PlIfMod->DownSzrEn[PortNum].Lsb,
+					_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	DwnSzrEnVal = XAie_SetField(Enable,
 			PlIfMod->DownSzrEn[PortNum].Lsb, DwnSzrEnMask);
 
 	/* If width is 128 bits, enable both ports */
 	if(Width == PLIF_WIDTH_128) {
-		PortNum = ((PortNum % 2U) != 0U) ? (PortNum - 1U) : (PortNum + 1U);
+		TempPortNum = ((PortNum % 2U) != 0U) ? (PortNum - 1U) : (PortNum + 1U);
+		if(TempPortNum > UINT8_MAX){
+			XAIE_ERROR("PortNum exceeds valid range\n");
+			return XAIE_ERR;
+		}
+		PortNum = (u8)TempPortNum;
 
 		DwnSzrEnMask |= PlIfMod->DownSzrEn[PortNum].Mask;
+
+		if (_XAie_CheckPrecisionExceeds(PlIfMod->DownSzrEn[PortNum].Lsb,
+				_XAie_MaxBitsNeeded(Enable), MAX_VALID_AIE_REG_BIT_INDEX)) {
+			XAIE_ERROR("Check Precision Exceeds Failed\n");
+			return XAIE_ERR;
+		}
 		DwnSzrEnVal |= XAie_SetField(Enable,
 				PlIfMod->DownSzrEn[PortNum].Lsb,
 				PlIfMod->DownSzrEn[PortNum].Mask);
@@ -397,7 +451,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-7)
+* @param        PortNum: Stream Port Number (0-7)
 * @param	Width: Supported widths are 32, 64 and 128
 *		(PLIF_WIDTH_32/64/128)
 *
@@ -425,7 +479,7 @@ AieRC XAie_PlToAieIntfEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-7)
+* @param        PortNum: Stream Port Number (0-7)
 * @param	Width: Supported widths are 32, 64 and 128
 *		(PLIF_WIDTH_32/64/128)
 *
@@ -451,7 +505,7 @@ AieRC XAie_PlToAieIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Coodinate of AIE Tile
-* @param	PortNum: Stream Port Number (0-5)
+* @param        PortNum: Stream Port Number (0-5)
 * @param	Width: Supported widths are 32, 64 and 128
 *		(PLIF_WIDTH_32/64/128)
 *
@@ -475,7 +529,7 @@ AieRC XAie_AieToPlIntfEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Coodinate of AIE Tile
-* @param	PortNum: Stream Port Number (0-5)
+* @param        PortNum: Stream Port Number (0-5)
 * @param	Width: Supported widths are 32, 64 and 128
 *		(PLIF_WIDTH_32/64/128)
 *
@@ -499,7 +553,7 @@ AieRC XAie_AieToPlIntfDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-7)
+* @param        PortNum: Stream Port Number (0-7)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -521,7 +575,7 @@ AieRC XAie_PlIfDownSzrEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0-7)
+* @param        PortNum: Stream Port Number (0-7)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -543,7 +597,7 @@ AieRC XAie_PlIfDownSzrDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0, 1, 2, 4, 5, 6)
+* @param        PortNum: Stream Port Number (0, 1, 2, 4, 5, 6)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -564,7 +618,7 @@ AieRC XAie_PlIfBliBypassEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (0, 1, 2, 4, 5, 6)
+* @param        PortNum: Stream Port Number (0, 1, 2, 4, 5, 6)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -586,7 +640,7 @@ AieRC XAie_PlIfBliBypassDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (2, 3, 6, 7)
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
 * @param	InputConnectionType: XAIE_MUX_DEMUX_CONFIG_TYPE_PL,
 *		XAIE_MUX_DEMUX_CONFIG_TYPE_DMA or XAIE_MUX_DEMUX_CONFIG_TYPE_NOC
 *
@@ -616,30 +670,19 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
-		if((PortNum != XAIE_STREAM_SOUTH_PORT_1) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_5) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-			XAIE_ERROR("Invalid port number for Mux\n");
-			return XAIE_ERR_STREAM_PORT;
-		}
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_6) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
+		XAIE_ERROR("Invalid port number for Mux\n");
+		return XAIE_ERR_STREAM_PORT;
+	}
 
+	/* Map the port numbers to 0, 1, 2, 3 */
+	if(PortNum > 3U) {
+		PortNum -= 4U;
 	} else {
-		if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_6) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_7)) {
-			XAIE_ERROR("Invalid port number for Mux\n");
-			return XAIE_ERR_STREAM_PORT;
-		}
-
-		/* Map the port numbers to 0, 1, 2, 3 */
-		if(PortNum > 3U) {
-			PortNum -= 4U;
-		} else {
-			PortNum -= 2U;
-		}
+		PortNum -= 2U;
 	}
 
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
@@ -663,7 +706,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (2, 3, 4, 5)
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
 * @param	OutputConnectionType: XAIE_MUX_DEMUX_CONFIG_TYPE_PL,
 *		XAIE_MUX_DEMUX_CONFIG_TYPE_DMA or XAIE_MUX_DEMUX_CONFIG_TYPE_NOC
 *
@@ -693,25 +736,15 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
-		if((PortNum != XAIE_STREAM_SOUTH_PORT_1) &&
-			(PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
+			(PortNum != XAIE_STREAM_SOUTH_PORT_4) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_5)) {
-			XAIE_ERROR("Invalid port number\n");
-			return XAIE_ERR_STREAM_PORT;
-		}
-	} else {
-		if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_3) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_4) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_5)) {
-			XAIE_ERROR("Invalid port number\n");
-			return XAIE_ERR_STREAM_PORT;
-		}
-		/* Map the port numbers to 0, 1, 2, 3 */
-		PortNum -= 2U;
+		XAIE_ERROR("Invalid port number\n");
+		return XAIE_ERR_STREAM_PORT;
 	}
+	/* Map the port numbers to 0, 1, 2, 3 */
+	PortNum -= 2U;
 
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 
@@ -733,7 +766,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (3, 7)
+* @param        PortNum: Stream Port Number (3, 7)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -762,7 +795,7 @@ AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (2, 3)
+* @param        PortNum: Stream Port Number (2, 3)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -772,18 +805,10 @@ AieRC XAie_EnableShimDmaToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 PortNum)
 {
-	if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
-		if((PortNum != XAIE_STREAM_SOUTH_PORT_1) &&
+	if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
 			(PortNum != XAIE_STREAM_SOUTH_PORT_3)) {
-				XAIE_ERROR("Invalid port number\n", PortNum);
+		XAIE_ERROR("Invalid port number\n", PortNum);
 		return XAIE_ERR_STREAM_PORT;
-		}
-	} else {
-		if((PortNum != XAIE_STREAM_SOUTH_PORT_2) &&
-				(PortNum != XAIE_STREAM_SOUTH_PORT_3)) {
-					XAIE_ERROR("Invalid port number\n", PortNum);
-			return XAIE_ERR_STREAM_PORT;
-		}
 	}
 
 	return _XAie_ConfigShimNocDeMux(DevInst, Loc, PortNum,
@@ -798,7 +823,7 @@ AieRC XAie_EnableAieToShimDmaStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (2, 3, 6, 7)
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -821,7 +846,7 @@ AieRC XAie_EnableNoCToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	PortNum: Stream Port Number (2, 3, 4, 5)
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -843,7 +868,7 @@ AieRC XAie_EnableAieToNoCStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Loc of AIE Tiles
-* @param	PortNum: Stream Port Number (2, 3, 6, 7)
+* @param        PortNum: Stream Port Number (2, 3, 6, 7)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
@@ -868,7 +893,7 @@ AieRC XAie_EnablePlToAieStrmPort(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Location of AIE Tile
-* @param	PortNum: Stream Port Number (2, 3, 4, 5)
+* @param        PortNum: Stream Port Number (2, 3, 4, 5)
 *
 * @return	XAIE_OK on success, Error code on failure.
 *

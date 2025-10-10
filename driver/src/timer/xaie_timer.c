@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -14,7 +15,7 @@
 * <pre>
 * MODIFICATION HISTORY:
 *
-* Ver   Who     Date	Changes
+* Ver   Who     Date        Changes
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   Dishita 04/06/2020  Initial creation
 * 1.1   Dishita 06/10/2020  Add XAie_WaitCycles API
@@ -31,6 +32,7 @@
 #include "xaie_events.h"
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_helper_internal.h"
 #include "xaie_timer.h"
 #include "xaiegbl.h"
 
@@ -58,13 +60,16 @@
 *			For Mem tile - XAIE_MEM_MOD.
 *
 * @param	LowEventValue: Value to set for the timer to trigger timer low
-*			      event.
+*                              event.
 * @param	HighEventValue: Value to set for the timer to trigger timer
-*			       high event.
+*                               high event.
 *
 * @return	XAIE_OK on success.
 * 		XAIE_INVALID_ARGS if any argument is invalid
 *		XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note
+*
 *******************************************************************************/
 AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u32 LowEventValue, u32 HighEventValue)
@@ -128,6 +133,9 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @return	XAIE_OK on success.
 *		XAIE_INVALID_ARGS if any argument is invalid
 *		XAIE_INVALID_TILE if tile type from Loc is invalid
+
+* @note
+*
 *******************************************************************************/
 AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module)
@@ -166,6 +174,12 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TimerMod->CtrlOff;
 	Mask = TimerMod->CtrlReset.Mask;
+
+	if ((_XAie_CheckPrecisionExceeds(TimerMod->CtrlReset.Lsb,
+			_XAie_MaxBitsNeeded(XAIE_RESETENABLE),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(XAIE_RESETENABLE, TimerMod->CtrlReset.Lsb, Mask);
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, RegVal);
@@ -180,16 +194,19 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	DevInst - Device Instance.
 * @param	Loc - Location of tile.
 * @param	Module - Module of the tile
-*			 For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			 For Pl or Shim tile - XAIE_PL_MOD,
-*			 For Mem tile - XAIE_MEM_MOD.
+*                         For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                         For Pl or Shim tile - XAIE_PL_MOD,
+*                         For Mem tile - XAIE_MEM_MOD.
 * @param	Event - Reset event.
 * @param	Reset - Indicate if reset is also required in this call.
-*		       (XAIE_RESETENABLE, XAIE_RESETDISABLE)
+*                       (XAIE_RESETENABLE, XAIE_RESETDISABLE)
 *
 * @return	XAIE_OK on success.
 *		XAIE_INVALID_ARGS if any argument is invalid
 * 		XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note
+*
 *******************************************************************************/
 AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, XAie_Events Event,
@@ -235,8 +252,17 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
 
+	/* check if the event passed as input is corresponding to the module */
+	if(Event < EvntMod->EventMin || Event > EvntMod->EventMax) {
+		XAIE_ERROR("Invalid Event id\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Subtract the module offset from event number */
+	Event -= EvntMod->EventMin;
+
 	/* Getting the true event number from the enum to array mapping */
-	IntEvent = XAie_GetEventNumber(EvntMod, Event);
+	IntEvent = EvntMod->XAie_EventNumber[Event];
 
 	/*checking for valid true event number */
 	if(IntEvent == XAIE_EVENT_INVALID) {
@@ -244,9 +270,19 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
+	if ((_XAie_CheckPrecisionExceeds( TimerMod->CtrlResetEvent.Lsb,
+			_XAie_MaxBitsNeeded(IntEvent),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal = XAie_SetField(IntEvent, TimerMod->CtrlResetEvent.Lsb,
 			TimerMod->CtrlResetEvent.Mask);
 
+	if ((_XAie_CheckPrecisionExceeds(TimerMod->CtrlReset.Lsb,
+			_XAie_MaxBitsNeeded((u32)Reset),MAX_VALID_AIE_REG_BIT_INDEX))) {
+		XAIE_ERROR("Check Precision Exceeds Failed\n");
+		return XAIE_ERR;
+	}
 	RegVal |= XAie_SetField(Reset, TimerMod->CtrlReset.Lsb,
 			TimerMod->CtrlReset.Mask);
 
@@ -264,14 +300,17 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @param	DevInst - Device Instance.
 * @param	Loc - Location of tile.
 * @param	Module - Module of the tile
-*			 For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			 For Pl or Shim tile - XAIE_PL_MOD,
-*			 For Mem tile - XAIE_MEM_MOD.
+*                         For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                         For Pl or Shim tile - XAIE_PL_MOD,
+*                         For Mem tile - XAIE_MEM_MOD.
 * @param	TimerVal - Pointer to store Timer Value.
 *
 * @return	XAIE_OK on success
 *		XAIE_INVALID_ARGS if any argument is invalid
 *		XAIE_INVALID_TILE if tile type from Loc is invalid
+*
+* @note		None.
+*
 ********************************************************************************/
 AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u64 *TimerVal)
@@ -295,8 +334,8 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* check for module and tiletype combination */
 	RC = XAie_CheckModule(DevInst, Loc, Module);
-	if(RC != XAIE_OK) {
-		return XAIE_INVALID_ARGS;
+        if(RC != XAIE_OK) {
+                return XAIE_INVALID_ARGS;
 	}
 
 	if(Module == XAIE_PL_MOD) {
@@ -330,19 +369,19 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 * This API implements a blocking wait function until the specified clock cyles
 * are elapsed in the given module's 64-bit counter.
 *
-* @param	DevInst - Device Instance.
-* @param	Loc - Location of tile.
-* @param	Module - Module of the tile
-*			For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
-*			For Pl or Shim tile - XAIE_PL_MOD,
-*			For Mem tile - XAIE_MEM_MOD.
-* @param	CycleCnt - No. of timer clock cycles to elapse.
+* @param        DevInst - Device Instance.
+* @param        Loc - Location of tile.
+* @param        Module - Module of the tile
+*                        For AIE Tile - XAIE_MEM_MOD or XAIE_CORE_MOD,
+*                        For Pl or Shim tile - XAIE_PL_MOD,
+*                        For Mem tile - XAIE_MEM_MOD.
+* @param        CycleCnt - No. of timer clock cycles to elapse.
 *
-* @return	XAIE_OK on success
-* 		XAIE_INVALID_ARGS if any argument is invalid
-* 		XAIE_INVALID_TILE if tile type from Loc is invalid
+* @return       XAIE_OK on success
+*               XAIE_INVALID_ARGS if any argument is invalid
+*               XAIE_INVALID_TILE if tile type from Loc is invalid
 *
-* @note		CycleCnt has an upper limit of 0xFFFFFFFFFFFF or 300 trillion
+* @note         CycleCnt has an upper limit of 0xFFFFFFFFFFFF or 300 trillion
 *		cycles to prevent overflow.
 *
 ******************************************************************************/
@@ -428,14 +467,14 @@ AieRC XAie_WaitCycles(XAie_DevInst *DevInst, XAie_LocType Loc,
 * This API returns the broadcast event enum given a resource id from the
 * event map.
 *
-* @param	DevInst: Device Instance
-* @param	Loc: Location of Tile
-* @param	Mod: Module type
-* @param	RscId: Specific resource to be requested
+* @param        DevInst: Device Instance
+* @param        Loc: Location of Tile
+* @param        Mod: Module type
+* @param        RscId: Specific resource to be requested
 *
-* @return	Event enum on success.
+* @return       Event enum on success.
 *
-* @note		Internal only.
+* @note         Internal only.
 *
 *******************************************************************************/
 static XAie_Events _XAie_GetBroadcastEventfromRscId(XAie_DevInst *DevInst,
@@ -444,7 +483,7 @@ static XAie_Events _XAie_GetBroadcastEventfromRscId(XAie_DevInst *DevInst,
 	u8 TileType;
 	const XAie_EvntMod *EvntMod;
 
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	TileType =  DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
 	if(Mod == XAIE_PL_MOD)
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
@@ -456,19 +495,19 @@ static XAie_Events _XAie_GetBroadcastEventfromRscId(XAie_DevInst *DevInst,
 
 /*****************************************************************************/
 /**
-* This API will setup broadcast configuration for all tiles for the timer sync
-* sequence
-*
-* @param	DevInst: Device Instance
-* @param	NumTiles: Size of Locs array
-* @param	Locs: Array of locations to clear
-* @param	BcastId: Channel ID of broadcast channel for timer reset
-*
-* @return	XAIE_OK on success, error code for failure
-*
-* @note		Internal only.
-*
-*******************************************************************************/
+ * This API will setup broadcast configuration for all tiles for the timer sync
+ * sequence
+ *
+ * @param        DevInst: Device Instance
+ * @param        NumTiles: Size of Locs array
+ * @param        Locs: Array of locations to clear
+ * @param        BcastId: Channel ID of broadcast channel for timer reset
+ *
+ * @return       XAIE_OK on success, error code for failure
+ *
+ * @note         Internal only.
+ *
+ *******************************************************************************/
 static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 		XAie_LocType *Locs, u8 BcastId)
 {
@@ -484,53 +523,53 @@ static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 				/* Checkerboard structure for AIE1 */
 				if((Locs[i].Row % 2) == 0) {
 					RC |= XAie_EventBroadcastBlockDir(
-						DevInst, Locs[i],
-						XAIE_MEM_MOD,
-						XAIE_EVENT_SWITCH_A,
-						BcastId,
-						XAIE_EVENT_BROADCAST_WEST);
+							DevInst, Locs[i],
+							XAIE_MEM_MOD,
+							XAIE_EVENT_SWITCH_A,
+							BcastId,
+							XAIE_EVENT_BROADCAST_WEST);
 					RC |= XAie_EventBroadcastBlockDir(
-						DevInst, Locs[i],
-						XAIE_CORE_MOD,
-						XAIE_EVENT_SWITCH_A,
-						BcastId,
-						XAIE_EVENT_BROADCAST_EAST);
+							DevInst, Locs[i],
+							XAIE_CORE_MOD,
+							XAIE_EVENT_SWITCH_A,
+							BcastId,
+							XAIE_EVENT_BROADCAST_EAST);
 				} else {
 					RC |= XAie_EventBroadcastBlockDir(
-						DevInst, Locs[i],
-						XAIE_MEM_MOD,
-						XAIE_EVENT_SWITCH_A,
-						BcastId,
-						XAIE_EVENT_BROADCAST_EAST);
+							DevInst, Locs[i],
+							XAIE_MEM_MOD,
+							XAIE_EVENT_SWITCH_A,
+							BcastId,
+							XAIE_EVENT_BROADCAST_EAST);
 					RC |= XAie_EventBroadcastBlockDir(
-						DevInst, Locs[i],
-						XAIE_CORE_MOD,
-						XAIE_EVENT_SWITCH_A,
-						BcastId,
-						XAIE_EVENT_BROADCAST_WEST);
+							DevInst, Locs[i],
+							XAIE_CORE_MOD,
+							XAIE_EVENT_SWITCH_A,
+							BcastId,
+							XAIE_EVENT_BROADCAST_WEST);
 				}
 			} else {
 				RC |= XAie_EventBroadcastBlockDir(
+						DevInst, Locs[i],
+						XAIE_MEM_MOD,
+						XAIE_EVENT_SWITCH_A,
+						BcastId,
+						XAIE_EVENT_BROADCAST_EAST);
+				RC |= XAie_EventBroadcastBlockDir(
+						DevInst, Locs[i],
+						XAIE_CORE_MOD,
+						XAIE_EVENT_SWITCH_A,
+						BcastId,
+						XAIE_EVENT_BROADCAST_WEST);
+			}
+		} else if(Locs[i].Row != 0) {
+			RC |= XAie_EventBroadcastBlockDir(
 					DevInst, Locs[i],
 					XAIE_MEM_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
+					XAIE_EVENT_BROADCAST_WEST |
 					XAIE_EVENT_BROADCAST_EAST);
-				RC |= XAie_EventBroadcastBlockDir(
-					DevInst, Locs[i],
-					XAIE_CORE_MOD,
-					XAIE_EVENT_SWITCH_A,
-					BcastId,
-					XAIE_EVENT_BROADCAST_WEST);
-			}
-		} else if(Locs[i].Row != 0) {
-			RC |= XAie_EventBroadcastBlockDir(
-				DevInst, Locs[i],
-				XAIE_MEM_MOD,
-				XAIE_EVENT_SWITCH_A,
-				BcastId,
-				XAIE_EVENT_BROADCAST_WEST |
-				XAIE_EVENT_BROADCAST_EAST);
 		}
 
 		if(RC != XAIE_OK) {
@@ -543,19 +582,19 @@ static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 
 /*****************************************************************************/
 /**
-* This API will setup timer reset events for all tiles for the timer sync
-* sequence
-*
-* @param	DevInst: Device Instance
-* @param	NumTiles: Size of Locs array
-* @param	Locs: Array of locations to clear
-* @param	BcastId: Channel ID of broadcast channel for timer reset
-*
-* @return	XAIE_OK on success, error code for failure
-*
-* @note		Internal only.
-*
-*******************************************************************************/
+ * This API will setup timer reset events for all tiles for the timer sync
+ * sequence
+ *
+ * @param        DevInst: Device Instance
+ * @param        NumTiles: Size of Locs array
+ * @param        Locs: Array of locations to clear
+ * @param        BcastId: Channel ID of broadcast channel for timer reset
+ *
+ * @return       XAIE_OK on success, error code for failure
+ *
+ * @note         Internal only.
+ *
+ *******************************************************************************/
 static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 		XAie_LocType *Locs, u8 BcastId)
 {
@@ -571,8 +610,8 @@ static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 					DevInst, Locs[i], XAIE_MEM_MOD,
 					BcastId);
 			RC = XAie_SetTimerResetEvent(DevInst, Locs[i],
-				XAIE_MEM_MOD, BcastEvent,
-				XAIE_RESETDISABLE);
+					XAIE_MEM_MOD, BcastEvent,
+					XAIE_RESETDISABLE);
 			if(RC != XAIE_OK) {
 				return RC;
 			}
@@ -581,22 +620,22 @@ static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 					DevInst, Locs[i], XAIE_CORE_MOD,
 					BcastId);
 			RC = XAie_SetTimerResetEvent(DevInst, Locs[i],
-				XAIE_CORE_MOD, BcastEvent,
-				XAIE_RESETDISABLE);
+					XAIE_CORE_MOD, BcastEvent,
+					XAIE_RESETDISABLE);
 		} else if(TileType == XAIEGBL_TILE_TYPE_MEMTILE) {
 			BcastEvent = _XAie_GetBroadcastEventfromRscId(
 					DevInst, Locs[i], XAIE_MEM_MOD,
 					BcastId);
 			RC = XAie_SetTimerResetEvent(DevInst, Locs[i],
-				XAIE_MEM_MOD, BcastEvent,
-				XAIE_RESETDISABLE);
+					XAIE_MEM_MOD, BcastEvent,
+					XAIE_RESETDISABLE);
 		} else {
 			BcastEvent = _XAie_GetBroadcastEventfromRscId(
 					DevInst, Locs[i], XAIE_PL_MOD,
 					BcastId);
 			RC = XAie_SetTimerResetEvent(DevInst, Locs[i],
-				XAIE_PL_MOD, BcastEvent,
-				XAIE_RESETDISABLE);
+					XAIE_PL_MOD, BcastEvent,
+					XAIE_RESETDISABLE);
 		}
 		if(RC != XAIE_OK) {
 			return RC;
@@ -611,34 +650,46 @@ static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 * This API clears broadcast configuration for shim tiles till the mentioned
 * column.
 *
-* @param	DevInst: Device Instance
-* @param	StartCol: Start column from where broadcast conf needs to be
-* 			  cleared
-* @param	EndCol: End column till where broadcast conf needs to be cleared
-* @param	BcastChannelId: ID of broadcast channel
 *
-* @note		Internal only.
+* @param        DevInst: Device Instance
+* @param        StartCol: Start column from where broadcast conf needs to be
+* 			  cleared
+* @param        EndCol: End column till where broadcast conf needs to be cleared
+* @param        BcastChannelId: ID of broadcast channel
+*
+* @return       None
+*
+* @note         Internal only.
+*
 *******************************************************************************/
 static void _XAie_ClearShimBroadcast(XAie_DevInst *DevInst, u8 StartCol,
 		u8 EndCol, u32 BcastChannelId)
 {
+	AieRC RC;
+	if(BcastChannelId > UCHAR_MAX) {
+		XAIE_ERROR("Invalid BcastChannelId Value \n");
+		return;
+	}
 	for(u32 i = StartCol; i < EndCol; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
-		XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-			BcastChannelId, XAIE_EVENT_NONE_PL);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
+		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
+			(u8)BcastChannelId, XAIE_EVENT_NONE_PL);
+		if(RC != XAIE_OK) {
+			return;
+		}
 	}
 }
 
 /*****************************************************************************/
 /**
-* This API clears timer configuration for all the locations
-*
-* @param	DevInst: Device Instance
-* @param	NumTiles: Size of Locs array
-* @param	Locs: Array of locations to clear
-*
-* @note		Internal only.
-*******************************************************************************/
+ * This API clears timer configuration for all the locations
+ *
+ * @param        DevInst: Device Instance
+ * @param        NumTiles: Size of Locs array
+ * @param        Locs: Array of locations to clear
+ *
+ * @note         Internal only.
+ *******************************************************************************/
 static void _XAie_ClearTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 		XAie_LocType *Locs)
 {
@@ -650,35 +701,47 @@ static void _XAie_ClearTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 
 		if(TType == XAIEGBL_TILE_TYPE_AIETILE) {
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[0U];
+			if((EvntMod->EventMin > XAIE_EVENT_LAST))
+				return;
+
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_MEM_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[1U];
+			if((EvntMod->EventMin > XAIE_EVENT_LAST))
+				return;
+
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_CORE_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 		} else if (TType == XAIEGBL_TILE_TYPE_MEMTILE) {
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[0U];
+
+            if((EvntMod->EventMin > XAIE_EVENT_LAST))
+				return;
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_MEM_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 		} else {
 			EvntMod = &DevInst->DevProp.DevMod[TType].EvntMod[0U];
+            if((EvntMod->EventMin > XAIE_EVENT_LAST))
+            	return;
+
 			XAie_SetTimerResetEvent(DevInst, Locs[i], XAIE_PL_MOD,
-					EvntMod->EventMin, XAIE_RESETDISABLE);
+					(XAie_Events)EvntMod->EventMin, XAIE_RESETDISABLE);
 		}
 	}
 }
 
 /*****************************************************************************/
 /**
-* This API clears broadcast configuration for all the locations
-*
-* @param	DevInst: Device Instance
-* @param	NumTiles: Size of Locs array
-* @param	Locs: Array of locations to clear
-* @param	BCastId: Id of broadcast channel to clear configuration.
-*
-* @note		Internal only.
-*******************************************************************************/
+ * This API clears broadcast configuration for all the locations
+ *
+ * @param        DevInst: Device Instance
+ * @param        NumTiles: Size of Locs array
+ * @param        Locs: Array of locations to clear
+ * @param        BCastId: Id of broadcast channel to clear configuration.
+ *
+ * @note         Internal only.
+ *******************************************************************************/
 static void _XAie_ClearBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 		XAie_LocType *Locs, u8 BcastId)
 {
@@ -713,113 +776,15 @@ static void _XAie_ClearBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 
 /*****************************************************************************/
 /**
-* This API synchronizes timer for all tiles for all modules in the partition.
-*
-* @param	DevInst - Device Instance.
-* @param	BcastChannelId1 - Starting broadcast channel ID used for timer
-* 				 sync.
-* @param	BcastChannelId2 - Next broadcast channel ID used for timer sync.
-*
-* @return	XAIE_OK on success
-* 		XAIE_INVALID_ARGS if any argument is invalid
-* 		XAIE_INVALID_TILE if tile type from Loc is invalid
-******************************************************************************/
-AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1, u8 BcastChannelId2)
-{
-	AieRC RC;
-	u32 NumTiles;
-	XAie_LocType *Locs;
-	XAie_Events ShimBcastEvent;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)){
-		XAIE_ERROR("Invalid Device Instance\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	/* Get all ungated tiles to broadcast to */
-	NumTiles = DevInst->NumCols * DevInst->NumRows;
-	Locs = (XAie_LocType *)calloc(NumTiles, sizeof(XAie_LocType));
-	if(Locs == NULL) {
-		XAIE_ERROR("Unable to allocate memory for tile locations\n");
-		return XAIE_ERR;
-	}
-
-	RC = XAie_GetUngatedLocsInPartition(DevInst, &NumTiles, Locs);
-	if(RC != XAIE_OK) {
-		free(Locs);
-		return RC;
-	}
-
-	RC = _XAie_SetupBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId1);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to setup broadcast network for timer sync\n");
-		free(Locs);
-		return RC;
-	}
-
-	ShimBcastEvent = _XAie_GetBroadcastEventfromRscId(DevInst,
-			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId2);
-
-	for(u32 i = 0; i < DevInst->NumCols; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
-
-		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-				BcastChannelId1, ShimBcastEvent);
-		if (i == 0) {
-			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-					BcastChannelId2, ShimBcastEvent);
-		}
-		if(RC != XAIE_OK) {
-			XAIE_ERROR("Unable to configure shim broadcast event for timer sync\n");
-			free(Locs);
-			return RC;
-		}
-	}
-
-	/* Configure the timer control with the trigger event */
-	RC = _XAie_SetupTimerConfig(DevInst, NumTiles, Locs, BcastChannelId1);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to setup timer reset events\n");
-		free(Locs);
-		return RC;
-	}
-
-	/* Trigger Event */
-	RC = XAie_EventGenerate(DevInst, XAie_TileLoc(0, 0), XAIE_PL_MOD,
-			ShimBcastEvent);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Unable to trigger event\n");
-		free(Locs);
-		return RC;
-	}
-
-	/* Clear timer reset event register */
-	_XAie_ClearTimerConfig(DevInst, NumTiles, Locs);
-
-	/* Clear broadcast setting */
-	_XAie_ClearBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId1);
-
-	/* Clear shim broadcast configuration */
-	_XAie_ClearShimBroadcast(DevInst, 0, DevInst->NumCols, BcastChannelId1);
-
-	free(Locs);
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-* This API synchronizes timer for all tiles for all modules in the partition.
-*
-* @param	DevInst - Device Instance.
-* @param	BcastChannelId - Starting broadcast channel ID used for timer
-* 				 sync. This API will use this channel as well
-* 				 as the next broadcast channel for the sync.
-*
-* @return	XAIE_OK on success
-* 		XAIE_INVALID_ARGS if any argument is invalid
-* 		XAIE_INVALID_TILE if tile type from Loc is invalid
-******************************************************************************/
+ * This API synchronizes timer for all tiles for all modules in the partition.
+ *
+ * @param        DevInst - Device Instance.
+ * @param        BcastChannelId - Broadcast channel id for timer sync.
+ *
+ * @return       XAIE_OK on success
+ *               XAIE_INVALID_ARGS if any argument is invalid
+ *               XAIE_INVALID_TILE if tile type from Loc is invalid
+ ******************************************************************************/
 AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 {
 	AieRC RC;
@@ -834,7 +799,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	}
 
 	/* Get all ungated tiles to broadcast to */
-	NumTiles = DevInst->NumCols * DevInst->NumRows;
+	NumTiles = (u32)((u32)DevInst->NumCols * (u32)DevInst->NumRows);
 	Locs = (XAie_LocType *)malloc(NumTiles * sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
@@ -854,17 +819,22 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 		return RC;
 	}
 
+	if(BcastChannelId >= UCHAR_MAX) {
+		XAIE_ERROR("Invalid BcastChannelId Value \n");
+		free(Locs);
+		return XAIE_ERR;
+	}
 	ShimBcastEvent = _XAie_GetBroadcastEventfromRscId(DevInst,
 			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId + 1);
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId, ShimBcastEvent);
 		if (i == 0) {
 			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-					BcastChannelId + 1, ShimBcastEvent);
+					BcastChannelId + 1 , ShimBcastEvent);
 		}
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Unable to configure shim broadcast event for timer sync\n");
@@ -903,4 +873,101 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	return XAIE_OK;
 }
 
+/*****************************************************************************/
+/**
+ * This API synchronizes timer for all tiles for all modules in the partition.
+ *
+ * @param        DevInst - Device Instance.
+ * @param        BcastChannelId - Broadcast channel id for timer sync.
+ *
+ * @return       XAIE_OK on success
+ *               XAIE_INVALID_ARGS if any argument is invalid
+ *               XAIE_INVALID_TILE if tile type from Loc is invalid
+ ******************************************************************************/
+AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1,
+	u8 BcastChannelId2)
+{
+	AieRC RC;
+	u32 NumTiles;
+	XAie_LocType *Locs;
+	XAie_Events ShimBcastEvent;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)){
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	/* Get all ungated tiles to broadcast to */
+	NumTiles = (u32)((u32)DevInst->NumCols * (u32)DevInst->NumRows);
+	Locs = (XAie_LocType *)malloc(NumTiles * sizeof(XAie_LocType));
+	if(Locs == NULL) {
+		XAIE_ERROR("Unable to allocate memory for tile locations\n");
+		return XAIE_ERR;
+	}
+
+	RC = XAie_GetUngatedLocsInPartition(DevInst, &NumTiles, Locs);
+	if(RC != XAIE_OK) {
+		free(Locs);
+		return RC;
+	}
+
+	RC = _XAie_SetupBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId1);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to setup broadcast network for timer sync\n");
+		free(Locs);
+		return RC;
+	}
+
+	ShimBcastEvent = _XAie_GetBroadcastEventfromRscId(DevInst,
+			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId2);
+
+	for(u32 i = 0; i < DevInst->NumCols; i++) {
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
+
+		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
+				BcastChannelId1, ShimBcastEvent);
+		if (i == 0) {
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
+					BcastChannelId2 , ShimBcastEvent);
+		}
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Unable to configure shim broadcast event for timer sync\n");
+			free(Locs);
+			return RC;
+		}
+	}
+
+	/* Configure the timer control with the trigger event */
+	RC = _XAie_SetupTimerConfig(DevInst, NumTiles, Locs, BcastChannelId1);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Failed to setup timer reset events\n");
+		free(Locs);
+		return RC;
+	}
+
+	/* Trigger Event */
+	RC = XAie_EventGenerate(DevInst, XAie_TileLoc(0, 0), XAIE_PL_MOD,
+			ShimBcastEvent);
+	if(RC != XAIE_OK) {
+		XAIE_ERROR("Unable to trigger event\n");
+		free(Locs);
+		return RC;
+	}
+
+	/* Clear timer reset event register */
+	_XAie_ClearTimerConfig(DevInst, NumTiles, Locs);
+
+	/* Clear broadcast setting */
+	_XAie_ClearBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId1);
+
+	/* Clear shim broadcast configuration for Chan1 */
+	_XAie_ClearShimBroadcast(DevInst, 0, DevInst->NumCols, BcastChannelId1);
+
+	/* Clear shim broadcast configuration for Chan2 */
+	_XAie_ClearShimBroadcast(DevInst, 0, DevInst->NumCols, BcastChannelId2);
+
+	free(Locs);
+	return XAIE_OK;
+}
 #endif /* XAIE_FEATURE_TIMER_ENABLE */

@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -57,6 +58,20 @@ AieRC XAie_MapIrqIdToCols(u8 IrqId, XAie_Range *Range)
 	Range->Num = Temp.Num;
 
 	return XAIE_OK;
+}
+
+AieRC XAie_ClearCoreReg(XAie_DevInst *DevInst)
+{
+	/* Based on the Architecture corresponding API will be
+	   called*/
+	_XAie_ClearCoreReg(DevInst);
+	return XAIE_OK;
+}
+
+AieRC XAie_PauseMem(XAie_DevInst *DevInst)
+{
+        _XAie_PauseMem(DevInst);
+        return XAIE_OK;
 }
 
 #endif /* XAIE_FEATURE_PRIVILEGED_ENABLE && XAIE_FEATURE_LITE */

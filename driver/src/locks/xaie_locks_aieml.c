@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -64,10 +65,11 @@
 *
 ******************************************************************************/
 AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
-		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut)
+		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut, u8 BusyPoll)
 {
 	u64 RegAddr;
 	u32 RegOff;
+	AieRC Status = XAIE_OK;
 
 	RegOff = LockMod->BaseAddr + (Lock.LockId * LockMod->LockIdOff) +
 		(((u8)Lock.LockVal & XAIEML_LOCK_VALUE_MASK) <<
@@ -75,14 +77,22 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	if(XAie_MaskPoll(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
-				(XAIEML_LOCK_RESULT_SUCCESS <<
-				 XAIEML_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+	if (BusyPoll != XAIE_ENABLE) {
+		Status = XAie_MaskPoll(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
+					(XAIEML_LOCK_RESULT_SUCCESS <<
+					 XAIEML_LOCK_RESULT_LSB), TimeOut);
+	} else {
+		Status = XAie_MaskPollBusy(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
+					(XAIEML_LOCK_RESULT_SUCCESS <<
+					 XAIEML_LOCK_RESULT_LSB), TimeOut);
+	}
 
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Wait for lock release timed out\n");
 		return XAIE_LOCK_RESULT_FAILED;
 	}
 
-	return XAIE_OK;
+	return Status;
 }
 
 /*****************************************************************************/
@@ -110,10 +120,11 @@ AieRC _XAieMl_LockRelease(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 *
 ******************************************************************************/
 AieRC _XAieMl_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
-		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut)
+		XAie_LocType Loc, XAie_Lock Lock, u32 TimeOut, u8 BusyPoll)
 {
 	u64 RegAddr;
 	u32 RegOff;
+	AieRC Status = XAIE_OK;
 
 	RegOff = LockMod->BaseAddr + (Lock.LockId * LockMod->LockIdOff) +
 		(LockMod->RelAcqOff) + (((u8)Lock.LockVal &
@@ -122,14 +133,22 @@ AieRC _XAieMl_LockAcquire(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOff;
 
-	if(XAie_MaskPoll(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
-				(XAIEML_LOCK_RESULT_SUCCESS <<
-				 XAIEML_LOCK_RESULT_LSB), TimeOut) != XAIE_OK) {
+	if (BusyPoll != XAIE_ENABLE) {
+		Status = XAie_MaskPoll(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
+					(XAIEML_LOCK_RESULT_SUCCESS <<
+					 XAIEML_LOCK_RESULT_LSB), TimeOut);
+	} else {
+		Status = XAie_MaskPollBusy(DevInst, RegAddr, XAIEML_LOCK_RESULT_MASK,
+					(XAIEML_LOCK_RESULT_SUCCESS <<
+					 XAIEML_LOCK_RESULT_LSB), TimeOut);
+	}
 
+	if (Status != XAIE_OK) {
+		XAIE_DBG("Wait for lock acquire timed out\n");
 		return XAIE_LOCK_RESULT_FAILED;
 	}
 
-	return XAIE_OK;
+	return Status;
 }
 
 /*****************************************************************************/

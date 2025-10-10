@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2019 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2019-2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -19,8 +20,8 @@
 #include "xaiegbl.h"
 /**************************** Type Definitions *******************************/
 /************************** Function Prototypes  *****************************/
-AieRC XAie_ResetPartition(XAie_DevInst *DevInst);
-AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ResetPartition(XAie_DevInst *DevInst);
+XAIE_AIG_EXPORT AieRC XAie_ClearPartitionMems(XAie_DevInst *DevInst);
 #endif		/* end of protection macro */
 
 /** @} */

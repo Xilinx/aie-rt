@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (C) 2021 - 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2023-2024 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -28,14 +28,23 @@
 #include "xaie_lite_hwcfg.h"
 #include "xaie_lite_io.h"
 #include "xaie_lite_npi.h"
+#if ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) || \
+	(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0) || \
+	(XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0))
+#include "xaie_lite_regdef_aie2p.h"
+#else
 #include "xaie_lite_regdef_aieml.h"
+#endif
 #include "xaiegbl_defs.h"
 #include "xaiegbl.h"
 #include "xaie_lite_util.h"
-#include "xaie_tilectrl.h"
+
+/* AIE core registers step size */
+#define AIE_CORE_REGS_STEP              0x10
+#define MAX_DMA_CHAN			2
+#define MAX_DMA_DIR			2
 
 /************************** Constant Definitions *****************************/
-
 /************************** Function Prototypes  *****************************/
 #if defined(XAIE_FEATURE_LITE_UTIL)
 /*****************************************************************************/
@@ -50,16 +59,16 @@
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
+static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
 	u64 RegAddr;
 
 	/* core status addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_STATUS_REGOFF;
 
 	/* core status */
@@ -68,7 +77,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 		 & XAIE_AIE_TILE_CORE_STATUS_MASK);
 
 	/* core program counter addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_PC_REGOFF;
 
 	/* program counter */
@@ -77,7 +86,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 		 & XAIE_AIE_TILE_CORE_PC_MASK);
 
 	/* core stack pointer addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_SP_REGOFF;
 
 	/* stack pointer */
@@ -86,7 +95,7 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 		 & XAIE_AIE_TILE_CORE_SP_MASK);
 
 	/* core link addr */
-	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+	RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 		+ XAIE_AIE_TILE_CORE_LR_REGOFF;
 
 	/* link register */
@@ -107,18 +116,19 @@ static inline void _XAie_LCoreStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
+static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
 	u64 RegAddr;
+
 	/* iterate all tile dma channels */
 	for (u32 Chan = 0; Chan < XAIE_TILE_DMA_NUM_CH; Chan++) {
 
 		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_IDX + XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -126,7 +136,7 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_TILE_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_IDX + XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 
 		/* read mm2s channel status */
@@ -148,19 +158,19 @@ static inline void _XAie_LCoreDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LCoreLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
+static inline void _XAie_LCoreLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
 	u64 RegAddr;
 
 	/* iterate all lock value registers */
 	for(u32 Lock = 0; Lock < XAIE_TILE_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Lock * XAIE_AIE_TILE_LOCK_VALUE_IDX + XAIE_AIE_TILE_LOCK_VALUE_REGOFF;
 
 		/* read lock value */
@@ -194,12 +204,20 @@ static inline void _XAie_LCoreEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 	for(u32 EventReg = 0; EventReg < XAIE_CORE_TILE_NUM_EVENT_STATUS_REGS; EventReg++) {
 
 		/* event status address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col)
-			+ EventReg * XAIE_AIE_TILE_EVENT_STATUS_IDX + XAIE_AIE_TILE_EVENT_STATUS_REGOFF;
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
+			+ EventReg * XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_IDX + XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_REGOFF;
 
 		/* read event status register and store in output buffer */
-		Status[Col].CoreTile[Row].EventStatus[EventReg] =
-			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_EVENT_STATUS_MASK);
+		Status[Col].CoreTile[Row].EventCoreModStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_CORE_MOD_EVENT_STATUS_MASK);
+
+		/* event status address */
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_AIE_TILE_ROW_START, Col + DevInst->StartCol)
+			+ EventReg * XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_IDX + XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_REGOFF;
+
+		/* read event status register and store in output buffer */
+		Status[Col].CoreTile[Row].EventMemModStatus[EventReg] =
+			(u32)(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_AIE_TILE_MEM_MOD_EVENT_STATUS_MASK);
 	}
 }
 
@@ -215,19 +233,19 @@ static inline void _XAie_LCoreEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
+static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
 	u64 RegAddr;
 
 	/* mem tile dma status */
 	for(u32 Chan = 0; Chan < XAIE_MEM_TILE_DMA_NUM_CH; Chan++) {
 
 		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_IDX + XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -235,7 +253,7 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_MEM_TILE_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Chan * XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_IDX + XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -256,19 +274,19 @@ static inline void _XAie_LMemDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *S
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LMemLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row) {
-
+static inline void _XAie_LMemLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col, u32 Row)
+{
 	u64 RegAddr;
 
 	/* iterate all lock value registers */
 	for(u32 Lock = 0; Lock < XAIE_MEM_TILE_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ Lock * XAIE_MEM_TILE_LOCK_VALUE_IDX + XAIE_MEM_TILE_LOCK_VALUE_REGOFF;
 
 		/* read lock value */
@@ -302,7 +320,7 @@ static inline void _XAie_LMemEventStatus(XAie_DevInst *DevInst, XAie_Col_Status 
 	for(u32 EventReg = 0; EventReg < XAIE_MEM_TILE_NUM_EVENT_STATUS_REGS; EventReg++)
 	{
 		/* Event Status address */
-		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col)
+		RegAddr = _XAie_LGetTileAddr(Row + XAIE_MEM_TILE_ROW_START, Col + DevInst->StartCol)
 			+ EventReg * XAIE_MEM_TILE_EVENT_STATUS_IDX + XAIE_MEM_TILE_EVENT_STATUS_REGOFF;
 
 		/* read Event Status register */
@@ -322,12 +340,12 @@ static inline void _XAie_LMemEventStatus(XAie_DevInst *DevInst, XAie_Col_Status 
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col) {
-
+static inline void _XAie_LTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
+{
 	/* iterate all mem tile rows */
 	for(u32 Row = 0; Row < XAIE_MEM_TILE_NUM_ROWS; Row++) {
 		_XAie_LMemDMAStatus(DevInst, Status, Col, Row);
@@ -355,19 +373,19 @@ static inline void _XAie_LTileStatus(XAie_DevInst *DevInst, XAie_Col_Status *Sta
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LShimLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col) {
-
+static inline void _XAie_LShimLockValue(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
+{
 	u64 RegAddr;
 
 	/* iterate all lock value registers for shim tile*/
 	for(u32 Lock = 0; Lock < XAIE_SHIM_NUM_LOCKS; Lock++) {
 
 		/* lock value address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col)
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col + DevInst->StartCol)
 			+ Lock * XAIE_SHIM_TILE_LOCK_VALUE_IDX + XAIE_SHIM_TILE_LOCK_VALUE_REGOFF;
 
 		/* read lock value */
@@ -388,19 +406,17 @@ static inline void _XAie_LShimLockValue(XAie_DevInst *DevInst, XAie_Col_Status *
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col) {
-
+static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status, u32 Col)
+{
 	u64 RegAddr;
 
 	/* shim dma status - fixed at row XAIE_SHIM_ROW */
 	for(u32 Chan = 0; Chan < XAIE_SHIM_DMA_NUM_CH; Chan++) {
-
-		/* s2mm channel address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_IDX +
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col + DevInst->StartCol) + Chan * XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_IDX +
 			XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 
 		/* read s2mm channel status */
@@ -408,7 +424,7 @@ static inline void _XAie_LShimDMAStatus(XAie_DevInst *DevInst, XAie_Col_Status *
 			(_XAie_LPartRead32(DevInst, RegAddr) & XAIE_SHIM_DMA_S2MM_CHANNEL_VALID_BITS_MASK);
 
 		/* mm2s channel address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) + Chan * XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_IDX +
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col + DevInst->StartCol) + Chan * XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_IDX +
 			XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 
 		/* read mm2s channel status */
@@ -440,7 +456,7 @@ static inline void _XAie_LShimEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 	for (u32 EventReg = 0; EventReg < XAIE_SHIM_TILE_NUM_EVENT_STATUS_REGS; EventReg++) {
 
 		/* event status register address */
-		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col)
+		RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col+DevInst->StartCol)
 			+ EventReg * XAIE_SHIM_TILE_EVENT_STATUS_IDX + XAIE_SHIM_TILE_EVENT_STATUS_REGOFF;
 
 		/* read event status value */
@@ -462,7 +478,7 @@ static inline void _XAie_LShimEventStatus(XAie_DevInst *DevInst, XAie_Col_Status
 *
 * @return	None.
 *
-* @note		None.
+* @note		Internal only.
 *
 ******************************************************************************/
 __FORCE_INLINE__
@@ -487,24 +503,22 @@ static inline void _XAie_LShimTileStatus(XAie_DevInst *DevInst, XAie_Col_Status 
 *
 ******************************************************************************/
 __FORCE_INLINE__
-static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status) {
-
-	u32 StartCol = (u32)(DevInst->StartCol);
+static inline void XAie_LGetColRangeStatus(XAie_DevInst *DevInst, XAie_Col_Status *Status)
+{
 	u32 NumCols  = (u32)(DevInst->NumCols);
 
 	/* iterate specified columns */
-	for(u32 Col = StartCol; Col < NumCols; Col++) {
+	for(u32 Col = 0; Col < NumCols; Col++) {
 		_XAie_LShimTileStatus(DevInst, Status, Col);
 		_XAie_LTileStatus(DevInst, Status, Col);
 	}
 }
 
 #endif      /* end of #if defined(XAIE_FEATURE_LITE_UTIL) */
-
 /*****************************************************************************/
 /**
 *
-* This API checks if an AI engine tile is in use.
+* This API checks if an AI engine array tile is in use.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Tile location.
@@ -527,7 +541,7 @@ static inline u8 _XAie_LPmIsArrayTileRequested(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
-* This API sets SHIM reset in the AI engine partition
+* This API set SHIM reset in the AI engine partition
 *
 * @param	DevInst: Device Instance
 * @param	Loc: SHIM tile location
@@ -558,26 +572,16 @@ static inline void _XAie_LSetPartColShimReset(XAie_DevInst *DevInst,
 * @note		Internal API only.
 *
 ******************************************************************************/
-static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
+static inline void _XAie_LSetPartIsolationAfterRst(XAie_DevInst *DevInst)
 {
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		u64 RegAddr;
 		u32 RegVal = 0;
 
-		if (IsolationFlags == XAIE_INIT_ISOLATION) {
-			if(C == 0) {
-				RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
-			}
-			if(C == (u8)(DevInst->NumCols - 1)) {
-				RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
-			}
-		}
-
-		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
-			RegVal |= XAIE_ISOLATE_WEST_MASK;
-		}
-		if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
-			RegVal |= XAIE_ISOLATE_EAST_MASK;
+		if(C == 0) {
+			RegVal = XAIE_TILE_CNTR_ISOLATE_WEST_MASK;
+		} else if(C == (u8)(DevInst->NumCols - 1)) {
+			RegVal = XAIE_TILE_CNTR_ISOLATE_EAST_MASK;
 		}
 
 		/* Isolate boundrary of SHIM tiles */
@@ -658,6 +662,11 @@ static inline void  _XAie_LPartMemZeroInit(XAie_DevInst *DevInst)
 	_XAie_LPartPoll32(DevInst, RegAddr,
 			XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
 
+}
+
+static inline void _XAie_LCertMemZeroInit(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
 }
 
 /*****************************************************************************/
@@ -790,17 +799,18 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 	u64 RegAddr;
 	int Ret;
 
-	for(u8 C = 0; C < DevInst->NumCols; C++) {
-		for (u8 R = XAIE_MEM_TILE_ROW_START;
-			R < XAIE_AIE_TILE_ROW_START; R++) {
-			RegAddr = _XAie_LGetTileAddr(R, C) +
-				XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
-			_XAie_LPartMaskWrite32(DevInst, RegAddr,
-				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK,
-				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK);
+	if(DevInst->L2PreserveMem == 0) {
+		for(u8 C = 0; C < DevInst->NumCols; C++) {
+			for (u8 R = XAIE_MEM_TILE_ROW_START;
+					R < XAIE_AIE_TILE_ROW_START; R++) {
+				RegAddr = _XAie_LGetTileAddr(R, C) +
+					XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
+				_XAie_LPartMaskWrite32(DevInst, RegAddr,
+						XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK,
+						XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK);
+			}
 		}
 	}
-
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		for (u8 R = XAIE_AIE_TILE_ROW_START;
 			R < XAIE_NUM_ROWS; R++) {
@@ -824,14 +834,17 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 				XAIE_MEM_MOD_MEM_CNTR_ZEROISATION_MASK, 0, 800);
 		if (Ret < 0)
 			return XAIE_ERR;
-
-		RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1, C) +
+		
+		if(DevInst->L2PreserveMem == 0) {
+			RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1, C) +
 				XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
-		Ret = _XAie_LPartPoll32(DevInst, RegAddr,
-				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
-		if (Ret < 0)
-			return XAIE_ERR;
+			Ret = _XAie_LPartPoll32(DevInst, RegAddr,
+					XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
+			if (Ret < 0)
+				return XAIE_ERR;
+		}
 	}
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -864,6 +877,203 @@ static inline void _XAie_LNpiSetPartProtectedReg(XAie_DevInst *DevInst,
 	_XAie_LNpiSetLock(XAIE_DISABLE);
 	_XAie_LNpiWriteCheck32(XAIE_NPI_PROT_REG_CNTR_REG, RegVal);
 	_XAie_LNpiSetLock(XAIE_ENABLE);
+}
+
+#if ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE) || \
+     (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIEML) || \
+     (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2IPU))
+
+/*****************************************************************************/
+/**
+ *
+ * Disable TLAST is not supported on AIEML
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+	(void)DevInst;
+}
+#else
+/*****************************************************************************/
+/**
+ *
+ * This API Disable TLAST Error Enable Field in Module Clock Control register.
+ * By disabling this bit, control packet can be processed without the need
+ * for TLAST to be present after each packet.
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
+	u64 RegAddr;
+	u32 Mask;
+
+	MemTileStart = XAIE_MEM_TILE_ROW_START;
+	MemTileEnd = XAIE_MEM_TILE_ROW_START + XAIE_MEM_TILE_NUM_ROWS;
+	AieRowStart = XAIE_AIE_TILE_ROW_START;
+	AieRowEnd = XAIE_AIE_TILE_ROW_START + XAIE_AIE_TILE_NUM_ROWS;
+
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			RegAddr = XAIE_AIE_TILE_CLOCK_CONTROL_REGOFF + _XAie_LGetTileAddr(Row, Col);
+			Mask = XAIE_AIE_TILE_CLOCK_CONTROL_STREAM_SWITCH_MASK;
+			_XAie_LPartMaskWrite32(DevInst, RegAddr, Mask, XAIE_DISABLE);
+		}
+		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
+			RegAddr = XAIE_MEM_TILE_CLOCK_CONTROL_REGOFF + _XAie_LGetTileAddr(MemRow, Col);
+			Mask = XAIE_MEM_TILE_CLOCK_CONTROL_STREAM_SWITCH_MASK;
+			_XAie_LPartMaskWrite32(DevInst, RegAddr, Mask, XAIE_DISABLE);
+		}
+		/*
+		 * Shim tile Clock Control TLAST Error disabled
+		 */
+		RegAddr = XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_REGOFF + _XAie_LGetTileAddr(0, Col);
+		Mask = XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_STREAM_SWITCH_MASK;
+		_XAie_LPartMaskWrite32(DevInst, RegAddr, Mask, XAIE_DISABLE);
+
+	}
+}
+
+#endif /* GEN == AIE || AIEML || AIE2IPU */
+
+/*****************************************************************************/
+/**
+ *
+ * This API runs loop through all start and end of core registers
+ *
+ * @param	DevInst: Device Instance
+ *		soff   : Start Address of Core Register
+ *		eoff   : End Address of Core Register
+ *		Row   :  Row number of Tile
+ *		Col   :  Column Number
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_WriteCoreReg(XAie_DevInst *DevInst, u32 soff, u32 eoff,
+				      u8 Row, u8 Col, u8 width)
+{
+	u32 RegAddr;
+	u8 j;
+	for(u32 reg = soff; reg <= eoff; reg+= AIE_CORE_REGS_STEP) {
+		for(j = 0; j < width; j++) {
+			RegAddr = reg + _XAie_LGetTileAddr(Row, Col);
+			_XAie_LPartWrite32(DevInst, (RegAddr + j * 4), 0);
+		}
+	}
+}
+
+/*****************************************************************************/
+/**
+ *
+ * This API Clears Core register as a part of Clear context.
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	None.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static inline void _XAie_ClearCoreReg(XAie_DevInst *DevInst)
+{
+	u32 soff, eoff;
+	u8 Row, Col;
+
+	for(Row = XAIE_AIE_TILE_ROW_START; Row < DevInst->NumRows; Row++) {
+		for(Col = DevInst->StartCol; Col < DevInst->NumCols; Col++) {
+
+                        /* Below registers are 128-bit. So need to write in 4 cycles */
+			soff = XAIE_AIE_TILE_CORE_LL_REGOFF;
+			eoff = XAIE_AIE_TILE_CORE_HH_REGOFF;
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+			soff = XAIE_CORE_MODULE_CORE_WL0_PART1_REGOFF;
+			eoff = XAIE_CORE_MODULE_CORE_WH11_PART2_REGOFF;
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+#if ((XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P) || \
+        (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_B0) || \
+        (XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE2P_STRIX_A0))
+
+			soff = XAIE_CORE_MODULE_CORE_Q0_REGOFF;
+			eoff = XAIE_CORE_MODULE_CORE_LDFIFOH1_PART4_REGOFF;
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+			soff = XAIE_CORE_MODULE_CORE_E0_REGOFF;
+			eoff = XAIE_CORE_MODULE_CORE_E11_REGOFF;
+			/* Below registers are 64-bit. So need to write in 2 cycles */
+			_XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 2);
+
+#else
+                        soff = XAIE_CORE_MODULE_CORE_Q0_REGOFF;
+                        eoff = XAIE_CORE_MODULE_CORE_Q3_REGOFF;
+                        /* Below registers are 128-bit. So need to write in 4 cycles */
+                        _XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 4);
+
+#endif
+                        soff = XAIE_CORE_MODULE_CORE_R0_REGOFF;
+                        eoff = XAIE_CORE_MODULE_CORE_S3_REGOFF;
+                        /* Below registers are 32-bit. So need to write in 1 cycles */
+                        _XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 1);
+	
+                        soff = XAIE_CORE_MODULE_CORE_PC_START_REGOFF;
+                        eoff = XAIE_CORE_MODULE_CORE_PC_END_REGOFF;
+                        /* Below registers are 32-bit. So need to write in 1 cycles */
+                        _XAie_WriteCoreReg(DevInst, soff, eoff, Row, Col, 1);
+
+		}
+	}
+}
+
+/*****************************************************************************/
+/**
+ *
+ * This API Stops issueing new AXI-MM commands before context switch
+ * Before context switching Needs to stop new AXI-MM transactions. So
+ * that context switch can be done and no data corruption can happen.
+ *
+ * @param       DevInst: Device Instance
+ *
+ * @return      None.
+ *
+ * @note        None.
+ *
+ *****************************************************************************/
+static inline void _XAie_PauseMem(XAie_DevInst *DevInst)
+{
+	u64 RegAddr;
+	u32 RegVal;
+	u8 Col, Dir, ChNum;
+
+	for(Col = DevInst->StartCol; Col < DevInst->NumCols; Col++) {
+		for(Dir = 0; Dir < MAX_DMA_DIR; Dir++) {
+			for(ChNum = 0; ChNum < MAX_DMA_CHAN; ChNum++) {
+				RegAddr = _XAie_LGetTileAddr(XAIE_SHIM_ROW, Col) +
+					XAIE_SHIM_DMA_MM2S_CHANNEL_CTRL_REGOFF +
+					ChNum * XAIE_SHIM_DMA_CHANNEL_CTRL_IDX +
+					(u32)Dir * XAIE_SHIM_DMA_CHANNEL_CTRL_IDX_OFFSET;
+				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
+				RegVal = (RegVal | XAIE_SHIM_DMA_CHANNEL_CTRL_PAUSE_MEM_MASK);
+				_XAie_LPartWrite32(DevInst, RegAddr, RegVal);
+			}
+		}
+	}
+	usleep(10000);
 }
 
 #endif		/* end of protection macro */

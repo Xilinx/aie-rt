@@ -1,5 +1,6 @@
 /******************************************************************************
-* Copyright (C) 2022 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+* Copyright (C) 2022-2023 Advanced Micro Devices, Inc. All rights reserved.
 * SPDX-License-Identifier: MIT
 ******************************************************************************/
 
@@ -158,6 +159,28 @@ static inline u8 _XAie_MapColToIrqId(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	return IrqId;
 }
+
+#if XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE
+/*****************************************************************************/
+/**
+* This API modifies(enable or disable) the clock control register for given shim.
+*
+* @param        DevInst: Device Instance
+* @param        Loc: Location of AIE SHIM tile
+* @param        Enable: XAIE_ENABLE to enable shim clock buffer,
+*                       XAIE_DISABLE to disable.
+
+* @note         It is internal function to this file
+*
+******************************************************************************/
+static inline void _XAie_PrivilegeSetShimClk(XAie_DevInst *DevInst,
+					     XAie_LocType Loc, u8 Enable)
+{
+	(void)DevInst;
+	(void)Loc;
+	(void)Enable;
+}
+#endif /* XAIE_DEV_SINGLE_GEN == XAIE_DEV_GEN_AIE */
 
 #endif		/* end of protection macro */
 /** @} */
