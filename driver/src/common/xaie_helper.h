@@ -36,6 +36,7 @@
 /***************************** Include Files *********************************/
 #include <limits.h>
 #include <stdio.h>
+#include <stddef.h>
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
 #include "xaie_core.h"
@@ -73,8 +74,7 @@
 #endif /* XAIE_DEBUG */
 
 /* Compute offset of field within a structure */
-#define XAIE_OFFSET_OF(structure, member) \
-	((uintptr_t)&(((structure *)0)->member))
+#define XAIE_OFFSET_OF(structure, member) offsetof(structure, member)
 
 /* Compute a pointer to a structure given a pointer to one of its fields */
 #define XAIE_CONTAINER_OF(ptr, structure, member) \
