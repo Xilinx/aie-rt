@@ -14,14 +14,13 @@ jobs:
     env:
       JENKINS_URL: "http://172.23.155.96:8080/"
       JENKINS_USER: "ips-lab"
-      JENKINS_TOKEN: "115d61b0f96a470b614c9f09aacf0d3814"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Run aie-rt build Patch Tests.
         run: |
           jenkinsUrl="${{ env.JENKINS_URL }}"
           user="${{ env.JENKINS_USER }}"
-          token="${{ env.JENKINS_TOKEN }}"
+          token=$(jq -r '.jenkins_token' /proj/xresults_dcs7/kishorer/my_work/config_files/jenkins_config.json)
           auth="$user:$token"
           base64AuthInfo=$(echo -n "$auth" | base64)
           headers="Authorization: Basic $base64AuthInfo"
