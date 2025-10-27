@@ -1092,27 +1092,33 @@ static inline u8 _XAie_CheckTxnCmd16KBBoundary(u32 CmdSize, u32 CurrentBuffSize,
 /**
 *
 * This function adds NoOp commands to fill remaining bytes to 16KB boundary.
+* Also increments LoadSeqCount for every NoOp TXN command added when
+* DevInst->PmLoadingActive == 1 and command is not XAIE_IO_LOAD_PM_START
+* or XAIE_IO_LOAD_PM_END_INTERNAL.
 *
+* @param	DevInst: Device Instance pointer.
 * @param	TxnPtr: Pointer to transaction buffer location.
 * @param	BuffSize: Pointer to current buffer size (updated by function).
 * @param	AllocatedBuffSize: Pointer to allocated buffer size (updated by function).
 * @param	RemainingBytes: Number of bytes remaining to 16KB boundary.
 * @param	BlockwriteBuffer: Pointer to blockwrite buffer (for error cleanup).
 * @param	NumOps: Pointer to number of operations (incremented by function).
+* @param	LoadSeqCount: Pointer to load sequence count (incremented by function).
+* @param	Cmd: Pointer to the current transaction command.
 *
 * @return	Updated TxnPtr or NULL on error.
 *
 * @note	Internal only.
 *
 ******************************************************************************/
-static inline u8* _XAie_AddNoOpPadding16KB(u8 *TxnPtr,
+static inline u8* _XAie_AddNoOpPadding16KB(XAie_DevInst *DevInst, u8 *TxnPtr,
 					    u32 *BuffSize, u32 *AllocatedBuffSize,
 					    u32 RemainingBytes, u32 *BlockwriteBuffer,
-					    u32 *NumOps)
+					    u32 *NumOps, u32 *LoadSeqCount, XAie_TxnCmd *Cmd)
 {
 	u32 NoOpCmdsNeeded = RemainingBytes / sizeof(XAie_NoOpHdr);
 	u32 UnAlignedAddr = RemainingBytes % sizeof(XAie_NoOpHdr);
-	XAie_NoOpHdr Cmd = {
+	XAie_NoOpHdr NoOpCmd = {
 		.Op = XAIE_IO_NOOP,
 		.padding = {0,0,0}
 	};
@@ -1152,13 +1158,23 @@ static inline u8* _XAie_AddNoOpPadding16KB(u8 *TxnPtr,
 
 		/* Directly copy the NoOp header instead of unsafe casting */
 		XAie_NoOpHdr *Hdr = (XAie_NoOpHdr*)(uintptr_t)TxnPtr;
-		*Hdr = Cmd;
+		*Hdr = NoOpCmd;
 		TxnPtr += sizeof(XAie_NoOpHdr);
 		*BuffSize += (u32)sizeof(XAie_NoOpHdr);
 
 		/* Increment the number of operations for each NoOp added */
 		if (NumOps != NULL) {
 			(*NumOps)++;
+		}
+
+		/**
+		 * Increment LoadSeqCount for every NoOp command added when
+		 * DevInst->PmLoadingActive == 1 and command is not XAIE_IO_LOAD_PM_START
+		 * or XAIE_IO_LOAD_PM_END_INTERNAL
+		 */
+		if ((DevInst->PmLoadingActive == 1) && (Cmd->Opcode != XAIE_IO_LOAD_PM_START) \
+			&& (Cmd->Opcode != XAIE_IO_LOAD_PM_END_INTERNAL)) {
+			(*LoadSeqCount)++;
 		}
 	}
 
@@ -1171,20 +1187,25 @@ static inline u8* _XAie_AddNoOpPadding16KB(u8 *TxnPtr,
 * This function checks if a transaction command will cross a 16KB boundary
 * and adds NoOp padding if necessary
 *
+* @param        DevInst: Device Instance pointer
 * @param        TxnPtr: Pointer to current position in transaction buffer
 * @param        BuffSize: Pointer to current buffer size
 * @param        AllocatedBuffSize: Pointer to allocated buffer size
 * @param        CmdSize: Size of the command to check
 * @param        BlockwriteBuffer: Block write buffer for cleanup on failure
 * @param        NumOps: Pointer to number of operations counter
+* @param        LoadSeqCount: Pointer to load sequence count
+* @param        Cmd: Pointer to the current transaction command
 *
 * @return       Updated TxnPtr on success, NULL on failure
 *
 * @note         Internal only.
 *
 ******************************************************************************/
-static inline u8* _XAie_HandleTxnCmd16KBBoundary(u8 *TxnPtr, u32 *BuffSize, u32 *AllocatedBuffSize,
-						  u32 CmdSize, u32 *BlockwriteBuffer, u32 *NumOps)
+static inline u8* _XAie_HandleTxnCmd16KBBoundary(XAie_DevInst *DevInst, u8 *TxnPtr,
+						u32 *BuffSize, u32 *AllocatedBuffSize, u32 CmdSize,
+						u32 *BlockwriteBuffer, u32 *NumOps, u32 *LoadSeqCount,
+						XAie_TxnCmd *Cmd)
 {
 	u32 RemainingBytes = 0U;
 
@@ -1193,8 +1214,8 @@ static inline u8* _XAie_HandleTxnCmd16KBBoundary(u8 *TxnPtr, u32 *BuffSize, u32 
 			 CmdSize, *BuffSize, RemainingBytes);
 
 		/* Add NoOp commands to fill remaining bytes to 16KB boundary */
-		TxnPtr = _XAie_AddNoOpPadding16KB(TxnPtr, BuffSize, AllocatedBuffSize,
-						  RemainingBytes, BlockwriteBuffer, NumOps);
+		TxnPtr = _XAie_AddNoOpPadding16KB(DevInst, TxnPtr, BuffSize, AllocatedBuffSize,
+						  RemainingBytes, BlockwriteBuffer, NumOps, LoadSeqCount, Cmd);
 		if (TxnPtr == NULL) {
 			return NULL;
 		}
@@ -1297,8 +1318,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_Write32Hdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_Write32Hdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1321,8 +1342,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_MaskWrite32Hdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_MaskWrite32Hdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1345,8 +1366,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_MaskPoll32Hdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_MaskPoll32Hdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1369,8 +1390,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_MaskPoll32Hdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_MaskPoll32Hdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1433,8 +1454,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 					/* Check for 16KB boundary crossing for current BW Header Only*/
 					u32 BlockWriteCmdSize = (u32)sizeof(XAie_BlockWrite32Hdr);
-					TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-								       BlockWriteCmdSize, BlockwriteBuffer, &NumOps);
+					TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+								       BlockWriteCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 					if (TxnPtr == NULL) {
 						return NULL;
 					}
@@ -1458,8 +1479,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 				/* Check for 16KB boundary crossing for current BW Header only*/
 				u32 BlockWriteCmdSize = (u32)sizeof(XAie_BlockWrite32Hdr);
-				TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-								       BlockWriteCmdSize, BlockwriteBuffer, &NumOps);
+				TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+								       BlockWriteCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 				if (TxnPtr == NULL) {
 					return NULL;
 				}
@@ -1501,8 +1522,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			 */
 			u32 BlockSetCmdSize = (u32)sizeof(XAie_BlockWrite32Hdr) + Cmd->Size * (u32)sizeof(u32);
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       BlockSetCmdSize, BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       BlockSetCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1529,8 +1550,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_NOOP)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_NoOpHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_NoOpHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1554,8 +1575,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_PREEMPT)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_PreemptHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_PreemptHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1579,8 +1600,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_LOADPDI)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_LoadPdiHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_LoadPdiHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1604,8 +1625,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_LOAD_PM_START)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_PmLoadHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_PmLoadHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1657,8 +1678,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_CreateScratchpadHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_CreateScratchpadHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1682,8 +1703,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_UpdateStateHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_UpdateStateHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1707,8 +1728,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_REG)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_UpdateRegHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_UpdateRegHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1732,8 +1753,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_SCRATCH)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_UpdateScratchHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_UpdateScratchHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1757,8 +1778,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_TCT) {
 			/* Check for 16KB boundary crossing and add padding if needed */
 			u32 CustomOpCmdSize = (u32)sizeof(XAie_CustomOpHdr) + Cmd->Size * (u32)sizeof(u8);
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       CustomOpCmdSize, BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       CustomOpCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -1985,8 +2006,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 	
 		if ((Cmd->Opcode == XAIE_IO_WRITE) && (Cmd->Mask == 0U)) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_Write32Hdr_opt), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_Write32Hdr_opt), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2009,8 +2030,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if ((Cmd->Opcode == XAIE_IO_WRITE) && ((Cmd->Mask)!=0U)) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_MaskWrite32Hdr_opt), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_MaskWrite32Hdr_opt), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2033,8 +2054,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_MaskPoll32Hdr_opt), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_MaskPoll32Hdr_opt), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2057,8 +2078,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 		else if (Cmd->Opcode == XAIE_IO_MASKPOLL_BUSY) {
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_MaskPoll32Hdr_opt), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_MaskPoll32Hdr_opt), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2109,8 +2130,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 
 					/* Check for 16KB boundary crossing of BW Header only and add padding if needed */
 					u32 BlockWriteCmdSize = (u32)sizeof(XAie_BlockWrite32Hdr);
-					TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       BlockWriteCmdSize, BlockwriteBuffer, &NumOps);
+					TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       BlockWriteCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 					if (TxnPtr == NULL) {
 						return NULL;
 					}
@@ -2130,8 +2151,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			} else {
 				/* Check for 16KB boundary crossing of BW Header only and add padding if needed */
 				u32 BlockWriteCmdSize = (u32)sizeof(XAie_BlockWrite32Hdr);
-				TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-						       BlockWriteCmdSize, BlockwriteBuffer, &NumOps);
+				TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+						       BlockWriteCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 				if (TxnPtr == NULL) {
 					return NULL;
 				}
@@ -2163,8 +2184,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if (Cmd->Opcode == XAIE_IO_BLOCKSET) {
 			/* Check for 16KB boundary crossing and add padding if needed */
 			u32 BlockSetCmdSize = (u32)sizeof(XAie_BlockWrite32Hdr_opt) + Cmd->Size * (u32)sizeof(u32);
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       BlockSetCmdSize, BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       BlockSetCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2195,8 +2216,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_NOOP)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_NoOpHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_NoOpHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2220,8 +2241,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_PREEMPT)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_PreemptHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_PreemptHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2245,8 +2266,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_LOADPDI)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_LoadPdiHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_LoadPdiHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2270,8 +2291,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_LOAD_PM_START)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_PmLoadHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_PmLoadHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2297,8 +2318,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_CREATE_SCRATCHPAD)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_CreateScratchpadHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_CreateScratchpadHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2322,8 +2343,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_STATE_TABLE)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_UpdateStateHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_UpdateStateHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2347,8 +2368,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_REG)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_UpdateRegHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_UpdateRegHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2372,8 +2393,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if(Cmd->Opcode == XAIE_IO_UPDATE_SCRATCH)
 		{
 			/* Check for 16KB boundary crossing and add padding if needed */
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       (u32)sizeof(XAie_UpdateScratchHdr), BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       (u32)sizeof(XAie_UpdateScratchHdr), BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
@@ -2422,8 +2443,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_TCT) {
 			/* Check for 16KB boundary crossing and add padding if needed */
 			u32 CustomOpCmdSize = (u32)sizeof(XAie_CustomOpHdr_opt) + Cmd->Size * (u32)sizeof(u8);
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(TxnPtr, &BuffSize, &AllocatedBuffSize,
-							       CustomOpCmdSize, BlockwriteBuffer, &NumOps);
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+							       CustomOpCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
 			if (TxnPtr == NULL) {
 				return NULL;
 			}
