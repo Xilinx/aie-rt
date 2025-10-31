@@ -48,6 +48,11 @@
 #define XAIE_TXN_16KB_BOUNDARY (16U * 1024U)
 
 /************************** Function Definitions *****************************/
+static inline u8* _XAie_HandleTxnCmd16KBBoundary(XAie_DevInst *DevInst, u8 *TxnPtr,
+						u32 *BuffSize, u32 *AllocatedBuffSize, u32 CmdSize,
+						u32 *BlockwriteBuffer, u32 *NumOps, u32 *LoadSeqCount,
+						XAie_TxnCmd *Cmd);
+
 /*****************************************************************************/
 /**
 * This API creates transaction binary header using device info.
@@ -1009,26 +1014,31 @@ static inline void _XAie_AppendBWToBlockwriteBuff(XAie_DevInst *DevInst, XAie_Tx
 	}
 }
 
-static inline u32 _XAie_AppendBWToTxnBuff(u32* BlockwriteBuffer,u8* TxnPtr, u32 PatchCmdCount)
+static inline u8* _XAie_AppendBWToTxnBuff(XAie_DevInst *DevInst,
+						u32* BlockwriteBuffer, u8* TxnPtr, u32 PatchCmdCount,
+						u32 *BuffSize, u32 *AllocatedBuffSize, u32 *NumOps,
+						u32 *LoadSeqCount)
 {
 	XAie_BlockWrite32Hdr *Hdr = (XAie_BlockWrite32Hdr*)(uintptr_t)BlockwriteBuffer;
-	u32 Size = 0,PatchCmdSize=0;
-	u8* TempPtr = NULL;
+	u32 Size = 0, PatchCmdSize = 0, PatchBufferSize = 0;
+	u8* PatchBufferPtr = NULL;
 
+	PatchCmdSize = sizeof(patch_op_t) + sizeof(XAie_CustomOpHdr);
 	if(PatchCmdCount != 0){
 
-		PatchCmdSize = ((PatchCmdCount) * ( sizeof(patch_op_t) + sizeof(XAie_CustomOpHdr) )) & UINT_MAX;
-		XAIE_DBG("_XAie_AppendBWToTxnBuff:PatchCmdSize = %d\n", PatchCmdSize);
+		PatchBufferSize = ((PatchCmdCount) * PatchCmdSize) & UINT_MAX;
+		XAIE_DBG("_XAie_AppendBWToTxnBuff:PatchBufferSize = %d\n", PatchBufferSize);
 
-		TempPtr = calloc(1,PatchCmdSize);
-		if(TempPtr == NULL) {
+		PatchBufferPtr = calloc(1,PatchBufferSize);
+		if(PatchBufferPtr == NULL) {
 			XAIE_ERROR("Calloc failed\n");
 			return 0;
 		}
 	
-		TxnPtr -= PatchCmdSize;
-		memcpy(TempPtr, TxnPtr, PatchCmdSize);
-		memset(TxnPtr, 0, PatchCmdSize);
+		TxnPtr -= PatchBufferSize;
+		memcpy(PatchBufferPtr, TxnPtr, PatchBufferSize);
+		memset(TxnPtr, 0, PatchBufferSize);
+		*BuffSize -= PatchBufferSize;
 	}
 	else
 	{
@@ -1038,19 +1048,40 @@ static inline u32 _XAie_AppendBWToTxnBuff(u32* BlockwriteBuffer,u8* TxnPtr, u32 
 	memcpy((void*)TxnPtr, (const void *)(uintptr_t)BlockwriteBuffer, Hdr->Size);
 	Size = Hdr->Size;
 	memset(BlockwriteBuffer, 0, Size);
+	TxnPtr += Size;
 
 	if(PatchCmdCount != 0)
 	{
-		TxnPtr += Size;
-		memcpy(TxnPtr, TempPtr, PatchCmdSize);
-		free(TempPtr);
+		u8* TempPtr = PatchBufferPtr;
+
+		/**
+		 * Add patch command one at a time and check if 16KB spill over
+		 * occur if yes then add noops
+		 */
+		for (u32 i = 0; i < PatchCmdCount; i++) {
+			XAie_TxnCmd Cmd = {0};
+			Cmd.Opcode = XAIE_IO_CUSTOM_OP_DDR_PATCH;
+			XAIE_DBG("_XAie_AppendBWToTxnBuff: Check for 16KB spill over\n");
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, BuffSize, AllocatedBuffSize,
+									PatchCmdSize, BlockwriteBuffer, NumOps, LoadSeqCount, &Cmd);
+			if (TxnPtr == NULL) {
+				XAIE_ERROR("_XAie_AppendBWToTxnBuff:TxnPtr == NULL\n");
+				free(PatchBufferPtr);
+				return NULL;
+			}
+			memcpy(TxnPtr, TempPtr, PatchCmdSize);
+			TxnPtr += PatchCmdSize;
+			*BuffSize += PatchCmdSize;
+			TempPtr += PatchCmdSize;
+		}
+		free(PatchBufferPtr);
 	}
 	else
 	{
 		XAIE_DBG("PatchCmdCount is 0\n");
 	}
 
-    return Size;
+    return TxnPtr;
 }
 
 /*****************************************************************************/
@@ -1219,6 +1250,9 @@ static inline u8* _XAie_HandleTxnCmd16KBBoundary(XAie_DevInst *DevInst, u8 *TxnP
 		if (TxnPtr == NULL) {
 			return NULL;
 		}
+	} else {
+		XAIE_DBG("TXN command of size %u will not cross 16KB boundary at buffer size %u\n",
+			 CmdSize, *BuffSize);
 	}
 
 	return TxnPtr;
@@ -1312,7 +1346,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr += BuffSize;
 			}
 			BuffSize += Hdr->Size;
-			TxnPtr += _XAie_AppendBWToTxnBuff(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+			TxnPtr = _XAie_AppendBWToTxnBuff(DevInst, BlockwriteBuffer, TxnPtr, PatchCmdCount, &BuffSize,
+											&AllocatedBuffSize, &NumOps, &LoadSeqCount);
 			PatchCmdCount = 0;
 			FirstBlockwriteProcessed = 0;
 		}
@@ -1447,7 +1482,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 						TxnPtr += BuffSize;
 					}
 					BuffSize += BWBuffSize;
-					TxnPtr += _XAie_AppendBWToTxnBuff(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+					TxnPtr = _XAie_AppendBWToTxnBuff(DevInst, BlockwriteBuffer, TxnPtr, PatchCmdCount, &BuffSize,
+												&AllocatedBuffSize, &NumOps, &LoadSeqCount);
 					PatchCmdCount = 0;
 					FirstBlockwriteProcessed = 0;
 					XAIE_DBG("On going BW Optimization terminated\n");
@@ -1776,12 +1812,19 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			continue;
 		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_TCT) {
-			/* Check for 16KB boundary crossing and add padding if needed */
-			u32 CustomOpCmdSize = (u32)sizeof(XAie_CustomOpHdr) + Cmd->Size * (u32)sizeof(u8);
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+			/**
+			 * Check for 16KB boundary crossing and add padding only if there is no ongoing BW Optimization
+			 * involving SHIM BD. When there are SHIM BD's involved in BW optimization as per the current
+			 * algorithm we club all SHIM BDs into one BW and group all DDR patches together.
+			 */
+			 if (PatchCmdCount == 0) {
+				/* Check for 16KB boundary crossing and add padding if needed */
+				u32 CustomOpCmdSize = (u32)sizeof(XAie_CustomOpHdr) + Cmd->Size * (u32)sizeof(u8);
+				TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
 							       CustomOpCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
-			if (TxnPtr == NULL) {
-				return NULL;
+				if (TxnPtr == NULL) {
+					return NULL;
+				}
 			}
 
 			if(Cmd->Opcode == XAIE_IO_CUSTOM_OP_DDR_PATCH)
@@ -1829,7 +1872,8 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			TxnPtr += BuffSize;
 		}
 		BuffSize += Hdr->Size;
-		TxnPtr += _XAie_AppendBWToTxnBuff(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+		TxnPtr = _XAie_AppendBWToTxnBuff(DevInst, BlockwriteBuffer, TxnPtr, PatchCmdCount, &BuffSize,\
+										&AllocatedBuffSize, &NumOps, &LoadSeqCount);
 	}
 
 	// Free the BlockwriteBuffer
@@ -1886,26 +1930,31 @@ static inline void _XAie_AppendBWToBlockwriteBuff_opt(XAie_TxnCmd *Cmd, u8 First
 	}
 }
 
-static inline u32 _XAie_AppendBWToTxnBuff_opt(u32* BlockwriteBuffer,u8* TxnPtr, u32 PatchCmdCount)
+static inline u8* _XAie_AppendBWToTxnBuff_opt(XAie_DevInst *DevInst,
+						u32* BlockwriteBuffer, u8* TxnPtr, u32 PatchCmdCount,
+						u32 *BuffSize, u32 *AllocatedBuffSize, u32 *NumOps,
+						u32 *LoadSeqCount)
 {
 	XAie_BlockWrite32Hdr_opt *Hdr = (XAie_BlockWrite32Hdr_opt*)(uintptr_t)BlockwriteBuffer;
-	u32 Size = 0,PatchCmdSize=0;
-	u8* TempPtr = NULL;
+	u32 Size = 0, PatchCmdSize = 0, PatchBufferSize = 0;
+	u8* PatchBufferPtr = NULL;
 
+	PatchCmdSize = sizeof(patch_op_opt_t) + sizeof(XAie_CustomOpHdr_opt);
 	if(PatchCmdCount != 0){
 
-		PatchCmdSize = ((PatchCmdCount) * ( sizeof(patch_op_opt_t) + sizeof(XAie_CustomOpHdr_opt) )) & UINT_MAX;
-		XAIE_DBG("_XAie_AppendBWToTxnBuff:PatchCmdSize = %d\n", PatchCmdSize);
+		PatchBufferSize = ((PatchCmdCount) * PatchCmdSize) & UINT_MAX;
+		XAIE_DBG("_XAie_AppendBWToTxnBuff_opt:PatchBufferSize = %d\n", PatchBufferSize);
 
-		TempPtr = calloc(1, PatchCmdSize);
-		if(TempPtr == NULL) {
+		PatchBufferPtr = calloc(1,PatchBufferSize);
+		if(PatchBufferPtr == NULL) {
 			XAIE_ERROR("Calloc failed\n");
 			return 0;
 		}
-
-		TxnPtr -= PatchCmdSize;
-		memcpy(TempPtr, TxnPtr, PatchCmdSize);
-		memset(TxnPtr, 0, PatchCmdSize);
+	
+		TxnPtr -= PatchBufferSize;
+		memcpy(PatchBufferPtr, TxnPtr, PatchBufferSize);
+		memset(TxnPtr, 0, PatchBufferSize);
+		*BuffSize -= PatchBufferSize;
 	}
 	else
 	{
@@ -1915,19 +1964,40 @@ static inline u32 _XAie_AppendBWToTxnBuff_opt(u32* BlockwriteBuffer,u8* TxnPtr, 
 	memcpy((void*)TxnPtr, (const void *)(uintptr_t)BlockwriteBuffer, Hdr->Size);
 	Size = Hdr->Size;
 	memset(BlockwriteBuffer, 0, Size);
+	TxnPtr += Size;
 
 	if(PatchCmdCount != 0)
 	{
-		TxnPtr += Size;
-		memcpy(TxnPtr, TempPtr, PatchCmdSize);
-		free(TempPtr);
+		u8* TempPtr = PatchBufferPtr;
+
+		/**
+		 * Add patch command one at a time and check if 16KB spill over
+		 * occur if yes then add noops
+		 */
+		for (u32 i = 0; i < PatchCmdCount; i++) {
+			XAie_TxnCmd Cmd = {0};
+			Cmd.Opcode = XAIE_IO_CUSTOM_OP_DDR_PATCH;
+			XAIE_DBG("_XAie_AppendBWToTxnBuff_opt: Check for 16KB spill over\n");
+			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, BuffSize, AllocatedBuffSize,
+									PatchCmdSize, BlockwriteBuffer, NumOps, LoadSeqCount, &Cmd);
+			if (TxnPtr == NULL) {
+				XAIE_ERROR("_XAie_AppendBWToTxnBuff_opt:TxnPtr == NULL\n");
+				free(PatchBufferPtr);
+				return NULL;
+			}
+			memcpy(TxnPtr, TempPtr, PatchCmdSize);
+			TxnPtr += PatchCmdSize;
+			*BuffSize += PatchCmdSize;
+			TempPtr += PatchCmdSize;
+		}
+		free(PatchBufferPtr);
 	}
 	else
 	{
 		XAIE_DBG("PatchCmdCount is 0\n");
 	}
 
-    return Size;
+    return TxnPtr;
 }
 
 u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
@@ -1999,7 +2069,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnPtr += BuffSize;
 			}
 			BuffSize += Hdr->Size;
-			TxnPtr += _XAie_AppendBWToTxnBuff_opt(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+			TxnPtr = _XAie_AppendBWToTxnBuff_opt(DevInst, BlockwriteBuffer, TxnPtr, PatchCmdCount, &BuffSize,\
+										&AllocatedBuffSize, &NumOps, &LoadSeqCount);
 			PatchCmdCount = 0;
 			FirstBlockwriteProcessed = 0;
 		}
@@ -2124,7 +2195,9 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 						TxnPtr += BuffSize;
 					}
 					BuffSize += BWBuffSize;
-					TxnPtr += _XAie_AppendBWToTxnBuff_opt(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+					TxnPtr = _XAie_AppendBWToTxnBuff_opt(DevInst, BlockwriteBuffer, TxnPtr,
+										PatchCmdCount, &BuffSize, &AllocatedBuffSize,
+										&NumOps, &LoadSeqCount);
 					PatchCmdCount = 0;
 					FirstBlockwriteProcessed = 0;
 
@@ -2441,12 +2514,19 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			DevInst->PmLoadingActive = 0;
 		}
 		else if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_TCT) {
-			/* Check for 16KB boundary crossing and add padding if needed */
-			u32 CustomOpCmdSize = (u32)sizeof(XAie_CustomOpHdr_opt) + Cmd->Size * (u32)sizeof(u8);
-			TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
+			/**
+			 * Check for 16KB boundary crossing and add padding only if there is no ongoing BW Optimization
+			 * involving SHIM BD. When there are SHIM BD's involved in BW optimization as per the current
+			 * algorithm we club all SHIM BDs into one BW and group all DDR patches together.
+			 */
+			if (PatchCmdCount == 0) {
+				/* Check for 16KB boundary crossing and add padding if needed */
+				u32 CustomOpCmdSize = (u32)sizeof(XAie_CustomOpHdr_opt) + Cmd->Size * (u32)sizeof(u8);
+				TxnPtr = _XAie_HandleTxnCmd16KBBoundary(DevInst, TxnPtr, &BuffSize, &AllocatedBuffSize,
 							       CustomOpCmdSize, BlockwriteBuffer, &NumOps, &LoadSeqCount, Cmd);
-			if (TxnPtr == NULL) {
-				return NULL;
+				if (TxnPtr == NULL) {
+					return NULL;
+				}
 			}
 
 			if(Cmd->Opcode == XAIE_IO_CUSTOM_OP_DDR_PATCH)
@@ -2500,7 +2580,8 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			TxnPtr += BuffSize;
 		}
 		BuffSize += Hdr->Size;
-		TxnPtr += _XAie_AppendBWToTxnBuff_opt(BlockwriteBuffer,TxnPtr,PatchCmdCount);
+		TxnPtr = _XAie_AppendBWToTxnBuff_opt(DevInst, BlockwriteBuffer, TxnPtr, PatchCmdCount,
+										&BuffSize, &AllocatedBuffSize, &NumOps, &LoadSeqCount);
 	}
 
 	// Free the BlockwriteBuffer
