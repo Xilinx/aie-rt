@@ -1146,5 +1146,37 @@ u8 _XAie_CountTrailingZeros(u32 value)
     return count;
 }
 
+/*****************************************************************************/
+/**
+*
+* This routine is used reset the desired bits of the TilesInUse, MemInUse and
+* CoreInUse global bitmaps based on the partition dimensions defined in DevInst
+* structure like startcol and numcols.
+*
+* @param    DevInst		: Device Instance
+*
+* @return	None
+*
+* @note		Internal API only.
+*
+*******************************************************************************/
+void _XAie_ResetInUseBitMaps(XAie_DevInst *DevInst)
+{
+	u8 startCol = DevInst->StartCol;
+	u8 numCols = DevInst->NumCols;
+
+	// Calculate the start bit position for each column and reset the bits in
+	// the global bitmaps.
+	for (int col = startCol; col < (startCol + numCols); col++) {
+		XAie_LocType ColStartLoc = { 0, col };
+		u32 ColStartBitPos = _XAie_GetTileBitPosFromLoc(DevInst, ColStartLoc);
+		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse, ColStartBitPos, \
+			DevInst->NumRows);
+		_XAie_ClrBitInBitmap(DevInst->DevOps->MemInUse, ColStartBitPos, \
+			DevInst->NumRows);
+		_XAie_ClrBitInBitmap(DevInst->DevOps->CoreInUse, ColStartBitPos, \
+			DevInst->NumRows);
+	}
+}
 
 /** @} */

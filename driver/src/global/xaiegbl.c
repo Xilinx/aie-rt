@@ -247,6 +247,12 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		return RC;
 	}
 
+	/**
+	 * Reset the portion of the global device (TilesInUse, MemInUse & CoreInUse)
+	 * bitmaps which represent the portion of the AIE used by current partition.
+	 */
+	_XAie_ResetInUseBitMaps(InstPtr);
+
 	return XAIE_OK;
 }
 
