@@ -950,9 +950,9 @@ static inline void _XAie_AppendDDRPatch_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 	// Write patch_op_opt_t into txn ptr.
 	patch_op_t *PatchOp = (patch_op_t *)(uintptr_t)Cmd->DataPtr;
 	patch_op_opt_t *PatchOpOpt = (patch_op_opt_t *)(uintptr_t)Payload;
-	u32 ValAddr = PatchOpOpt->regaddr & UINT32_MAX; 
+	u32 ValAddr = PatchOp->regaddr & UINT32_MAX; 
 	memcpy(&PatchOpOpt->regaddr, &ValAddr, sizeof(u32));
-	u8 ValIdx = PatchOpOpt->argidx & UINT8_MAX; 
+	u8 ValIdx = PatchOp->argidx & UINT8_MAX; 
 	memcpy(&PatchOpOpt->argidx, &ValIdx, sizeof(u8));
 	PatchOpOpt->argplus = PatchOp->argplus;
 }
