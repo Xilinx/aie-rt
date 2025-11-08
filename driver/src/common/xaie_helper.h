@@ -78,7 +78,7 @@
 
 /* Compute a pointer to a structure given a pointer to one of its fields */
 #define XAIE_CONTAINER_OF(ptr, structure, member) \
-	(void*)((uintptr_t)(ptr) - XAIE_OFFSET_OF(structure, member))
+	 ((uintptr_t)(ptr) - XAIE_OFFSET_OF(structure, member))
 
 /* Loop through the set bits in Value */
 #define for_each_set_bit(Index, Value, Len)				      \
