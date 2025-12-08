@@ -1,0 +1,8 @@
+# To be updated on release branches
+# Exclude workflows
+.github/**
+
+# Exclude submodules
+.gitmodules
+
+.git/**

@@ -1,0 +1,42 @@
+name: Keyword Scan
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  keyword-scan:
+    runs-on: ai-engine-arc-xxxsmall-dind
+    permissions:
+      contents: read
+    container:
+      image: xcoacasharbor.amd.com/acas-devops/aig-kws:20251104-161309
+      volumes:
+        - /build:/build
+        - /group:/group
+        - /proj:/proj
+        - /tool:/tool
+        - /tools:/tools
+        - /wrk:/wrk
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+                
+      - name: Run Keyword Scan
+        id: reports
+        uses: actions-int/keyword-scan@v5
+        with:
+          source_path: .
+          type_of_scan: 'release'  ### [ To be changed to 'release' on release branches ]
+          exclude_paths_file: '.github/keyword_scan_excludes.txt'
+          fail_on_violations: 'true'
+
+      - name: Display output file path
+        if: always()
+        run: |
+          echo "HTML file path: ${{ steps.reports.outputs.report_path }}"
+          echo "Report id: ${{ steps.reports.outputs.report_id }}"
