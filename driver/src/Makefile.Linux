@@ -21,7 +21,7 @@ INCLUDEDIR = ../include
 INTERNALDIR = ../internal
 NAME := xaiengine
 MAJOR = 3
-MINOR = 8
+MINOR = 9
 VERSION = $(MAJOR).$(MINOR)
 
 all: include lib$(NAME).so

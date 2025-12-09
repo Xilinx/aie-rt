@@ -22,7 +22,7 @@ set_target_properties(aienginev2 PROPERTIES LINKER_LANGUAGE C)
 target_compile_options(aienginev2 PRIVATE -Wall -Wextra -D__AIEBAREMETAL__)
 
 else ()
-project(xaiengine LANGUAGES C VERSION 3.8)
+project(xaiengine LANGUAGES C VERSION 3.9)
 
 set(CMAKE_C_STANDARD 11)
 
