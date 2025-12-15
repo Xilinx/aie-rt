@@ -544,10 +544,8 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 	AieRC RC;
 	u32 TileStatus, NumTiles;
 
-	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
-
-	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
-			((Args->StartCol + Args->NumCols - 1) > PartEndCol) ) {
+	if((Args->NumCols == 0U) || (Args->StartCol >= DevInst->NumCols) ||
+		((Args->StartCol + Args->NumCols) > DevInst->NumCols)) {
 		XAIE_ERROR("Invalid Start Column/Numcols. Args->StartCol: %d Args->NumCols:%d\n",
 				Args->StartCol, Args->NumCols);
 		return XAIE_ERR;

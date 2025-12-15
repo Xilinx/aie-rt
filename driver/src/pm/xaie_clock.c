@@ -152,12 +152,10 @@ AieRC XAie_PmSetColumnClk(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols,
 		return XAIE_INVALID_ARGS;
 	}
 
-	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
-
-	if((StartCol < DevInst->StartCol) || (StartCol > PartEndCol) ||
-	   ((StartCol + NumCols - 1) > PartEndCol) ) {
-
-		XAIE_ERROR("Invalid Start Column/Numcols \n");
+	if((NumCols == 0U) || (StartCol >= DevInst->NumCols) ||
+		((StartCol + NumCols) > DevInst->NumCols)) {
+		XAIE_ERROR("Invalid Start Column/Numcols: StartCol:%d, NumCols:%d, DevInst->NumCols:%d\n",
+				StartCol, NumCols, DevInst->NumCols);
 		return XAIE_INVALID_ARGS;
 	}
 
