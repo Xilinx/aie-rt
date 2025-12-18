@@ -926,14 +926,28 @@ static inline void _XAie_AppendCustomOp_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 static inline void _XAie_AppendDDRPatch_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 {
 	u8 *Payload = TxnPtr + sizeof(XAie_CustomOpHdr_opt);
-	XAie_CustomOpHdr_opt *Hdr = (XAie_CustomOpHdr_opt*)(uintptr_t)TxnPtr;
+
+	/**
+	 * Use stack variable instead of pointer access to avoid unaligned access
+	 * when TxnPtr is unaligned. To avoid UBSan alignment errors.
+	 */
+	XAie_CustomOpHdr_opt Hdr;
+	patch_op_t PatchOp;
+	patch_op_opt_t PatchOpOpt;
 
 	// Modify the cmd size to align with version 1.0
 	Cmd->Size = (u32)sizeof(patch_op_opt_t);
 
 	// Write the custom header into Txn Ptr with correct size.
-	Hdr->Size = (u32)sizeof(*Hdr) + Cmd->Size;
-	Hdr->OpHdr.Op = (u8)Cmd->Opcode;
+	Hdr.Size = (u32)sizeof(Hdr) + Cmd->Size;
+	Hdr.OpHdr.Op = (u8)Cmd->Opcode;
+	Hdr.OpHdr.padding[0] = 0;
+	Hdr.OpHdr.padding[1] = 0;
+	Hdr.OpHdr.padding[2] = 0;
+
+	// Use memcpy to avoid unaligned access
+	memcpy(TxnPtr, &Hdr, sizeof(Hdr));
+
 #if UINTPTR_MAX == U64_MAX  // 64-bit system
     if (Cmd->DataPtr > UINTPTR_MAX) {
     	XAIE_ERROR("DataPtr cannot be represented in 64bit system\n");
@@ -941,15 +955,24 @@ static inline void _XAie_AppendDDRPatch_opt(XAie_TxnCmd *Cmd, u8 *TxnPtr)
     }
 #endif
 
-	// Map the patch_op_t fields to patch_op_opt_t and
-	// Write patch_op_opt_t into txn ptr.
-	patch_op_t *PatchOp = (patch_op_t *)(uintptr_t)Cmd->DataPtr;
-	patch_op_opt_t *PatchOpOpt = (patch_op_opt_t *)(uintptr_t)Payload;
-	u32 ValAddr = PatchOp->regaddr & UINT32_MAX; 
-	memcpy(&PatchOpOpt->regaddr, &ValAddr, sizeof(u32));
-	u8 ValIdx = PatchOp->argidx & UINT8_MAX; 
-	memcpy(&PatchOpOpt->argidx, &ValIdx, sizeof(u8));
-	PatchOpOpt->argplus = PatchOp->argplus;
+	// Map the patch_op_t fields to patch_op_opt_t
+	// Use memcpy to safely read from DataPtr, which may point to misaligned data.
+	// memcpy performs byte-wise copy and does not require alignment.
+	// Coverity note: The cast to void* is intentional. The alignment of the
+	// source pointer is unknown, but memcpy handles misalignment correctly.
+	const void *data_src = (const void *)(uintptr_t)Cmd->DataPtr;
+	memcpy(&PatchOp, data_src, sizeof(PatchOp));
+
+	// Convert u64 fields to smaller types
+	PatchOpOpt.regaddr = (u32)(PatchOp.regaddr & UINT32_MAX);
+	PatchOpOpt.argidx = (u8)(PatchOp.argidx & UINT8_MAX);
+	PatchOpOpt.padding[0] = 0;
+	PatchOpOpt.padding[1] = 0;
+	PatchOpOpt.padding[2] = 0;
+	PatchOpOpt.argplus = PatchOp.argplus;
+
+	// Write patch_op_opt_t into txn ptr using memcpy to avoid unaligned access
+	memcpy(Payload, &PatchOpOpt, sizeof(PatchOpOpt));
 }
 
 static u8* _XAie_ReallocTxnBuf_MemInit(u8 *TxnPtr, u32 NewSize, u32 Buffsize)
