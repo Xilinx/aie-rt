@@ -514,7 +514,8 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 			TileLoc.Row = row;
 			CheckTileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 					TileLoc);
-			if(CheckBit(DevInst->DevOps->TilesInUse,
+			if((DevInst->DevOps->TilesInUse != NULL) &&
+			   CheckBit(DevInst->DevOps->TilesInUse,
 						CheckTileStatus)) {
 				flag = 1;
 				if(SetTileStatus > CheckTileStatus) {

@@ -512,7 +512,7 @@ AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
 /**
 * This API sets given number of bits from given start bit in the given bitmap.
 *
-* @param        Bitmap: bitmap to be set
+* @param        Bitmap: bitmap to be set (NULL if bitmap tracking disabled)
 * @param        StartSetBit: Bit position in the bitmap
 * @param        NumSetBit: Number of bits to be set.
 *
@@ -520,14 +520,28 @@ AieRC _XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
 *
 * @note         This API is internal, hence all the argument checks are taken
 *               care of in the caller API.
+*               For device generations that don't require bitmap tracking,
+*               Bitmap will be NULL and this function safely returns without
+*               accessing memory. This handles all bitmap sizes: NULL (disabled),
+*               1 word, 32 words, or any other valid size.
 *
 ******************************************************************************/
 void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit,
 		u32 NumSetBit)
 {
+	/*
+	 * Handle NULL bitmap (tracking disabled) or zero bits to set.
+	 * For device generations like AIE2P/AIE2IPU that don't need bitmap
+	 * tracking, the DevOps pointers are set to NULL explicitly.
+	 */
+	if ((Bitmap == NULL) || (NumSetBit == 0U)) {
+		return;
+	}
+
 	for(u32 i = StartSetBit; i < StartSetBit + NumSetBit; i++) {
-		Bitmap[i / (sizeof(Bitmap[0]) * 8U)] |=
-			(u32)(1U << (i % (sizeof(Bitmap[0]) * 8U)));
+		u32 WordIndex = i / (sizeof(Bitmap[0]) * 8U);
+		u32 BitIndex = i % (sizeof(Bitmap[0]) * 8U);
+		Bitmap[WordIndex] |= (u32)(1U << BitIndex);
 	}
 }
 
@@ -535,21 +549,35 @@ void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit,
 /**
 * This API clears number of bits from given start bit in the given bitmap.
 *
-* @param        Bitmap: bitmap to be set
+* @param        Bitmap: bitmap to be cleared (NULL if bitmap tracking disabled)
 * @param        StartBit: Bit position in the bitmap
-* @param        NumBit: Number of bits to be set.
+* @param        NumBit: Number of bits to be cleared.
 *
 * @return       None
 *
 * @note         This API is internal, hence all the argument checks are taken
 *               care of in the caller API.
+*               For device generations that don't require bitmap tracking,
+*               Bitmap will be NULL and this function safely returns without
+*               accessing memory. This handles all bitmap sizes: NULL (disabled),
+*               1 word, 32 words, or any other valid size.
 *
 ******************************************************************************/
 void _XAie_ClrBitInBitmap(u32 *Bitmap, u32 StartBit, u32 NumBit)
 {
+	/*
+	 * Handle NULL bitmap (tracking disabled) or zero bits to clear.
+	 * For device generations like AIE2P/AIE2IPU that don't need bitmap
+	 * tracking, the DevOps pointers are set to NULL explicitly.
+	 */
+	if ((Bitmap == NULL) || (NumBit == 0U)) {
+		return;
+	}
+
 	for(u32 i = StartBit; i < StartBit + NumBit; i++) {
-		Bitmap[i / (sizeof(Bitmap[0]) * 8U)] &=
-			~(u32)((1U << (i % (sizeof(Bitmap[0]) * 8U))));
+		u32 WordIndex = i / (sizeof(Bitmap[0]) * 8U);
+		u32 BitIndex = i % (sizeof(Bitmap[0]) * 8U);
+		Bitmap[WordIndex] &= ~(u32)(1U << BitIndex);
 	}
 }
 
@@ -1158,12 +1186,25 @@ u8 _XAie_CountTrailingZeros(u32 value)
 * @return	None
 *
 * @note		Internal API only.
+*		For device generations that don't require bitmap tracking (AIE2P,
+*		AIE2IPU), the bitmap pointers are NULL and this function returns
+*		early without any operations.
 *
 *******************************************************************************/
 void _XAie_ResetInUseBitMaps(XAie_DevInst *DevInst)
 {
 	u8 startCol = DevInst->StartCol;
 	u8 numCols = DevInst->NumCols;
+
+	/*
+	 * Skip if bitmaps are not allocated (NULL indicates bitmap tracking
+	 * is disabled for this device generation).
+	 */
+	if ((DevInst->DevOps->TilesInUse == NULL) ||
+	    (DevInst->DevOps->MemInUse == NULL) ||
+	    (DevInst->DevOps->CoreInUse == NULL)) {
+		return;
+	}
 
 	// Calculate the start bit position for each column and reset the bits in
 	// the global bitmaps.

@@ -119,6 +119,11 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIE_ENABLE;
 	}
 
+	/* Handle zero-sized bitmap case */
+	if (DevInst->DevOps->TilesInUse == NULL) {
+		return XAIE_DISABLE;
+	}
+
 	TileBit = (u32)(Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U);
 	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit)) {
 		return XAIE_ENABLE;

@@ -363,7 +363,8 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 */
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				XAie_TileLoc(Args->Locs[i].Col, 1));
-		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+		if ((DevInst->DevOps->TilesInUse != NULL) &&
+		    CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
 			continue;
 		}
 

@@ -44,17 +44,20 @@
 /**************************** Type Definitions *******************************/
 
 /**************************** Macro Definitions ******************************/
-#ifdef _MSC_VER
-#define XAIE2IPU_TILES_BITMAPSIZE	1U
-#else
+/*
+ * Bitmap size for AIE2IPU. Set to 0 to disable bitmap tracking for this
+ * device generation. When 0, no bitmap arrays are allocated and DevOps
+ * pointers are set to NULL.
+ */
 #define XAIE2IPU_TILES_BITMAPSIZE	0U
-#endif
 
 /************************** Variable Definitions *****************************/
 /* bitmaps to capture modules being used by the application */
+#if (XAIE2IPU_TILES_BITMAPSIZE > 0U)
 static u32 Aie2IpuTilesInUse[XAIE2IPU_TILES_BITMAPSIZE];
 static u32 Aie2IpuMemInUse[XAIE2IPU_TILES_BITMAPSIZE];
 static u32 Aie2IpuCoreInUse[XAIE2IPU_TILES_BITMAPSIZE];
+#endif
 
 #ifdef XAIE_FEATURE_CORE_ENABLE
 /*
@@ -4222,13 +4225,21 @@ const XAie_TileMod Aie2IpuMod[] =
 	}
 };
 
-/* Device level operations for aieml */
+/* Device level operations for aie2ipu */
 const XAie_DeviceOps Aie2IpuDevOps =
 {
 	.IsCheckerBoard = 0U,
+#if (XAIE2IPU_TILES_BITMAPSIZE > 0U)
+	/* Bitmap tracking enabled - assign bitmap array addresses */
 	.TilesInUse = Aie2IpuTilesInUse,
 	.MemInUse = Aie2IpuMemInUse,
 	.CoreInUse = Aie2IpuCoreInUse,
+#else
+	/* Bitmap tracking disabled - set pointers to NULL */
+	.TilesInUse = NULL,
+	.MemInUse = NULL,
+	.CoreInUse = NULL,
+#endif
 	.GetTTypefromLoc = &_XAie2Ipu_GetTTypefromLoc,
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 	.SetPartColShimReset = &_XAieMl_SetPartColShimReset,
