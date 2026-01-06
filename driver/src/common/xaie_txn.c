@@ -630,6 +630,17 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 		return XAIE_OK;
 	}
 
+	/* Free DataPtr for custom ops and blockwrites before cleanup */
+	for(u32 i = 0U; i < Inst->NumCmds; i++) {
+		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
+
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE ||
+			(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN && Cmd->Opcode < XAIE_IO_CUSTOM_OP_NEXT)) &&
+			((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
+			free((void *)(uintptr_t)Cmd->DataPtr);
+		}
+	}
+
 	RC = _XAie_RemoveTxnInstFromList(DevInst, Tid);
 	if(RC != XAIE_OK) {
 		return RC;
@@ -994,7 +1005,7 @@ static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
 	Tmp =  (u8*)realloc((void*)TxnPtr, NewSize);
 	if(Tmp == NULL) {
 		XAIE_ERROR("Reallocation failed for txn buffer\n");
-		free(TxnPtr);  /* Free original memory to prevent leak */
+		/* Standard realloc semantics: original pointer remains valid on failure */
 		return NULL;
 	}
 
@@ -1749,11 +1760,14 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			TmpInst->NumCmds);
 
 	/* Adjust pointer and reallocate to the right size */
-	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
-	if(TxnPtr == NULL) {
+	u8 *OrigPtr = TxnPtr - BuffSize;
+	u8 *NewPtr = _XAie_ReallocTxnBuf(OrigPtr, four_byte_aligned_BuffSize);
+	if(NewPtr == NULL) {
 		XAIE_ERROR("TxnPtr realloc failed\n");
+		free(OrigPtr);  /* Free original buffer on failure */
 		return NULL;
 	}
+	TxnPtr = NewPtr;
 	((XAie_TxnHeader *)(uintptr_t)TxnPtr)->NumOps =  NumOps;
 	((XAie_TxnHeader *)(uintptr_t)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
 
@@ -2325,11 +2339,14 @@ u8* _XAie_TxnExportSerialized_opt(XAie_DevInst *DevInst, u8 NumConsumers,
 			TmpInst->NumCmds);
 
 	/* Adjust pointer and reallocate to the right size */
-	TxnPtr = _XAie_ReallocTxnBuf(TxnPtr - BuffSize, four_byte_aligned_BuffSize);
-	if(TxnPtr == NULL) {
+	u8 *OrigPtr = TxnPtr - BuffSize;
+	u8 *NewPtr = _XAie_ReallocTxnBuf(OrigPtr, four_byte_aligned_BuffSize);
+	if(NewPtr == NULL) {
 		XAIE_ERROR("TxnPtr realloc failed\n");
+		free(OrigPtr);  /* Free original buffer on failure */
 		return NULL;
 	}
+	TxnPtr = NewPtr;
 	
 	((XAie_TxnHeader *)(uintptr_t)TxnPtr)->NumOps =  NumOps;
 	((XAie_TxnHeader *)(uintptr_t)TxnPtr)->TxnSize =  four_byte_aligned_BuffSize;
