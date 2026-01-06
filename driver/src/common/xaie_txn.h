@@ -23,6 +23,7 @@
 #ifndef XAIETXN_H
 #define XAIETXN_H
 #include <limits.h>
+#include <stdbool.h>
 
 /***************************** Include Files *********************************/
 /* All New custom Ops should be added above XAIE_IO_CUSTOM_OP_NEXT
@@ -335,6 +336,7 @@ XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
 XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction_opt(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
+XAIE_AIG_EXPORT bool XAie_ReserializeTransaction(XAie_DevInst *DevInst, u8* SrcTxn, u8** ReserTxn);
 XAIE_AIG_EXPORT AieRC XAie_FreeTransactionInstance(XAie_TxnInst *TxnInst);
 XAIE_AIG_EXPORT AieRC XAie_ClearTransaction(XAie_DevInst* DevInst);
 

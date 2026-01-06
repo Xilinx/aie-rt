@@ -1254,6 +1254,343 @@ static inline u8* _XAie_HandleTxnCmd16KBBoundary(u8 *TxnPtr, u32 *BuffSize,
 
 /*****************************************************************************/
 /**
+* This function calculates the size of a transaction command based on the
+* transaction version and opcode.
+*
+* @param        TxnVersion: Transaction version (Major << 8 | Minor)
+* @param        CmdPtr: Pointer to command header
+* @param        CmdSize: Pointer to receive calculated command size
+*
+* @return       XAIE_OK on success, error code on failure
+*
+* @note         Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_GetTxnCmdSize(u16 TxnVersion, u8 *CmdPtr, u32 *CmdSize)
+{
+	XAie_OpHdr *OpHdr = (XAie_OpHdr *)(uintptr_t)CmdPtr;
+
+	switch (OpHdr->Op) {
+		case XAIE_IO_WRITE:
+			if (TxnVersion == ((XAIE_TXN_VER_10_MAJOR << 8) | XAIE_TXN_VER_10_MINOR)) {
+				*CmdSize = sizeof(XAie_Write32Hdr_opt);
+			} else {
+                XAie_Write32Hdr *WHdr = (XAie_Write32Hdr *)(uintptr_t)CmdPtr;
+				*CmdSize = WHdr->Size;
+			}
+			break;
+		case XAIE_IO_MASKWRITE:
+			if (TxnVersion == ((XAIE_TXN_VER_10_MAJOR << 8) | XAIE_TXN_VER_10_MINOR)) {
+				*CmdSize = sizeof(XAie_MaskWrite32Hdr_opt);
+			} else {
+				XAie_MaskWrite32Hdr *MWHdr = (XAie_MaskWrite32Hdr *)(uintptr_t)CmdPtr;
+				*CmdSize = MWHdr->Size;
+			}
+			break;
+		case XAIE_IO_MASKPOLL:
+		case XAIE_IO_MASKPOLL_BUSY:
+			if (TxnVersion == ((XAIE_TXN_VER_10_MAJOR << 8) | XAIE_TXN_VER_10_MINOR)) {
+				*CmdSize = sizeof(XAie_MaskPoll32Hdr_opt);
+			} else {
+				XAie_MaskPoll32Hdr *MPHdr = (XAie_MaskPoll32Hdr *)(uintptr_t)CmdPtr;
+				*CmdSize = MPHdr->Size;
+			}
+			break;
+		case XAIE_IO_BLOCKWRITE:
+		{
+			if (TxnVersion == ((XAIE_TXN_VER_10_MAJOR << 8) | XAIE_TXN_VER_10_MINOR)) {
+				XAie_BlockWrite32Hdr_opt *BWHdr = (XAie_BlockWrite32Hdr_opt *)(uintptr_t)CmdPtr;
+				*CmdSize = BWHdr->Size;
+			} else{
+				XAie_BlockWrite32Hdr *BWHdr = (XAie_BlockWrite32Hdr *)(uintptr_t)CmdPtr;
+				*CmdSize = BWHdr->Size;
+			}
+			break;
+		}
+		case XAIE_IO_BLOCKSET:
+			if (TxnVersion == ((XAIE_TXN_VER_10_MAJOR << 8) | XAIE_TXN_VER_10_MINOR)) {
+				*CmdSize = sizeof(XAie_BlockWrite32Hdr_opt);
+			} else {
+				*CmdSize = sizeof(XAie_BlockWrite32Hdr);
+			}
+			break;
+		case XAIE_IO_NOOP:
+			*CmdSize = sizeof(XAie_NoOpHdr);
+			break;
+		case XAIE_IO_PREEMPT:
+			*CmdSize = sizeof(XAie_PreemptHdr);
+			break;
+		case XAIE_IO_LOADPDI:
+			*CmdSize = sizeof(XAie_LoadPdiHdr);
+			break;
+		case XAIE_IO_LOAD_PM_START:
+			*CmdSize = sizeof(XAie_PmLoadHdr);
+			break;
+		case XAIE_IO_CREATE_SCRATCHPAD:
+			*CmdSize = sizeof(XAie_CreateScratchpadHdr);
+			break;
+		case XAIE_IO_UPDATE_STATE_TABLE:
+			*CmdSize = sizeof(XAie_UpdateStateHdr);
+			break;
+		case XAIE_IO_UPDATE_REG:
+			*CmdSize = sizeof(XAie_UpdateRegHdr);
+			break;
+		case XAIE_IO_UPDATE_SCRATCH:
+			*CmdSize = sizeof(XAie_UpdateScratchHdr);
+			break;
+		case XAIE_IO_CUSTOM_OP_TCT:
+		case XAIE_IO_CUSTOM_OP_DDR_PATCH:
+		case XAIE_IO_CUSTOM_OP_READ_REGS:
+		case XAIE_IO_CUSTOM_OP_RECORD_TIMER:
+		case XAIE_IO_CUSTOM_OP_MERGE_SYNC:
+			if (TxnVersion == ((XAIE_TXN_VER_10_MAJOR << 8) | XAIE_TXN_VER_10_MINOR)) {
+				XAie_CustomOpHdr_opt *CoHeader = (XAie_CustomOpHdr_opt *)(uintptr_t)CmdPtr;
+				*CmdSize = CoHeader->Size;
+			} else {
+				XAie_CustomOpHdr *CoHeader = (XAie_CustomOpHdr *)(uintptr_t)CmdPtr;
+				*CmdSize = CoHeader->Size;
+			}
+			break;
+		default:
+			XAIE_ERROR("Unknown opcode %u\n", OpHdr->Op);
+			return XAIE_ERR;
+			break;
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+* This function parses a serialized transaction buffer and checks for
+* UPDATE_REG commands that spill over 16KB boundaries. If any are found,
+* it creates a new reserialized buffer with NOOPs inserted to prevent spills.
+*
+* @param        DevInst: Device instance pointer
+* @param        SrcTxn: Source transaction buffer to parse
+* @param        ReserTxn: Pointer to receive the new reserialized transaction
+*                         buffer (set to NULL if no reserialization needed)
+*
+* @return       true if reserialization was needed and successful,
+*               false if no reserialization needed or on error
+*
+* @note         Internal only. Caller is responsible for freeing *ReserTxn
+*               if return value is true.
+*
+* @TODO:        Currently does not handle aligning of UPDATE_REG commands in
+*               load PM start sequence gracefully. To be implemented in future.
+*               In current implementation, if an UPDATE_REG in PM load spills
+*               over it will be aligned using NOOPS, but the load sequence count
+*               will not be updated to reflect the new size. This may cause
+*               issues.
+*
+******************************************************************************/
+bool _XAie_TxnReSerialized(XAie_DevInst *DevInst, u8* SrcTxn, u8** ReserTxn)
+{
+	XAie_TxnHeader *SrcHeader;
+	u8 *SrcPtr;
+	u32 SrcBuffSize = 0U;
+	u32 DestBuffSize = 0U;
+	u32 DestAllocatedSize = XAIE_DEFAULT_TXN_BUFFER_SIZE;
+	u32 NumOps = 0U;
+	u32 SrcNumOps = 0U;
+	u32 CmdIdx = 0U;
+	bool NeedReserialization = false;
+	u16 TxnVersion = 0U;
+	AieRC RC;
+
+	if (DevInst == NULL || SrcTxn == NULL || ReserTxn == NULL) {
+		XAIE_ERROR("Invalid arguments\n");
+		return false;
+	}
+
+	*ReserTxn = NULL;
+
+	/* Parse the header */
+	SrcHeader = (XAie_TxnHeader *)(uintptr_t)SrcTxn;
+	SrcPtr = SrcTxn + sizeof(XAie_TxnHeader);
+	SrcBuffSize = sizeof(XAie_TxnHeader);
+	SrcNumOps = SrcHeader->NumOps;
+
+	/* Calculate transaction version for version-aware parsing */
+	TxnVersion = (u16)((SrcHeader->Major << 8) | SrcHeader->Minor);
+
+	XAIE_DBG("Parsing transaction: %u operations, TxnSize: %u, Version: %u.%u\n",
+			SrcNumOps, SrcHeader->TxnSize, SrcHeader->Major, SrcHeader->Minor);
+
+	/* First pass: Check if any UPDATE_REG commands spill over 16KB boundary */
+	for (CmdIdx = 0U; CmdIdx < SrcNumOps; CmdIdx++) {
+		XAie_OpHdr *OpHdr = (XAie_OpHdr *)(uintptr_t)SrcPtr;
+		u32 CmdSize = 0U;
+
+		/* Get command size using version-aware helper */
+		RC = _XAie_GetTxnCmdSize(TxnVersion, SrcPtr, &CmdSize);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("%d) Failed to parse command at offset %u\n", CmdIdx, SrcBuffSize);
+			return false;
+		}
+
+		/* Check if UPDATE_REG command spills over 16KB boundary */
+		if (OpHdr->Op == XAIE_IO_UPDATE_REG) {
+			u32 RemainingBytes = 0U;
+			if (_XAie_CheckTxnCmdSpillsOver16KBBoundary(CmdSize, SrcBuffSize, &RemainingBytes)) {
+				XAIE_DBG("UPDATE_REG at offset %u spills over 16KB boundary (remaining: %u bytes)\n",
+						SrcBuffSize, RemainingBytes);
+				NeedReserialization = true;
+			}
+		}
+
+		SrcBuffSize += CmdSize;
+		SrcPtr += CmdSize;
+	}
+
+	/* If no reserialization needed, return false */
+	if (!NeedReserialization) {
+		XAIE_DBG("No reserialization needed\n");
+		return false;
+	}
+
+	XAIE_DBG("Reserialization needed, creating new buffer\n");
+
+	/* Allocate destination buffer */
+	*ReserTxn = calloc(1, DestAllocatedSize);
+
+	if (*ReserTxn == NULL) {
+		XAIE_ERROR("Failed to allocate destination transaction buffer\n");
+		return false;
+	}
+
+	/* Store base pointer to avoid backward pointer arithmetic */
+	u8 *ReserTxnBase = *ReserTxn;
+
+	/* Copy header */
+	memcpy(*ReserTxn, SrcTxn, sizeof(XAie_TxnHeader));
+
+	*ReserTxn += sizeof(XAie_TxnHeader);
+	DestBuffSize = sizeof(XAie_TxnHeader);
+
+	/* Second pass: Copy commands in chunks, adding NOOPs only where needed */
+	SrcPtr = SrcTxn + sizeof(XAie_TxnHeader);
+	u8 *ChunkStartPtr = SrcPtr;
+	u32 ChunkSize = 0U;
+	u32 CmdsInChunk = 0U;
+
+	for (CmdIdx = 0U; CmdIdx < SrcNumOps; CmdIdx++) {
+		XAie_OpHdr *OpHdr = (XAie_OpHdr *)(uintptr_t)SrcPtr;
+		u32 CmdSize = 0U;
+
+		/* Calculate command size using version-aware helper */
+		RC = _XAie_GetTxnCmdSize(TxnVersion, SrcPtr, &CmdSize);
+
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to parse command during reserialization\n");
+			free(ReserTxnBase);
+			*ReserTxn = NULL;
+			return false;
+		}
+
+		/* For UPDATE_REG, check if we need to add NOOPs */
+		if (OpHdr->Op == XAIE_IO_UPDATE_REG) {
+			u32 RemainingBytes = 0U;
+			if (_XAie_CheckTxnCmdSpillsOver16KBBoundary(CmdSize, DestBuffSize + ChunkSize, &RemainingBytes)) {
+				XAIE_DBG("Adding NOOP padding before UPDATE_REG at offset %u\n", DestBuffSize + ChunkSize);
+
+				/* Ensure buffer has space for accumulated chunk */
+				while ((DestBuffSize + ChunkSize) > DestAllocatedSize) {
+					u8 *NewBase = _XAie_ReallocTxnBuf_MemInit(ReserTxnBase,
+						DestAllocatedSize * 2U, DestBuffSize);
+					if (NewBase == NULL) {
+						XAIE_ERROR("Failed to reallocate destination buffer\n");
+						/* _XAie_ReallocTxnBuf_MemInit already freed the memory */
+						ReserTxnBase = NULL;
+						*ReserTxn = NULL;
+						return false;
+					}
+					ReserTxnBase = NewBase;
+					*ReserTxn = ReserTxnBase + DestBuffSize;
+					DestAllocatedSize *= 2U;
+				}
+
+				/* Copy accumulated chunk before adding NOOPs */
+				if (ChunkSize > 0U) {
+					memcpy(*ReserTxn, ChunkStartPtr, ChunkSize);
+					*ReserTxn += ChunkSize;
+					DestBuffSize += ChunkSize;
+					NumOps += CmdsInChunk;
+				}
+
+				/* Add NOOPs to prevent spill */
+				*ReserTxn = _XAie_AddNoOpPadding16KB(*ReserTxn, &DestBuffSize,
+						&DestAllocatedSize, RemainingBytes, NULL, &NumOps);
+				if (*ReserTxn == NULL) {
+					XAIE_ERROR("Failed to add NOOP padding\n");
+					/* _XAie_AddNoOpPadding16KB already freed the memory */
+					ReserTxnBase = NULL;
+					return false;
+				}
+
+				/* Reset chunk tracking - start new chunk after NOOPs */
+				ChunkStartPtr = SrcPtr;
+				ChunkSize = 0U;
+				CmdsInChunk = 0U;
+			}
+		}
+
+		/* Accumulate command size for bulk copy */
+		ChunkSize += CmdSize;
+		CmdsInChunk++;
+		SrcPtr += CmdSize;
+	}
+
+	/* Copy remaining accumulated chunk */
+	if (ChunkSize > 0U) {
+		/* Ensure buffer has space */
+		while ((DestBuffSize + ChunkSize) > DestAllocatedSize) {
+			u8 *NewBase = _XAie_ReallocTxnBuf_MemInit(ReserTxnBase,
+					DestAllocatedSize * 2U, DestBuffSize);
+			if (NewBase == NULL) {
+				XAIE_ERROR("Failed to reallocate destination buffer\n");
+				/* _XAie_ReallocTxnBuf_MemInit already freed the memory */
+				ReserTxnBase = NULL;
+				*ReserTxn = NULL;
+				return false;
+			}
+			ReserTxnBase = NewBase;
+			*ReserTxn = ReserTxnBase + DestBuffSize;
+			DestAllocatedSize *= 2U;
+		}
+
+		memcpy(*ReserTxn, ChunkStartPtr, ChunkSize);
+		*ReserTxn += ChunkSize;
+		DestBuffSize += ChunkSize;
+		NumOps += CmdsInChunk;
+	}
+
+	/* Calculate 4-byte aligned size for final buffer */
+	u32 four_byte_aligned_BuffSize = (DestBuffSize + 3U) & ~3U;
+
+	/* Adjust pointer and reallocate to the right size */
+	u8 *NewPtr = _XAie_ReallocTxnBuf(ReserTxnBase, four_byte_aligned_BuffSize);
+	if(NewPtr == NULL) {
+		XAIE_ERROR("ReserTxn realloc failed\n");
+		free(ReserTxnBase);  /* Free original buffer on failure */
+		*ReserTxn = NULL;
+		return false;
+	}
+	*ReserTxn = NewPtr;
+
+	/* Update header in destination buffer */
+	XAie_TxnHeader *DestHeader = (XAie_TxnHeader *)(uintptr_t)(*ReserTxn);
+	DestHeader->NumOps = NumOps;
+	DestHeader->TxnSize = four_byte_aligned_BuffSize;
+
+	XAIE_DBG("Reserialization complete: %u ops, %u bytes\n", NumOps, DestBuffSize);
+
+	return true;
+}
+
+/*****************************************************************************/
+/**
 *
 * This api copies an existing transaction instance and returns a copy of the
 * instance with all the commands for users to save the commands and use them
@@ -3801,6 +4138,41 @@ u8* XAie_ExportSerializedTransaction_opt(XAie_DevInst *DevInst,
     return _XAie_TxnExportSerialized_opt(DevInst, NumConsumers, Flags);
 }
 
+
+/*****************************************************************************/
+/**
+*
+* This API reserializes a transaction buffer by checking for UPDATE_REG commands
+* that spill over 16KB boundaries and inserting NOOPs to prevent such spills.
+*
+* @param	DevInst: Device instance pointer.
+* @param	SrcTxn: Source transaction buffer to be reserialized.
+* @param	ReserTxn: Pointer to receive the reserialized transaction buffer.
+*		Will be set to NULL if no reserialization is needed.
+*
+* @return	true if reserialization was performed successfully,
+*		false if no reserialization needed or on error.
+*
+* @note		The caller is responsible for freeing the reserialized buffer
+*		using XAie_FreeSerializedTransaction() if the return value is true.
+*		If false is returned, the original buffer should continue to be used.
+*
+******************************************************************************/
+bool XAie_ReserializeTransaction(XAie_DevInst *DevInst, u8* SrcTxn, u8** ReserTxn)
+{
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid arguments\n");
+		return false;
+	}
+
+	if(SrcTxn == NULL || ReserTxn == NULL) {
+		XAIE_ERROR("Invalid arguments\n");
+		return false;
+	}
+
+	return _XAie_TxnReSerialized(DevInst, SrcTxn, ReserTxn);
+}
 
 /*****************************************************************************/
 /**
