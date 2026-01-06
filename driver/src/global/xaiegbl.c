@@ -1262,7 +1262,6 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 {
 
 	AieRC RC = XAIE_OK;
-	XAie_Range PartRange;
 	u32 Size, NumTiles;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1277,10 +1276,9 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	}
 
 	if(PerfInst->Range == XAIE_NULL) {
-		PartRange.Start = DevInst->StartCol;
-		PartRange.Num = DevInst->NumCols;
-		XAIE_DBG("Start Col: %d\tnum: %d\n", PartRange.Start, PartRange.Num);
-		PerfInst->Range = &PartRange;
+		PerfInst->Range->Start = DevInst->StartCol;
+		PerfInst->Range->Num = DevInst->NumCols;
+		XAIE_DBG("Start Col: %d\tnum: %d\n", PerfInst->Range->Start, PerfInst->Range->Num);
 	} else if (PerfInst->Range->Num <= 0U ||
 			PerfInst->Range->Num > DevInst->NumCols) {
 		XAIE_ERROR("Invalid range!: %u\n", PerfInst->Range->Num);
