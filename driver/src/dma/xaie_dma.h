@@ -74,7 +74,7 @@ typedef enum {
 
 XAIE_AIG_EXPORT AieRC XAie_DmaLockControl(XAie_DmaDesc *DmaDesc, XAie_Lock Acq,
 		XAie_Lock Rel, u8 AcqEn, u8 RelEn);
-XAIE_AIG_EXPORT AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+XAIE_AIG_EXPORT AieRC XAie_DmaDescInit(const XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel);
 XAIE_AIG_EXPORT AieRC XAie_DmaSetPkt(XAie_DmaDesc *DmaDesc, XAie_Packet Pkt);
@@ -92,7 +92,7 @@ XAIE_AIG_EXPORT AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, XAie_DmaPadTenso
 XAIE_AIG_EXPORT AieRC XAie_DmaEnableCompression(XAie_DmaDesc *DmaDesc);
 XAIE_AIG_EXPORT AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc,
 		XAie_DmaFifoCounter Counter);
-XAIE_AIG_EXPORT AieRC XAie_DmaGetNumBds(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds);
+XAIE_AIG_EXPORT AieRC XAie_DmaGetNumBds(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds);
 XAIE_AIG_EXPORT AieRC XAie_DmaSetNextBd(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd);
 XAIE_AIG_EXPORT AieRC XAie_DmaEnableBd(XAie_DmaDesc *DmaDesc);
 XAIE_AIG_EXPORT AieRC XAie_DmaDisableBd(XAie_DmaDesc *DmaDesc);
@@ -100,43 +100,43 @@ XAIE_AIG_EXPORT AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen
 		u8 Cache, u8 Secure);
 XAIE_AIG_EXPORT AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 		u8 IntrleaveCount, u16 IntrleaveCurr);
-XAIE_AIG_EXPORT AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+XAIE_AIG_EXPORT AieRC XAie_DmaWriteBd(const XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum);
-XAIE_AIG_EXPORT AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+XAIE_AIG_EXPORT AieRC XAie_DmaReadBd(const XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelResetAll(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_DmaChReset Reset);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelReset(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, XAie_DmaChReset Reset);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelPauseStream(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 Pause);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelPauseMem(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u8 Pause);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelPushBdToQueue(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelEnable(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelDisable(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
-XAIE_AIG_EXPORT AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+XAIE_AIG_EXPORT AieRC XAie_DmaWaitForDone(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u32 TimeOutUs);
-XAIE_AIG_EXPORT AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+XAIE_AIG_EXPORT AieRC XAie_DmaWaitForDoneBusy(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u32 TimeOutUs);
-XAIE_AIG_EXPORT AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaWaitForBdTaskQueue(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs);
-XAIE_AIG_EXPORT AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaWaitForBdTaskQueueBusy(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs);
-XAIE_AIG_EXPORT AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaGetPendingBdCount(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 *PendingBd);
-XAIE_AIG_EXPORT AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaGetMaxQueueSize(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *QueueSize);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelSetStartQueue(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelSetStartQueueGeneric(const XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc);
-XAIE_AIG_EXPORT AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_DmaWriteChannel(const XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir);
 XAIE_AIG_EXPORT AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
@@ -147,21 +147,21 @@ XAIE_AIG_EXPORT AieRC XAie_DmaChannelEnOutofOrder(XAie_DmaChannelDesc *DmaChanne
 		u8 EnOutofOrder);
 XAIE_AIG_EXPORT AieRC XAie_DmaChannelEnCompression(XAie_DmaChannelDesc *DmaChannelDesc,
 		u8 EnCompression);
-XAIE_AIG_EXPORT AieRC XAie_DmaChannelDescInit(XAie_DevInst *DevInst,
+XAIE_AIG_EXPORT AieRC XAie_DmaChannelDescInit(const XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc);
 XAIE_AIG_EXPORT AieRC XAie_DmaSetZeroPadding(XAie_DmaDesc *DmaDesc, u8 Dim,
 		XAie_DmaZeroPaddingPos Pos, u8 NumZeros);
 XAIE_AIG_EXPORT AieRC XAie_DmaTlastEnable(XAie_DmaDesc *DmaDesc);
 XAIE_AIG_EXPORT AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc);
-XAIE_AIG_EXPORT AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
+XAIE_AIG_EXPORT AieRC XAie_DmaGetBdLen(const XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 		u16 BdNum);
-XAIE_AIG_EXPORT AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
+XAIE_AIG_EXPORT AieRC XAie_DmaUpdateBdLen(const XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 		u16 BdNum);
-XAIE_AIG_EXPORT AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
+XAIE_AIG_EXPORT AieRC XAie_DmaUpdateBdAddr(const XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 		u16 BdNum);
-XAIE_AIG_EXPORT AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+XAIE_AIG_EXPORT AieRC XAie_DmaSetPadValue(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		u32 PadValue);
-XAIE_AIG_EXPORT AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+XAIE_AIG_EXPORT AieRC XAie_DmaGetChannelStatus(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 *Status);
 
 /* All Below APIs are declared just to bypass the compiler regression for release/main_aig branch. 

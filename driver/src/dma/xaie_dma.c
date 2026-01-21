@@ -66,7 +66,7 @@
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+AieRC XAie_DmaDescInit(const XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc)
 {
 	u8 TileType;
@@ -607,7 +607,7 @@ AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc, XAie_DmaFifoCounter Counter)
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaGetNumBds(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds)
+AieRC XAie_DmaGetNumBds(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 *NumBds)
 {
 	const XAie_DmaMod *DmaMod;
 	u8 TileType;
@@ -837,7 +837,7 @@ AieRC XAie_DmaSetInterleaveEnable(XAie_DmaDesc *DmaDesc, u8 DoubleBuff,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+AieRC XAie_DmaWriteBd(const XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
@@ -878,7 +878,7 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+AieRC XAie_DmaReadBd(const XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
@@ -924,7 +924,7 @@ AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 * @note		Returns error for SHIMNOC tiles.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaChannelReset(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, XAie_DmaChReset Reset)
 {
 	u8 TileType;
@@ -990,7 +990,7 @@ AieRC XAie_DmaChannelReset(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note		Returns error for SHIMNOC tiles.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaChannelResetAll(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_DmaChReset Reset)
 {
 	u8 TileType;
@@ -1051,7 +1051,7 @@ AieRC XAie_DmaChannelResetAll(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		For AIE Shim Noc Tiles only.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaChannelPauseStream(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 Pause)
 {
 	u8 TileType;
@@ -1120,7 +1120,7 @@ AieRC XAie_DmaChannelPauseStream(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		For AIE Shim Noc Tiles only.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaChannelPauseMem(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u8 Pause)
 {
 	u8 TileType;
@@ -1190,7 +1190,7 @@ AieRC XAie_DmaChannelPauseMem(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 *		channel.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaChannelPushBdToQueue(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum)
 {
 	AieRC RC;
@@ -1255,7 +1255,7 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		Internal only.
 *
 ******************************************************************************/
-static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+static AieRC _XAie_DmaChannelControl(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 Enable)
 {
 	u8 TileType;
@@ -1309,7 +1309,7 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaChannelEnable(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir)
 {
 	return _XAie_DmaChannelControl(DevInst, Loc, ChNum, Dir, XAIE_ENABLE);
@@ -1330,7 +1330,7 @@ AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaChannelDisable(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir)
 {
 	return _XAie_DmaChannelControl(DevInst, Loc, ChNum, Dir, XAIE_DISABLE);
@@ -1354,7 +1354,7 @@ AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * If multiple BDs are chained, it's counted as one BD.
 *
 ******************************************************************************/
-AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaGetPendingBdCount(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 *PendingBd)
 {
 	u8 TileType;
@@ -1402,7 +1402,7 @@ AieRC XAie_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaGetChannelStatus(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 *Status)
 {
 	u8 TileType;
@@ -1451,7 +1451,7 @@ AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
-AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaWaitForDone(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u32 TimeOutUs)
 {
 	u8 TileType;
@@ -1504,7 +1504,7 @@ AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note		This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
-AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaWaitForDoneBusy(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u32 TimeOutUs)
 {
 	u8 TileType;
@@ -1558,7 +1558,7 @@ AieRC XAie_DmaWaitForDoneBusy(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note     This API in context of TXN flow will be a yeilded poll wait.
 *
 ******************************************************************************/
-AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaWaitForBdTaskQueue(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs)
 {
 	u8 TileType;
@@ -1617,7 +1617,7 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note     This API in context of TXN flow will be a busy poll wait.
 *
 ******************************************************************************/
-AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaWaitForBdTaskQueueBusy(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 TimeOutUs)
 {
 	u8 TileType;
@@ -1673,7 +1673,7 @@ AieRC XAie_DmaWaitForBdTaskQueueBusy(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaGetMaxQueueSize(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 *QueueSize)
 {
 	u8 TileType;
@@ -1716,7 +1716,7 @@ AieRC XAie_DmaGetMaxQueueSize(XAie_DevInst *DevInst, XAie_LocType Loc,
 *		This API doesn't support out of order.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
+AieRC XAie_DmaChannelSetStartQueue(const XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue)
 {
@@ -1744,7 +1744,7 @@ AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		This feature is not supported for AIE.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
+AieRC XAie_DmaChannelSetStartQueueGeneric(const XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc)
 {
@@ -1857,7 +1857,7 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 * 		no effect on AIE.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelDescInit(XAie_DevInst *DevInst,
+AieRC XAie_DmaChannelDescInit(const XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc)
 {
 	u8 TileType;
@@ -2071,7 +2071,7 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 * @note		This API works only for AIE-ML and has no effect on AIE.
 *
 ******************************************************************************/
-AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
+AieRC XAie_DmaWriteChannel(const XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir)
 {
@@ -2348,7 +2348,7 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 * @note		Returns 0 if the Buffer Descriptor Valid bit is 0.
 *
 ******************************************************************************/
-AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
+AieRC XAie_DmaGetBdLen(const XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 		u16 BdNum)
 {
 	u8 TileType;
@@ -2430,7 +2430,7 @@ AieRC XAie_DmaGetBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 * @note		This API accesses the hardware directly and does not operate
 *		on software descriptor.
 ******************************************************************************/
-AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
+AieRC XAie_DmaUpdateBdLen(const XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 		u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
@@ -2477,7 +2477,7 @@ AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 * @note		This API accesses the hardware directly and does not operate
 *		on software descriptor.
 ******************************************************************************/
-AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
+AieRC XAie_DmaUpdateBdAddr(const XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 		u16 BdNum)
 {
 	const XAie_DmaMod *DmaMod;
@@ -2527,7 +2527,7 @@ AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 * @note		None.
 *
 ******************************************************************************/
-AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+AieRC XAie_DmaSetPadValue(const XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		u32 PadValue)
 {
 	const XAie_DmaMod *DmaMod;
