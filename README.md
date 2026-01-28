@@ -2,7 +2,7 @@
 
 AI Engine runtime(aie-rt) is a combination of two components.
 * driver
-* fal
+* fal test
 
 ## AIE Driver(driver)
 AIE Driver.
