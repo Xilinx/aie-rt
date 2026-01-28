@@ -69,7 +69,8 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
-			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)){
+			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
+			(XAie_IsUcModulePresent(DevInst, TileType) == 0)){
 		XAIE_ERROR("Invalid Tile Type. Col:%u Row:%u TileType:%u\n",Loc.Col,Loc.Row,TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -128,7 +129,8 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
-			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)){
+			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
+			(XAie_IsUcModulePresent(DevInst, TileType) == 0U)){
 		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -280,7 +282,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
-			!XAie_IsUcModulePresent(DevInst, TileType)) {
+			(XAie_IsUcModulePresent(DevInst, TileType) == 0)) {
 		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -336,7 +338,7 @@ AieRC XAie_SharedDataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(!XAie_IsUcModulePresent(DevInst, TileType)) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) == 0) {
 		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -395,7 +397,7 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(!XAie_IsUcModulePresent(DevInst, TileType)) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) == 0) {
 		XAIE_ERROR("Invalid tile type Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -475,6 +477,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		void *Dst, u32 Size)
 {
 	AieRC RC;
+	u32 MemSize, MemAddr;
 	u64 DmAddrRoundDown, DmAddrRoundUp;
 	u32 BytePtr = 0;
 	u32 RemBytes = Size;
@@ -483,6 +486,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	u8 TileType;
 	unsigned char *CharDst = (unsigned char *)Dst;
 	const XAie_MemMod *MemMod;
+	const XAie_UcMod *UcMod;
 
 	if((DevInst == XAIE_NULL) ||
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY) || (Dst == NULL))
@@ -493,12 +497,21 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
-			(TileType != XAIEGBL_TILE_TYPE_MEMTILE)) {
+			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
+			(XAie_IsUcModulePresent(DevInst, TileType) == 0)) {
 		XAIE_ERROR("Invalid tile type Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
 
-	MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
+	if(XAie_IsUcModulePresent(DevInst, TileType)) {
+		UcMod = DevInst->DevProp.DevMod[TileType].UcMod;
+		MemSize = UcMod->PrivDataMemSize;
+		MemAddr = UcMod->PrivDataMemAddr;
+	} else {
+		MemMod = DevInst->DevProp.DevMod[TileType].MemMod;
+		MemSize = MemMod->Size;
+		MemAddr = MemMod->MemAddr;
+	}
 
 	/* Check for any size overflow */
 	if((u64)Addr + Size > MemMod->Size) {
