@@ -2701,7 +2701,7 @@ static const XAie_PerfMod Aie2PSTilePerfCnt[] =
  */
 static const XAie_PerfMod Aie2PSPlPerfCnt =
 {
-	.MaxCounterVal = 2U,
+	.MaxCounterVal = 6U,
 	.StartStopShift = 16U,
 	.ResetShift = 8U,
 	.PerfCounterOffsetAdd = 0x4,
