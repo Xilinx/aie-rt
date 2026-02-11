@@ -19,7 +19,11 @@ file(COPY ${HEADERS} DESTINATION ${CMAKE_BINARY_DIR}/include/xaiengine)
 add_library(aienginev2 STATIC ${SOURCES})
 
 set_target_properties(aienginev2 PROPERTIES LINKER_LANGUAGE C)
-target_compile_options(aienginev2 PRIVATE -Wall -Wextra -D__AIEBAREMETAL__)
+set(COMP_FLAG -Wall -Wextra -D__AIEBAREMETAL__)
+if("${CMAKE_MACHINE}" STREQUAL "Versal")
+	list(APPEND COMP_FLAG -DXAIE_PROD)
+endif()
+target_compile_options(aienginev2 PRIVATE ${COMP_FLAG})
 
 else ()
 project(xaiengine LANGUAGES C VERSION 3.9)

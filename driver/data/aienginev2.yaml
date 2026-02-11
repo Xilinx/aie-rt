@@ -15,6 +15,9 @@ properties:
     items:
       - const: xlnx,ai-engine-2.0
 
+depends_libs:
+        xilpm: {}
+        xilpm_ng: {}
+
 depends:
         aiefal: []
-...
