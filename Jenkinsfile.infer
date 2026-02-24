@@ -1,0 +1,227 @@
+pipeline {
+    agent any
+
+    environment {
+        // GitHub credentials for API access
+        GITHUB_TOKEN_AUTH = credentials('github-enterprise-token')
+
+        // Map Jenkins native PR variables to script expectations
+        GITHUB_PR_NUMBER = "${env.CHANGE_ID ?: ''}"
+        GITHUB_PR_URL = "${env.CHANGE_URL ?: ''}"
+        GITHUB_PR_SOURCE_BRANCH = "${env.CHANGE_BRANCH ?: env.BRANCH_NAME}"
+        GITHUB_PR_TARGET_BRANCH = "${env.CHANGE_TARGET ?: 'main'}"
+        GITHUB_PR_TRIGGER_SENDER_AUTHOR = "${env.CHANGE_AUTHOR ?: ''}"
+
+        // Token value for the script
+        GITHUB_TOKEN_AUTH_VAL = "${env.GITHUB_TOKEN_AUTH}"
+    }
+
+    stages {
+        stage('Check Build Conditions') {
+            when {
+                anyOf {
+                    // Run on PRs targeting main
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main'
+                    }
+                    // Run on PRs targeting main-aie
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie'
+                    }
+                    // Run on PRs targeting main-next
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-next'
+                    }
+                    // Run on PRs targeting main-aie-next
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie-next'
+                    }
+                }
+            }
+            steps {
+                echo "✓ Build conditions met: PR targeting main, main-aie, main-next, or main-aie-next"
+                echo "PR #${GITHUB_PR_NUMBER}: ${GITHUB_PR_SOURCE_BRANCH} → ${GITHUB_PR_TARGET_BRANCH}"
+            }
+        }
+
+        stage('Environment Check') {
+            when {
+                anyOf {
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-next'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie-next'
+                    }
+                }
+            }
+            steps {
+                echo 'Checking environment...'
+                sh 'echo "Current working directory: $(pwd)"'
+                sh 'echo "Current branch: ${BRANCH_NAME}"'
+                sh '''
+                    echo "=== Pull Request Environment Variables ==="
+                    echo "CHANGE_ID: ${CHANGE_ID:-not set}"
+                    echo "CHANGE_URL: ${CHANGE_URL:-not set}"
+                    echo "CHANGE_BRANCH: ${CHANGE_BRANCH:-not set}"
+                    echo "CHANGE_TARGET: ${CHANGE_TARGET:-not set}"
+                    echo "CHANGE_AUTHOR: ${CHANGE_AUTHOR:-not set}"
+                    echo ""
+                    echo "=== Mapped Variables for Script ==="
+                    echo "GITHUB_PR_NUMBER: ${GITHUB_PR_NUMBER:-not set}"
+                    echo "GITHUB_PR_URL: ${GITHUB_PR_URL:-not set}"
+                    echo "GITHUB_PR_SOURCE_BRANCH: ${GITHUB_PR_SOURCE_BRANCH:-not set}"
+                    echo "GITHUB_PR_TARGET_BRANCH: ${GITHUB_PR_TARGET_BRANCH:-not set}"
+                    echo "GITHUB_PR_TRIGGER_SENDER_AUTHOR: ${GITHUB_PR_TRIGGER_SENDER_AUTHOR:-not set}"
+                '''
+
+                // Check for required tools
+                sh '''
+                    echo ""
+                    echo "=== Checking Required Tools ==="
+                    which git || echo "WARNING: git not found"
+                    which jq || echo "WARNING: jq not found"
+                    which curl || echo "WARNING: curl not found"
+                '''
+            }
+        }
+
+        stage('Infer Analysis') {
+            when {
+                anyOf {
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-next'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie-next'
+                    }
+                }
+            }
+            steps {
+                echo 'Running Infer Static Analysis...'
+                echo 'Executing: .jenkins/infer_from_PR_jenkins_job.sh'
+
+                script {
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        def result = sh(
+                            script: 'bash -x ./.jenkins/infer_from_PR_jenkins_job.sh',
+                            returnStatus: true
+                        )
+
+                        if (result != 0) {
+                            updateGitHubStatus('FAILURE', 'Infer Analysis Failed', 'AIE_Driver_Infer_From_PR')
+                            error("Infer analysis failed with exit code: ${result}")
+                        } else {
+                            echo "✓ Infer analysis passed successfully"
+                            updateGitHubStatus('SUCCESS', 'Infer Analysis Passed', 'AIE_Driver_Infer_From_PR')
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            when {
+                anyOf {
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-next'
+                    }
+                    allOf {
+                        changeRequest()
+                        changeRequest target: 'main-aie-next'
+                    }
+                }
+            }
+            steps {
+                script {
+                    try {
+                        echo 'Cleanup: No shared resources to clean (infer directories are shared across jobs)'
+                        echo 'Workspace cleanup will be handled by cleanWs() in post section'
+                    } catch (Exception e) {
+                        echo "Cleanup warning: ${e.message}"
+                        // Don't fail the build if cleanup has issues
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+            // Clean workspace to free up disk space
+            cleanWs(deleteDirs: true, notFailBuild: true)
+        }
+        success {
+            echo '✓ Infer Analysis Passed'
+            updateGitHubStatus('SUCCESS', 'Infer Analysis Passed', 'AIE_Driver_Infer_From_PR')
+        }
+        failure {
+            echo '✗ Infer Analysis Failed'
+            updateGitHubStatus('FAILURE', 'Infer Analysis Failed', 'AIE_Driver_Infer_From_PR')
+        }
+    }
+}
+
+/**
+ * Update GitHub commit status for the PR
+ * @param state The status state: SUCCESS, FAILURE, PENDING, or ERROR
+ * @param message The status message to display
+ * @param context The status context (defaults to 'AIE_Driver_Infer_From_PR')
+ */
+def updateGitHubStatus(String state, String message, String context = 'AIE_Driver_Infer_From_PR') {
+    try {
+        step([
+            $class: 'GitHubCommitStatusSetter',
+            contextSource: [
+                $class: 'ManuallyEnteredCommitContextSource',
+                context: context
+            ],
+            statusResultSource: [
+                $class: 'ConditionalStatusResultSource',
+                results: [[
+                    $class: 'AnyBuildResult',
+                    message: message,
+                    state: state
+                ]]
+            ]
+        ])
+        echo "GitHub status updated [${context}]: ${state} - ${message}"
+    } catch (Exception e) {
+        echo "Warning: Failed to update GitHub status: ${e.message}"
+        echo "This may require 'Commit statuses: Read and write' permission for the GitHub App"
+    }
+}
