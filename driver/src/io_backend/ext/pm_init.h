@@ -57,10 +57,10 @@ static XStatus XAie_IpiConfigure(XIpiPsu *IpiInst)
 		goto done;
 	}
 	/* Look Up the config data */
-	IpiCfgPtr = XIpiPsu_LookupConfig(XPAR_IPI0_BASEADDR);
+	IpiCfgPtr = XIpiPsu_LookupConfig(XPAR_XIPIPSU_0_BASEADDR);
 	if (!IpiCfgPtr) {
 		Status = XST_FAILURE;
-		XAIE_ERROR("Failed to find config for %d\n", XPAR_IPI0_BASEADDR);
+		XAIE_ERROR("Failed to find config for %d\n", XPAR_XIPIPSU_0_BASEADDR);
 		goto done;
 	}
 
