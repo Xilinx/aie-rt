@@ -45,6 +45,17 @@
 #include "xaie_npi.h"
 #include "btree4.h"
 
+#ifndef IOCTL_AIE2PS_OPS
+#define IOCTL_AIE2PS_OPS 39U
+#endif
+
+#ifndef AIE_OPS_START_NUM_COL
+#define AIE_OPS_START_NUM_COL 7U
+#endif
+
+#define PAYLOAD_SIZE 3U
+#define RESPONSE_SIZE 1U
+
 #ifdef __AIEBAREMETAL__
 
 /****************************** Type Definitions *****************************/
@@ -53,6 +64,23 @@ typedef struct {
 	u64 NpiBaseAddr;
 	struct btree4 btree;
 } XAie_BaremetalIO;
+
+typedef struct {
+	u16 Type;
+	u16 Len;
+	u16 StartCol;
+	u16 NumCols;
+} XAie_PmOpStartNumCol __attribute__((aligned(4)));
+
+
+typedef struct {
+	u16 Type;
+	u16 Len;
+} XAie_PmOpTypeLen __attribute__((aligned(4)));
+
+#if defined(XAIE_PROD)
+static u8 XAie_BaremetalUseIoctl2 = 0U;
+#endif
 
 /************************** Function Definitions *****************************/
 
@@ -129,9 +157,11 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 	DevInst->IOInst = (void *)IOInst;
 
 #if defined(XAIE_PROD)
-	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIEML) {
-		DevInst->IsProd = 1U;
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS)
+		XAie_BaremetalUseIoctl2 = 1U;
 
+	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIE2PS) {
+		DevInst->IsProd = 1U;
 		Ret = XAie_PmInit(&IpiInst);
 		if (Ret != XST_SUCCESS) {
 			XAIE_ERROR("Failed to initialize PM\n");
@@ -188,18 +218,51 @@ static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 #if defined(XAIE_PROD)
 	u32 Response;
 	int Ret;
+	if (XAie_BaremetalUseIoctl2 == 0U) {
+		Ret = XPm_DevIoctl(PM_DEV_NODE_ID, IOCTL_AIE_OPS,
+				  (NumCols << 16U) | StartCol, Ops, &Response);
+	} else {
+		XAie_PmOpStartNumCol RangeOp;
+		XAie_PmOpTypeLen Op;
+		u64 OpsBufAddr;
+		u32 OpsPayload[3];
+		u32 Payload[PAYLOAD_SIZE];
 
-	Ret = XPm_DevIoctl(PM_DEV_AIE, IOCTL_AIE_OPS, (NumCols << 16)
-			      | StartCol, Ops, &Response);
+		RangeOp.Type = (u16)AIE_OPS_START_NUM_COL;
+		RangeOp.Len = (u16)sizeof(RangeOp);
+		RangeOp.StartCol = (u16)StartCol;
+		RangeOp.NumCols = (u16)NumCols;
+
+		Op.Type = (u16)Ops;
+		Op.Len = (u16)sizeof(Op);
+
+		/* Build AIE2PS ops buffer as packed type/len words. */
+		OpsPayload[0] = ((u32)RangeOp.Len << 16U) | (u32)RangeOp.Type;
+		OpsPayload[1] = ((u32)RangeOp.NumCols << 16U) | (u32)RangeOp.StartCol;
+		OpsPayload[2] = ((u32)Op.Len << 16U) | (u32)Op.Type;
+
+		/* { ops_size, ddr_upper_address, ddr_lower_address } */
+		OpsBufAddr = (u64)(UINTPTR)OpsPayload;
+		Payload[0] = (u32)sizeof(OpsPayload);
+		Payload[1] = (u32)(OpsBufAddr >> 32U);
+		Payload[2] = (u32)(OpsBufAddr & 0xFFFFFFFFU);
+
+		Ret = XPm_DevIoctl2(PM_DEV_NODE_ID, IOCTL_AIE2PS_OPS, Payload,
+				   PAYLOAD_SIZE, &Response, RESPONSE_SIZE);
+	}
+
 	if (Ret != XST_SUCCESS) {
 		XAIE_ERROR("Failed to write to privileged register. NumCols: %u StartCol: %u PLM Op ID:%u\n", NumCols, StartCol, Ops);
 		return XAIE_ERR;
 	}
+#else
+	(void)StartCol;
+	(void)NumCols;
+	(void)Ops;
 #endif
 
 	return XAIE_OK;
 }
-
 /*****************************************************************************/
 /**
 *

@@ -36,6 +36,8 @@
 #include "xil_io.h"
 
 /************************** Function Definitions *****************************/
+
+#define PM_DEV_NODE_ID 0x18800000U
 /*****************************************************************************/
 /**
 *
@@ -137,7 +139,7 @@ XStatus XAie_PmInit(XIpiPsu *IpiInst)
 	}
 
 	/* Request AIE device node */
-	Status = XPm_RequestNode(PM_DEV_AIE, PM_CAP_ACCESS, 100, 0);
+	Status = XPm_RequestNode(PM_DEV_NODE_ID, PM_CAP_ACCESS, 100, 0);
 	if (Status != XST_SUCCESS) {
 			XAIE_ERROR("Requesting of AIE device node failed!\n");
 			goto done;
