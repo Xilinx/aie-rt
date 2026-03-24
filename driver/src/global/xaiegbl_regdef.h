@@ -830,7 +830,10 @@ typedef struct XAie_PerfMod {
 	u8 PerfCounterOffsetAdd;/* Add to calc perf cntrl offset for counter */
 	u32 PerfCtrlBaseAddr;   /* Perf counter ctrl register offset address */
 	u32 PerfCtrlOffsetAdd;  /* Add this val for next Perf counter ctrl reg*/
+	u32 PerfCtrlOffsetGap;  /* Some archs have a register gap in between control regs*/
 	u32 PerfCtrlResetBaseAddr;/* Perf counter ctrl offset addr for reset */
+	u32 PerfCtrlResetOffsetAdd;/* Add this val for next Perf counter reset control reg*/
+	u32 PerfCtrlResetPerReg;/* How many counter reset controls per register*/
 	u32 PerfCounterBaseAddr; /* Offset addr for perf counter 0 */
 	u32 PerfCounterEvtValBaseAddr; /* Offset addr for perf counter evnt val*/
 	const XAie_RegFldAttr Start; /* lsb and mask for start event for ctr0 */
