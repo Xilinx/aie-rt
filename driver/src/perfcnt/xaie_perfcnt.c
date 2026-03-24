@@ -260,7 +260,9 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	RegOffset = PerfMod->PerfCtrlBaseAddr +
-				(Counter / 2U * PerfMod->PerfCtrlOffsetAdd);
+				((Counter / 2U) * PerfMod->PerfCtrlOffsetAdd) +
+				((Counter / 2U) ? PerfMod->PerfCtrlOffsetGap : 0U);
+
 	/* Compute mask for performance control register */
 	FldMask = (PerfMod->Start.Mask | PerfMod->Stop.Mask) <<
 				(PerfMod->StartStopShift * (Counter % 2U));
@@ -301,7 +303,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u8 Counter,
 		XAie_Events ResetEvent)
 {
-	u32 ResetRegOffset, ResetFldVal, ResetFldMask;
+	u32 ResetRegOffset, ResetFldVal, ResetFldMask, CounterIdx;
 	u64 ResetRegAddr;
 	u8 TileType;
 	u16 IntResetEvent;
@@ -351,15 +353,17 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Get offset address based on Counter */
-	ResetRegOffset = PerfMod->PerfCtrlResetBaseAddr;
+	ResetRegOffset = PerfMod->PerfCtrlResetBaseAddr +
+				((Counter / 2U) * PerfMod->PerfCtrlOffsetAdd);
 
 	/* Compute mask for performance control register */
+	CounterIdx = Counter % PerfMod->PerfCtrlResetPerReg;
 	ResetFldMask = PerfMod->Reset.Mask <<
-					(PerfMod->ResetShift * (Counter));
+					(PerfMod->ResetShift * CounterIdx);
 	/* Compute value to be written to the performance control register */
 	ResetFldVal = XAie_SetField(IntResetEvent,
-		PerfMod->Reset.Lsb + (PerfMod->ResetShift * Counter),
-		PerfMod->Reset.Mask << (PerfMod->ResetShift * Counter));
+		PerfMod->Reset.Lsb + (PerfMod->ResetShift * CounterIdx),
+		PerfMod->Reset.Mask << (PerfMod->ResetShift * CounterIdx));
 
 	/* Compute absolute address and write to register */
 	ResetRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
