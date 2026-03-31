@@ -150,6 +150,9 @@ AieRC XAie_DmaChannelSetStartQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc);
+int XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
+		u8 EnTokenIssue, XAie_AsyncRes *AsyncRes);
 int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc, XAie_AsyncRes *AsyncRes);

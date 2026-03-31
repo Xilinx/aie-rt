@@ -1960,6 +1960,39 @@ AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This is the asynchronous API to configure the start queue of a DMA Channel.
+*
+* @param	DevInst: Device Instance
+* @param	Loc: Location of the DMA
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	BdNum: The starting BD number of the queue.
+* @param	RepeatCount: The number of times the queue needs to be repeated.
+* @param	EnTokenIssue: XAIE_ENABLE to enable the DMA Channel to issue
+*		token when the queue is completed, otherwise XAIE_DISABLE.
+* @param	AsyncRes: Pointer to async result structure
+*
+* @return	Number of SQEs submitted on success, 0 on error.
+*
+* @note		This feature is not supported for AIE. For AIE-ML the enable
+*		token issue can be XAIE_ENABLE or XAIE_DISABLE.
+*		This API doesn't support out of order.
+*
+******************************************************************************/
+int XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
+		u8 EnTokenIssue, XAie_AsyncRes *AsyncRes)
+{
+	XAie_DmaDeclareQueueConfig(DmaQueueDesc, BdNum, RepeatCount,
+			EnTokenIssue, XAIE_DISABLE);
+
+	return XAie_DmaChannelSetStartQueueGenericAsync(DevInst, Loc, ChNum, Dir,
+			&DmaQueueDesc, AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
 * This is a helper function that validates inputs and prepares the register
 * address and value for setting start queue.
 *
