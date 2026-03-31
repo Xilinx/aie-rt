@@ -1875,13 +1875,13 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 		}
 
 		if(((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) &&
-				(TxnInst->NumCmds > 0U)) {
-				/* Flush command buffer */
-				RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
-				if(RC != XAIE_OK) {
-					XAIE_ERROR("Failed to flush cmd buffer\n");
-					return RC;
-				}
+		   (TxnInst->NumCmds > 0U)) {
+			/* Flush command buffer */
+			RC = _XAie_Txn_FlushCmdBuf(DevInst, TxnInst);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to flush cmd buffer\n");
+				return RC;
+			}
 			TxnInst->NumCmds = 0;
 			return Backend->Ops.RunOp(DevInst->IOInst, DevInst, Op, Arg);
 		} else if(TxnInst->NumCmds == 0U) {
