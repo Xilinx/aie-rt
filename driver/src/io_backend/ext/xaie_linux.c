@@ -1268,6 +1268,48 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 /*****************************************************************************/
 /**
 *
+* This is the memory function to asynchronously attach the allocated memory to
+* the device using io_uring.
+*
+* @param	MemInst: Memory instance pointer.
+* @param	MemHandle: Handle to the allocated memory (DMA buffer fd).
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Internal only. Uses io_uring for async DMA buffer attachment.
+*
+*******************************************************************************/
+static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
+				    XAie_AsyncRes *AsyncRes)
+{
+	XAie_DevInst *DevInst = MemInst->DevInst;
+	struct io_uring_sqe *Sqe;
+	int ret;
+
+	Sqe = io_uring_get_sqe(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
+	if (Sqe == NULL) {
+		XAIE_ERROR("Failed to get sqe for async mem attach\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_ATTACH_DMABUF_IOCTL;
+	Sqe->user_data = (u64)AsyncRes;
+	ret = io_uring_submit(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
+	if (ret < 0) {
+		XAIE_ERROR("Failed to submit async mem attach: %d\n", ret);
+		return 0;
+	}
+
+	return ret;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the memory function to detach the memory from device
 *
 * @param	MemInst: Memory instance pointer.
@@ -2485,6 +2527,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.MemSyncForCPU = XAie_LinuxMemSyncForCPU,
 	.Ops.MemSyncForDev = XAie_LinuxMemSyncForDev,
 	.Ops.MemAttach = XAie_LinuxMemAttach,
+	.Ops.MemAttachAsync = XAie_LinuxMemAttachAsync,
 	.Ops.MemDetach = XAie_LinuxMemDetach,
 	.Ops.GetTid = XAie_LinuxGetTid,
 	.Ops.GetPartFd = XAie_LinuxGetPartFd,

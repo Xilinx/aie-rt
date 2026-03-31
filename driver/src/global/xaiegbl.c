@@ -930,6 +930,73 @@ AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
 /*****************************************************************************/
 /**
 *
+* This is the memory function to asynchronously attach user allocated memory to
+* the AI engine partition device instance using io_uring. It validates input
+* parameters, initializes the memory instance, and delegates to the backend's
+* MemAttachAsync operation.
+*
+* @param	DevInst: AI Engine Device Instance
+* @param	MemInst: Memory Instance
+* @param	DevAddr: Device Address
+* @param	VAddr:   Virtual Address
+* @param	Size:    Size
+* @param	Cache:   Cache property
+* @param	MemHandle: Memory Handle (DMA buffer fd)
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+*******************************************************************************/
+int XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
+			u64 DevAddr, u64 VAddr, u64 Size, XAie_MemCacheProp Cache,
+			u64 MemHandle, XAie_AsyncRes *AsyncRes)
+{
+	if(AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+
+	if((DevInst == XAIE_NULL) ||
+	   (DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
+	   (DevInst->Backend == XAIE_NULL)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if(MemInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid memory instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if(Cache > XAIE_MEM_NONCACHEABLE) {
+		XAIE_ERROR("Invalid cache property\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if(DevInst->Backend->Ops.MemAttachAsync == NULL) {
+		XAIE_ERROR("Asynchronous memory attach is not supported "
+				"by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	MemInst->DevInst = DevInst;
+	MemInst->VAddr = (void *)(uintptr_t)VAddr;
+	MemInst->DevAddr = DevAddr;
+	MemInst->Size = Size;
+	MemInst->Cache = Cache;
+
+	return DevInst->Backend->Ops.MemAttachAsync(MemInst, MemHandle, AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the memory function to dettach user allocated memory from the AI engine
 * partition device instance.
 *

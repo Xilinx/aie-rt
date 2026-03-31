@@ -166,6 +166,8 @@ typedef struct XAie_BackendOps {
 	AieRC (*MemSyncForDevVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 	AieRC (*MemGetDevAddrFromVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
 	AieRC (*MemAttach)(XAie_MemInst *MemInst, u64 MemHandle);
+	int (*MemAttachAsync)(XAie_MemInst *MemInst, u64 MemHandle,
+				XAie_AsyncRes *AsyncRes);
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
 	u64 (*GetTid)(void);
 	int (*GetPartFd)(void *IOInst);
