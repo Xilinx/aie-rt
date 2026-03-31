@@ -32,6 +32,9 @@ LIBURING_A ?= ${LIBURING_DIR}/src/liburing.a
 all: include lib$(NAME).so lib$(NAME).a
 
 ${LIBURING_A}:
+	echo "CC=$$CC"; \
+	echo "CXX=$$CXX"; \
+	echo "CFLAGS=$$CFLAGS"; \
 	cd ${LIBURING_DIR};				\
 	CC_TRIMMED=$$(echo "$$CC" | sed 's/^[[:space:]]*//'); \
 	CC_CUT_1=$$(echo "$$CC_TRIMMED" | cut -d ' ' -f 1); \
@@ -40,8 +43,10 @@ ${LIBURING_A}:
 		echo "Warning: CC variable contains multiple words. Only the first word will be "; \
 		echo "used to build liburing. Please ensure that CC variable is set correctly."; \
 		CC_LIBURING=$$CC_CUT_1; \
+		export CFLAGS="$$CFLAGS $$CC_CUT_2"; \
 	else \
 		CC_LIBURING=$$CC; \
+		export CFLAGS="$$CFLAGS"; \
 	fi; \
 	CXX_TRIMMED=$$(echo "$$CXX" | sed 's/^[[:space:]]*//'); \
 	CXX_CUT_1=$$(echo "$$CXX_TRIMMED" | cut -d ' ' -f 1); \
@@ -50,9 +55,15 @@ ${LIBURING_A}:
 		echo "Warning: CXX variable contains multiple words. Only the first word will be "; \
 		echo "used to build liburing. Please ensure that CXX variable is set correctly."; \
 		CXX_LIBURING=$$CXX_CUT_1; \
+		export CPPFLAGS="$$CPPFLAGS $$CXX_CUT_2"; \
 	else \
 		CXX_LIBURING=$$CXX; \
+		export CPPFLAGS="$$CFLAGS"; \
 	fi; \
+	echo "CC_LIBURING=$$CC_LIBURING"; \
+	echo "CXX_LIBURING=$$CXX_LIBURING"; \
+	echo "CFLAGS for liburing build: $$CFLAGS"; \
+	echo "CPPFLAGS for liburing build: $$CPPFLAGS"; \
 	./configure --cc=$${CC_LIBURING} --cxx=$${CXX_LIBURING};		\
 	make -C src -j32;				\
 
