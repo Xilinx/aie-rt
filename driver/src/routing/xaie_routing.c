@@ -1767,7 +1767,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 		}
 	} else {
 		RC |= (u32)XAie_DmaSetAddrLen(&SourceBufferDescriptor,
-						(u64)(void*)SourceObject, data_size);
+						(u64)(uintptr_t)SourceObject, data_size);
 	}
 
 	RC |= (u32)XAie_DmaEnableBd(&SourceBufferDescriptor);
@@ -1799,7 +1799,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 		}
 	} else {
 		RC |= (u32)XAie_DmaSetAddrLen(&DestBufferDescriptor,
-						(u64)(void*)DestinationObject, data_size);
+						(u64)(uintptr_t)DestinationObject, data_size);
 	}
 	RC |= (u32)XAie_DmaEnableBd(&DestBufferDescriptor);
 	int destBufferID = _XAie_findAvailableBufferID(routingInstance, destination);
