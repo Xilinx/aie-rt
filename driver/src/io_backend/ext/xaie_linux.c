@@ -111,10 +111,7 @@ typedef struct XAie_LinuxMem {
 	int BufferFd;
 } XAie_LinuxMem;
 
-#endif /* __AIELINUX__ */
-
 /************************** Function Definitions *****************************/
-#ifdef __AIELINUX__
 
 static bool _XAie_LinuxIO_IoVecIsFull(XAie_LinuxIO *LinuxIOInst)
 {
@@ -1987,7 +1984,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 	return XAIE_OK;
 }
 
-#else
+#else /* _POSIX_C_SOURCE */
 /*****************************************************************************/
 /**
 * The API captures core tile utilization over a user-defined period.
@@ -2009,7 +2006,7 @@ static AieRC _XAie_LinuxIO_PerfUtilization(void *IOInst, XAie_PerfInst *PerfInst
 	return XAIE_ERR;
 
 }
-#endif
+#endif /* _POSIX_C_SOURCE */
 
 /*****************************************************************************/
 /**
