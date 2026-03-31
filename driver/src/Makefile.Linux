@@ -8,6 +8,7 @@ APP = aiengine
 
 CC ?= gcc
 AR ?= ar
+CXX ?= g++
 CP = cp
 LIBSOURCES = $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)
 CFLAGS += -Wall -Wextra --std=c11
@@ -24,19 +25,31 @@ NAME := xaiengine
 MAJOR = 3
 MINOR = 9
 VERSION = $(MAJOR).$(MINOR)
+LIBURING_DIR ?= ../../liburing
+LIBURING_INCLUDE ?= ${LIBURING_DIR}/src/include
+LIBURING_A ?= ${LIBURING_DIR}/src/liburing.a
 
 all: include lib$(NAME).so lib$(NAME).a
 
-include:
+${LIBURING_A}:
+	cd ${LIBURING_DIR};				\
+	./configure --cc=${CC} --cxx=${CXX};		\
+	make -j32;					\
+
+include: ${LIBURING_A}
 	mkdir $(INCLUDEDIR)/xaiengine -p
 	mkdir $(INTERNALDIR)/xaiengine -p
 	$(CP) xaiengine.h $(INCLUDEDIR)
 	$(CP) $(INCLUDEFILES) $(INCLUDEDIR)/xaiengine
 	$(CP) xaiengine.h $(INTERNALDIR)
 	$(CP) $(INTERNALFILES) $(INTERNALDIR)/xaiengine
+	$(CP) $(LIBURING_DIR)/src/include/liburing.h $(INCLUDEDIR)/
+	$(CP) $(LIBURING_DIR)/src/include/liburing $(INCLUDEDIR)/ -r
 
-lib$(NAME).so.$(VERSION): $(OUTS)
-	$(CC) $(LDFLAGS) $^ -shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
+lib$(NAME).so.$(VERSION): ${LIBURING_A} $(OUTS)
+	$(CC) $(LDFLAGS) $^ 									\
+		-Wl,--whole-archive ${LIBURING_A} -Wl,--no-whole-archive			\
+		-shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
 
 lib$(NAME).so: lib$(NAME).so.$(VERSION)
 	rm -f lib$(NAME).so.$(MAJOR) lib$(NAME).so
@@ -45,9 +58,12 @@ lib$(NAME).so: lib$(NAME).so.$(VERSION)
 
 lib$(NAME).a: $(OUTS)
 	${AR} rcs lib${NAME}.a $^
+	(echo "OPEN lib${NAME}.a"; echo "ADDLIB ${LIBURING_A}"; echo "SAVE"; echo "END";) | ${AR} -M
+	ranlib lib${NAME}.a
 
 %.o: %.c include
-	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine 		\
+		-I$(LIBURING_INCLUDE) -c -fPIC $< -o $@
 
 baremetal: include lib$(NAME).so lib$(NAME).a
 CFLAGS_bare += -Wall -Wextra --std=c11 -D__AIEBAREMETAL__
@@ -100,6 +116,7 @@ doc-clean:
 	rm -rf $(DOCS_DIR)
 
 clean:
-	rm -rf $(OUTS) *.so *.so.*
+	make -C ${LIBURING_DIR} clean
+	rm -rf $(OUTS) *.so *.so.* ${LIBURING_A} lib$(NAME).a
 	rm -rf $(INCLUDEDIR)
 	rm -rf $(INTERNALDIR)
