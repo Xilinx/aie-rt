@@ -57,6 +57,7 @@
 #define XAIE_128BIT_ALIGN_MASK 0xF
 #define XAIE_DEVICE_FILE "/dev/aie0"
 #define XAIE_OCCUPANCY_USER_EVENT_NUM 0x2U
+#define AIE_IO_URING_BUFFER_ENTRIES 32U
 
 #ifdef __AIELINUX__
 
@@ -99,6 +100,8 @@ typedef struct XAie_LinuxIO {
 	struct io_uring ring;
 	struct io_uring_params params;
 	struct io_uring_cqe **cqes;
+	struct iovec *IoVecs;
+	u32 IoVecsCount;
 
 } XAie_LinuxIO;
 
@@ -210,7 +213,16 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 		close(LinuxIOInst->UcPrivDataMem.Fd);
 		close(LinuxIOInst->UcDataMem.Fd);
 	}
+
+	io_uring_unregister_buffers(&LinuxIOInst->ring);
+	for (u32 i = 0; i < LinuxIOInst->IoVecsCount; i++) {
+		if (LinuxIOInst->IoVecs[i].iov_base != NULL) {
+			munmap(LinuxIOInst->IoVecs[i].iov_base, LinuxIOInst->IoVecs[i].iov_len);
+		}
+	}
 	io_uring_queue_exit(&LinuxIOInst->ring);
+	free(LinuxIOInst->IoVecs);
+
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
@@ -519,6 +531,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	u32 NumTiles;
 	u32 SetTileStatus;
 	u16 ring_size = 256;
+	size_t pg_size = getpagesize();
 
 	IOInst = (XAie_LinuxIO *)calloc(1, sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -587,9 +600,41 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		RC = XAIE_ERR;
 		goto queue_exit;
 	}
+	IOInst->IoVecsCount = AIE_IO_URING_BUFFER_ENTRIES;
+	IOInst->IoVecs = (struct iovec *)calloc(IOInst->IoVecsCount, sizeof(struct iovec));
+	if (IOInst->IoVecs == NULL) {
+		XAIE_ERROR("Failed to allocate memory for iovec structures\n");
+		RC = XAIE_ERR;
+		goto free_cqes;
+	}
+	for (u32 i = 0; i < IOInst->IoVecsCount; i++) {
+		IOInst->IoVecs[i].iov_base = mmap(NULL, pg_size, PROT_READ | PROT_WRITE,
+						  MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+		if (IOInst->IoVecs[i].iov_base == MAP_FAILED) {
+			XAIE_ERROR("Failed to allocate memory for iovec buffer %d\n", i);
+			IOInst->IoVecs[i].iov_base = NULL;
+			RC = XAIE_ERR;
+			goto free_iovecs;
+		}
+		IOInst->IoVecs[i].iov_len = pg_size;
+	}
+	ret = io_uring_register_buffers(&IOInst->ring, IOInst->IoVecs, IOInst->IoVecsCount);
+	if (ret) {
+		XAIE_ERROR("Failed to register buffers for uring: %d\n", ret);
+		RC = XAIE_ERR;
+		goto free_iovecs;
+	}
 
 	return XAIE_OK;
 
+free_iovecs:
+	for (u32 i = 0; i < IOInst->IoVecsCount; i++) {
+		if (IOInst->IoVecs[i].iov_base != NULL) {
+			munmap(IOInst->IoVecs[i].iov_base, pg_size);
+		}
+	}
+free_cqes:
+	free(IOInst->cqes);
 queue_exit:
 	io_uring_queue_exit(&IOInst->ring);
 free_IOInst:
