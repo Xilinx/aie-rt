@@ -97,9 +97,9 @@ typedef struct XAie_LinuxIO {
 	u8 RowShift;
 	u8 ColShift;
 	u64 BaseAddr;
-	struct io_uring ring;
-	struct io_uring_params params;
-	struct io_uring_cqe **cqes;
+	struct io_uring Ring;
+	struct io_uring_params Params;
+	struct io_uring_cqe **Cqes;
 	struct iovec *IoVecs;
 	u32 IoVecsCount;
 	u32 IoVecsHead;
@@ -242,19 +242,19 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 		close(LinuxIOInst->UcDataMem.Fd);
 	}
 
-	io_uring_unregister_buffers(&LinuxIOInst->ring);
+	io_uring_unregister_buffers(&LinuxIOInst->Ring);
 	for (u32 i = 0; i < LinuxIOInst->IoVecsCount; i++) {
 		if (LinuxIOInst->IoVecs[i].iov_base != NULL) {
 			munmap(LinuxIOInst->IoVecs[i].iov_base, LinuxIOInst->IoVecs[i].iov_len);
 		}
 	}
-	io_uring_queue_exit(&LinuxIOInst->ring);
+	io_uring_queue_exit(&LinuxIOInst->Ring);
 	free(LinuxIOInst->IoVecs);
 
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
-	free(LinuxIOInst->cqes);
+	free(LinuxIOInst->Cqes);
 	free(IOInst);
 
 	return XAIE_OK;
@@ -558,8 +558,8 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	int Fd;
 	u32 NumTiles;
 	u32 SetTileStatus;
-	u16 ring_size = 256;
-	size_t pg_size = getpagesize();
+	u16 RingSize = 256;
+	size_t PgSize = getpagesize();
 
 	IOInst = (XAie_LinuxIO *)calloc(1, sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -575,14 +575,14 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		goto free_IOInst;
 	}
 
-	IOInst->params.flags = IORING_SETUP_CQE32 | IORING_SETUP_SQE128 |
+	IOInst->Params.flags = IORING_SETUP_CQE32 | IORING_SETUP_SQE128 |
 			       IORING_SETUP_SQPOLL;
 
-	IOInst->params.sq_thread_idle = 1;
-	if (DevInst->ring_size)
-		ring_size = DevInst->ring_size;
-	DevInst->ring_size = ring_size;
-	ret = io_uring_queue_init_params(ring_size, &IOInst->ring, &IOInst->params);
+	IOInst->Params.sq_thread_idle = 1;
+	if (DevInst->RingSize)
+		RingSize = DevInst->RingSize;
+	DevInst->RingSize = RingSize;
+	ret = io_uring_queue_init_params(RingSize, &IOInst->Ring, &IOInst->Params);
 	if (ret) {
 		XAIE_ERROR("Uring init failed: %d\n", ret);
 		RC = XAIE_ERR;
@@ -616,14 +616,14 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	DevInst->IOInst = (void *)IOInst;
 	IOInst->DevInst = DevInst;
 
-	ret = io_uring_register_files(&IOInst->ring, &IOInst->PartitionFd, 1);
+	ret = io_uring_register_files(&IOInst->Ring, &IOInst->PartitionFd, 1);
 	if (ret) {
 		XAIE_ERROR("Failed to register fd for uring sqpoll: %d\n", ret);
 		RC = XAIE_ERR;
 		goto queue_exit;
 	}
-	IOInst->cqes = (struct io_uring_cqe **)calloc(ring_size, sizeof(struct io_uring_cqe *));
-	if (!IOInst->cqes) {
+	IOInst->Cqes = (struct io_uring_cqe **)calloc(RingSize, sizeof(struct io_uring_cqe *));
+	if (!IOInst->Cqes) {
 		XAIE_ERROR("Failed to allocate memory for cqe pointers\n");
 		RC = XAIE_ERR;
 		goto queue_exit;
@@ -636,7 +636,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		goto free_cqes;
 	}
 	for (u32 i = 0; i < IOInst->IoVecsCount; i++) {
-		IOInst->IoVecs[i].iov_base = mmap(NULL, pg_size, PROT_READ | PROT_WRITE,
+		IOInst->IoVecs[i].iov_base = mmap(NULL, PgSize, PROT_READ | PROT_WRITE,
 						  MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 		if (IOInst->IoVecs[i].iov_base == MAP_FAILED) {
 			XAIE_ERROR("Failed to allocate memory for iovec buffer %d\n", i);
@@ -644,9 +644,9 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 			RC = XAIE_ERR;
 			goto free_iovecs;
 		}
-		IOInst->IoVecs[i].iov_len = pg_size;
+		IOInst->IoVecs[i].iov_len = PgSize;
 	}
-	ret = io_uring_register_buffers(&IOInst->ring, IOInst->IoVecs, IOInst->IoVecsCount);
+	ret = io_uring_register_buffers(&IOInst->Ring, IOInst->IoVecs, IOInst->IoVecsCount);
 	if (ret) {
 		XAIE_ERROR("Failed to register buffers for uring: %d\n", ret);
 		RC = XAIE_ERR;
@@ -660,13 +660,13 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 free_iovecs:
 	for (u32 i = 0; i < IOInst->IoVecsCount; i++) {
 		if (IOInst->IoVecs[i].iov_base != NULL) {
-			munmap(IOInst->IoVecs[i].iov_base, pg_size);
+			munmap(IOInst->IoVecs[i].iov_base, PgSize);
 		}
 	}
 free_cqes:
-	free(IOInst->cqes);
+	free(IOInst->Cqes);
 queue_exit:
-	io_uring_queue_exit(&IOInst->ring);
+	io_uring_queue_exit(&IOInst->Ring);
 free_IOInst:
 	free(IOInst);
 	return RC;
@@ -701,7 +701,7 @@ static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
 	int Ret;
 
 	AsyncRes->io_vec_inuse = 0;
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (!Sqe) {
 		XAIE_ERROR("Failed to get sqe for async write\n");
 		AsyncRes->res = -ENOMEM;
@@ -719,7 +719,7 @@ static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
 		.mask = 0, /* mask must be 0 for register write */
 	};
 
-	Ret = io_uring_submit(&LinuxIOInst->ring);
+	Ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to submit async write: %d\n", Ret);
 		AsyncRes->res = Ret;
@@ -747,16 +747,16 @@ static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
 {
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
 	XAie_DevInst *DevInst = LinuxIOInst->DevInst;
-	struct io_uring_cqe **Cqe = LinuxIOInst->cqes;
+	struct io_uring_cqe **Cqe = LinuxIOInst->Cqes;
 	XAie_AsyncRes *AsyncRes;
 	int Ret;
 
-	if (Nr > DevInst->ring_size) {
+	if (Nr > DevInst->RingSize) {
 		XAIE_ERROR("Requested completion wait number %u is greater than ring size %u\n",
-			   Nr, DevInst->ring_size);
+			   Nr, DevInst->RingSize);
 		return XAIE_ERR;
 	}
-	Ret = io_uring_wait_cqes(&LinuxIOInst->ring, Cqe, Nr, NULL, NULL);
+	Ret = io_uring_wait_cqes(&LinuxIOInst->Ring, Cqe, Nr, NULL, NULL);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to wait for async completion: %d\n", Ret);
 		return XAIE_ERR;
@@ -772,7 +772,7 @@ static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
 		if (AsyncRes->io_vec_inuse == 1) {
 			_XAie_LinuxIO_IoVecIncTail(LinuxIOInst);
 		}
-		io_uring_cqe_seen(&LinuxIOInst->ring, Cqe[i]);
+		io_uring_cqe_seen(&LinuxIOInst->Ring, Cqe[i]);
 	}
 
 	return Ret;
@@ -2056,7 +2056,7 @@ static int XAie_LinuxIO_PartitionInitAsync(void *IOInst, XAie_PartInitOpts *Opts
 		}
 	}
 
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async partition init\n");
 		AsyncRes->res = -ENOMEM;
@@ -2128,7 +2128,7 @@ static int XAie_LinuxIO_PartitionInitAsync(void *IOInst, XAie_PartInitOpts *Opts
 					     InitArgs->locs[i].row);
 		}
 	}
-	ret = io_uring_submit(&LinuxIOInst->ring);
+	ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (ret < 0) {
 		XAIE_ERROR("Failed to submit async partition init: %d\n", ret);
 		AsyncRes->res = ret;
@@ -2165,7 +2165,7 @@ static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
 	int ret;
 
 	AsyncRes->io_vec_inuse = 0;
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async partition teardown\n");
 		AsyncRes->res = -ENOMEM;
@@ -2176,7 +2176,7 @@ static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
 	Sqe->cmd_op = AIE_PARTITION_TEAR_IOCTL;
 	Sqe->user_data = (u64)AsyncRes;
 
-	ret = io_uring_submit(&LinuxIOInst->ring);
+	ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (ret < 0) {
 		XAIE_ERROR("Failed to submit async partition teardown: %d\n",
 			   ret);
@@ -2212,7 +2212,7 @@ static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
 	int ret;
 
 	AsyncRes->io_vec_inuse = 0;
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async partition clear context\n");
 		AsyncRes->res = -ENOMEM;
@@ -2223,7 +2223,7 @@ static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
 	Sqe->cmd_op = AIE_PARTITION_CLR_CONTEXT_IOCTL;
 	Sqe->user_data = (u64)AsyncRes;
 
-	ret = io_uring_submit(&LinuxIOInst->ring);
+	ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (ret < 0) {
 		XAIE_ERROR("Failed to submit async partition clear context: %d\n",
 			   ret);
@@ -2607,7 +2607,7 @@ int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
 		AsyncRes->res = -EINVAL;
 		return 0;
 	}
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (!Sqe) {
 		XAIE_ERROR("Failed to get sqe for async write\n");
 		AsyncRes->res = -ENOMEM;
@@ -2622,7 +2622,7 @@ int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
 	Args->size = Size;
 	memcpy(Args->data, Data, Size * sizeof(u32));
 
-	Ret = io_uring_submit(&LinuxIOInst->ring);
+	Ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to submit async write: %d\n", Ret);
 		AsyncRes->res = Ret;
@@ -2692,7 +2692,7 @@ static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
 	memcpy(LinuxIOInst->IoVecs[BufIdx].iov_base, Data, Size * sizeof(u32));
 	AsyncRes->io_vec_inuse = 1;
 
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async block write\n");
 		AsyncRes->res = -ENOMEM;
@@ -2712,7 +2712,7 @@ static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
 		.len = Size,
 	};
 
-	Ret = io_uring_submit(&LinuxIOInst->ring);
+	Ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to submit async block write: %d\n", Ret);
 		AsyncRes->res = Ret;
@@ -2768,7 +2768,7 @@ static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
 		return 0;
 	}
 
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async block set\n");
 		AsyncRes->res = -ENOMEM;
@@ -2786,7 +2786,7 @@ static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
 		.mask = 0,
 	};
 
-	Ret = io_uring_submit(&LinuxIOInst->ring);
+	Ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to submit async block set: %d\n", Ret);
 		AsyncRes->res = Ret;
@@ -2824,7 +2824,7 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 			return 0;
 		}
 
-		Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+		Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 		if (Sqe == NULL) {
 			XAIE_ERROR("Failed to get sqe for async BD write\n");
 			AsyncRes->res = -ENOMEM;
@@ -2841,7 +2841,7 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 		args->loc.row = Loc.Row;
 
 		DmaMod->WriteBdPrep(DevInst, DmaDesc, Loc, BdNum, args->bd, &Addr);
-		ret = io_uring_submit(&LinuxIOInst->ring);
+		ret = io_uring_submit(&LinuxIOInst->Ring);
 		if (ret < 0) {
 			XAIE_ERROR("Failed to submit async BD write: %d\n", ret);
 			AsyncRes->res = ret;
@@ -2857,7 +2857,7 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 			AsyncRes->res = -EINVAL;
 			return 0;
 		}
-		Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+		Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 		if (Sqe == NULL) {
 			XAIE_ERROR("Failed to get sqe for async BD write\n");
 			AsyncRes->res = -ENOMEM;
@@ -2871,7 +2871,7 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 		Args->size = DmaMod->BdSize * sizeof(u32);
 		DmaMod->WriteBdPrep(DevInst, DmaDesc, Loc, BdNum, Args->data, &Addr);
 		Sqe->addr = Addr;
-		ret = io_uring_submit(&LinuxIOInst->ring);
+		ret = io_uring_submit(&LinuxIOInst->Ring);
 		if (ret < 0) {
 			XAIE_ERROR("Failed to submit async BD write: %d\n", ret);
 			AsyncRes->res = ret;
@@ -2898,7 +2898,7 @@ static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst, XAie_
 	}
 	LinuxMemInst = (XAie_LinuxMem *) MemInst->BackendHandle;
 
-	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async BD address update\n");
 		AsyncRes->res = -ENOMEM;
@@ -2915,7 +2915,7 @@ static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst, XAie_
 	args->loc.row = Loc.Row;
 	args->bd[0] = Offset;
 
-	ret = io_uring_submit(&LinuxIOInst->ring);
+	ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (ret < 0) {
 		XAIE_ERROR("Failed to submit async BD address update: %d\n", ret);
 		AsyncRes->res = ret;
