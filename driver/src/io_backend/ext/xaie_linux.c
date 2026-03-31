@@ -39,6 +39,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <liburing.h>
 
 #include "xlnx-ai-engine.h"
 
@@ -95,6 +96,9 @@ typedef struct XAie_LinuxIO {
 	u8 RowShift;
 	u8 ColShift;
 	u64 BaseAddr;
+	struct io_uring ring;
+	struct io_uring_params params;
+
 } XAie_LinuxIO;
 
 typedef struct XAie_LinuxMem {
@@ -205,6 +209,7 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 		close(LinuxIOInst->UcPrivDataMem.Fd);
 		close(LinuxIOInst->UcDataMem.Fd);
 	}
+	io_uring_queue_exit(&LinuxIOInst->ring);
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
@@ -507,6 +512,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 {
 	AieRC RC;
 	XAie_LinuxIO *IOInst;
+	int ret;
 	int Fd;
 	u32 NumTiles;
 	u32 SetTileStatus;
@@ -521,8 +527,19 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	if(Fd < 0) {
 		XAIE_ERROR("Failed to open aie device %s, %d: %s\n",
 			"/dev/aie0", errno, strerror(errno));
-		free(IOInst);
-		return XAIE_ERR;
+		RC = XAIE_ERR;
+		goto free_IOInst;
+	}
+
+	IOInst->params.flags = IORING_SETUP_CQE32 | IORING_SETUP_SQE128 |
+			       IORING_SETUP_SQPOLL;
+
+	IOInst->params.sq_thread_idle = 1;
+	ret = io_uring_queue_init_params(256, &IOInst->ring, &IOInst->params);
+	if (ret) {
+		XAIE_ERROR("Uring init failed: %d\n", ret);
+		RC = XAIE_ERR;
+		goto free_IOInst;
 	}
 
 	IOInst->RowShift = DevInst->DevProp.RowShift;
@@ -532,8 +549,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 
 	RC = _XAie_LinuxIO_GetPartition(DevInst, IOInst);
 	if(RC != XAIE_OK) {
-		free(IOInst);
-		return RC;
+		goto queue_exit;
 	}
 
 	XAIE_DBG("Registers mapped as read-only to 0x%lx\n",
@@ -541,8 +557,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 
 	RC = _XAie_LinuxIO_MapMemory(DevInst, IOInst);
 	if(RC != XAIE_OK) {
-		free(IOInst);
-		return XAIE_ERR;
+		goto queue_exit;
 	}
 
 	XAie_LocType TileLoc = XAie_TileLoc(0, 1);
@@ -554,7 +569,21 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	DevInst->IOInst = (void *)IOInst;
 	IOInst->DevInst = DevInst;
 
+	ret = io_uring_register_files(&IOInst->ring, &IOInst->PartitionFd, 1);
+	if (ret) {
+		XAIE_ERROR("Failed to register fd for uring sqpoll: %d\n", ret);
+		RC = XAIE_ERR;
+		goto queue_exit;
+	}
+
 	return XAIE_OK;
+
+queue_exit:
+	io_uring_queue_exit(&IOInst->ring);
+free_IOInst:
+	free(IOInst);
+	return RC;
+
 }
 
 /*****************************************************************************/
