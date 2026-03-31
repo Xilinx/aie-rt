@@ -117,6 +117,7 @@ typedef enum {
  * MaskWrite32 : IO operation to write masked 32-bit data.
  * MaskPoll    : IO operation to mask poll an address for a value.
  * BlockWrite32: IO operation to write a block of data at 32-bit granularity.
+ * BlockWrite64BytesAsync: IO operation to write 64 bytes of data asynchronously.
  * BlockSet32  : IO operation to initialize a chunk of aie address space with a
  *               a specified value at 32-bit granularity.
  * CmdWrite32  : This IO operation is required only in simulation mode. Other
@@ -150,6 +151,8 @@ typedef struct XAie_BackendOps {
 	AieRC (*MaskPoll)(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 			u32 TimeOutUs);
 	AieRC (*BlockWrite32)(void *IOInst, u64 RegOff, const u32 *Data, u32 Size);
+	int (*BlockWrite64BytesAsync)(void *IOInst, u64 RegOff, const u32 *Data,
+					u32 Size, XAie_AsyncRes *AsyncRes);
 	AieRC (*BlockSet32)(void *IOInst, u64 RegOff, u32 Data, u32 Size);
 	AieRC (*CmdWrite)(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 			u32 CmdWd1, const char *CmdStr);

@@ -2522,6 +2522,63 @@ static AieRC XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 	return XAIE_ERR;
 }
 
+/*****************************************************************************/
+/**
+*
+* This function submits an asynchronous 64-byte block write to the AIE device
+* using io_uring. The write data is embedded directly in the SQE command buffer
+* to avoid additional memory allocations.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write to.
+* @param	Data: Pointer to data buffer containing u32 words to write.
+* @param	Size: Number of u32 words to write (max 16, i.e. 64 bytes).
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure. AsyncRes->res will contain
+* 		the error code on failure.
+*
+* @note		Size must not exceed 16 u32 words (64 bytes).
+*
+*******************************************************************************/
+int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
+				    u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	struct aie_block_write64 *Args;
+	struct io_uring_sqe *Sqe;
+	int Ret;
+
+	if (Size > 16) {
+		XAIE_ERROR("Size exceeds 16-u32 (64 bytes) for async write\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (!Sqe) {
+		XAIE_ERROR("Failed to get sqe for async write\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->cmd_op = AIE_BLOCK_WRITE64_IOCTL;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->addr = RegOff;
+	Sqe->user_data = (u64)AsyncRes;
+	Args = (struct aie_block_write64 *)Sqe->cmd;
+	Args->size = Size;
+	memcpy(Args->data, Data, Size * sizeof(u32));
+
+	Ret = io_uring_submit(&LinuxIOInst->ring);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to submit async write: %d\n", Ret);
+		AsyncRes->res = Ret;
+		return 0;
+	}
+	return Ret;
+}
+
 const XAie_Backend LinuxBackend =
 {
 	.Type = XAIE_IO_BACKEND_LINUX,
@@ -2535,6 +2592,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.MaskWrite32 = XAie_LinuxIO_MaskWrite32,
 	.Ops.MaskPoll = XAie_LinuxIO_MaskPoll,
 	.Ops.BlockWrite32 = XAie_LinuxIO_BlockWrite32,
+	.Ops.BlockWrite64BytesAsync = XAie_LinuxIO_Write64Bytes_Async,
 	.Ops.BlockSet32 = XAie_LinuxIO_BlockSet32,
 	.Ops.CmdWrite = XAie_LinuxIO_CmdWrite,
 	.Ops.RunOp = XAie_LinuxIO_RunOp,

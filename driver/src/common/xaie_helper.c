@@ -1771,6 +1771,45 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			Value, TimeOutUs);
 }
 
+/*****************************************************************************/
+/**
+*
+* This function performs an asynchronous 64-byte block write to the AIE device.
+* It validates the input parameters and delegates to the backend's
+* BlockWrite64BytesAsync operation.
+*
+* @param	DevInst: Device Instance
+* @param	RegOff: Register offset to write to.
+* @param	Data: Pointer to data buffer containing u32 words to write.
+* @param	Size: Number of u32 words to write.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			  tracking. Must not be NULL.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+int XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
+			   u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (AsyncRes == NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+	if (Backend->Ops.BlockWrite64BytesAsync == NULL) {
+		XAIE_ERROR("Asynchronous block write operation is not supported "
+				"by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	return Backend->Ops.BlockWrite64BytesAsync((void *)(DevInst->IOInst), RegOff,
+						   Data, Size, AsyncRes);
+}
+
 AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 Size)
 {
 	AieRC RC;
