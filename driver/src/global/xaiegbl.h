@@ -648,6 +648,7 @@ int XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts
 AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 		XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo);
 AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
+int XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
 AieRC XAie_Finish(XAie_DevInst *DevInst);
 AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);

@@ -186,6 +186,7 @@ typedef struct XAie_BackendOps {
 	AieRC (*SetPadInteger)(void *IOInst, char* BuffName, u32 BuffSize);
 	AieRC (*SetPadString)(void *IOInst, char* BuffName, char* BuffBlobPath);
 	int (*PartitionInitAsync)(void *IOInst, XAie_PartInitOpts *Opts, XAie_AsyncRes *AsyncRes);
+	int (*PartitionTeardownAsync)(void *IOInst, XAie_AsyncRes *AsyncRes);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */
