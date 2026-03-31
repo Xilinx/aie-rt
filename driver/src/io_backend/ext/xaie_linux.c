@@ -2288,6 +2288,7 @@ static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
 		return XAIE_ERR;
 	}
 
+	close(LinuxMemInst->BufferFd);
 	free(MemInst->BackendHandle);
 	free(MemInst);
 	MemInst = XAIE_NULL;
