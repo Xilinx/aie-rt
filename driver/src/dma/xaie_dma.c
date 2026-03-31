@@ -1297,6 +1297,87 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
+* This API asynchronously pushes a buffer descriptor to a DMA channel queue
+* using io_uring.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	BdNum: Bd number to be pushed to the queue.
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		If there is no bit to enable the channel in AIE DMAs,
+*		pushing a Buffer descriptor number onto the queue starts the
+*		channel.
+*
+******************************************************************************/
+int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+				      XAie_DmaDirection Dir, u16 BdNum, XAie_AsyncRes *AsyncRes)
+{
+	AieRC RC;
+	u8 TileType;
+	u64 Addr;
+	const XAie_DmaMod *DmaMod;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid AsyncRes pointer\n");
+		return 0;
+	}
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if(Dir >= DMA_MAX) {
+		XAIE_ERROR("Invalid DMA direction\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		AsyncRes->res = XAIE_INVALID_TILE;
+		return 0;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		AsyncRes->res = XAIE_INVALID_CHANNEL_NUM;
+		return 0;
+	}
+
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		AsyncRes->res = XAIE_INVALID_BD_NUM;
+		return 0;
+	}
+
+	RC = DmaMod->BdChValidity(BdNum, ChNum);
+	if (RC != XAIE_OK) {
+		AsyncRes->res = RC;
+		return 0;
+	}
+
+	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+
+	return XAie_Write32Async(DevInst, Addr + (u64)(DmaMod->ChProp->StartBd.Idx * 4U),
+			BdNum, AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
 * This API Enables or Disables a S2MM or MM2S channel of AIE DMAs.
 *
 * @param	DevInst: Device Instance.
