@@ -1252,52 +1252,6 @@ static AieRC XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 /*****************************************************************************/
 /**
 *
-* This is function to attach the allocated memory descriptor to kernel driver
-*
-* @param	IOInst: IO instance pointer
-* @param	MemInst: Linux Memory instance pointer.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static AieRC _XAie_LinuxMemAttach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
-{
-	int Ret;
-
-	Ret = ioctl(IOInst->PartitionFd, AIE_ATTACH_DMABUF_IOCTL,
-			MemInst->BufferFd);
-	if(Ret != 0) {
-		XAIE_ERROR("Failed to attach to dmabuf, %d: %s\n",
-			errno, strerror(errno));
-		return XAIE_ERR;
-	}
-
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
-* This is function to attach the allocated memory descriptor to kernel driver
-*
-* @param	IOInst: Linux IO instance pointer
-* @param	MemInst: Linux Memory instance pointer.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-* @note		Internal only.
-*
-*******************************************************************************/
-static AieRC _XAie_LinuxMemDetach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
-{
-	return XAIE_OK;
-}
-
-/*****************************************************************************/
-/**
-*
 * This is the memory function to attach the external memory to device
 *
 * @param	MemInst: Memory instance pointer.
@@ -1358,17 +1312,7 @@ static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 *******************************************************************************/
 static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 {
-	XAie_DevInst *DevInst = MemInst->DevInst;
-	XAie_LinuxMem *LinuxMemInst =
-		(XAie_LinuxMem *)MemInst->BackendHandle;
-	AieRC RC;
-
-	RC = _XAie_LinuxMemDetach((XAie_LinuxIO *)DevInst->IOInst,
-			LinuxMemInst);
-	if(RC != XAIE_OK) {
-		return RC;
-	}
-
+	(void)MemInst;
 	return XAIE_OK;
 }
 
@@ -1391,6 +1335,7 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 *******************************************************************************/
 static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
 {
+	(void)MemInst;
 	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = 0;
 	return 0;
 }
@@ -2456,7 +2401,6 @@ static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
 	XAie_MemInst *MemInst;
 	XAie_LinuxMem *LinuxMemInst;
 	void* Buf;
-	AieRC RC;
 	int Fd;
 
 	MemInst = (XAie_MemInst *)malloc(sizeof(XAie_MemInst));
@@ -2491,14 +2435,6 @@ static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
 	LinuxMemInst->BufferFd = Fd;
 	MemInst->BackendHandle = (void *) LinuxMemInst;
 
-	RC = _XAie_LinuxMemAttach((XAie_LinuxIO *)DevInst->IOInst,
-				  LinuxMemInst);
-	if(RC != XAIE_OK) {
-		free(LinuxMemInst);
-		free(MemInst);
-		return NULL;
-	}
-
 	return MemInst;
 }
 
@@ -2507,13 +2443,6 @@ static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
 	XAie_LinuxMem* LinuxMemInst = (XAie_LinuxMem *)MemInst->BackendHandle;
 	XAie_LinuxIO* LinuxIOInst = (XAie_LinuxIO *)MemInst->DevInst->IOInst;
 	int Ret;
-
-	Ret = _XAie_LinuxMemDetach(LinuxIOInst, LinuxMemInst);
-	if(Ret < 0) {
-		free(MemInst->BackendHandle);
-		free(MemInst);
-		return XAIE_ERR;
-	}
 
 	Ret = munmap(MemInst->VAddr, MemInst->Size);
 	if (Ret < 0) {
