@@ -2576,317 +2576,6 @@ static AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
 	return XAIE_OK;
 }
 
-#else
-
-static AieRC XAie_LinuxIO_Finish(void *IOInst)
-{
-	/* no-op */
-	(void)IOInst;
-	return XAIE_OK;
-}
-
-static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
-{
-	/* no-op */
-	(void)DevInst;
-	XAIE_ERROR("Driver is not compiled with Linux kernel backend "
-			"(__AIELINUX__)\n");
-	return XAIE_INVALID_BACKEND;
-}
-
-static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-	return 0;
-}
-
-static AieRC XAie_LinuxIO_Write32(void *IOInst, u64 RegOff, u32 Data)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
-		u32 Data)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)RegOff;
-	(void)Mask;
-	(void)Data;
-
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
-		u32 TimeOutUs)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)RegOff;
-	(void)Mask;
-	(void)Value;
-	(void)TimeOutUs;
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff,
-		const u32 *Data, u32 Size)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-	(void)Size;
-
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
-		u32 Size)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-	(void)Size;
-
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
-		XAie_BackendOpCode Op, void *Arg)
-{
-	(void)IOInst;
-	(void)DevInst;
-	(void)Op;
-	(void)Arg;
-	return XAIE_FEATURE_NOT_SUPPORTED;
-}
-
-static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
-		XAie_MemCacheProp Cache)
-{
-	(void) DevInst;
-	(void) Size;
-	(void) Cache;
-
-	return XAIE_NULL;
-}
-
-static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
-{
-	(void) MemInst;
-
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxMemSyncForCPU(XAie_MemInst *MemInst)
-{
-	(void) MemInst;
-
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
-{
-	(void) MemInst;
-
-	return XAIE_ERR;
-}
-
-
-static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
-{
-	(void)MemInst;
-	(void)MemHandle;
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
-{
-	(void)MemInst;
-	return XAIE_ERR;
-}
-
-static u64 XAie_LinuxGetTid(void)
-{
-	return 0;
-}
-
-static int XAie_LinuxGetPartFd(void *IOInst)
-{
-	(void)IOInst;
-	return 0;
-}
-
-static AieRC XAie_LinuxIO_GetPartitionList(XAie_DevInst *DevInst)
-{
-        (void)DevInst;
-        return 0;
-}
-
-static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)
-{
-	(void)IOInst;
-	(void)TxnInst;
-	return XAIE_ERR;
-}
-
-static void* XAie_LinuxIO_GetShimDmaBdConfig(XAie_ShimDmaBdArgs *Args)
-{
-	(void)Args;
-	return XAIE_NULL;
-}
-
-static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
-				      XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)RegOff;
-	(void)Value;
-	(void)AsyncRes;
-	return 0;
-}
-
-static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
-{
-	(void)IOInst;
-	(void)Nr;
-	return XAIE_ERR;
-}
-
-static AieRC XAie_LinuxIO_AsyncWait(void *IOInst)
-{
-	(void)IOInst;
-	return XAIE_ERR;
-}
-
-static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
-				    XAie_AsyncRes *AsyncRes)
-{
-	(void)MemInst;
-	(void)MemHandle;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst,
-				    XAie_AsyncRes *AsyncRes)
-{
-	(void)MemInst;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_PartitionInitAsync(void *IOInst,
-					   XAie_PartInitOpts *Opts,
-					   XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)Opts;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
-					  XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
-					      XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
-					  const u32 *Data, u32 Size,
-					  XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-	(void)Size;
-	(void)AsyncRes;
-	return 0;
-}
-
-int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
-				    u32 Size, XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-	(void)Size;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
-					u32 Size, XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)RegOff;
-	(void)Data;
-	(void)Size;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
-				     XAie_LocType Loc, u16 BdNum,
-				     XAie_AsyncRes *AsyncRes)
-{
-	(void)IOInst;
-	(void)DmaDesc;
-	(void)Loc;
-	(void)BdNum;
-	(void)AsyncRes;
-	return 0;
-}
-
-static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst,
-						    XAie_LocType Loc,
-						    u32 Offset, u16 BdNum,
-						    XAie_AsyncRes *AsyncRes)
-{
-	(void)MemInst;
-	(void)Loc;
-	(void)Offset;
-	(void)BdNum;
-	(void)AsyncRes;
-	return 0;
-}
-#endif /* __AIELINUX__ */
-
-static AieRC XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
-		u32 CmdWd0, u32 CmdWd1, const char *CmdStr)
-{
-	/* no-op */
-	(void)IOInst;
-	(void)Col;
-	(void)Row;
-	(void)Command;
-	(void)CmdWd0;
-	(void)CmdWd1;
-	(void)CmdStr;
-
-	return XAIE_ERR;
-}
-
 /*****************************************************************************/
 /**
 *
@@ -3237,6 +2926,318 @@ static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst, XAie_
 	}
 
 	return ret;
+}
+
+#else /* __AIELINUX__ */
+
+static AieRC XAie_LinuxIO_Finish(void *IOInst)
+{
+	/* no-op */
+	(void)IOInst;
+	return XAIE_OK;
+}
+
+static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
+{
+	/* no-op */
+	(void)DevInst;
+	XAIE_ERROR("Driver is not compiled with Linux kernel backend "
+			"(__AIELINUX__)\n");
+	return XAIE_INVALID_BACKEND;
+}
+
+static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	return 0;
+}
+
+static AieRC XAie_LinuxIO_Write32(void *IOInst, u64 RegOff, u32 Data)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
+		u32 Data)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Data;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
+		u32 TimeOutUs)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
+	(void)TimeOutUs;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_BlockWrite32(void *IOInst, u64 RegOff,
+		const u32 *Data, u32 Size)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
+		u32 Size)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
+		XAie_BackendOpCode Op, void *Arg)
+{
+	(void)IOInst;
+	(void)DevInst;
+	(void)Op;
+	(void)Arg;
+	return XAIE_FEATURE_NOT_SUPPORTED;
+}
+
+static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
+		XAie_MemCacheProp Cache)
+{
+	(void) DevInst;
+	(void) Size;
+	(void) Cache;
+
+	return XAIE_NULL;
+}
+
+static AieRC XAie_LinuxMemFree(XAie_MemInst *MemInst)
+{
+	(void) MemInst;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxMemSyncForCPU(XAie_MemInst *MemInst)
+{
+	(void) MemInst;
+
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxMemSyncForDev(XAie_MemInst *MemInst)
+{
+	(void) MemInst;
+
+	return XAIE_ERR;
+}
+
+
+static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
+{
+	(void)MemInst;
+	(void)MemHandle;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
+{
+	(void)MemInst;
+	return XAIE_ERR;
+}
+
+static u64 XAie_LinuxGetTid(void)
+{
+	return 0;
+}
+
+static int XAie_LinuxGetPartFd(void *IOInst)
+{
+	(void)IOInst;
+	return 0;
+}
+
+static AieRC XAie_LinuxIO_GetPartitionList(XAie_DevInst *DevInst)
+{
+        (void)DevInst;
+        return 0;
+}
+
+static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)
+{
+	(void)IOInst;
+	(void)TxnInst;
+	return XAIE_ERR;
+}
+
+static void* XAie_LinuxIO_GetShimDmaBdConfig(XAie_ShimDmaBdArgs *Args)
+{
+	(void)Args;
+	return XAIE_NULL;
+}
+
+static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
+				      XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Value;
+	(void)AsyncRes;
+	return 0;
+}
+
+static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
+{
+	(void)IOInst;
+	(void)Nr;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_AsyncWait(void *IOInst)
+{
+	(void)IOInst;
+	return XAIE_ERR;
+}
+
+static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
+				    XAie_AsyncRes *AsyncRes)
+{
+	(void)MemInst;
+	(void)MemHandle;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst,
+				    XAie_AsyncRes *AsyncRes)
+{
+	(void)MemInst;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_PartitionInitAsync(void *IOInst,
+					   XAie_PartInitOpts *Opts,
+					   XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)Opts;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
+					  XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
+					      XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
+					  const u32 *Data, u32 Size,
+					  XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+	(void)AsyncRes;
+	return 0;
+}
+
+int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
+				    u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
+					u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
+				     XAie_LocType Loc, u16 BdNum,
+				     XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)DmaDesc;
+	(void)Loc;
+	(void)BdNum;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst,
+						    XAie_LocType Loc,
+						    u32 Offset, u16 BdNum,
+						    XAie_AsyncRes *AsyncRes)
+{
+	(void)MemInst;
+	(void)Loc;
+	(void)Offset;
+	(void)BdNum;
+	(void)AsyncRes;
+	return 0;
+}
+
+#endif /* __AIELINUX__ */
+
+static AieRC XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
+		u32 CmdWd0, u32 CmdWd1, const char *CmdStr)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)Col;
+	(void)Row;
+	(void)Command;
+	(void)CmdWd0;
+	(void)CmdWd1;
+	(void)CmdStr;
+
+	return XAIE_ERR;
 }
 
 const XAie_Backend LinuxBackend =
