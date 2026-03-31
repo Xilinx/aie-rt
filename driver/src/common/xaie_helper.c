@@ -1960,7 +1960,7 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 	for(u32 i = 0U; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
 		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
-			XAIE_DBG("free DataPtr %p\n", Cmd->DataPtr);
+			XAIE_DBG("free DataPtr %p\n", (void *)(uintptr_t)Cmd->DataPtr);
 			free((void *)(uintptr_t)Cmd->DataPtr);
 		}
 	}
