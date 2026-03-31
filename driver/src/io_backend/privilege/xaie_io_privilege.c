@@ -825,9 +825,9 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	if(Loc == XAIE_NULL) {
 		for(u32 col = 0; col < DevInst->NumCols; col++) {
-			XAie_LocType Loc = XAie_TileLoc(col, 0);
+			XAie_LocType TileLoc = XAie_TileLoc(col, 0);
 			RegAddr = NocDma->NocDmaPauseReg->RegOff +
-				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+				XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col);
 			XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
 		}
 	} else {
@@ -904,9 +904,9 @@ AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	if(Loc == XAIE_NULL) {
 		for(u32 col = 0; col < DevInst->NumCols; col++) {
-			XAie_LocType Loc = XAie_TileLoc(col, 0);
+			XAie_LocType TileLoc = XAie_TileLoc(col, 0);
 			RegAddr = UcDma->UcDmaPauseReg->RegOff +
-				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+				XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col);
 			XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
 		}
 	} else {
