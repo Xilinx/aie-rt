@@ -192,6 +192,9 @@ typedef struct XAie_BackendOps {
 	int (*PartitionInitAsync)(void *IOInst, XAie_PartInitOpts *Opts, XAie_AsyncRes *AsyncRes);
 	int (*PartitionTeardownAsync)(void *IOInst, XAie_AsyncRes *AsyncRes);
 	int (*PartClearContextAsync)(void *IOInst, XAie_AsyncRes *AsyncRes);
+	int (*WriteBdAsync)(void *IOInst, XAie_DmaDesc *DmaDesc,
+			    XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes);
+
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */

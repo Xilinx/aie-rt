@@ -868,6 +868,63 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 /*****************************************************************************/
 /**
 *
+* This API asynchronously writes a DMA buffer descriptor to hardware using
+* io_uring. It validates the descriptor, tile type, and BD number, then
+* delegates to the backend's WriteBdAsync operation.
+*
+* @param	DevInst: Device Instance
+* @param	DmaDesc: Initialized Dma Descriptor.
+* @param	Loc: Location of AIE Tile
+* @param	BdNum: Hardware BD number to be written to.
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		None.
+*
+******************************************************************************/
+int XAie_DmaWriteBdAsync(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+			 XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes)
+{
+	const XAie_DmaMod *DmaMod;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid AsyncRes pointer\n");
+		return 0;
+	}
+	if((DmaDesc == XAIE_NULL) ||
+	   (DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Arguments\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if(DmaDesc->TileType != DevInst->DevOps->GetTTypefromLoc(DevInst, Loc)) {
+		XAIE_ERROR("Tile type mismatch\n");
+		AsyncRes->res = XAIE_INVALID_TILE;
+		return 0;
+	}
+
+	DmaMod = DmaDesc->DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		AsyncRes->res = XAIE_INVALID_BD_NUM;
+		return 0;
+	}
+
+	if (DevInst->Backend->Ops.WriteBdAsync == NULL) {
+		XAIE_ERROR("Invalid WriteBdAsync pointer\n");
+		AsyncRes->res = XAIE_FEATURE_NOT_SUPPORTED;
+		return 0;
+	}
+
+	return DevInst->Backend->Ops.WriteBdAsync(DevInst->IOInst, DmaDesc, Loc, BdNum, AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
 * This API reads the data from the buffer descriptor registers to fill the
 * dma descriptor structure.
 *

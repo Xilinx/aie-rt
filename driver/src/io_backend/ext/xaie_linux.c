@@ -3030,6 +3030,91 @@ static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
 	return Ret;
 }
 
+static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
+				     XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	XAie_DevInst *DevInst = LinuxIOInst->DevInst;
+	struct io_uring_sqe *Sqe;
+	const XAie_DmaMod *DmaMod = DmaDesc->DmaMod;
+	u64 Addr;
+	int ret;
+
+	AsyncRes->io_vec_inuse = 0;
+	if (DmaDesc->TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
+		struct aie_dmabuf_bd_cmd * args;
+		XAie_LinuxMem *LinuxMemInst;
+
+		if (DmaDesc->MemInst == NULL) {
+			XAIE_ERROR("DMA descriptor must have a valid memory instance for async BD write\n");
+			AsyncRes->res = -EINVAL;
+			return 0;
+		}
+		LinuxMemInst = (XAie_LinuxMem *) DmaDesc->MemInst->BackendHandle;
+
+		if ((DmaMod->BdSize * sizeof(u32)) > sizeof(args->bd)) {
+			XAIE_ERROR("BD size exceeds command buffer capacity for async BD write\n");
+			AsyncRes->res = -EINVAL;
+			return 0;
+		}
+
+		Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+		if (Sqe == NULL) {
+			XAIE_ERROR("Failed to get sqe for async BD write\n");
+			AsyncRes->res = -ENOMEM;
+			return 0;
+		}
+		Sqe->opcode = IORING_OP_URING_CMD;
+		Sqe->flags |= IOSQE_FIXED_FILE;
+		Sqe->cmd_op = AIE_CONFIG_SHIMDMA_DMABUF_BD_CMD;
+		Sqe->user_data = (u64)AsyncRes;
+		Sqe->addr = BdNum;
+		Sqe->buf_index = LinuxMemInst->BufferFd;
+		args = (struct aie_dmabuf_bd_cmd *)Sqe->cmd;
+		args->loc.col = Loc.Col;
+		args->loc.row = Loc.Row;
+
+		DmaMod->WriteBdPrep(DevInst, DmaDesc, Loc, BdNum, args->bd, &Addr);
+		ret = io_uring_submit(&LinuxIOInst->ring);
+		if (ret < 0) {
+			XAIE_ERROR("Failed to submit async BD write: %d\n", ret);
+			AsyncRes->res = ret;
+			return 0;
+		}
+
+		return ret;
+	} else {
+		struct aie_block_write64 *Args;
+
+		if ((DmaMod->BdSize * sizeof(u32)) > sizeof(Args->data)) {
+			XAIE_ERROR("BD size exceeds 64 bytes for async BD write\n");
+			AsyncRes->res = -EINVAL;
+			return 0;
+		}
+		Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+		if (Sqe == NULL) {
+			XAIE_ERROR("Failed to get sqe for async BD write\n");
+			AsyncRes->res = -ENOMEM;
+			return 0;
+		}
+		Sqe->opcode = IORING_OP_URING_CMD;
+		Sqe->flags |= IOSQE_FIXED_FILE;
+		Sqe->cmd_op = AIE_BLOCK_WRITE64_IOCTL;
+		Sqe->user_data = (u64)AsyncRes;
+		Args = (struct aie_block_write64 *)Sqe->cmd;
+		Args->size = DmaMod->BdSize * sizeof(u32);
+		DmaMod->WriteBdPrep(DevInst, DmaDesc, Loc, BdNum, Args->data, &Addr);
+		Sqe->addr = Addr;
+		ret = io_uring_submit(&LinuxIOInst->ring);
+		if (ret < 0) {
+			XAIE_ERROR("Failed to submit async BD write: %d\n", ret);
+			AsyncRes->res = ret;
+			return 0;
+		}
+		return ret;
+	}
+}
+
 const XAie_Backend LinuxBackend =
 {
 	.Type = XAIE_IO_BACKEND_LINUX,
@@ -3067,6 +3152,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.PartitionInitAsync = XAie_LinuxIO_PartitionInitAsync,
 	.Ops.PartitionTeardownAsync = XAie_LinuxIO_TeardownPartAsync,
 	.Ops.PartClearContextAsync = XAie_LinuxIO_PartClearContextAsync,
+	.Ops.WriteBdAsync = XAie_LinuxIO_WriteBdAsync,
 };
 
 /** @} */
