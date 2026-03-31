@@ -1213,16 +1213,6 @@ static AieRC _XAie_LinuxMemAttach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
 *******************************************************************************/
 static AieRC _XAie_LinuxMemDetach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
 {
-	int Ret;
-
-	Ret = ioctl(IOInst->PartitionFd, AIE_DETACH_DMABUF_IOCTL,
-			MemInst->BufferFd);
-	if(Ret != 0) {
-		XAIE_ERROR("Failed to detach dmabuf, %d: %s\n",
-			errno, strerror(errno));
-		return XAIE_ERR;
-	}
-
 	return XAIE_OK;
 }
 
@@ -1241,27 +1231,6 @@ static AieRC _XAie_LinuxMemDetach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
 *******************************************************************************/
 static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
-	XAie_DevInst *DevInst = MemInst->DevInst;
-	XAie_LinuxMem *LinuxMemInst;
-	AieRC RC;
-
-	LinuxMemInst = (XAie_LinuxMem *) malloc(sizeof(*LinuxMemInst));
-	if(LinuxMemInst == NULL) {
-		XAIE_ERROR("Memory attachment failed, Memory allocation failed\n");
-		return XAIE_ERR;
-	}
-
-	LinuxMemInst->BufferFd = MemHandle;
-
-	RC = _XAie_LinuxMemAttach((XAie_LinuxIO *)DevInst->IOInst,
-			LinuxMemInst);
-	if(RC != XAIE_OK) {
-		free(LinuxMemInst);
-		return XAIE_ERR;
-	}
-
-	MemInst->BackendHandle = (void *)LinuxMemInst;
-
 	return XAIE_OK;
 }
 
