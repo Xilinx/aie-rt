@@ -1361,8 +1361,6 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 		return RC;
 	}
 
-	free(LinuxMemInst);
-
 	return XAIE_OK;
 }
 
