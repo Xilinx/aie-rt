@@ -1335,28 +1335,8 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 				    XAie_AsyncRes *AsyncRes)
 {
-	XAie_DevInst *DevInst = MemInst->DevInst;
-	struct io_uring_sqe *Sqe;
-	int ret;
-
-	AsyncRes->io_vec_inuse = 0;
-	Sqe = io_uring_get_sqe(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
-	if (Sqe == NULL) {
-		XAIE_ERROR("Failed to get sqe for async mem attach\n");
-		AsyncRes->res = -ENOMEM;
-		return 0;
-	}
-	Sqe->opcode = IORING_OP_URING_CMD;
-	Sqe->flags |= IOSQE_FIXED_FILE;
-	Sqe->cmd_op = AIE_ATTACH_DMABUF_IOCTL;
-	Sqe->user_data = (u64)AsyncRes;
-	ret = io_uring_submit(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
-	if (ret < 0) {
-		XAIE_ERROR("Failed to submit async mem attach: %d\n", ret);
-		return 0;
-	}
-
-	return ret;
+	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = 0;
+	return 0;
 }
 
 /*****************************************************************************/
@@ -1408,33 +1388,8 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 *******************************************************************************/
 static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
 {
-	XAie_DevInst *DevInst = MemInst->DevInst;
-	XAie_LinuxMem *LinuxMemInst = (XAie_LinuxMem *)MemInst->BackendHandle;
-	struct io_uring_sqe *Sqe;
-	int *BufferFd;
-	int ret;
-
-	AsyncRes->io_vec_inuse = 0;
-	Sqe = io_uring_get_sqe(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
-	if (!Sqe) {
-		XAIE_ERROR("Failed to get sqe for async mem detach\n");
-		AsyncRes->res = -ENOMEM;
-		return 0;
-	}
-	Sqe->opcode = IORING_OP_URING_CMD;
-	Sqe->flags |= IOSQE_FIXED_FILE;
-	Sqe->cmd_op = AIE_DETACH_DMABUF_IOCTL;
-	Sqe->user_data = (u64)AsyncRes;
-	BufferFd = (int *)Sqe->cmd;
-	*BufferFd = LinuxMemInst->BufferFd;
-	ret = io_uring_submit(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
-	if (ret < 0) {
-		XAIE_ERROR("Failed to submit async mem detach: %d\n", ret);
-		AsyncRes->res = ret;
-		return 0;
-	}
-
-	return ret;;
+	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = 0;
+	return 0;
 }
 
 /*****************************************************************************/
