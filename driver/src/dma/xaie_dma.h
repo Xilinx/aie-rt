@@ -152,6 +152,9 @@ int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
 AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir);
+int XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
+		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 		XAie_DmaChannelFoTMode FoTMode);
 AieRC XAie_DmaChannelSetControllerId(XAie_DmaChannelDesc *DmaChannelDesc,

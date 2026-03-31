@@ -2332,29 +2332,30 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 
 /*****************************************************************************/
 /**
-=======
 * This API configures the Dma channel descriptor fields in the hardware for a
 * particular tile location. This includes FoT mode, Controller id, out of order
 * and Compression/Decompression.
 *
+* This is a helper function that validates inputs and prepares the register
+* address and value for writing DMA channel configuration.
 *
 * @param	DevInst: Device Instance.
 * @param	DmaChannelDesc: Initialized Dma Channel Descriptor.
 * @param	Loc: Location of AIE Tile
 * @param	ChNum: Channel number of the DMA.
 * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	Addr: Pointer to return the register address
+* @param	Val: Pointer to return the register value
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This API works only for AIE-ML and has no effect on AIE.
+* @note		Internal helper function.
 *
 ******************************************************************************/
-AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
+static AieRC _XAie_DmaWriteChannelPrepare(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir)
+		u8 ChNum, XAie_DmaDirection Dir, u64 *Addr, u32 *Val)
 {
-	u64 Addr;
-	u32 Val;
 	const XAie_DmaMod *DmaMod;
 
 	if((DevInst == XAIE_NULL) || (DmaChannelDesc == XAIE_NULL) ||
@@ -2389,11 +2390,11 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
-	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	*Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, (DmaMod->ChProp->EnOutofOrder.Lsb),
+	*Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, (DmaMod->ChProp->EnOutofOrder.Lsb),
 			(DmaMod->ChProp->EnOutofOrder.Mask)) |
 		XAie_SetField(DmaChannelDesc->EnCompression, (DmaMod->ChProp->EnCompression.Lsb),
 			(DmaMod->ChProp->EnCompression.Mask)) |
@@ -2402,7 +2403,85 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		XAie_SetField(DmaChannelDesc->FoTMode, (DmaMod->ChProp->FoTMode.Lsb),
 			(DmaMod->ChProp->FoTMode.Mask));
 
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+* This API configures the Dma channel descriptor fields in the hardware for a
+* particular tile location. This includes FoT mode, Controller id, out of order
+* and Compression/Decompression.
+*
+*
+* @param	DevInst: Device Instance.
+* @param	DmaChannelDesc: Initialized Dma Channel Descriptor.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This API works only for AIE-ML and has no effect on AIE.
+*
+******************************************************************************/
+AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
+		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir)
+{
+	AieRC RC;
+	u64 Addr;
+	u32 Val;
+
+	RC = _XAie_DmaWriteChannelPrepare(DevInst, DmaChannelDesc, Loc, ChNum,
+			Dir, &Addr, &Val);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
 	return XAie_Write32(DevInst, Addr, Val);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API asynchronously configures the Dma channel descriptor fields in the
+* hardware for a particular tile location using io_uring. This includes FoT mode,
+* Controller id, out of order and Compression/Decompression.
+*
+* @param	DevInst: Device Instance.
+* @param	DmaChannelDesc: Initialized Dma Channel Descriptor.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		This API works only for AIE-ML and has no effect on AIE.
+*
+******************************************************************************/
+int XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
+		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes)
+{
+	AieRC RC;
+	u64 Addr;
+	u32 Val;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid AsyncRes pointer\n");
+		return 0;
+	}
+
+	RC = _XAie_DmaWriteChannelPrepare(DevInst, DmaChannelDesc, Loc, ChNum,
+			Dir, &Addr, &Val);
+	if(RC != XAIE_OK) {
+		AsyncRes->res = RC;
+		return 0;
+	}
+
+	return XAie_Write32Async(DevInst, Addr, Val, AsyncRes);
 }
 
 /******************************************************************************/
