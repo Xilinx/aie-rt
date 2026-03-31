@@ -1968,6 +1968,46 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 			Size);
 }
 
+/*****************************************************************************/
+/**
+*
+* This function performs an asynchronous 32-bit block set on the AIE device.
+* It validates the input parameters and delegates to the backend's
+* BlockSet32Async operation. PM and DM memory regions are not supported.
+*
+* @param	DevInst: Device Instance
+* @param	RegOff: Register offset to write to.
+* @param	Data: 32-bit value to fill the address range with.
+* @param	Size: Number of 32-bit words to set.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Does not support PM/DM memory regions.
+*
+******************************************************************************/
+int XAie_BlockSet32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Data,
+			 u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (AsyncRes == NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+	if (Backend->Ops.BlockSet32Async == NULL) {
+		XAIE_ERROR("Asynchronous block set32 operation is not "
+				"supported by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	return Backend->Ops.BlockSet32Async((void *)(DevInst->IOInst), RegOff,
+					    Data, Size, AsyncRes);
+}
+
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr)
 {

@@ -2957,6 +2957,79 @@ static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
 	return Ret;
 }
 
+/*****************************************************************************/
+/**
+*
+* This function submits an asynchronous block set to the AIE device using
+* io_uring. It initializes a chunk of AIE address space with a specified
+* value at 32-bit granularity. PM and DM memory regions are not supported
+* and will return an error.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write to.
+* @param	Data: 32-bit value to fill the address range with.
+* @param	Size: Number of 32-bit words to set.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. On error, AsyncRes->res is set to the
+*			corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Internal only. Does not support PM/DM memory regions.
+*
+*******************************************************************************/
+static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
+					u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	struct aie_reg_args *Args;
+	struct io_uring_sqe *Sqe;
+	u32 *VirtAddr;
+	int Ret;
+
+	AsyncRes->io_vec_inuse = 0;
+
+	/* PM and DM memory regions are not supported for async block set */
+	VirtAddr = _XAie_GetVirtAddrFromOffset(LinuxIOInst, RegOff, Size);
+	if (VirtAddr != NULL) {
+		XAIE_ERROR("Async block set not supported for PM/DM memory\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+	if (VirtAddr == (u32 *)XAIE_INVALID_TILE) {
+		XAIE_ERROR("Invalid tile for async block set\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (Sqe == NULL) {
+		XAIE_ERROR("Failed to get sqe for async block set\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_REG_BLOCKSET_CMD;
+	Sqe->user_data = (u64)AsyncRes;
+	Args = (struct aie_reg_args *)Sqe->cmd;
+	*Args = (struct aie_reg_args){
+		.offset = RegOff,
+		.val = Data,
+		.len = Size,
+		.mask = 0,
+	};
+
+	Ret = io_uring_submit(&LinuxIOInst->ring);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to submit async block set: %d\n", Ret);
+		AsyncRes->res = Ret;
+		return 0;
+	}
+
+	return Ret;
+}
+
 const XAie_Backend LinuxBackend =
 {
 	.Type = XAIE_IO_BACKEND_LINUX,
@@ -2973,6 +3046,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.BlockWrite32Async = XAie_LinuxIO_BlockWrite32Async,
 	.Ops.BlockWrite64BytesAsync = XAie_LinuxIO_Write64Bytes_Async,
 	.Ops.BlockSet32 = XAie_LinuxIO_BlockSet32,
+	.Ops.BlockSet32Async = XAie_LinuxIO_BlockSet32Async,
 	.Ops.CmdWrite = XAie_LinuxIO_CmdWrite,
 	.Ops.RunOp = XAie_LinuxIO_RunOp,
 	.Ops.MemAllocate = XAie_LinuxMemAllocate,
