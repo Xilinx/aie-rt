@@ -2745,6 +2745,131 @@ static void* XAie_LinuxIO_GetShimDmaBdConfig(XAie_ShimDmaBdArgs *Args)
 	(void)Args;
 	return XAIE_NULL;
 }
+
+static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
+				      XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Value;
+	(void)AsyncRes;
+	return 0;
+}
+
+static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
+{
+	(void)IOInst;
+	(void)Nr;
+	return XAIE_ERR;
+}
+
+static AieRC XAie_LinuxIO_AsyncWait(void *IOInst)
+{
+	(void)IOInst;
+	return XAIE_ERR;
+}
+
+static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
+				    XAie_AsyncRes *AsyncRes)
+{
+	(void)MemInst;
+	(void)MemHandle;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst,
+				    XAie_AsyncRes *AsyncRes)
+{
+	(void)MemInst;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_PartitionInitAsync(void *IOInst,
+					   XAie_PartInitOpts *Opts,
+					   XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)Opts;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
+					  XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
+					      XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
+					  const u32 *Data, u32 Size,
+					  XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+	(void)AsyncRes;
+	return 0;
+}
+
+int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
+				    u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
+					u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)RegOff;
+	(void)Data;
+	(void)Size;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
+				     XAie_LocType Loc, u16 BdNum,
+				     XAie_AsyncRes *AsyncRes)
+{
+	(void)IOInst;
+	(void)DmaDesc;
+	(void)Loc;
+	(void)BdNum;
+	(void)AsyncRes;
+	return 0;
+}
+
+static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst,
+						    XAie_LocType Loc,
+						    u32 Offset, u16 BdNum,
+						    XAie_AsyncRes *AsyncRes)
+{
+	(void)MemInst;
+	(void)Loc;
+	(void)Offset;
+	(void)BdNum;
+	(void)AsyncRes;
+	return 0;
+}
 #endif /* __AIELINUX__ */
 
 static AieRC XAie_LinuxIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
