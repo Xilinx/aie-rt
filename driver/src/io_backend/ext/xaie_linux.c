@@ -1321,13 +1321,29 @@ static AieRC XAie_LinuxIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 *******************************************************************************/
 static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
+	XAie_LinuxMem *LinuxMemInst;
+	XAie_DevInst *DevInst;
+	XAie_LinuxIO *IOInst;
+	int Ret;
+
 	if ((MemInst == NULL) ||
-	    (MemInst->BackendHandle == NULL)) {
+	    (MemInst->BackendHandle == NULL ||
+	    (MemInst->DevInst == NULL))) {
 		XAIE_ERROR("Invalid memory instance or backend handle for attach\n");
 		return XAIE_ERR;
 	}
 
-	*((int *)MemInst->BackendHandle) = (int)MemHandle;
+	DevInst = MemInst->DevInst;
+	IOInst = (XAie_LinuxIO *)DevInst->IOInst;
+	LinuxMemInst = (XAie_LinuxMem *)MemInst->BackendHandle;
+	LinuxMemInst->BufferFd = (int)MemHandle;
+	Ret = ioctl(IOInst->PartitionFd, AIE_ATTACH_DMABUF_IOCTL, MemHandle);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to attach dmabuf fd %d, %d: %s\n",
+			(int)MemHandle, errno, strerror(errno));
+		return XAIE_ERR;
+	}
+
 	return XAIE_OK;
 }
 
@@ -1350,7 +1366,7 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 				    XAie_AsyncRes *AsyncRes)
 {
-	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = XAie_LinuxMemAttach(MemInst, MemHandle);
+	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = MemHandle;
 
 	return 0;
 }
@@ -1369,7 +1385,19 @@ static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 *******************************************************************************/
 static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 {
-	(void)MemInst;
+	XAie_DevInst *DevInst = MemInst->DevInst;
+	XAie_LinuxIO *IOInst = (XAie_LinuxIO *)DevInst->IOInst;
+	XAie_LinuxMem *LinuxMemInst;
+	int Ret;
+
+	LinuxMemInst = (XAie_LinuxMem *)MemInst->BackendHandle;
+	Ret = ioctl(IOInst->PartitionFd, AIE_DETACH_DMABUF_IOCTL,
+		    LinuxMemInst->BufferFd);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to detach dmabuf fd %d, %d: %s\n",
+			*((int *)MemInst->BackendHandle), errno, strerror(errno));
+		return XAIE_ERR;
+	}
 	return XAIE_OK;
 }
 
