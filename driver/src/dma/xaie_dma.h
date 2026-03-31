@@ -179,5 +179,7 @@ AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offse
 		u16 BdNum);
 AieRC XAie_DmaUpdateBdAddrOff_16(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
 		u16 BdNum);
+int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
+				 u16 BdNum, XAie_AsyncRes *AsyncRes);
 
 #endif		/* end of protection macro */

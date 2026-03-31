@@ -2533,7 +2533,67 @@ AieRC XAie_DmaUpdateBdAddrOff_16(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Of
 AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
 		u16 BdNum)
 {
-	return XAie_DmaUpdateBdAddrOff_16(MemInst, Loc, Offset,	(u16)BdNum);
+	return XAie_DmaUpdateBdAddrOff_16(MemInst, Loc, Offset, (u16)BdNum);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API asynchronously updates the SHIM DMA buffer descriptor address
+* offset using io_uring. It validates the memory instance, tile type, and BD
+* number, then delegates to the backend's UpdateShimDmaBdAddrOffAsync
+* operation.
+*
+* @param	MemInst: Memory Instance (must reference a valid dmabuf).
+* @param	Loc: Location of AIE Tile (must be SHIM NOC tile).
+* @param	Offset: Buffer offset within the dmabuf to update in the BD.
+* @param	BdNum: Hardware BD number to be updated.
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		This API is only valid for SHIM NOC tiles with dmabuf-backed
+*		memory instances.
+*
+******************************************************************************/
+int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
+				 u16 BdNum, XAie_AsyncRes *AsyncRes)
+{
+	const XAie_DmaMod *DmaMod;
+	XAie_DevInst *DevInst;
+	u8 TileType;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid Async Result pointer\n");
+		return 0;
+	}
+	if (MemInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid Memory Instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	DevInst = MemInst->DevInst;
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		AsyncRes->res = XAIE_INVALID_TILE;
+		return 0;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(BdNum > DmaMod->NumBds) {
+		XAIE_ERROR("Invalid BD number\n");
+		AsyncRes->res = XAIE_INVALID_BD_NUM;
+		return 0;
+	}
+	if (DevInst->Backend->Ops.UpdateShimDmaBdAddrOffAsync == NULL) {
+		XAIE_ERROR("Async Update BD Addr Off API not supported by backend\n");
+		AsyncRes->res = XAIE_FEATURE_NOT_SUPPORTED;
+		return 0;
+	}
+	return DevInst->Backend->Ops.UpdateShimDmaBdAddrOffAsync(MemInst, Loc, Offset, BdNum, AsyncRes);
 }
 
 #endif /* XAIE_FEATURE_DMA_ENABLE */

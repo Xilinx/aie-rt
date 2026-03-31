@@ -3115,6 +3115,50 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 	}
 }
 
+static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc,
+						    u32 Offset, u16 BdNum, XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)MemInst->DevInst->IOInst;
+	struct io_uring_sqe *Sqe;
+	XAie_LinuxMem *LinuxMemInst;
+	struct aie_dmabuf_bd_cmd *args;
+	int ret;
+
+	AsyncRes->io_vec_inuse = 0;
+	if (MemInst == NULL) {
+		XAIE_ERROR("Memory instance cannot be NULL for async BD address update\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+	LinuxMemInst = (XAie_LinuxMem *) MemInst->BackendHandle;
+
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (Sqe == NULL) {
+		XAIE_ERROR("Failed to get sqe for async BD address update\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_UPDATE_SHIMDMA_DMABUF_BD_ADDR_IOCTL;
+	Sqe->user_data = (u64)AsyncRes;
+	Sqe->addr = BdNum;
+	Sqe->buf_index = LinuxMemInst->BufferFd;
+	args = (struct aie_dmabuf_bd_cmd *)Sqe->cmd;
+	args->loc.col = Loc.Col;
+	args->loc.row = Loc.Row;
+	args->bd[0] = Offset;
+
+	ret = io_uring_submit(&LinuxIOInst->ring);
+	if (ret < 0) {
+		XAIE_ERROR("Failed to submit async BD address update: %d\n", ret);
+		AsyncRes->res = ret;
+		return 0;
+	}
+
+	return ret;
+}
+
 const XAie_Backend LinuxBackend =
 {
 	.Type = XAIE_IO_BACKEND_LINUX,
@@ -3153,6 +3197,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.PartitionTeardownAsync = XAie_LinuxIO_TeardownPartAsync,
 	.Ops.PartClearContextAsync = XAie_LinuxIO_PartClearContextAsync,
 	.Ops.WriteBdAsync = XAie_LinuxIO_WriteBdAsync,
+	.Ops.UpdateShimDmaBdAddrOffAsync = XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync,
 };
 
 /** @} */

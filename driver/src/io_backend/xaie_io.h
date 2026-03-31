@@ -194,7 +194,8 @@ typedef struct XAie_BackendOps {
 	int (*PartClearContextAsync)(void *IOInst, XAie_AsyncRes *AsyncRes);
 	int (*WriteBdAsync)(void *IOInst, XAie_DmaDesc *DmaDesc,
 			    XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes);
-
+	int (*UpdateShimDmaBdAddrOffAsync)(XAie_MemInst *MemInst, XAie_LocType Loc,
+					   u32 Offset, u16 BdNum, XAie_AsyncRes *AsyncRes);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */
