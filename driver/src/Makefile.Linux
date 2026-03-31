@@ -33,7 +33,27 @@ all: include lib$(NAME).so lib$(NAME).a
 
 ${LIBURING_A}:
 	cd ${LIBURING_DIR};				\
-	./configure --cc=${CC} --cxx=${CXX};		\
+	CC_TRIMMED=$$(echo "$$CC" | sed 's/^[[:space:]]*//'); \
+	CC_CUT_1=$$(echo "$$CC_TRIMMED" | cut -d ' ' -f 1); \
+	CC_CUT_2=$$(echo "$$CC_TRIMMED" | cut -d ' ' -f 2-); \
+	if [ "$$CC_CUT_1" != "$$CC_CUT_2" ]; then \
+		echo "Warning: CC variable contains multiple words. Only the first word will be "; \
+		echo "used to build liburing. Please ensure that CC variable is set correctly."; \
+		CC_LIBURING=$$CC_CUT_1; \
+	else \
+		CC_LIBURING=$$CC; \
+	fi; \
+	CXX_TRIMMED=$$(echo "$$CXX" | sed 's/^[[:space:]]*//'); \
+	CXX_CUT_1=$$(echo "$$CXX_TRIMMED" | cut -d ' ' -f 1); \
+	CXX_CUT_2=$$(echo "$$CXX_TRIMMED" | cut -d ' ' -f 2-); \
+	if [ "$$CXX_CUT_1" != "$$CXX_CUT_2" ]; then \
+		echo "Warning: CXX variable contains multiple words. Only the first word will be "; \
+		echo "used to build liburing. Please ensure that CXX variable is set correctly."; \
+		CXX_LIBURING=$$CXX_CUT_1; \
+	else \
+		CXX_LIBURING=$$CXX; \
+	fi; \
+	./configure --cc=$${CC_LIBURING} --cxx=$${CXX_LIBURING};		\
 	make -C src -j32;				\
 
 include: ${LIBURING_A}
