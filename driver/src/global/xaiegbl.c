@@ -511,6 +511,48 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 /*****************************************************************************/
 /**
 *
+* This is the API to asynchronously clear the AI engine partition context
+* using io_uring. It validates input parameters and delegates to the
+* backend's PartClearContextAsync operation.
+*
+* @param	DevInst: Global AIE device instance pointer.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+******************************************************************************/
+int XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst,
+				    XAie_AsyncRes *AsyncRes)
+{
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+
+	if((DevInst == XAIE_NULL) ||
+	   (DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
+	   (DevInst->Backend == XAIE_NULL)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if (DevInst->Backend->Ops.PartClearContextAsync == NULL) {
+		XAIE_ERROR("Partition Clear Context Async operation is not "
+				"supported by the backend\n");
+		AsyncRes->res = XAIE_ERR;
+		return 0;
+	}
+
+	return DevInst->Backend->Ops.PartClearContextAsync(DevInst->IOInst,
+							   AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the API to setup the AI engine partition intialization. It is
 * supposed to be called after the partition resets.
 *

@@ -2237,6 +2237,53 @@ static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
 
 /*****************************************************************************/
 /**
+*
+* This function asynchronously clears the AI engine partition context using
+* io_uring. It submits the partition clear context ioctl as an io_uring
+* command.
+*
+* @param	IOInst: IO instance pointer.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. On error, AsyncRes->res is set to the
+*			corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Internal only.
+*
+*******************************************************************************/
+static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
+					      XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	struct io_uring_sqe *Sqe;
+	int ret;
+
+	AsyncRes->io_vec_inuse = 0;
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (Sqe == NULL) {
+		XAIE_ERROR("Failed to get sqe for async partition clear context\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_PARTITION_CLR_CONTEXT_IOCTL;
+	Sqe->user_data = (u64)AsyncRes;
+
+	ret = io_uring_submit(&LinuxIOInst->ring);
+	if (ret < 0) {
+		XAIE_ERROR("Failed to submit async partition clear context: %d\n",
+			   ret);
+		AsyncRes->res = ret;
+		return 0;
+	}
+
+	return ret;
+}
+
+/*****************************************************************************/
+/**
 * This API initializes the AI engine partition
 *
 * @param	IOInst: IO Instance pointer.
@@ -2852,6 +2899,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.SetPadString = NULL,
 	.Ops.PartitionInitAsync = XAie_LinuxIO_PartitionInitAsync,
 	.Ops.PartitionTeardownAsync = XAie_LinuxIO_TeardownPartAsync,
+	.Ops.PartClearContextAsync = XAie_LinuxIO_PartClearContextAsync,
 };
 
 /** @} */
