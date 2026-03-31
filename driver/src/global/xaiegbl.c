@@ -360,6 +360,54 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 /*****************************************************************************/
 /**
 *
+* This is the API to asynchronously initialize the AI engine partition using
+* io_uring. It validates input parameters and delegates to the backend's
+* PartitionInitAsync operation.
+*
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Opts: Partition initialization options.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+******************************************************************************/
+int XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
+				  XAie_AsyncRes *AsyncRes)
+{
+	int ret;
+
+	if (AsyncRes == NULL) {
+		XAIE_ERROR("Invalid Async Result argument\n");
+		return 0;
+	}
+
+	if((DevInst == XAIE_NULL) || (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if (DevInst->Backend->Ops.PartitionInitAsync == NULL) {
+		XAIE_ERROR("Partition Initialize Async operation is not supported by the backend\n");
+		AsyncRes->res = XAIE_ERR;
+		return 0;
+	}
+
+	ret = DevInst->Backend->Ops.PartitionInitAsync(DevInst->IOInst, Opts, AsyncRes);
+	if (ret < 0) {
+		XAIE_ERROR("Failed to start asynchronous partition initialization\n");
+		AsyncRes->res = ret;
+		return 0;
+	}
+
+	return ret;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the API to teardown the AI engine partition. It will initialize
 * the AI engine partition hardware.
 *

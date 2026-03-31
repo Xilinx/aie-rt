@@ -102,6 +102,8 @@ typedef struct XAie_LinuxIO {
 	struct io_uring_cqe **cqes;
 	struct iovec *IoVecs;
 	u32 IoVecsCount;
+	u32 IoVecsHead;
+	u32 IoVecsTail;
 
 } XAie_LinuxIO;
 
@@ -113,6 +115,35 @@ typedef struct XAie_LinuxMem {
 
 /************************** Function Definitions *****************************/
 #ifdef __AIELINUX__
+
+static bool _XAie_LinuxIO_IoVecIsFull(XAie_LinuxIO *LinuxIOInst)
+{
+	return LinuxIOInst->IoVecsHead == LinuxIOInst->IoVecsTail;
+}
+static u32 _XAie_LinuxIO_IoVecIncHead(XAie_LinuxIO *LinuxIOInst)
+{
+	u32 ret = LinuxIOInst->IoVecsHead;
+
+	LinuxIOInst->IoVecsHead = (LinuxIOInst->IoVecsHead + 1) % LinuxIOInst->IoVecsCount;
+	return ret;
+}
+
+static u32 _XAie_LinuxIO_IoVecIncTail(XAie_LinuxIO *LinuxIOInst)
+{
+	u32 ret = LinuxIOInst->IoVecsTail;
+
+	LinuxIOInst->IoVecsTail = (LinuxIOInst->IoVecsTail + 1) % LinuxIOInst->IoVecsCount;
+	return ret;
+}
+
+static u32 _XAie_LinuxIO_IoVecDecHead(XAie_LinuxIO *LinuxIOInst)
+{
+	u32 ret = LinuxIOInst->IoVecsHead;
+
+	LinuxIOInst->IoVecsHead = (LinuxIOInst->IoVecsHead - 1 + LinuxIOInst->IoVecsCount) % LinuxIOInst->IoVecsCount;
+	return ret;
+}
+
 /*****************************************************************************/
 /**
 *
@@ -624,6 +655,8 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		RC = XAIE_ERR;
 		goto free_iovecs;
 	}
+	IOInst->IoVecsHead = 0;
+	IOInst->IoVecsTail = IOInst->IoVecsCount - 1;
 
 	return XAIE_OK;
 
@@ -670,6 +703,7 @@ static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
 	struct io_uring_sqe *Sqe;
 	int Ret;
 
+	AsyncRes->io_vec_inuse = 0;
 	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
 	if (!Sqe) {
 		XAIE_ERROR("Failed to get sqe for async write\n");
@@ -738,6 +772,9 @@ static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
 		AsyncRes->res = Cqe[i]->res;
 		AsyncRes->res2 = Cqe[i]->big_cqe[0];
 		AsyncRes->res3 = Cqe[i]->big_cqe[1];
+		if (AsyncRes->io_vec_inuse == 1) {
+			_XAie_LinuxIO_IoVecIncTail(LinuxIOInst);
+		}
 		io_uring_cqe_seen(&LinuxIOInst->ring, Cqe[i]);
 	}
 
@@ -1302,6 +1339,7 @@ static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 	struct io_uring_sqe *Sqe;
 	int ret;
 
+	AsyncRes->io_vec_inuse = 0;
 	Sqe = io_uring_get_sqe(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
 	if (Sqe == NULL) {
 		XAIE_ERROR("Failed to get sqe for async mem attach\n");
@@ -1376,6 +1414,7 @@ static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncR
 	int *BufferFd;
 	int ret;
 
+	AsyncRes->io_vec_inuse = 0;
 	Sqe = io_uring_get_sqe(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
 	if (!Sqe) {
 		XAIE_ERROR("Failed to get sqe for async mem detach\n");
@@ -2043,6 +2082,113 @@ static AieRC _XAie_LinuxIO_PartClearContext(XAie_LinuxIO *IOInst)
 	return XAIE_OK;
 }
 
+static int XAie_LinuxIO_PartitionInitAsync(void *IOInst, XAie_PartInitOpts *Opts,
+					   XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *) IOInst;
+	struct io_uring_sqe *Sqe;
+	struct aie_partition_init_args *InitArgs;
+	int ret;
+
+	if ((Opts != NULL) && (Opts->NumUseTiles != 0) && (Opts->Locs !=NULL)) {
+		if (_XAie_LinuxIO_IoVecIsFull(LinuxIOInst)) {
+			XAIE_ERROR("io_uring iovec array is full, cannot submit async partition init\n");
+			AsyncRes->res = -ENOMEM;
+			return 0;
+		}
+		if ((Opts->NumUseTiles * sizeof(struct aie_location) >
+		    (long unsigned int)getpagesize())) {
+			XAIE_ERROR("Number of tiles requested exceeds iovec buffer size for async partition init\n");
+			AsyncRes->res = -EINVAL;
+			return 0;
+		}
+	}
+
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (Sqe == NULL) {
+		XAIE_ERROR("Failed to get sqe for async partition init\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_PARTITION_INIT_IOCTL;
+	Sqe->user_data = (u64)AsyncRes;
+	InitArgs = (struct aie_partition_init_args *)Sqe->cmd;
+
+	if (Opts != NULL) {
+		InitArgs->init_opts = Opts->InitOpts;
+		if (Opts->NumUseTiles == 0 || Opts->Locs == NULL) {
+			InitArgs->num_tiles = 0;
+			InitArgs->locs = NULL;
+		} else {
+			Sqe->buf_index = _XAie_LinuxIO_IoVecIncHead(LinuxIOInst);
+			InitArgs->num_tiles = Opts->NumUseTiles;
+			InitArgs->locs = LinuxIOInst->IoVecs[Sqe->buf_index].iov_base;
+			AsyncRes->io_vec_inuse = 1;
+
+			for (__u32 i = 0; i < InitArgs->num_tiles; i++) {
+				InitArgs->locs[i].col = (__u32)Opts->Locs[i].Col;
+				InitArgs->locs[i].row = (__u32)Opts->Locs[i].Row;
+			}
+		}
+	} else {
+		InitArgs->init_opts = XAIE_PART_INIT_OPT_DEFAULT;
+		InitArgs->num_tiles = 0;
+		InitArgs->locs = NULL;
+	}
+
+	/* Clear the TilesInuse bitmap to reflect the current status */
+	for(u32 C = 0; C < LinuxIOInst->DevInst->NumCols; C++) {
+		XAie_LocType Loc;
+		u32 ColClockStatus;
+
+		Loc = XAie_TileLoc(C, 1);
+		ColClockStatus = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst, Loc);
+
+		_XAie_ClrBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse,
+				     ColClockStatus, LinuxIOInst->DevInst->NumRows - 1);
+	}
+
+	if (InitArgs->locs == NULL) {
+		u32 StartBit, NumTiles;
+
+		NumTiles = (u32)(LinuxIOInst->DevInst->NumCols * (LinuxIOInst->DevInst->NumRows - 1U));
+		/* Loc is NULL, it suggests all tiles are requested */
+		StartBit = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst,
+				XAie_TileLoc(0, 1));
+		_XAie_SetBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse, StartBit,NumTiles);
+	} else {
+		for(u32 i = 0; i < InitArgs->num_tiles; i++) {
+			u32 Bit;
+
+			if(InitArgs->locs[i].row == 0U) {
+				continue;
+			}
+
+			/*
+			 * If a tile is ungated, the rows below it are
+			 * ungated.
+			 */
+			Bit = _XAie_GetTileBitPosFromLoc(LinuxIOInst->DevInst,
+							 XAie_TileLoc(InitArgs->locs[i].col, 1));
+			_XAie_SetBitInBitmap(LinuxIOInst->DevInst->DevOps->TilesInUse,Bit,
+					     InitArgs->locs[i].row);
+		}
+	}
+	ret = io_uring_submit(&LinuxIOInst->ring);
+	if (ret < 0) {
+		XAIE_ERROR("Failed to submit async partition init: %d\n", ret);
+		AsyncRes->res = ret;
+		if (AsyncRes->io_vec_inuse) {
+			_XAie_LinuxIO_IoVecDecHead(LinuxIOInst);
+		}
+		return 0;
+	}
+
+	return ret;
+}
+
 /*****************************************************************************/
 /**
 * This API initializes the AI engine partition
@@ -2596,6 +2742,7 @@ int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
 	struct io_uring_sqe *Sqe;
 	int Ret;
 
+	AsyncRes->io_vec_inuse = 0;
 	if (Size > 16) {
 		XAIE_ERROR("Size exceeds 16-u32 (64 bytes) for async write\n");
 		AsyncRes->res = -EINVAL;
@@ -2657,6 +2804,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.GetPartitionList = XAie_LinuxIO_GetPartitionList,
 	.Ops.SetPadInteger = NULL,
 	.Ops.SetPadString = NULL,
+	.Ops.PartitionInitAsync = XAie_LinuxIO_PartitionInitAsync,
 };
 
 /** @} */

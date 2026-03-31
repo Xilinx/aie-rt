@@ -82,6 +82,7 @@ typedef struct XAie_AsyncRes {
 	int res;
 	u64 res2;
 	u64 res3;
+	u8 io_vec_inuse;
 } XAie_AsyncRes;
 
 /*
@@ -642,6 +643,8 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
 AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
+int XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
+				  XAie_AsyncRes *AsyncRes);
 AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 		XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo);
 AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
