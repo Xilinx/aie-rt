@@ -127,8 +127,12 @@ int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u
 				      XAie_DmaDirection Dir, u16 BdNum, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
+int XAie_DmaChannelEnableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
+int XAie_DmaChannelDisableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u32 TimeOutUs);
 AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,

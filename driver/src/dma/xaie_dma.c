@@ -1378,24 +1378,26 @@ int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u
 /*****************************************************************************/
 /**
 *
-* This API Enables or Disables a S2MM or MM2S channel of AIE DMAs.
+* This is a helper function that validates inputs and prepares parameters for
+* DMA channel control operations.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Location of AIE Tile
 * @param	ChNum: Channel number of the DMA.
 * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
-* @param	Enable: XAIE_ENABLE/XAIE_DISABLE to enable/disable.
+* @param	Addr: Pointer to return the register address
+* @param	Mask: Pointer to return the register mask
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		Internal only.
+* @note		Internal helper function.
 *
 ******************************************************************************/
-static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u8 ChNum, XAie_DmaDirection Dir, u8 Enable)
+static AieRC _XAie_DmaChannelControlPrepare(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
+		u64 *Addr, u32 *Mask)
 {
 	u8 TileType;
-	u64 Addr;
 	const XAie_DmaMod *DmaMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1421,13 +1423,85 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_CHANNEL_NUM;
 	}
 
-	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	*Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
-		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
+		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels +
+		(u64)(DmaMod->ChProp->Enable.Idx * 4U);
 
-	return XAie_MaskWrite32(DevInst,
-			Addr + (u64)(DmaMod->ChProp->Enable.Idx * 4U),
-			DmaMod->ChProp->Enable.Mask, Enable);
+	*Mask = DmaMod->ChProp->Enable.Mask;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API Enables or Disables a S2MM or MM2S channel of AIE DMAs.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	Enable: XAIE_ENABLE/XAIE_DISABLE to enable/disable.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u8 Enable)
+{
+	AieRC RC;
+	u64 Addr;
+	u32 Mask;
+
+	RC = _XAie_DmaChannelControlPrepare(DevInst, Loc, ChNum, Dir, &Addr, &Mask);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	return XAie_MaskWrite32(DevInst, Addr, Mask, Enable);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API asynchronously Enables or Disables a S2MM or MM2S channel of AIE
+* DMAs using io_uring.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	Enable: XAIE_ENABLE/XAIE_DISABLE to enable/disable.
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static int _XAie_DmaChannelControlAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
+		u8 ChNum, XAie_DmaDirection Dir, u8 Enable, XAie_AsyncRes *AsyncRes)
+{
+	AieRC RC;
+	u64 Addr;
+	u32 Mask;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid AsyncRes pointer\n");
+		return 0;
+	}
+
+	RC = _XAie_DmaChannelControlPrepare(DevInst, Loc, ChNum, Dir, &Addr, &Mask);
+	if(RC != XAIE_OK) {
+		AsyncRes->res = RC;
+		return 0;
+	}
+
+	return XAie_MaskWrite32Async(DevInst, Addr, Mask, Enable, AsyncRes);
 }
 
 /*****************************************************************************/
@@ -1454,6 +1528,30 @@ AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 /*****************************************************************************/
 /**
 *
+* This API asynchronously Enables a S2MM or MM2S channel of AIE DMAs using
+* io_uring.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		None.
+*
+******************************************************************************/
+int XAie_DmaChannelEnableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes)
+{
+	return _XAie_DmaChannelControlAsync(DevInst, Loc, ChNum, Dir, XAIE_ENABLE, AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
 * This API Disables a S2MM or MM2S channel of AIE DMAs.
 *
 * @param	DevInst: Device Instance.
@@ -1470,6 +1568,30 @@ AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir)
 {
 	return _XAie_DmaChannelControl(DevInst, Loc, ChNum, Dir, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API asynchronously Disables a S2MM or MM2S channel of AIE DMAs using
+* io_uring.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		None.
+*
+******************************************************************************/
+int XAie_DmaChannelDisableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes)
+{
+	return _XAie_DmaChannelControlAsync(DevInst, Loc, ChNum, Dir, XAIE_DISABLE, AsyncRes);
 }
 
 /*****************************************************************************/
