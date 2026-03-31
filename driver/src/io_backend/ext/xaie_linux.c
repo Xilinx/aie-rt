@@ -511,7 +511,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	u32 NumTiles;
 	u32 SetTileStatus;
 
-	IOInst = (XAie_LinuxIO *)malloc(sizeof(*IOInst));
+	IOInst = (XAie_LinuxIO *)calloc(1, sizeof(*IOInst));
 	if(IOInst == NULL) {
 		XAIE_ERROR("Initialization failed. Failed to allocate memory\n");
 		return XAIE_ERR;
