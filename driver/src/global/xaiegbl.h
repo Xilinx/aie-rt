@@ -666,6 +666,8 @@ int XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
 			XAie_MemCacheProp Cache, u64 MemHandle,
 			XAie_AsyncRes *AsyncRes);
 AieRC XAie_MemDetach(XAie_MemInst *MemInst);
+int XAie_MemDetachAsync(XAie_MemInst *MemInst,
+			XAie_AsyncRes *AsyncRes);
 AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
 AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
 AieRC XAie_StartTransaction(XAie_DevInst *DevInst, u32 Flags);

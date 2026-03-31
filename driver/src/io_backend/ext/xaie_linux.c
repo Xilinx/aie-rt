@@ -1340,6 +1340,53 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 /*****************************************************************************/
 /**
 *
+* This is the memory function to asynchronously detach the memory from device
+* using io_uring. The DMA buffer fd is passed to the kernel via the SQE command
+* buffer. On success, the backend memory handle is freed.
+*
+* @param	MemInst: Memory instance pointer.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. On error, AsyncRes->res is set to the
+*			corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Internal only. Uses io_uring for async DMA buffer detachment.
+*
+*******************************************************************************/
+static int XAie_LinuxMemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
+{
+	XAie_DevInst *DevInst = MemInst->DevInst;
+	XAie_LinuxMem *LinuxMemInst = (XAie_LinuxMem *)MemInst->BackendHandle;
+	struct io_uring_sqe *Sqe;
+	int *BufferFd;
+	int ret;
+
+	Sqe = io_uring_get_sqe(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
+	if (!Sqe) {
+		XAIE_ERROR("Failed to get sqe for async mem detach\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_DETACH_DMABUF_IOCTL;
+	Sqe->user_data = (u64)AsyncRes;
+	BufferFd = (int *)Sqe->cmd;
+	*BufferFd = LinuxMemInst->BufferFd;
+	ret = io_uring_submit(&((XAie_LinuxIO *)DevInst->IOInst)->ring);
+	if (ret < 0) {
+		XAIE_ERROR("Failed to submit async mem detach: %d\n", ret);
+		AsyncRes->res = ret;
+		return 0;
+	}
+
+	return ret;;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API updates the address in shim dma bd using the linux kernel driver.
 *
 * @param	IOInst: IO instance pointer
@@ -2529,6 +2576,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.MemAttach = XAie_LinuxMemAttach,
 	.Ops.MemAttachAsync = XAie_LinuxMemAttachAsync,
 	.Ops.MemDetach = XAie_LinuxMemDetach,
+	.Ops.MemDetachAsync = XAie_LinuxMemDetachAsync,
 	.Ops.GetTid = XAie_LinuxGetTid,
 	.Ops.GetPartFd = XAie_LinuxGetPartFd,
 	.Ops.SubmitTxn = XAie_LinuxSubmitTxn,

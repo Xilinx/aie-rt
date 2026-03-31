@@ -169,6 +169,7 @@ typedef struct XAie_BackendOps {
 	int (*MemAttachAsync)(XAie_MemInst *MemInst, u64 MemHandle,
 				XAie_AsyncRes *AsyncRes);
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
+	int (*MemDetachAsync)(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes);
 	u64 (*GetTid)(void);
 	int (*GetPartFd)(void *IOInst);
 	AieRC (*SubmitTxn)(void *IOInst, XAie_TxnInst *TxnInst);

@@ -1026,6 +1026,55 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 }
 
 /*****************************************************************************/
+/**
+*
+* This is the memory function to asynchronously detach user allocated memory
+* from the AI engine partition device instance using io_uring. It validates
+* input parameters and delegates to the backend's MemDetachAsync operation.
+*
+* @param	MemInst: Memory Instance
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+*******************************************************************************/
+int XAie_MemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
+{
+	XAie_DevInst *DevInst;
+
+	if(AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+
+	if(MemInst == XAIE_NULL) {
+		XAIE_ERROR("Invalid memory instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	DevInst = MemInst->DevInst;
+	if((DevInst == XAIE_NULL) ||
+		(DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
+		(DevInst->Backend == XAIE_NULL)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		AsyncRes->res = XAIE_INVALID_ARGS;
+		return 0;
+	}
+
+	if(DevInst->Backend->Ops.MemDetachAsync == NULL) {
+		XAIE_ERROR("Asynchronous memory detach is not supported "
+				"by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	return DevInst->Backend->Ops.MemDetachAsync(MemInst, AsyncRes);
+}
+
+/*****************************************************************************/
 /*
 * This API disables the ECC flag in the Device Instance of the partition. It
 * should be called before calling elf loader to disable ECC. ECC configuration
