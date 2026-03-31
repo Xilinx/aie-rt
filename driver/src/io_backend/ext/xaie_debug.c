@@ -107,7 +107,7 @@ static AieRC XAie_DebugIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	PRINT("W: %p, 0x%x\n", (void *)UINTPTR_T DebugIOInst->BaseAddr + RegOff, Value);
+	PRINT("W: %p, 0x%x\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr + RegOff), Value);
 
 	return XAIE_OK;
 }
@@ -131,7 +131,7 @@ static AieRC XAie_DebugIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	*Data = 0U;
-	PRINT("R: %p, 0x%x\n", (void *)UINTPTR_T DebugIOInst->BaseAddr + RegOff, 0);
+	PRINT("R: %p, 0x%x\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr + RegOff), 0);
 
 	return XAIE_OK;
 }
@@ -157,7 +157,7 @@ static AieRC XAie_DebugIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	PRINT("MW: %p, 0x%x, 0x%x\n", (void *)UINTPTR_T DebugIOInst->BaseAddr + RegOff,
+	PRINT("MW: %p, 0x%x, 0x%x\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr + RegOff),
 			Mask, Value);
 
 	return XAIE_OK;
@@ -184,8 +184,8 @@ static AieRC XAie_DebugIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (void *)UINTPTR_T DebugIOInst->BaseAddr +
-			RegOff, Mask, Value, TimeOutUs);
+	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr +
+			RegOff), Mask, Value, TimeOutUs);
 
 	return XAIE_OK;
 }
@@ -278,7 +278,7 @@ static void _XAie_DebugIO_NpiWrite32(void *IOInst, u32 RegOff,
 	u64 RegAddr;
 
 	RegAddr = DebugIOInst->NpiBaseAddr + RegOff;
-	PRINT("NPIMW: %p, 0x%x\n", (void *)UINTPTR_T RegAddr, RegVal);
+	PRINT("NPIMW: %p, 0x%x\n", (void *)(uintptr_t)RegAddr, RegVal);
 }
 
 /*****************************************************************************/
@@ -302,8 +302,8 @@ static AieRC _XAie_DebugIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 {
 	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
-	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (void *)UINTPTR_T DebugIOInst->NpiBaseAddr +
-			RegOff, Mask, Value, TimeOutUs);
+	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (char *)(uintptr_t)(DebugIOInst->NpiBaseAddr +
+			RegOff), Mask, Value, TimeOutUs);
 
 	return XAIE_OK;
 }
