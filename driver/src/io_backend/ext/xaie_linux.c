@@ -756,6 +756,9 @@ static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
 			   Nr, DevInst->RingSize);
 		return XAIE_ERR;
 	}
+	if (Nr == 0) {
+		return XAIE_OK;
+	}
 	Ret = io_uring_wait_cqes(&LinuxIOInst->Ring, Cqe, Nr, NULL, NULL);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to wait for async completion: %d\n", Ret);
