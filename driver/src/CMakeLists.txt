@@ -3,8 +3,10 @@
 cmake_minimum_required(VERSION 3.15)
 
 file(GLOB_RECURSE  SOURCES  "${CMAKE_CURRENT_SOURCE_DIR}/*/*.c"  "${CMAKE_CURRENT_SOURCE_DIR}/*/*/*.c")
+list(FILTER SOURCES EXCLUDE REGEX ".*/liburing/.*")
 
 file(GLOB_RECURSE  HEADERS  "${CMAKE_CURRENT_SOURCE_DIR}/*/*.h"  "${CMAKE_CURRENT_SOURCE_DIR}/*/*/*.h")
+list(FILTER HEADERS EXCLUDE REGEX ".*/liburing/.*")
 
 if (NOT "$ENV{UTEST_BUILD}" STREQUAL "ON")
 project(aienginev2)
