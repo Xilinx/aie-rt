@@ -634,6 +634,7 @@ typedef struct {
  */
 struct XAie_DmaMod {
 	u8  NumBds;
+	u8  BdSize;	/* Number of 32-bit words in the BD */
 	u16  NumLocks;
 	u8  ChIdxOffset;
 	u8  NumAddrDim;
