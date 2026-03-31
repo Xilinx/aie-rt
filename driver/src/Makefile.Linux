@@ -32,6 +32,11 @@ LIBURING_A ?= ${LIBURING_DIR}/src/liburing.a
 all: include lib$(NAME).so lib$(NAME).a
 
 ${LIBURING_A}:
+	@if [ ! -d "${LIBURING_DIR}/src" ]; then		\
+		echo "Error: ${LIBURING_DIR}/src not found.";	\
+		echo "Run: git submodule init && git submodule update"; \
+		exit 1;						\
+	fi
 	cd ${LIBURING_DIR};				\
 	./configure --cc=${CC} --cxx=${CXX};		\
 	make -j32;					\
