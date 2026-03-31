@@ -32,14 +32,9 @@ LIBURING_A ?= ${LIBURING_DIR}/src/liburing.a
 all: include lib$(NAME).so lib$(NAME).a
 
 ${LIBURING_A}:
-	@if [ ! -d "${LIBURING_DIR}/src" ]; then		\
-		echo "Error: ${LIBURING_DIR}/src not found.";	\
-		echo "Run: git submodule init && git submodule update"; \
-		exit 1;						\
-	fi
 	cd ${LIBURING_DIR};				\
 	./configure --cc=${CC} --cxx=${CXX};		\
-	make -j32;					\
+	make -C src -j32;				\
 
 include: ${LIBURING_A}
 	mkdir $(INCLUDEDIR)/xaiengine -p
@@ -121,7 +116,7 @@ doc-clean:
 	rm -rf $(DOCS_DIR)
 
 clean:
-	make -C ${LIBURING_DIR} clean
+	make -C ${LIBURING_DIR}/src clean
 	rm -rf $(OUTS) *.so *.so.* ${LIBURING_A} lib$(NAME).a
 	rm -rf $(INCLUDEDIR)
 	rm -rf $(INTERNALDIR)
