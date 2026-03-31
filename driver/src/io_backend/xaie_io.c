@@ -90,6 +90,11 @@
 #else
 	#define DEBUGBACKEND NULL
 #endif
+#if defined (__AIEZEPHYR__)
+	#define ZEPHYRBACKEND &ZephyrBackend
+#else
+	#define ZEPHYRBACKEND NULL
+#endif
 
 /************************** Variable Definitions *****************************/
 extern const XAie_Backend MetalBackend;
@@ -100,6 +105,7 @@ extern const XAie_Backend DebugBackend;
 extern const XAie_Backend LinuxBackend;
 extern const XAie_Backend SocketBackend;
 extern const XAie_Backend ControlCodeBackend;
+extern const XAie_Backend ZephyrBackend;
 
 static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 {
@@ -111,6 +117,7 @@ static const XAie_Backend *IOBackend[XAIE_IO_BACKEND_MAX] =
 	LINUXBACKEND,
 	SOCKETBACKEND,
 	CONTROLCODEBACKEND,
+	ZEPHYRBACKEND,
 };
 
 /************************** Function Definitions *****************************/

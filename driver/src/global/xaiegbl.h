@@ -100,6 +100,7 @@ typedef enum {
 	XAIE_IO_BACKEND_LINUX, /* Linux kernel backend */
 	XAIE_IO_BACKEND_SOCKET, /* Socket backend */
 	XAIE_IO_BACKEND_CONTROLCODE,
+	XAIE_IO_BACKEND_ZEPHYR, /* Zephyr OS backend */
 	XAIE_IO_BACKEND_MAX
 } XAie_BackendType;
 
