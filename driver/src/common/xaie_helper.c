@@ -348,6 +348,41 @@ u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 }
 
 /**
+ * Case-insensitive string comparison implementation for embedded systems
+ * that may not have strcasecmp() available.
+ */
+static int xaie_strcasecmp(const char *s1, const char *s2) {
+	unsigned char c1, c2;
+
+	while (*s1 && *s2) {
+		c1 = (unsigned char)*s1;
+		c2 = (unsigned char)*s2;
+
+		/* Convert to lowercase */
+		if (c1 >= 'A' && c1 <= 'Z')
+			c1 += 'a' - 'A';
+		if (c2 >= 'A' && c2 <= 'Z')
+			c2 += 'a' - 'A';
+
+		if (c1 != c2)
+			return c1 - c2;
+
+		s1++;
+		s2++;
+	}
+
+	/* Handle different string lengths */
+	c1 = (unsigned char)*s1;
+	c2 = (unsigned char)*s2;
+	if (c1 >= 'A' && c1 <= 'Z')
+		c1 += 'a' - 'A';
+	if (c2 >= 'A' && c2 <= 'Z')
+		c2 += 'a' - 'A';
+
+	return c1 - c2;
+}
+
+/**
  * This function is automatically executed when the shared library is loaded.
  * It reads the "XAIE_LOG_LEVEL" environment variable to configure the logger.
  * Note: __attribute__((constructor)) is a GCC/Clang language extension.
@@ -362,12 +397,12 @@ static void _XAie_LoggerInit(void) {
 
 void XAie_LoggerInit(const char *AieLevelEnv) {
     if (AieLevelEnv) {
-        if (strcasecmp(AieLevelEnv, "FATAL") == 0) AieLogLevel = XAIE_LOG_LEVEL_FATAL;
-        else if (strcasecmp(AieLevelEnv, "ERROR") == 0) AieLogLevel = XAIE_LOG_LEVEL_ERROR;
-        else if (strcasecmp(AieLevelEnv, "WARN")  == 0) AieLogLevel = XAIE_LOG_LEVEL_WARN;
-        else if (strcasecmp(AieLevelEnv, "INFO")  == 0) AieLogLevel = XAIE_LOG_LEVEL_INFO;
-        else if (strcasecmp(AieLevelEnv, "DEBUG") == 0) AieLogLevel = XAIE_LOG_LEVEL_DEBUG;
-        else if (strcasecmp(AieLevelEnv, "TRACE") == 0) AieLogLevel = XAIE_LOG_LEVEL_TRACE;
+        if (xaie_strcasecmp(AieLevelEnv, "FATAL") == 0) AieLogLevel = XAIE_LOG_LEVEL_FATAL;
+        else if (xaie_strcasecmp(AieLevelEnv, "ERROR") == 0) AieLogLevel = XAIE_LOG_LEVEL_ERROR;
+        else if (xaie_strcasecmp(AieLevelEnv, "WARN")  == 0) AieLogLevel = XAIE_LOG_LEVEL_WARN;
+        else if (xaie_strcasecmp(AieLevelEnv, "INFO")  == 0) AieLogLevel = XAIE_LOG_LEVEL_INFO;
+        else if (xaie_strcasecmp(AieLevelEnv, "DEBUG") == 0) AieLogLevel = XAIE_LOG_LEVEL_DEBUG;
+        else if (xaie_strcasecmp(AieLevelEnv, "TRACE") == 0) AieLogLevel = XAIE_LOG_LEVEL_TRACE;
     }
 }
 
