@@ -1838,29 +1838,29 @@ AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 /*****************************************************************************/
 /**
 *
-* This API pushes a Buffer Descriptor number, configures repeat count and token
-* status to start channel queue.
+* This is a helper function that validates inputs and prepares the register
+* address and value for setting start queue.
 *
 * @param	DevInst: Device Instance.
 * @param	Loc: Location of AIE Tile
 * @param	ChNum: Channel number of the DMA.
 * @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
 * @param	DmaQueueDesc: Pointer of DMA queue descriptor
+* @param	Addr: Pointer to return the register address
+* @param	Val: Pointer to return the register value
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		This feature is not supported for AIE.
+* @note		Internal helper function.
 *
 ******************************************************************************/
-AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
+static AieRC _XAie_DmaChannelSetStartQueuePrepare(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
-		XAie_DmaQueueDesc *DmaQueueDesc)
+		XAie_DmaQueueDesc *DmaQueueDesc, u64 *Addr, u32 *Val)
 {
 	AieRC RC;
 	u8 TileType;
 	u8 StartBd;
-	u32 Val = 0;
-	u64 Addr;
 	const XAie_DmaMod *DmaMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -1923,11 +1923,11 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 		StartBd = 0;
 	}
 
-	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+	*Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->StartQueueBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	Val = XAie_SetField(StartBd, DmaMod->ChProp->StartBd.Lsb,
+	*Val = XAie_SetField(StartBd, DmaMod->ChProp->StartBd.Lsb,
 			DmaMod->ChProp->StartBd.Mask) |
 		XAie_SetField((DmaQueueDesc->RepeatCount - 1U),
 			DmaMod->ChProp->RptCount.Lsb,
@@ -1935,6 +1935,40 @@ AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 		XAie_SetField(DmaQueueDesc->EnTokenIssue,
 			DmaMod->ChProp->EnToken.Lsb,
 			DmaMod->ChProp->EnToken.Mask);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API pushes a Buffer Descriptor number, configures repeat count and token
+* status to start channel queue.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	DmaQueueDesc: Pointer of DMA queue descriptor
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		This feature is not supported for AIE.
+*
+******************************************************************************/
+AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
+		XAie_DmaQueueDesc *DmaQueueDesc)
+{
+	AieRC RC;
+	u64 Addr;
+	u32 Val;
+
+	RC = _XAie_DmaChannelSetStartQueuePrepare(DevInst, Loc, ChNum, Dir,
+			DmaQueueDesc, &Addr, &Val);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
 
 	return XAie_Write32(DevInst, Addr, Val);
 }
@@ -1986,6 +2020,47 @@ AieRC XAie_DmaUpdateBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 	return DmaMod->UpdateBdLen(DevInst, DmaMod, Loc, AdjustedLen, BdNum);
 }
 
+/*****************************************************************************/
+/**
+*
+* This API asynchronously pushes a Buffer Descriptor number, configures repeat
+* count and token status to start channel queue using io_uring.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile
+* @param	ChNum: Channel number of the DMA.
+* @param	Dir: Direction of the DMA Channel. (MM2S or S2MM)
+* @param	DmaQueueDesc: Pointer of DMA queue descriptor
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		This feature is not supported for AIE.
+*
+******************************************************************************/
+int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
+		XAie_DmaQueueDesc *DmaQueueDesc, XAie_AsyncRes *AsyncRes)
+{
+	AieRC RC;
+	u64 Addr;
+	u32 Val;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid AsyncRes pointer\n");
+		return 0;
+	}
+
+	RC = _XAie_DmaChannelSetStartQueuePrepare(DevInst, Loc, ChNum, Dir,
+			DmaQueueDesc, &Addr, &Val);
+	if(RC != XAIE_OK) {
+		AsyncRes->res = RC;
+		return 0;
+	}
+
+	return XAie_Write32Async(DevInst, Addr, Val, AsyncRes);
+}
 AieRC XAie_DmaUpdateBdLen(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 		u16 BdNum)
 {
@@ -2047,6 +2122,7 @@ AieRC XAie_DmaUpdateBdAddr(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 {
 	return XAie_DmaUpdateBdAddr_16(DevInst, Loc, Addr, (u16)BdNum);
 }
+
 /*****************************************************************************/
 /**
 *

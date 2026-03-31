@@ -146,6 +146,9 @@ AieRC XAie_DmaChannelSetStartQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc);
+int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
+		XAie_DmaQueueDesc *DmaQueueDesc, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir);
