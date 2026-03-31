@@ -1310,6 +1310,13 @@ static AieRC _XAie_LinuxMemDetach(XAie_LinuxIO *IOInst, XAie_LinuxMem *MemInst)
 *******************************************************************************/
 static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 {
+	if ((MemInst == NULL) ||
+	    (MemInst->BackendHandle == NULL)) {
+		XAIE_ERROR("Invalid memory instance or backend handle for attach\n");
+		return XAIE_ERR;
+	}
+
+	*((int *)MemInst->BackendHandle) = (int)MemHandle;
 	return XAIE_OK;
 }
 
@@ -1332,7 +1339,8 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 				    XAie_AsyncRes *AsyncRes)
 {
-	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = 0;
+	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = XAie_LinuxMemAttach(MemInst, MemHandle);
+
 	return 0;
 }
 
