@@ -1158,7 +1158,7 @@ static AieRC _XAie_BacktrackIntrCtrlL1(XAie_DevInst *DevInst,
 		 * Skip backtracking above array tiles if no broadcast signal
 		 * was received and the last backtrack operation was successful.
 		 */
-		if (((XAie_EventReadStatusHw(DevInst, Loc, Module, (u8)Event) == 0U) ||
+		if (!((XAie_EventReadStatusHw(DevInst, Loc, Module, (u8)Event) != 0U) ||
 		     ((MData->IsNextInfoValid != 0U) &&
 		      (MData->NextModule == Module) &&
 		      (MData->NextTile.Row > Loc.Row)))) {
@@ -1338,39 +1338,24 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 	MData->ErrorCount = 0U;
 
 	for (L2.Col = Cols.Start; L2.Col < ColEnd; L2.Col++) {
-		u32 L2Status, Index, L2Mask, Mask;
+		u32 Index, L2Mask;
 		XAie_BroadcastSw Switch;
-		u32 Enable = 0;
 
 		TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, L2);
 		if (TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 			continue;
 		}
-		L2Status = XAie_IntrCtrlL2Status(DevInst, L2);
 		L2Mask = XAie_IntrCtrlL2Mask(DevInst, L2);
-		if (L2Status) {
-			(void)XAie_IntrCtrlL2Disable(DevInst, L2, L2Status);
-			(void)XAie_IntrCtrlL2Ack(DevInst, L2, L2Status);
-		} else {
-			continue;
-		}
-		Mask = L2Status & L2Mask;
-		for_each_set_bit(Index, Mask, 32U) {
+		for_each_set_bit(Index, L2Mask, 32U) {
+			(void)XAie_IntrCtrlL2Ack(DevInst, L2, BIT(Index));
 			_XAie_MapL2MaskToL1(DevInst, Index, L2.Col, &L1.Col, &Switch);
 			RC = _XAie_BacktrackIntrCtrlL1(DevInst, MData, L1,
 					Switch);
 			if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
-				(void)XAie_IntrCtrlL2Enable(DevInst, L2, Enable);
 				return RC;
 			}
-
-			Enable |= BIT(Index);
-
 		}
 
-		if (Enable) {
-			(void)XAie_IntrCtrlL2Enable(DevInst, L2, Enable);
-		}
 	}
 
 	MData->IsNextInfoValid = 0U;
