@@ -140,26 +140,14 @@ typedef struct XAie_BackendOps {
 	AieRC (*Init)(XAie_DevInst *DevInst);
 	AieRC (*Finish)(void *IOInst);
 	AieRC (*Write32)(void *IOInst, u64 RegOff, u32 Value);
-	int (*Write32Async)(void *IOInst, u64 RegOff, u32 Value,
-			      XAie_AsyncRes *AsyncRes);
-	AieRC (*AsyncWait)(void *IOInst);
-	AieRC (*AsyncWaitNr)(void *IOInst, u32 Nr);
 	AieRC (*PrivilegeWrite32)(u32 StartCol, u32 NumCols,
 				  u32 Ops);
 	AieRC (*Read32)(void *IOInst,  u64 RegOff, u32 *Data);
 	AieRC (*MaskWrite32)(void *IOInst, u64 RegOff, u32 Mask, u32 Value);
-	int (*MaskWrite32Async)(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
-				XAie_AsyncRes *AsyncRes);
 	AieRC (*MaskPoll)(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 			u32 TimeOutUs);
 	AieRC (*BlockWrite32)(void *IOInst, u64 RegOff, const u32 *Data, u32 Size);
-	int (*BlockWrite32Async)(void *IOInst, u64 RegOff, const u32 *Data,
-				u32 Size, XAie_AsyncRes *AsyncRes);
-	int (*BlockWrite64BytesAsync)(void *IOInst, u64 RegOff, const u32 *Data,
-					u32 Size, XAie_AsyncRes *AsyncRes);
 	AieRC (*BlockSet32)(void *IOInst, u64 RegOff, u32 Data, u32 Size);
-	int (*BlockSet32Async)(void *IOInst, u64 RegOff, u32 Data, u32 Size,
-			      XAie_AsyncRes *AsyncRes);
 	AieRC (*CmdWrite)(void *IOInst, u8 Col, u8 Row, u8 Command, u32 CmdWd0,
 			u32 CmdWd1, const char *CmdStr);
 	AieRC (*RunOp)(void *IOInst, XAie_DevInst *DevInst,
@@ -175,10 +163,7 @@ typedef struct XAie_BackendOps {
 	AieRC (*MemSyncForDevVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 	AieRC (*MemGetDevAddrFromVAddr)(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
 	AieRC (*MemAttach)(XAie_MemInst *MemInst, u64 MemHandle);
-	int (*MemAttachAsync)(XAie_MemInst *MemInst, u64 MemHandle,
-				XAie_AsyncRes *AsyncRes);
 	AieRC (*MemDetach)(XAie_MemInst *MemInst);
-	int (*MemDetachAsync)(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes);
 	u64 (*GetTid)(void);
 	int (*GetPartFd)(void *IOInst);
 	AieRC (*SubmitTxn)(void *IOInst, XAie_TxnInst *TxnInst);
@@ -198,6 +183,21 @@ typedef struct XAie_BackendOps {
 			    XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes);
 	int (*UpdateShimDmaBdAddrOffAsync)(XAie_MemInst *MemInst, XAie_LocType Loc,
 					   u32 Offset, u16 BdNum, XAie_AsyncRes *AsyncRes);
+	int (*Write32Async)(void *IOInst, u64 RegOff, u32 Value,
+			      XAie_AsyncRes *AsyncRes);
+	AieRC (*AsyncWait)(void *IOInst);
+	AieRC (*AsyncWaitNr)(void *IOInst, u32 Nr);
+	int (*MaskWrite32Async)(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
+			XAie_AsyncRes *AsyncRes);
+	int (*BlockWrite32Async)(void *IOInst, u64 RegOff, const u32 *Data,
+				u32 Size, XAie_AsyncRes *AsyncRes);
+	int (*BlockWrite64BytesAsync)(void *IOInst, u64 RegOff, const u32 *Data,
+					u32 Size, XAie_AsyncRes *AsyncRes);
+	int (*BlockSet32Async)(void *IOInst, u64 RegOff, u32 Data, u32 Size,
+			      XAie_AsyncRes *AsyncRes);
+	int (*MemAttachAsync)(XAie_MemInst *MemInst, u64 MemHandle,
+				XAie_AsyncRes *AsyncRes);
+	int (*MemDetachAsync)(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes);
 } XAie_BackendOps;
 
 /* Typedef to capture all backend information */

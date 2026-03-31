@@ -634,7 +634,6 @@ typedef struct {
  */
 struct XAie_DmaMod {
 	u8  NumBds;
-	u8  BdSize;	/* Number of 32-bit words in the BD */
 	u16  NumLocks;
 	u8  ChIdxOffset;
 	u8  NumAddrDim;
@@ -667,9 +666,6 @@ struct XAie_DmaMod {
 	AieRC (*SetMultiDim) (XAie_DmaDesc *Desc, XAie_DmaTensor *Tensor);
 	AieRC (*SetBdIter) (XAie_DmaDesc *Desc, u32 StepSize, u16 Wrap,
 			u8 IterCurr);
-	AieRC (*WriteBdPrep)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
-			XAie_LocType Loc, u8 BdNum, u32 *BdWord,
-			u64 *Addr);
 	AieRC (*WriteBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
 			XAie_LocType Loc, u8 BdNum);
 	AieRC (*ReadBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
@@ -696,6 +692,10 @@ struct XAie_DmaMod {
 		       XAie_DmaDirection Dir, u8 Pause, const struct XAie_DmaMod *DmaMod);
 	AieRC (*GetNocDmaAxiMmOutstandingTxn)(XAie_DevInst *DevInst, XAie_LocType Loc,
 		       const XAie_DmaMod *DmaMod, u32 *Status);
+	AieRC (*WriteBdPrep)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
+			XAie_LocType Loc, u8 BdNum, u32 *BdWord,
+			u64 *Addr);
+	u8  BdSize;	/* Number of 32-bit words in the BD */
 };
 
 /*
