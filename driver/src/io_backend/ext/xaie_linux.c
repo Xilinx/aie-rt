@@ -1288,7 +1288,7 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 * @param	AsyncRes: Pointer to async result structure for completion
 *			tracking.
 *
-* @return	Number of SQEs submitted on success, or 0 on failure.
+* @return	Number of SQEs submitted on success(0 in this case, or < 0 on failure.
 *
 * @note		Internal only. Uses io_uring for async DMA buffer attachment.
 *
@@ -1331,7 +1331,7 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 *			tracking. On error, AsyncRes->res is set to the
 *			corresponding error code.
 *
-* @return	Number of SQEs submitted on success, or 0 on failure.
+* @return	Number of SQEs submitted on success(0 in this case), or < 0 on failure.
 *
 * @note		Internal only. Uses io_uring for async DMA buffer detachment.
 *

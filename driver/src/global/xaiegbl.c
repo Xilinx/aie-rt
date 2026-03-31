@@ -1077,7 +1077,7 @@ AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
 *			tracking. Must not be NULL. On error, AsyncRes->res
 *			is set to the corresponding error code.
 *
-* @return	Number of SQEs submitted on success, or 0 on failure.
+* @return	Number of SQEs submitted on success (0 in this case), or < 0 on failure.
 *
 *******************************************************************************/
 int XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
@@ -1168,7 +1168,7 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 *			tracking. Must not be NULL. On error, AsyncRes->res
 *			is set to the corresponding error code.
 *
-* @return	Number of SQEs submitted on success, or 0 on failure.
+* @return	Number of SQEs submitted on success (0 in this case), or < 0 on failure.
 *
 *******************************************************************************/
 int XAie_MemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
