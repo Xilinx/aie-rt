@@ -98,6 +98,7 @@ typedef struct XAie_LinuxIO {
 	u64 BaseAddr;
 	struct io_uring ring;
 	struct io_uring_params params;
+	struct io_uring_cqe **cqes;
 
 } XAie_LinuxIO;
 
@@ -213,6 +214,7 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
+	free(LinuxIOInst->cqes);
 	free(IOInst);
 
 	return XAIE_OK;
@@ -579,6 +581,12 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		RC = XAIE_ERR;
 		goto queue_exit;
 	}
+	IOInst->cqes = (struct io_uring_cqe **)calloc(ring_size, sizeof(struct io_uring_cqe *));
+	if (!IOInst->cqes) {
+		XAIE_ERROR("Failed to allocate memory for cqe pointers\n");
+		RC = XAIE_ERR;
+		goto queue_exit;
+	}
 
 	return XAIE_OK;
 
@@ -588,6 +596,126 @@ free_IOInst:
 	free(IOInst);
 	return RC;
 
+}
+
+/*****************************************************************************/
+/**
+*
+* This is the IO function to asynchronously write 32-bit data to the specified
+* register address using io_uring. The register write arguments are embedded
+* directly in the SQE command buffer.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write to.
+* @param	Value: 32-bit data to be written.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. On error, AsyncRes->res is set to the
+*			corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Internal only. Uses io_uring for async submission.
+*
+*******************************************************************************/
+static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
+					XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	struct aie_reg_args *Args;
+	struct io_uring_sqe *Sqe;
+	int Ret;
+
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (!Sqe) {
+		XAIE_ERROR("Failed to get sqe for async write\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_REG_WRITE_CMD;
+	Sqe->user_data = (u64)AsyncRes;
+	Args = (struct aie_reg_args *)Sqe->cmd;
+	*Args = (struct aie_reg_args){
+		.op = AIE_REG_WRITE,
+		.offset = RegOff,
+		.val = Value,
+		.mask = 0, /* mask must be 0 for register write */
+	};
+
+	Ret = io_uring_submit(&LinuxIOInst->ring);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to submit async write: %d\n", Ret);
+		AsyncRes->res = Ret;
+		return 0;
+	}
+	return Ret;
+}
+
+/*****************************************************************************/
+/**
+*
+* This function waits for a specified number of asynchronous operations to
+* complete using io_uring.
+*
+* @param	IOInst: IO instance pointer
+* @param	Nr: Number of completions to wait for.
+*
+* @return	XAIE_OK on success, XAIE_ERR on failure.
+*
+* @note		Internal only. Populates AsyncRes structures with completion
+*		results from the completion queue entries.
+*
+*******************************************************************************/
+static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	XAie_DevInst *DevInst = LinuxIOInst->DevInst;
+	struct io_uring_cqe **Cqe = LinuxIOInst->cqes;
+	XAie_AsyncRes *AsyncRes;
+	int Ret;
+
+	if (Nr > DevInst->ring_size) {
+		XAIE_ERROR("Requested completion wait number %u is greater than ring size %u\n",
+			   Nr, DevInst->ring_size);
+		return XAIE_ERR;
+	}
+	Ret = io_uring_wait_cqes(&LinuxIOInst->ring, Cqe, Nr, NULL, NULL);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to wait for async completion: %d\n", Ret);
+		return XAIE_ERR;
+	}
+	for (u32 i = 0; i < Nr; i++) {
+		AsyncRes = (XAie_AsyncRes *)(uintptr_t)Cqe[i]->user_data;
+		if (Cqe[i]->res < 0) {
+			XAIE_ERROR("Async operation failed: %d\n", Cqe[i]->res);
+		}
+		AsyncRes->res = Cqe[i]->res;
+		AsyncRes->res2 = Cqe[i]->big_cqe[0];
+		AsyncRes->res3 = Cqe[i]->big_cqe[1];
+		io_uring_cqe_seen(&LinuxIOInst->ring, Cqe[i]);
+	}
+
+	return Ret;
+}
+
+/*****************************************************************************/
+/**
+*
+* This function waits for a single asynchronous operation to complete using
+* io_uring.
+*
+* @param	IOInst: IO instance pointer
+*
+* @return	XAIE_OK on success, XAIE_ERR on failure.
+*
+* @note		Internal only. Wrapper around XAie_LinuxIO_AsyncWaitNr with
+*		Nr set to 1.
+*
+*******************************************************************************/
+static AieRC XAie_LinuxIO_AsyncWait(void *IOInst)
+{
+	return XAie_LinuxIO_AsyncWaitNr(IOInst, 1);
 }
 
 /*****************************************************************************/
@@ -2342,6 +2470,9 @@ const XAie_Backend LinuxBackend =
 	.Ops.Init = XAie_LinuxIO_Init,
 	.Ops.Finish = XAie_LinuxIO_Finish,
 	.Ops.Write32 = XAie_LinuxIO_Write32,
+	.Ops.Write32Async = XAie_LinuxIO_Write32_Async,
+	.Ops.AsyncWait = XAie_LinuxIO_AsyncWait,
+	.Ops.AsyncWaitNr = XAie_LinuxIO_AsyncWaitNr,
 	.Ops.Read32 = XAie_LinuxIO_Read32,
 	.Ops.MaskWrite32 = XAie_LinuxIO_MaskWrite32,
 	.Ops.MaskPoll = XAie_LinuxIO_MaskPoll,

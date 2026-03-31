@@ -139,6 +139,10 @@ typedef struct XAie_BackendOps {
 	AieRC (*Init)(XAie_DevInst *DevInst);
 	AieRC (*Finish)(void *IOInst);
 	AieRC (*Write32)(void *IOInst, u64 RegOff, u32 Value);
+	int (*Write32Async)(void *IOInst, u64 RegOff, u32 Value,
+			      XAie_AsyncRes *AsyncRes);
+	AieRC (*AsyncWait)(void *IOInst);
+	AieRC (*AsyncWaitNr)(void *IOInst, u32 Nr);
 	AieRC (*PrivilegeWrite32)(u32 StartCol, u32 NumCols,
 				  u32 Ops);
 	AieRC (*Read32)(void *IOInst,  u64 RegOff, u32 *Data);

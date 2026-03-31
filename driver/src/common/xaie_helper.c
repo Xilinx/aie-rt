@@ -1513,6 +1513,97 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 	}
 }
 
+/*****************************************************************************/
+/**
+*
+* This API waits for a specified number of asynchronous operations to complete.
+*
+* @param	DevInst: Device Instance
+* @param	Nr: Number of asynchronous operations to wait for.
+*
+* @return	XAIE_OK on success, XAIE_INVALID_DEVICE if async wait is not
+*		supported by the backend.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_AsyncWaitNr(XAie_DevInst *DevInst, u32 Nr)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (Backend->Ops.AsyncWait != NULL) {
+		return Backend->Ops.AsyncWaitNr((void*)(DevInst->IOInst), Nr);
+	} else {
+		XAIE_ERROR("Asynchronous wait operation is not supported "
+				"by the backend\n");
+		return XAIE_INVALID_DEVICE;
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API waits for first pending asynchronous operations to complete.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, XAIE_INVALID_DEVICE if async wait is not
+*		supported by the backend.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_AsyncWait(XAie_DevInst *DevInst)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (Backend->Ops.AsyncWait != NULL) {
+		return Backend->Ops.AsyncWait((void*)(DevInst->IOInst));
+	} else {
+		XAIE_ERROR("Asynchronous wait operation is not supported "
+				"by the backend\n");
+		return XAIE_INVALID_DEVICE;
+	}
+}
+
+/*****************************************************************************/
+/**
+*
+* This API asynchronously writes a 32-bit value to the specified register
+* offset. It validates the input parameters and delegates to the backend's
+* Write32Async operation.
+*
+* @param	DevInst: Device Instance
+* @param	RegOff: Register offset to write to.
+* @param	Value: 32-bit value to be written.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+int XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRes *AsyncRes)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (AsyncRes == NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+	if (Backend->Ops.Write32Async == NULL) {
+		XAIE_ERROR("Asynchronous write operation is not supported "
+				"by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	return Backend->Ops.Write32Async((void*)(DevInst->IOInst), RegOff,
+					 Value, AsyncRes);
+}
+
 AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value)
 {
 	u64 Tid;

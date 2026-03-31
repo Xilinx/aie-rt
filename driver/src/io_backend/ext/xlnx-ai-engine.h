@@ -786,4 +786,6 @@ struct aie_rsc_user_stat_array {
  */
 #define AIE_UPDATE_SHIMDMA_DMABUF_BD_ADDR_IOCTL	_IOW(AIE_IOCTL_BASE, 0x1e, \
 						     struct aie_dmabuf_bd_args)
+#define AIE_REG_WRITE_CMD		_IOW(AIE_IOCTL_BASE, 0x21, struct aie_reg_args)
+
 #endif

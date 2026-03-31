@@ -78,6 +78,12 @@ typedef struct XAie_Backend XAie_Backend;
 typedef struct XAie_TxnCmd XAie_TxnCmd;
 typedef struct XAie_ResourceManager XAie_ResourceManager;
 
+typedef struct XAie_AsyncRes {
+	int res;
+	u64 res2;
+	u64 res3;
+} XAie_AsyncRes;
+
 /*
  * This typedef captures all the properties of a AIE Device
  */

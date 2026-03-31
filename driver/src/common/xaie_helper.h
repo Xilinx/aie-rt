@@ -228,6 +228,9 @@ AieRC XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
                 XAie_LocType *Locs);
 AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
+int XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRes *AsyncRes);
+AieRC XAie_AsyncWait(XAie_DevInst *DevInst);
+AieRC XAie_AsyncWaitNr(XAie_DevInst *DevInst, u32 Nr);
 AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data);
 AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value);
 AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
