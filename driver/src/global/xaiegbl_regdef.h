@@ -666,6 +666,9 @@ struct XAie_DmaMod {
 	AieRC (*SetMultiDim) (XAie_DmaDesc *Desc, XAie_DmaTensor *Tensor);
 	AieRC (*SetBdIter) (XAie_DmaDesc *Desc, u32 StepSize, u16 Wrap,
 			u8 IterCurr);
+	AieRC (*WriteBdPrep)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
+			XAie_LocType Loc, u8 BdNum, u32 *BdWord,
+			u64 *Addr);
 	AieRC (*WriteBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,
 			XAie_LocType Loc, u8 BdNum);
 	AieRC (*ReadBd)(XAie_DevInst *DevInst, XAie_DmaDesc *Desc,

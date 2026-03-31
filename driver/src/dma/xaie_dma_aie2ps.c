@@ -156,27 +156,27 @@ static AieRC _XAie2PS_DmaMemTileCheckPaddingConfig(XAie_DmaDesc *DmaDesc)
 /*****************************************************************************/
 /**
 *
-* This API writes a Dma Descriptor which is initialized and setup by other APIs
-* into the corresponding registers and register fields in the hardware. This API
-* is specific to AIE2PS Memory Tiles only.
+* This API prepares the buffer descriptor words for an AIE2PS Memory Tile DMA BD.
 *
 * @param	DevInst: Device Instance
 * @param	DmaDesc: Initialized Dma Descriptor.
 * @param	Loc: Location of AIE Tile
 * @param	BdNum: Hardware BD number to be written to.
+* @param	BdWord: Output buffer for BD words (must hold at least
+*			XAIE2PS_MEMTILEDMA_NUM_BD_WORDS entries).
+* @param	Addr: Output pointer to store the register address to write to.
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
 * @note		Internal only. For AIE2PS Mem Tiles only.
 *
 ******************************************************************************/
-AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
-		XAie_LocType Loc, u8 BdNum)
+AieRC _XAie2PS_MemTileDmaWriteBdPrep(XAie_DevInst *DevInst,
+		XAie_DmaDesc *DmaDesc, XAie_LocType Loc, u8 BdNum,
+		u32 *BdWord, u64 *Addr)
 {
 	AieRC RC;
-	u64 Addr;
 	u64 BdBaseAddr;
-	u32 BdWord[XAIE2PS_MEMTILEDMA_NUM_BD_WORDS];
 	const XAie_DmaMod *DmaMod;
 	const XAie_DmaBdProp *BdProp;
 
@@ -305,9 +305,9 @@ AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 				BdProp->Lock->AieMlDmaLock.LckAcqEn.Lsb,
 				BdProp->Lock->AieMlDmaLock.LckAcqEn.Mask);
 
-	Addr = BdBaseAddr + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	*Addr = BdBaseAddr + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
-	return XAie_BlockWrite32(DevInst, Addr, BdWord, XAIE2PS_MEMTILEDMA_NUM_BD_WORDS);
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -315,7 +315,7 @@ AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 *
 * This API writes a Dma Descriptor which is initialized and setup by other APIs
 * into the corresponding registers and register fields in the hardware. This API
-* is specific to AIE2PS Shim Tiles only.
+* is specific to AIE2PS Memory Tiles only.
 *
 * @param	DevInst: Device Instance
 * @param	DmaDesc: Initialized Dma Descriptor.
@@ -324,16 +324,48 @@ AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 *
 * @return	XAIE_OK on success, Error code on failure.
 *
-* @note		Internal only. For AIE2PS Shim Tiles only.
+* @note		Internal only. For AIE2PS Mem Tiles only.
 *
 ******************************************************************************/
-AieRC _XAie2PS_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
+AieRC _XAie2PS_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum)
 {
 	u64 Addr;
+	u32 BdWord[XAIE2PS_MEMTILEDMA_NUM_BD_WORDS];
+	AieRC RC;
+
+	RC = _XAie2PS_MemTileDmaWriteBdPrep(DevInst, DmaDesc, Loc, BdNum,
+					     BdWord, &Addr);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+
+	return XAie_BlockWrite32(DevInst, Addr, BdWord, XAIE2PS_MEMTILEDMA_NUM_BD_WORDS);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API prepares the buffer descriptor words for an AIE2PS Shim DMA BD.
+*
+* @param	DevInst: Device Instance
+* @param	DmaDesc: Initialized Dma Descriptor.
+* @param	Loc: Location of AIE Tile
+* @param	BdNum: Hardware BD number to be written to.
+* @param	BdWord: Output buffer for BD words (must hold at least
+*			XAIE2PS_SHIMDMA_NUM_BD_WORDS entries).
+* @param	Addr: Output pointer to store the register address to write to.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only. For AIE2PS Shim Tiles only.
+*
+******************************************************************************/
+AieRC _XAie2PS_ShimDmaWriteBdPrep(XAie_DevInst *DevInst,
+		XAie_DmaDesc *DmaDesc, XAie_LocType Loc, u8 BdNum,
+		u32 *BdWord, u64 *Addr)
+{
 	u64 BdBaseAddr;
-	u32 BdWord[XAIE2PS_SHIMDMA_NUM_BD_WORDS];
-	XAie_ShimDmaBdArgs Args;
 	const XAie_DmaMod *DmaMod;
 	const XAie_DmaBdProp *BdProp;
 
@@ -439,7 +471,41 @@ AieRC _XAie2PS_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 			BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Lsb,
 			BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Mask);
 
-	Addr = BdBaseAddr + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+	*Addr = BdBaseAddr + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API writes a Dma Descriptor which is initialized and setup by other APIs
+* into the corresponding registers and register fields in the hardware. This API
+* is specific to AIE2PS Shim Tiles only.
+*
+* @param	DevInst: Device Instance
+* @param	DmaDesc: Initialized Dma Descriptor.
+* @param	Loc: Location of AIE Tile
+* @param	BdNum: Hardware BD number to be written to.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal only. For AIE2PS Shim Tiles only.
+*
+******************************************************************************/
+AieRC _XAie2PS_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
+		XAie_LocType Loc, u8 BdNum)
+{
+	u64 Addr;
+	u32 BdWord[XAIE2PS_SHIMDMA_NUM_BD_WORDS];
+	XAie_ShimDmaBdArgs Args;
+	AieRC RC;
+
+	RC = _XAie2PS_ShimDmaWriteBdPrep(DevInst, DmaDesc, Loc, BdNum,
+					  BdWord, &Addr);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
 
 	Args.NumBdWords = XAIE2PS_SHIMDMA_NUM_BD_WORDS;
 	Args.BdWords = &BdWord[0U];

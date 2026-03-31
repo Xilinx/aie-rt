@@ -33,14 +33,23 @@ void _XAieMl_TileDmaInit(XAie_DmaDesc *Desc);
 void _XAieMl_MemTileDmaInit(XAie_DmaDesc *Desc);
 AieRC _XAieMl_DmaSetLock(XAie_DmaDesc *DmaDesc, XAie_Lock Acq, XAie_Lock Rel,
 		u8 AcqEn, u8 RelEn);
+AieRC _XAieMl_MemTileDmaWriteBdPrep(XAie_DevInst *DevInst,
+		XAie_DmaDesc *DmaDesc, XAie_LocType Loc, u8 BdNum,
+		u32 *BdWord, u64 *Addr);
 AieRC _XAieMl_MemTileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
 AieRC _XAieMl_MemTileDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
+AieRC _XAieMl_TileDmaWriteBdPrep(XAie_DevInst *DevInst,
+		XAie_DmaDesc *DmaDesc, XAie_LocType Loc, u8 BdNum,
+		u32 *BdWord, u64 *Addr);
 AieRC _XAieMl_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
 AieRC _XAieMl_TileDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
+AieRC _XAieMl_ShimDmaWriteBdPrep(XAie_DevInst *DevInst,
+		XAie_DmaDesc *DmaDesc, XAie_LocType Loc, u8 BdNum,
+		u32 *BdWord, u64 *Addr);
 AieRC _XAieMl_ShimDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u8 BdNum);
 AieRC _XAieMl_ShimDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
