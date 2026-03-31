@@ -1717,6 +1717,26 @@ AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value)
 			Value);
 }
 
+int XAie_MaskWrite32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
+			  XAie_AsyncRes *AsyncRes)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (AsyncRes == NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+	if (Backend->Ops.MaskWrite32Async == NULL) {
+		XAIE_ERROR("Asynchronous mask write operation is not supported "
+				"by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	return Backend->Ops.MaskWrite32Async((void *)(DevInst->IOInst), RegOff, Mask,
+					Value, AsyncRes);
+}
+
 AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {

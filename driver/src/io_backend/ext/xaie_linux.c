@@ -953,6 +953,60 @@ static AieRC XAie_LinuxIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 /*****************************************************************************/
 /**
 *
+* This is the memory IO function to asynchronously write a masked 32-bit value
+* to a register using io_uring.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write.
+* @param	Mask: Mask to be applied to Value.
+* @param	Value: 32-bit value to be written.
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static int XAie_LinuxIO_MaskWrite32_Async(void *IOInst, u64 RegOff, u32 Mask,
+		u32 Value, XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	struct aie_reg_args *Args;
+	struct io_uring_sqe *Sqe;
+	int Ret;
+
+	AsyncRes->io_vec_inuse = 0;
+	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);
+	if (!Sqe) {
+		XAIE_ERROR("Failed to get sqe for async mask write\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_REG_WRITE_CMD;
+	Sqe->user_data = (u64)AsyncRes;
+	Args = (struct aie_reg_args *)Sqe->cmd;
+	*Args = (struct aie_reg_args){
+		.op = AIE_REG_WRITE,
+		.offset = RegOff,
+		.val = Value,
+		.mask = Mask,
+	};
+
+	Ret = io_uring_submit(&LinuxIOInst->Ring);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to submit async mask write: %d\n", Ret);
+		AsyncRes->res = Ret;
+		return 0;
+	}
+	return Ret;
+}
+
+/*****************************************************************************/
+/**
+*
 * This is the memory IO function to mask poll an address for a value.
 *
 * @param	IOInst: IO instance pointer
@@ -2912,6 +2966,18 @@ static AieRC XAie_LinuxIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 	return XAIE_ERR;
 }
 
+static int XAie_LinuxIO_MaskWrite32_Async(void *IOInst, u64 RegOff, u32 Mask,
+		u32 Value, XAie_AsyncRes *AsyncRes)
+{
+	/* no-op */
+	(void)IOInst;
+	(void)RegOff;
+	(void)Mask;
+	(void)Value;
+	(void)AsyncRes;
+	return 0;
+}
+
 static AieRC XAie_LinuxIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
@@ -3186,6 +3252,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.AsyncWaitNr = XAie_LinuxIO_AsyncWaitNr,
 	.Ops.Read32 = XAie_LinuxIO_Read32,
 	.Ops.MaskWrite32 = XAie_LinuxIO_MaskWrite32,
+	.Ops.MaskWrite32Async = XAie_LinuxIO_MaskWrite32_Async,
 	.Ops.MaskPoll = XAie_LinuxIO_MaskPoll,
 	.Ops.BlockWrite32 = XAie_LinuxIO_BlockWrite32,
 	.Ops.BlockWrite32Async = XAie_LinuxIO_BlockWrite32Async,
