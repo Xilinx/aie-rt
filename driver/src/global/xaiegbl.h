@@ -142,6 +142,7 @@ typedef struct {
 	u8 IsReady;
 	u8 IsProd;	/*Baremetal production environment*/
 	u8 EccStatus;		/* Ecc On/Off status of the partition */
+	u16 ring_size;	/* Size of the io_uring for the partition */
 	const XAie_Backend *Backend; /* Backend IO properties */
 	void *IOInst;	       /* IO Instance for the backend */
 	XAie_DevProp DevProp; /* Pointer to the device property. To be

@@ -516,6 +516,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	int Fd;
 	u32 NumTiles;
 	u32 SetTileStatus;
+	u16 ring_size = 256;
 
 	IOInst = (XAie_LinuxIO *)calloc(1, sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -535,7 +536,10 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 			       IORING_SETUP_SQPOLL;
 
 	IOInst->params.sq_thread_idle = 1;
-	ret = io_uring_queue_init_params(256, &IOInst->ring, &IOInst->params);
+	if (DevInst->ring_size)
+		ring_size = DevInst->ring_size;
+	DevInst->ring_size = ring_size;
+	ret = io_uring_queue_init_params(ring_size, &IOInst->ring, &IOInst->params);
 	if (ret) {
 		XAIE_ERROR("Uring init failed: %d\n", ret);
 		RC = XAIE_ERR;
