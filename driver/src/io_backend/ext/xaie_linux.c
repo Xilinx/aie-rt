@@ -2865,6 +2865,98 @@ int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
 	return Ret;
 }
 
+/*****************************************************************************/
+/**
+*
+* This function submits an asynchronous block write to the AIE device using
+* io_uring. The write data is copied into a registered iovec buffer and
+* submitted via the AIE_REG_BLOCKWRITE_CMD ioctl. PM and DM memory regions
+* are not supported and will return an error.
+*
+* @param	IOInst: IO instance pointer
+* @param	RegOff: Register offset to write to.
+* @param	Data: Pointer to data buffer containing u32 words to write.
+* @param	Size: Number of u32 words to write.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. On error, AsyncRes->res is set to the
+*			corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Internal only. Does not support PM/DM memory writes.
+*
+*******************************************************************************/
+static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
+					  const u32 *Data, u32 Size,
+					  XAie_AsyncRes *AsyncRes)
+{
+	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
+	struct aie_reg_args *Args;
+	struct io_uring_sqe *Sqe;
+	u32 *VirtAddr;
+	u32 BufIdx;
+	int Ret;
+
+	/* PM and DM memory regions are not supported for async block write */
+	VirtAddr = _XAie_GetVirtAddrFromOffset(LinuxIOInst, RegOff, Size);
+	if (VirtAddr != NULL) {
+		XAIE_ERROR("Async block write not supported for PM/DM memory\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+	if (VirtAddr == (u32 *)XAIE_INVALID_TILE) {
+		XAIE_ERROR("Invalid tile for async block write\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+
+	if (_XAie_LinuxIO_IoVecIsFull(LinuxIOInst)) {
+		XAIE_ERROR("io_uring iovec array is full, cannot submit async block write\n");
+		AsyncRes->res = -ENOMEM;
+		return 0;
+	}
+
+	if (Size * sizeof(u32) > (size_t)getpagesize()) {
+		XAIE_ERROR("Block write size exceeds iovec buffer size\n");
+		AsyncRes->res = -EINVAL;
+		return 0;
+	}
+
+	BufIdx = _XAie_LinuxIO_IoVecIncHead(LinuxIOInst);
+	memcpy(LinuxIOInst->IoVecs[BufIdx].iov_base, Data, Size * sizeof(u32));
+	AsyncRes->io_vec_inuse = 1;
+
+	Sqe = io_uring_get_sqe(&LinuxIOInst->ring);
+	if (Sqe == NULL) {
+		XAIE_ERROR("Failed to get sqe for async block write\n");
+		AsyncRes->res = -ENOMEM;
+		_XAie_LinuxIO_IoVecDecHead(LinuxIOInst);
+		return 0;
+	}
+	Sqe->opcode = IORING_OP_URING_CMD;
+	Sqe->flags |= IOSQE_FIXED_FILE;
+	Sqe->cmd_op = AIE_REG_BLOCKWRITE_CMD;
+	Sqe->user_data = (u64)AsyncRes;
+	Sqe->buf_index = BufIdx;
+	Args = (struct aie_reg_args *)Sqe->cmd;
+	*Args = (struct aie_reg_args){
+		.op = AIE_REG_BLOCKWRITE,
+		.offset = RegOff,
+		.dataptr = (u64)LinuxIOInst->IoVecs[BufIdx].iov_base,
+		.len = Size,
+	};
+
+	Ret = io_uring_submit(&LinuxIOInst->ring);
+	if (Ret < 0) {
+		XAIE_ERROR("Failed to submit async block write: %d\n", Ret);
+		AsyncRes->res = Ret;
+		_XAie_LinuxIO_IoVecDecHead(LinuxIOInst);
+		return 0;
+	}
+
+	return Ret;
+}
+
 const XAie_Backend LinuxBackend =
 {
 	.Type = XAIE_IO_BACKEND_LINUX,
@@ -2878,6 +2970,7 @@ const XAie_Backend LinuxBackend =
 	.Ops.MaskWrite32 = XAie_LinuxIO_MaskWrite32,
 	.Ops.MaskPoll = XAie_LinuxIO_MaskPoll,
 	.Ops.BlockWrite32 = XAie_LinuxIO_BlockWrite32,
+	.Ops.BlockWrite32Async = XAie_LinuxIO_BlockWrite32Async,
 	.Ops.BlockWrite64BytesAsync = XAie_LinuxIO_Write64Bytes_Async,
 	.Ops.BlockSet32 = XAie_LinuxIO_BlockSet32,
 	.Ops.CmdWrite = XAie_LinuxIO_CmdWrite,

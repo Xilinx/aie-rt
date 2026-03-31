@@ -1810,6 +1810,46 @@ int XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 						   Data, Size, AsyncRes);
 }
 
+/*****************************************************************************/
+/**
+*
+* This function performs an asynchronous 32-bit block write to the AIE device.
+* It validates the input parameters and delegates to the backend's
+* BlockWrite32Async operation. PM and DM memory writes are not supported.
+*
+* @param	DevInst: Device Instance
+* @param	RegOff: Register offset to write to.
+* @param	Data: Pointer to data buffer containing u32 words to write.
+* @param	Size: Number of u32 words to write.
+* @param	AsyncRes: Pointer to async result structure for completion
+*			tracking. Must not be NULL. On error, AsyncRes->res
+*			is set to the corresponding error code.
+*
+* @return	Number of SQEs submitted on success, or 0 on failure.
+*
+* @note		Does not support PM/DM memory writes.
+*
+******************************************************************************/
+int XAie_BlockWrite32Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
+			   u32 Size, XAie_AsyncRes *AsyncRes)
+{
+	const XAie_Backend *Backend = DevInst->Backend;
+
+	if (AsyncRes == NULL) {
+		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
+		return 0;
+	}
+	if (Backend->Ops.BlockWrite32Async == NULL) {
+		XAIE_ERROR("Asynchronous block write32 operation is not "
+				"supported by the backend\n");
+		AsyncRes->res = XAIE_INVALID_DEVICE;
+		return 0;
+	}
+
+	return Backend->Ops.BlockWrite32Async((void *)(DevInst->IOInst), RegOff,
+					      Data, Size, AsyncRes);
+}
+
 AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 Size)
 {
 	AieRC RC;

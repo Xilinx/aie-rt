@@ -151,6 +151,8 @@ typedef struct XAie_BackendOps {
 	AieRC (*MaskPoll)(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 			u32 TimeOutUs);
 	AieRC (*BlockWrite32)(void *IOInst, u64 RegOff, const u32 *Data, u32 Size);
+	int (*BlockWrite32Async)(void *IOInst, u64 RegOff, const u32 *Data,
+				u32 Size, XAie_AsyncRes *AsyncRes);
 	int (*BlockWrite64BytesAsync)(void *IOInst, u64 RegOff, const u32 *Data,
 					u32 Size, XAie_AsyncRes *AsyncRes);
 	AieRC (*BlockSet32)(void *IOInst, u64 RegOff, u32 Data, u32 Size);
