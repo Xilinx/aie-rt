@@ -10,7 +10,7 @@ CC ?= gcc
 AR ?= ar
 CXX ?= g++
 CP = cp
-LIBSOURCES = $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)
+LIBSOURCES = $(filter-out ./liburing/%, $(wildcard ./*/*.c) $(wildcard ./*/*/*.c))
 CFLAGS += -Wall -Wextra --std=c11
 EXTRA_CFLAGS += -D_POSIX_C_SOURCE=200809 -D_DEFAULT_SOURCE
 DOCS_DIR = ../tmp
@@ -18,14 +18,14 @@ DOXYGEN_CONFIG_FILE = ../docs/aie_driver_docs_config.dox
 
 OUTS = $(LIBSOURCES:.c=.o)
 INCLUDEFILES = ./*/xaie_clock.h ./*/xaie_reset.h ./*/xaie_core.h ./*/xaie_dma.h ./*/xaie_elfloader.h ./*/xaie_events.h ./*/xaie_events_aie.h ./*/xaie_events_aieml.h ./*/xaie_interrupt.h ./*/xaie_lite.h ./*/xaie_lite_util.h ./*/xaie_locks.h ./*/xaie_mem.h ./*/xaie_perfcnt.h ./*/xaie_plif.h ./*/xaie_ss.h ./*/xaie_timer.h ./*/xaie_trace.h ./*/xaie_util_events.h ./*/xaiegbl.h ./*/xaiegbl_defs.h ./*/xaiegbl_regdef.h ./*/xaie_io.h ./*/xaie_feature_config.h ./*/xaie_helper.h ./*/xaie_lite_hwcfg.h ./*/xaiegbl_params.h ./*/*/xlnx-ai-engine.h ./*/xaie_txn.h ./*/xaie_routing.h
-INTERNALFILES = ./*/*.h ./*/*/*.h
+INTERNALFILES = $(filter-out ./liburing/%, $(wildcard ./*/*.h ./*/*/*.h))
 INCLUDEDIR = ../include
 INTERNALDIR = ../internal
 NAME := xaiengine
 MAJOR = 3
 MINOR = 9
 VERSION = $(MAJOR).$(MINOR)
-LIBURING_DIR ?= ../../liburing
+LIBURING_DIR ?= ./liburing
 LIBURING_INCLUDE ?= ${LIBURING_DIR}/src/include
 LIBURING_A ?= ${LIBURING_DIR}/src/liburing.a
 

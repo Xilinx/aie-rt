@@ -26,10 +26,10 @@ endif
 XAIE_DIR = .
 OUTS = *.o
 OBJECTS =	$(addsuffix .o, $(basename $(wildcard ./*/*.c) $(wildcard ./*/*/*.c)))
-XAIE_SRCS := $(filter-out $(XAIE_SRCS_EXCLUDE), $(wildcard ./*/*.c) $(wildcard ./*/*/*.c))
+XAIE_SRCS := $(filter-out $(XAIE_SRCS_EXCLUDE) ./liburing/%, $(wildcard ./*/*.c) $(wildcard ./*/*/*.c))
 XAIE_OBJS = $(addprefix $(XAIE_DIR)/, $(XAIE_SRCS:%.c=%.o))
 
-INCLUDEFILES= $(wildcard ./*/*.h) $(wildcard ./*/*/*.h)
+INCLUDEFILES= $(filter-out ./liburing/%, $(wildcard ./*/*.h) $(wildcard ./*/*/*.h))
 
 libs: xaie
 
