@@ -2665,56 +2665,6 @@ AieRC XAie_DmaTlastDisable(XAie_DmaDesc *DmaDesc)
 
 /*****************************************************************************/
 /**
-*
-* This API configure the pad value for DMA MM2S Channel.
-*
-* @param	DevInst: Device Instance.
-* @param	Loc: Location of AIE Tile.
-* @param	ChNum: DMA MM2S Channel number.
-* @param	PadValue: 32-bit pad value.
-*
-* @return	XAIE_OK on success, Error code on failure.
-*
-******************************************************************************/
-AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
-		u32 PadValue)
-{
-	const XAie_DmaMod *DmaMod;
-	u8 TileType;
-	u64 Addr;
-
-	if((DevInst == XAIE_NULL) ||
-			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
-		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
-		XAIE_ERROR("Invalid Tile Type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
-		return XAIE_INVALID_TILE;
-	}
-
-	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-	if(DmaMod->PadValueBase == XAIE_FEATURE_UNAVAILABLE) {
-		XAIE_ERROR("Cannot configure pad value for this"
-				" architecture\n");
-		return XAIE_FEATURE_NOT_SUPPORTED;
-	}
-
-	if(ChNum > DmaMod->NumChannels) {
-		XAIE_ERROR("Invalid Channel number. ChNum:%u\n", ChNum);
-		return XAIE_INVALID_CHANNEL_NUM;
-	}
-
-	Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->PadValueBase + ChNum * 0x4U;
-
-	return XAie_Write32(DevInst, Addr, PadValue);
-}
-
-/*****************************************************************************/
-/**
 * This API updates the address of the buffer descriptor in the dma module.
 *
 * @param	MemInst: Memory Instance
@@ -2830,6 +2780,125 @@ int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Of
 		return 0;
 	}
 	return DevInst->Backend->Ops.UpdateShimDmaBdAddrOffAsync(MemInst, Loc, Offset, BdNum, AsyncRes);
+}
+
+/*****************************************************************************/
+/**
+*
+* This is a helper function that validates inputs and prepares the register
+* address for setting DMA pad value.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+* @param	ChNum: DMA MM2S Channel number.
+* @param	Addr: Pointer to return the register address
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		Internal helper function.
+*
+******************************************************************************/
+static AieRC _XAie_DmaSetPadValuePrepare(XAie_DevInst *DevInst,
+		XAie_LocType Loc, u8 ChNum, u64 *Addr)
+{
+	const XAie_DmaMod *DmaMod;
+	u8 TileType;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+		XAIE_ERROR("Invalid Tile Type\n");
+		return XAIE_INVALID_TILE;
+	}
+
+	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+	if(DmaMod->PadValueBase == XAIE_FEATURE_UNAVAILABLE) {
+		XAIE_ERROR("Cannot configure pad value for this"
+				" architecture\n");
+		return XAIE_FEATURE_NOT_SUPPORTED;
+	}
+
+	if(ChNum > DmaMod->NumChannels) {
+		XAIE_ERROR("Invalid Channel number\n");
+		return XAIE_INVALID_CHANNEL_NUM;
+	}
+
+	*Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
+		DmaMod->PadValueBase + ChNum * 0x4U;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API configure the pad value for DMA MM2S Channel.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+* @param	ChNum: DMA MM2S Channel number.
+* @param	PadValue: 32-bit pad value.
+*
+* @return	XAIE_OK on success, Error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		u32 PadValue)
+{
+	AieRC RC;
+	u64 Addr;
+
+	RC = _XAie_DmaSetPadValuePrepare(DevInst, Loc, ChNum, &Addr);
+	if(RC != XAIE_OK) {
+		return RC;
+	}
+
+	return XAie_Write32(DevInst, Addr, PadValue);
+}
+
+/*****************************************************************************/
+/**
+*
+* This API asynchronously configures the pad value for DMA MM2S Channel using
+* io_uring.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE Tile.
+* @param	ChNum: DMA MM2S Channel number.
+* @param	PadValue: 32-bit pad value.
+* @param	AsyncRes: Pointer to async result structure. On error, AsyncRes->res
+*			is set to the error code and 0 is returned. Cannot be NULL.
+*
+* @return	0 on error, positive SQE count on success.
+*
+* @note		None.
+*
+******************************************************************************/
+int XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		u32 PadValue, XAie_AsyncRes *AsyncRes)
+{
+	AieRC RC;
+	u64 Addr;
+
+	if (AsyncRes == XAIE_NULL) {
+		XAIE_ERROR("Invalid AsyncRes pointer\n");
+		return 0;
+	}
+
+	RC = _XAie_DmaSetPadValuePrepare(DevInst, Loc, ChNum, &Addr);
+	if(RC != XAIE_OK) {
+		AsyncRes->res = RC;
+		return 0;
+	}
+
+	return XAie_Write32Async(DevInst, Addr, PadValue, AsyncRes);
 }
 
 #endif /* XAIE_FEATURE_DMA_ENABLE */

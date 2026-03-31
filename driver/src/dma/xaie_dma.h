@@ -183,6 +183,8 @@ AieRC XAie_DmaUpdateBdAddr_16(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 		u16 BdNum);
 AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		u32 PadValue);
+int XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+		u32 PadValue, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 *Status);
 AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
