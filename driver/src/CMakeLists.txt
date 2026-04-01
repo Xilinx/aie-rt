@@ -22,9 +22,11 @@ add_library(aienginev2 STATIC ${SOURCES})
 
 set_target_properties(aienginev2 PROPERTIES LINKER_LANGUAGE C)
 set(COMP_FLAG -Wall -Wextra -D__AIEBAREMETAL__)
-if(("${CMAKE_MACHINE}" STREQUAL "Versal") OR
-	("${CMAKE_MACHINE}" STREQUAL "VersalNet"))
-		list(APPEND COMP_FLAG -DXAIE_PROD)
+option(XAIE_ENABLE_PROD "Enable XAIE_PROD compile define" OFF)
+if(XAIE_ENABLE_PROD AND
+   (("${CMAKE_MACHINE}" STREQUAL "Versal") OR
+    ("${CMAKE_MACHINE}" STREQUAL "VersalNet")))
+        list(APPEND COMP_FLAG -DXAIE_PROD)
 endif()
 target_compile_options(aienginev2 PRIVATE ${COMP_FLAG})
 
