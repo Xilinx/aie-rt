@@ -247,6 +247,8 @@ static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 		Payload[1] = (u32)(OpsBufAddr >> 32U);
 		Payload[2] = (u32)(OpsBufAddr & 0xFFFFFFFFU);
 
+		Xil_DCacheFlushRange((INTPTR)Payload, (INTPTR)sizeof(Payload));
+
 		Ret = XPm_DevIoctl2(PM_DEV_NODE_ID, IOCTL_AIE2PS_OPS, Payload,
 				   PAYLOAD_SIZE, &Response, RESPONSE_SIZE);
 	}
