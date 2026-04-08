@@ -64,7 +64,7 @@ cd infer-source/driver/src || {
 }
 
 echo "Analyzing source code with Infer..."
-$INFER_BIN -- make -f Makefile.Linux > ../../../infer_source.txt 2>&1
+CC=gcc CXX=g++ $INFER_BIN -- make -f Makefile.Linux > ../../../infer_source.txt 2>&1
 
 cd ../../..
 
@@ -92,7 +92,7 @@ cd driver/src || {
 }
 
 echo "Analyzing destination code with Infer..."
-$INFER_BIN -- make -f Makefile.Linux > ../../../infer_dest.txt 2>&1
+CC=gcc CXX=g++ $INFER_BIN -- make -f Makefile.Linux > ../../../infer_dest.txt 2>&1
 
 cd ../../..
 
