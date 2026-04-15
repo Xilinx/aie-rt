@@ -1327,9 +1327,13 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 	int Ret;
 
 	if ((MemInst == NULL) ||
-	    (MemInst->BackendHandle == NULL ||
-	    (MemInst->DevInst == NULL))) {
+	    (MemInst->DevInst == NULL)) {
 		XAIE_ERROR("Invalid memory instance or backend handle for attach\n");
+		return XAIE_ERR;
+	}
+	MemInst->BackendHandle = malloc(sizeof(XAie_LinuxMem));
+	if (MemInst->BackendHandle == NULL) {
+		XAIE_ERROR("Failed to allocate memory for LinuxMemInst\n");
 		return XAIE_ERR;
 	}
 
@@ -1341,6 +1345,8 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to attach dmabuf fd %d, %d: %s\n",
 			(int)MemHandle, errno, strerror(errno));
+		free(MemInst->BackendHandle);
+		MemInst->BackendHandle = NULL;
 		return XAIE_ERR;
 	}
 
@@ -1398,6 +1404,9 @@ static AieRC XAie_LinuxMemDetach(XAie_MemInst *MemInst)
 			*((int *)MemInst->BackendHandle), errno, strerror(errno));
 		return XAIE_ERR;
 	}
+	free(MemInst->BackendHandle);
+	MemInst->BackendHandle = NULL;
+
 	return XAIE_OK;
 }
 
@@ -2492,12 +2501,18 @@ static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
 	if(MemInst == NULL) {
 		return NULL;
 	}
+	LinuxMemInst = (XAie_LinuxMem *) malloc(sizeof(XAie_LinuxMem));
+	if (LinuxMemInst == NULL) {
+		free(MemInst);
+		return NULL;
+	}
 
 	Fd = ioctl(LinuxIOInst->PartitionFd, AIE_DMA_MEM_ALLOCATE_IOCTL,
 		    &Size);
 	if(Fd < 0) {
 		XAIE_ERROR("Memory Allocation Failed");
 		free(MemInst);
+		free(LinuxMemInst);
 		return NULL;
 	}
 
@@ -2510,13 +2525,13 @@ static XAie_MemInst* XAie_LinuxMemAllocate(XAie_DevInst* DevInst, u64 Size,
 	if(Buf == MAP_FAILED) {
 		XAIE_ERROR("Memory Mapping Failed!: %d\n", errno);
 		free(MemInst);
+		free(LinuxMemInst);
 		return NULL;
 	}
 
 	MemInst->VAddr = Buf;
 	MemInst->DevAddr = 0x0;
 
-	LinuxMemInst = (XAie_LinuxMem *) malloc(sizeof(XAie_LinuxMem));
 	LinuxMemInst->BufferFd = Fd;
 	MemInst->BackendHandle = (void *) LinuxMemInst;
 
