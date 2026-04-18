@@ -26,6 +26,7 @@
 
 #ifdef __AIEZEPHYR__
 #include <zephyr/kernel.h>
+#include <zephyr/cache.h>
 
 #endif
 
@@ -447,10 +448,9 @@ static AieRC XAie_ZephyrMemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
 *******************************************************************************/
 static AieRC XAie_ZephyrMemSyncForCPU(XAie_MemInst *MemInst)
 {
-	/*
-	Xil_DCacheInvalidateRange((intptr_t)MemInst->VAddr,
-			(intptr_t)MemInst->Size);
-	*/
+#ifdef CONFIG_DCACHE
+	sys_cache_data_invd_range((void *)(uintptr_t)MemInst->VAddr, (size_t)MemInst->Size);
+#endif
 	return XAIE_OK;
 }
 
@@ -458,9 +458,9 @@ static AieRC XAie_ZephyrMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
 					      uint64_t Size)
 {
 	(void)DevInst;
-	/*
-	Xil_DCacheInvalidateRange((intptr_t)VAddr, (intptr_t)Size);
-	*/
+#ifdef CONFIG_DCACHE
+	sys_cache_data_flush_range((void *)(uintptr_t)VAddr, (size_t)Size);
+#endif
 	return XAIE_OK;
 }
 
