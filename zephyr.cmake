@@ -15,8 +15,6 @@ function(add_aie_rt_library TARGET_NAME)
     ${AIE_RT_SRC_DIR}/driver/src/core/xaie_uc.c
 
     ${AIE_RT_SRC_DIR}/driver/src/device/xaie_device_aie.c
-    ${AIE_RT_SRC_DIR}/driver/src/device/xaie_device_aie2ipu.c
-    ${AIE_RT_SRC_DIR}/driver/src/device/xaie_device_aie2p.c
     ${AIE_RT_SRC_DIR}/driver/src/device/xaie_device_aie2ps.c
     ${AIE_RT_SRC_DIR}/driver/src/device/xaie_device_aieml.c
 
@@ -27,15 +25,12 @@ function(add_aie_rt_library TARGET_NAME)
 
     ${AIE_RT_SRC_DIR}/driver/src/events/xaie_events.c
 
-    ${AIE_RT_SRC_DIR}/driver/src/global/xaie2ipugbl_reginit.c
-    ${AIE_RT_SRC_DIR}/driver/src/global/xaie2pgbl_reginit.c
     ${AIE_RT_SRC_DIR}/driver/src/global/xaie2psgbl_reginit.c
     ${AIE_RT_SRC_DIR}/driver/src/global/xaiegbl.c
     ${AIE_RT_SRC_DIR}/driver/src/global/xaiegbl_reginit.c
     ${AIE_RT_SRC_DIR}/driver/src/global/xaiemlgbl_reginit.c
 
     ${AIE_RT_SRC_DIR}/driver/src/interrupt/xaie_interrupt_aie.c
-    ${AIE_RT_SRC_DIR}/driver/src/interrupt/xaie_interrupt_aie2ipu.c
     ${AIE_RT_SRC_DIR}/driver/src/interrupt/xaie_interrupt_aie2ps.c
     ${AIE_RT_SRC_DIR}/driver/src/interrupt/xaie_interrupt_aieml.c
     ${AIE_RT_SRC_DIR}/driver/src/interrupt/xaie_interrupt_backtrack.c
@@ -48,7 +43,6 @@ function(add_aie_rt_library TARGET_NAME)
     ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_controlcode.c
     ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_debug.c
     ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_io_common.c
-    ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_ipu.c
     ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_linux.c
     ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_metal.c
     ${AIE_RT_SRC_DIR}/driver/src/io_backend/ext/xaie_sim.c
