@@ -242,6 +242,7 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 		close(LinuxIOInst->UcDataMem.Fd);
 	}
 
+	io_uring_unregister_files(&LinuxIOInst->Ring);
 	io_uring_unregister_buffers(&LinuxIOInst->Ring);
 	for (u32 i = 0; i < LinuxIOInst->IoVecsCount; i++) {
 		if (LinuxIOInst->IoVecs[i].iov_base != NULL) {
