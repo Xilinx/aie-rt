@@ -99,7 +99,6 @@ typedef struct XAie_LinuxIO {
 	u64 BaseAddr;
 	struct io_uring Ring;
 	struct io_uring_params Params;
-	struct io_uring_cqe **Cqes;
 	struct iovec *IoVecs;
 	u32 IoVecsCount;
 	u32 IoVecsHead;
@@ -255,7 +254,6 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 	close(LinuxIOInst->PartitionFd);
 	close(LinuxIOInst->DeviceFd);
 
-	free(LinuxIOInst->Cqes);
 	free(IOInst);
 
 	return XAIE_OK;
@@ -623,18 +621,12 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		RC = XAIE_ERR;
 		goto queue_exit;
 	}
-	IOInst->Cqes = (struct io_uring_cqe **)calloc(RingSize, sizeof(struct io_uring_cqe *));
-	if (!IOInst->Cqes) {
-		XAIE_ERROR("Failed to allocate memory for cqe pointers\n");
-		RC = XAIE_ERR;
-		goto queue_exit;
-	}
 	IOInst->IoVecsCount = AIE_IO_URING_BUFFER_ENTRIES;
 	IOInst->IoVecs = (struct iovec *)calloc(IOInst->IoVecsCount, sizeof(struct iovec));
 	if (IOInst->IoVecs == NULL) {
 		XAIE_ERROR("Failed to allocate memory for iovec structures\n");
 		RC = XAIE_ERR;
-		goto free_cqes;
+		goto queue_exit;
 	}
 	for (u32 i = 0; i < IOInst->IoVecsCount; i++) {
 		IOInst->IoVecs[i].iov_base = mmap(NULL, PgSize, PROT_READ | PROT_WRITE,
@@ -664,8 +656,6 @@ free_iovecs:
 			munmap(IOInst->IoVecs[i].iov_base, PgSize);
 		}
 	}
-free_cqes:
-	free(IOInst->Cqes);
 queue_exit:
 	io_uring_queue_exit(&IOInst->Ring);
 free_IOInst:
@@ -748,9 +738,10 @@ static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
 {
 	XAie_LinuxIO *LinuxIOInst = (XAie_LinuxIO *)IOInst;
 	XAie_DevInst *DevInst = LinuxIOInst->DevInst;
-	struct io_uring_cqe **Cqe = LinuxIOInst->Cqes;
+	struct io_uring_cqe *Cqe;
 	XAie_AsyncRes *AsyncRes;
 	int Ret;
+	int head;
 
 	if (Nr > DevInst->RingSize) {
 		XAIE_ERROR("Requested completion wait number %u is greater than ring size %u\n",
@@ -760,23 +751,24 @@ static AieRC XAie_LinuxIO_AsyncWaitNr(void *IOInst, u32 Nr)
 	if (Nr == 0) {
 		return XAIE_OK;
 	}
-	Ret = io_uring_wait_cqes(&LinuxIOInst->Ring, Cqe, Nr, NULL, NULL);
+	Ret = io_uring_wait_cqes(&LinuxIOInst->Ring, &Cqe, Nr, NULL, NULL);
 	if (Ret < 0) {
 		XAIE_ERROR("Failed to wait for async completion: %d\n", Ret);
 		return XAIE_ERR;
 	}
-	for (u32 i = 0; i < Nr; i++) {
-		AsyncRes = (XAie_AsyncRes *)(uintptr_t)Cqe[i]->user_data;
-		if (Cqe[i]->res < 0) {
-			XAIE_ERROR("Async operation failed: %d\n", Cqe[i]->res);
+	io_uring_for_each_cqe(&LinuxIOInst->Ring, head, Cqe) {
+		AsyncRes = (XAie_AsyncRes *)(uintptr_t)Cqe->user_data;
+		if (Cqe->res < 0) {
+			XAIE_ERROR("Async operation failed: %d\n", Cqe->res);
 		}
-		AsyncRes->res = Cqe[i]->res;
-		AsyncRes->res2 = Cqe[i]->big_cqe[0];
-		AsyncRes->res3 = Cqe[i]->big_cqe[1];
+		AsyncRes->res = Cqe->res;
+		AsyncRes->res2 = Cqe->big_cqe[0];
+		AsyncRes->res3 = Cqe->big_cqe[1];
 		if (AsyncRes->io_vec_inuse == 1) {
 			_XAie_LinuxIO_IoVecIncTail(LinuxIOInst);
 		}
-		io_uring_cqe_seen(&LinuxIOInst->Ring, Cqe[i]);
+		io_uring_cqe_seen(&LinuxIOInst->Ring, Cqe);
+
 	}
 
 	return Ret;
