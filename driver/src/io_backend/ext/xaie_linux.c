@@ -716,7 +716,7 @@ static int XAie_LinuxIO_Write32_Async(void *IOInst, u64 RegOff, u32 Value,
 		AsyncRes->res = Ret;
 		return 0;
 	}
-	return Ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -994,7 +994,7 @@ static int XAie_LinuxIO_MaskWrite32_Async(void *IOInst, u64 RegOff, u32 Mask,
 		AsyncRes->res = Ret;
 		return 0;
 	}
-	return Ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -2176,7 +2176,7 @@ static int XAie_LinuxIO_PartitionInitAsync(void *IOInst, XAie_PartInitOpts *Opts
 		return 0;
 	}
 
-	return ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -2222,7 +2222,7 @@ static int XAie_LinuxIO_TeardownPartAsync(void *IOInst,
 		return 0;
 	}
 
-	return ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -2269,7 +2269,7 @@ static int XAie_LinuxIO_PartClearContextAsync(void *IOInst,
 		return 0;
 	}
 
-	return ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -2656,7 +2656,7 @@ int XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
 		AsyncRes->res = Ret;
 		return 0;
 	}
-	return Ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -2748,7 +2748,7 @@ static int XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
 		return 0;
 	}
 
-	return Ret;
+	return 1;
 }
 
 /*****************************************************************************/
@@ -2821,7 +2821,7 @@ static int XAie_LinuxIO_BlockSet32Async(void *IOInst, u64 RegOff, u32 Data,
 		return 0;
 	}
 
-	return Ret;
+	return 1;
 }
 
 static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
@@ -2876,7 +2876,7 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 			return 0;
 		}
 
-		return ret;
+		return 1;
 	} else {
 		struct aie_block_write64 *Args;
 
@@ -2905,7 +2905,7 @@ static int XAie_LinuxIO_WriteBdAsync(void *IOInst, XAie_DmaDesc *DmaDesc,
 			AsyncRes->res = ret;
 			return 0;
 		}
-		return ret;
+		return 1;
 	}
 }
 
@@ -2950,7 +2950,7 @@ static int XAie_LinuxIO_UpdateShimDmaBdAddrOffAsync(XAie_MemInst *MemInst, XAie_
 		return 0;
 	}
 
-	return ret;
+	return 1;
 }
 
 #else /* __AIELINUX__ */
