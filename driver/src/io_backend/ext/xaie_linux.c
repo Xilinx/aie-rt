@@ -559,7 +559,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	int Fd;
 	u32 NumTiles;
 	u32 SetTileStatus;
-	u16 RingSize = 256;
+	u16 RingSize = 1024;
 	size_t PgSize = getpagesize();
 
 	IOInst = (XAie_LinuxIO *)calloc(1, sizeof(*IOInst));
