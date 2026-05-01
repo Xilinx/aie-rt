@@ -1365,6 +1365,7 @@ static AieRC XAie_LinuxMemAttach(XAie_MemInst *MemInst, u64 MemHandle)
 static int XAie_LinuxMemAttachAsync(XAie_MemInst *MemInst, u64 MemHandle,
 				    XAie_AsyncRes *AsyncRes)
 {
+	(void)MemInst;
 	AsyncRes->res = AsyncRes->res2 = AsyncRes->res3 = MemHandle;
 
 	return 0;

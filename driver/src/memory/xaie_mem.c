@@ -514,17 +514,17 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Check for any size overflow */
-	if((u64)Addr + Size > MemMod->Size) {
+	if((u64)Addr + Size > MemSize) {
 		XAIE_ERROR("Size of read block overflows tile data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
-	DmAddrRoundDown = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
+	DmAddrRoundDown = (u64)(MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
 			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
-	DmAddrRoundUp = (u64)(MemMod->MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
+	DmAddrRoundUp = (u64)(MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
 				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* First unaligned byte read into destination block */
