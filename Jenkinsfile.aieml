@@ -12,8 +12,6 @@ pipeline {
         GITHUB_PR_TARGET_BRANCH = "${env.CHANGE_TARGET ?: 'main'}"
         GITHUB_PR_TRIGGER_SENDER_AUTHOR = "${env.CHANGE_AUTHOR ?: ''}"
 
-        // Token value for the script
-        GITHUB_TOKEN_AUTH_VAL = "${env.GITHUB_TOKEN_AUTH}"
     }
 
     stages {
@@ -187,16 +185,21 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed.'
-            // Clean workspace to free up disk space
+            script {
+                def status  = currentBuild.result ?: 'FAILURE'
+                def passed  = (status == 'SUCCESS')
+                def aborted = (status == 'ABORTED')
+                def icon    = passed ? '✓' : (aborted ? '⊘' : '✗')
+                echo "${icon} AIEML Tests ${status}"
+                updateGitHubStatus(
+                    passed ? 'SUCCESS' : 'FAILURE',
+                    "AIEML Tests ${passed ? 'Passed' : (aborted ? 'Aborted' : 'Failed')}",
+                    'AIE_Driver_AIEML_Tests_From_PR'
+                )
+                sendNotification(status, 'AIEML Tests', 'aieml.status')
+            }
+            // Clean workspace AFTER sending notifications
             cleanWs(deleteDirs: true, notFailBuild: true)
-        }
-        success {
-            echo '✓ AIEML Tests Passed'
-            updateGitHubStatus('SUCCESS', 'AIEML Tests Passed', 'AIE_Driver_AIEML_Tests_From_PR')
-        }
-        failure {
-            echo '✗ AIEML Tests Failed'
-            updateGitHubStatus('FAILURE', 'AIEML Tests Failed', 'AIE_Driver_AIEML_Tests_From_PR')
         }
     }
 }
@@ -228,5 +231,166 @@ def updateGitHubStatus(String state, String message, String context = 'AIE_Drive
     } catch (Exception e) {
         echo "Warning: Failed to update GitHub status: ${e.message}"
         echo "This may require 'Commit statuses: Read and write' permission for the GitHub App"
+    }
+}
+
+/**
+ * Get the PR author's email using their GitHub username
+ * @return The author's email address derived from their username
+ */
+def getAuthorEmail() {
+    def username = env.CHANGE_AUTHOR
+    if (!username) {
+        echo "Warning: CHANGE_AUTHOR not set, cannot determine email"
+        return null
+    }
+    echo "Using email for GitHub user: ${username}"
+    return "${username}@amd.com"
+}
+
+/**
+ * Send an individual email for this job only.
+ * Used as fallback when not all 4 jobs have completed yet.
+ */
+def sendIndividualEmail(String buildStatus, String jobLabel, String authorEmail) {
+    def icon = (buildStatus == 'SUCCESS') ? '✓' : ((buildStatus == 'ABORTED') ? '⊘' : '✗')
+    mail(
+        to: authorEmail,
+        subject: "${icon} ${jobLabel} ${buildStatus} - PR #${GITHUB_PR_NUMBER}",
+        body: """${jobLabel} ${buildStatus}
+
+PR #${GITHUB_PR_NUMBER}: ${GITHUB_PR_SOURCE_BRANCH} -> ${GITHUB_PR_TARGET_BRANCH}
+PR URL: ${GITHUB_PR_URL}
+Author: ${GITHUB_PR_TRIGGER_SENDER_AUTHOR}
+
+Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+Status: ${buildStatus}
+Build URL: ${env.BUILD_URL}
+
+Note: A combined summary email will be sent once all 4 CI jobs complete.
+This is an automated notification from Jenkins CI/CD pipeline.
+"""
+    )
+    echo "Individual email sent to: ${authorEmail} (combined email pending)"
+}
+
+/**
+ * Write this job's result to a shared directory, then send a combined summary email
+ * once all 4 CI jobs have completed. Falls back to an individual email if some jobs
+ * have not yet written their results.
+ *
+ * @param buildStatus    SUCCESS, FAILURE, or ABORTED
+ * @param jobLabel       Human-readable label, e.g. "AIEML Tests"
+ * @param statusFileName Unique filename for this job, e.g. "aieml.status"
+ */
+def sendNotification(String buildStatus, String jobLabel, String statusFileName) {
+    try {
+        def authorEmail = getAuthorEmail()
+        if (!authorEmail) {
+            echo "Warning: Cannot determine author email — skipping notification"
+            return
+        }
+
+        def prNumber = env.CHANGE_ID ?: ''
+        if (!prNumber) {
+            echo "Not a PR build — sending individual email"
+            sendIndividualEmail(buildStatus, jobLabel, authorEmail)
+            return
+        }
+
+        def resultsDir     = "/storage1/var/jenkins/jenkins/pr_combined_results/PR-${prNumber}"
+        def allStatusFiles = ['aie2ps.status', 'aieml.status', 'unittest.status', 'infer.status']
+
+        // Write this job's result file
+        sh """
+            mkdir -p '${resultsDir}'
+            printf 'STATUS=${buildStatus}\\nBUILD_URL=${env.BUILD_URL}\\nDISPLAY_NAME=${jobLabel}\\n' \
+                > '${resultsDir}/${statusFileName}'
+        """
+        echo "Written: ${statusFileName} → ${buildStatus}"
+
+        // Count how many result files are present
+        def presentCount = sh(
+            script: "ls '${resultsDir}'/*.status 2>/dev/null | wc -l",
+            returnStdout: true
+        ).trim().toInteger()
+        echo "Jobs with results: ${presentCount} / ${allStatusFiles.size()}"
+
+        if (presentCount < allStatusFiles.size()) {
+            echo "${allStatusFiles.size() - presentCount} job(s) not yet done — exiting (last job will send combined email)"
+            return
+        }
+
+        // All 4 results present — atomically claim the sender role via mkdir (atomic on Linux)
+        def isSender = sh(
+            script: "mkdir '${resultsDir}/sender_claimed' 2>/dev/null && echo SENDER || echo SKIP",
+            returnStdout: true
+        ).trim()
+
+        if (isSender == 'SKIP') {
+            echo "Combined email already being sent by another job — done"
+            return
+        }
+
+        echo "All ${allStatusFiles.size()} results present — sending combined summary for PR #${prNumber}"
+
+        // Read all result files and build summary lines
+        def resultLines = []
+        def urlLines    = []
+        def allPassed   = true
+
+        allStatusFiles.each { fname ->
+            def statusFile = "${resultsDir}/${fname}"
+            def exists = sh(script: "test -f '${statusFile}' && echo yes || echo no", returnStdout: true).trim()
+            if (exists == 'yes') {
+                def raw     = sh(script: "cat '${statusFile}'", returnStdout: true).trim()
+                def lines   = raw.split('\n')
+                def status  = lines.find { it.startsWith('STATUS=') }?.minus('STATUS=') ?: 'UNKNOWN'
+                def url     = lines.find { it.startsWith('BUILD_URL=') }?.minus('BUILD_URL=') ?: 'N/A'
+                def display = lines.find { it.startsWith('DISPLAY_NAME=') }?.minus('DISPLAY_NAME=') ?: fname
+                def icon    = (status == 'SUCCESS') ? '✓' : ((status == 'ABORTED') ? '⊘' : '✗')
+                resultLines << "  ${icon} ${display.padRight(32)}: ${status}"
+                urlLines    << "  ${display}: ${url}"
+                if (status != 'SUCCESS') allPassed = false
+            } else {
+                def display = fname.replace('.status', '')
+                resultLines << "  ? ${display.padRight(32)}: DID NOT COMPLETE"
+                urlLines    << "  ${display}: N/A"
+                allPassed   = false
+            }
+        }
+
+        def overallIcon    = allPassed ? '✓' : '✗'
+        def overallSummary = allPassed ? 'ALL PASSED' : 'SOME FAILED'
+
+        mail(
+            to: authorEmail,
+            subject: "${overallIcon} PR #${prNumber} CI Results: ${overallSummary}",
+            body: """PR #${prNumber} Combined CI Test Results
+${'-' * 50}
+Overall Status : ${overallIcon} ${overallSummary}
+
+Pull Request:
+  Author  : ${env.CHANGE_AUTHOR ?: 'unknown'}
+  Branch  : ${env.CHANGE_BRANCH ?: 'N/A'} -> ${env.CHANGE_TARGET ?: 'N/A'}
+  PR URL  : ${env.CHANGE_URL ?: 'N/A'}
+
+Test Results:
+${resultLines.join('\n')}
+
+Build URLs:
+${urlLines.join('\n')}
+
+This is an automated notification from Jenkins CI/CD pipeline.
+"""
+        )
+        echo "Combined summary email sent to: ${authorEmail}"
+
+        // Cleanup the shared results directory
+        sh "rm -rf '${resultsDir}'"
+
+    } catch (Exception e) {
+        echo "WARNING: Failed to send notification: ${e.message}"
+        echo "Check Jenkins SMTP configuration at: Manage Jenkins → Configure System → E-mail Notification"
     }
 }
