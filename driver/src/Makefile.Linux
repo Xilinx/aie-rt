@@ -29,14 +29,16 @@ LIBURING_DIR ?= ./liburing
 LIBURING_INCLUDE ?= ${LIBURING_DIR}/src/include
 LIBURING_A ?= ${LIBURING_DIR}/src/liburing.a
 
+.PHONY: include include_liburing doc-generate doc-clean clean
+
 all: include lib$(NAME).so lib$(NAME).a
 
 ${LIBURING_A}:
-	echo "CC=$$CC"; \
-	echo "CXX=$$CXX"; \
-	echo "CFLAGS=$$CFLAGS"; \
+	echo "CC=$(CC)"; \
+	echo "CXX=$(CXX)"; \
+	echo "CFLAGS=$(CFLAGS)"; \
 	cd ${LIBURING_DIR};				\
-	CC_TRIMMED=$$(echo "$$CC" | sed 's/^[[:space:]]*//'); \
+	CC_TRIMMED=$$(echo "$(CC)" | sed 's/^[[:space:]]*//'); \
 	CC_CUT_1=$$(echo "$$CC_TRIMMED" | cut -d ' ' -f 1); \
 	CC_CUT_2=$$(echo "$$CC_TRIMMED" | cut -d ' ' -f 2-); \
 	if [ "$$CC_CUT_1" != "$$CC_CUT_2" ]; then \
@@ -45,10 +47,10 @@ ${LIBURING_A}:
 		CC_LIBURING=$$CC_CUT_1; \
 		export CFLAGS="$$CFLAGS $$CC_CUT_2"; \
 	else \
-		CC_LIBURING=$$CC; \
-		export CFLAGS="$$CFLAGS"; \
+		CC_LIBURING=$(CC); \
+		export CFLAGS="$(CFLAGS)"; \
 	fi; \
-	CXX_TRIMMED=$$(echo "$$CXX" | sed 's/^[[:space:]]*//'); \
+	CXX_TRIMMED=$$(echo "$(CXX)" | sed 's/^[[:space:]]*//'); \
 	CXX_CUT_1=$$(echo "$$CXX_TRIMMED" | cut -d ' ' -f 1); \
 	CXX_CUT_2=$$(echo "$$CXX_TRIMMED" | cut -d ' ' -f 2-); \
 	if [ "$$CXX_CUT_1" != "$$CXX_CUT_2" ]; then \
@@ -57,44 +59,66 @@ ${LIBURING_A}:
 		CXX_LIBURING=$$CXX_CUT_1; \
 		export CPPFLAGS="$$CPPFLAGS $$CXX_CUT_2"; \
 	else \
-		CXX_LIBURING=$$CXX; \
-		export CPPFLAGS="$$CFLAGS"; \
+		CXX_LIBURING=$(CXX); \
+		export CPPFLAGS="$(CFLAGS)"; \
 	fi; \
 	echo "CC_LIBURING=$$CC_LIBURING"; \
 	echo "CXX_LIBURING=$$CXX_LIBURING"; \
 	echo "CFLAGS for liburing build: $$CFLAGS"; \
 	echo "CPPFLAGS for liburing build: $$CPPFLAGS"; \
 	./configure --cc=$${CC_LIBURING} --cxx=$${CXX_LIBURING};		\
-	make -C src -j32;				\
+	make -C src -j32;
 
-include: ${LIBURING_A}
+include_liburing: ${LIBURING_A}
+	mkdir $(INCLUDEDIR)/xaiengine -p
+	mkdir $(INTERNALDIR)/xaiengine -p
+	$(CP) $(LIBURING_DIR)/src/include/liburing.h $(INCLUDEDIR)/
+	$(CP) $(LIBURING_DIR)/src/include/liburing $(INCLUDEDIR)/ -r
+	$(CP) $(LIBURING_DIR)/src/include/liburing.h $(INTERNALDIR)/
+	$(CP) $(LIBURING_DIR)/src/include/liburing $(INTERNALDIR)/ -r
+
+include:
 	mkdir $(INCLUDEDIR)/xaiengine -p
 	mkdir $(INTERNALDIR)/xaiengine -p
 	$(CP) xaiengine.h $(INCLUDEDIR)
 	$(CP) $(INCLUDEFILES) $(INCLUDEDIR)/xaiengine
 	$(CP) xaiengine.h $(INTERNALDIR)
 	$(CP) $(INTERNALFILES) $(INTERNALDIR)/xaiengine
-	$(CP) $(LIBURING_DIR)/src/include/liburing.h $(INCLUDEDIR)/
-	$(CP) $(LIBURING_DIR)/src/include/liburing $(INCLUDEDIR)/ -r
-
-lib$(NAME).so.$(VERSION): ${LIBURING_A} $(OUTS)
-	$(CC) $(LDFLAGS) $^ 									\
-		-Wl,--whole-archive ${LIBURING_A} -Wl,--no-whole-archive			\
-		-shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
 
 lib$(NAME).so: lib$(NAME).so.$(VERSION)
 	rm -f lib$(NAME).so.$(MAJOR) lib$(NAME).so
 	ln -s lib$(NAME).so.$(VERSION) lib$(NAME).so.$(MAJOR)
 	ln -s lib$(NAME).so.$(MAJOR) lib$(NAME).so
 
-lib$(NAME).a: $(OUTS)
-	${AR} rcs lib${NAME}.a $^
+ifneq (,$(or $(findstring __AIELINUX__,$(CFLAGS) $(EXTRA_CFLAGS)),$(filter linux,$(MAKECMDGOALS))))
+lib$(NAME).a: ${LIBURING_A} $(OUTS)
+	${AR} rcs lib${NAME}.a $(OUTS)
 	(echo "OPEN lib${NAME}.a"; echo "ADDLIB ${LIBURING_A}"; echo "SAVE"; echo "END";) | ${AR} -M
 	ranlib lib${NAME}.a
 
+lib$(NAME).so.$(VERSION): ${LIBURING_A} $(OUTS)
+	$(CC) $(LDFLAGS) $(OUTS) 								\
+		-Wl,--whole-archive ${LIBURING_A} -Wl,--no-whole-archive			\
+		-shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
+
+%.o: %.c ${LIBURING_A} include include_liburing
+	$(CC) $(CFLAGS) -D__AIELINUX__ -Wall -Wextra --std=c11 $(EXTRA_CFLAGS) \
+		-I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine \
+		-I$(LIBURING_INCLUDE) \
+		-I$(INTERNALDIR)/liburing \
+		-c -fPIC $< -o $@
+else
+lib$(NAME).a: $(OUTS)
+	${AR} rcs lib${NAME}.a $^
+
+lib$(NAME).so.$(VERSION): $(OUTS)
+	$(CC) $(LDFLAGS) $^ 									\
+		-shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
+
 %.o: %.c include
 	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine 		\
-		-I$(LIBURING_INCLUDE) -c -fPIC $< -o $@
+		-c -fPIC $< -o $@
+endif
 
 baremetal: include lib$(NAME).so lib$(NAME).a
 CFLAGS_bare += -Wall -Wextra --std=c11 -D__AIEBAREMETAL__
@@ -103,12 +127,7 @@ ifeq ($(MAKECMDGOALS) ,baremetal)
 	$(CC) $(CFLAGS_bare) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
 endif
 
-linux: include lib$(NAME).so lib$(NAME).a
-CFLAGS_linux += -Wall -Wextra --std=c11 -D__AIELINUX__ -D_POSIX_C_SOURCE=200809 -D_DEFAULT_SOURCE
-ifeq ($(MAKECMDGOALS),linux)
-%.o: %.c include
-	$(CC) $(CFLAGS_linux) -I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine -c -fPIC $< -o $@
-endif
+linux: include include_liburing lib$(NAME).so lib$(NAME).a
 
 simulation: include lib$(NAME).so lib$(NAME).a
 CFLAGS_simulation += -Wall -Wextra --std=c11 -D__AIESIM__ -D_DEFAULT_SOURCE
