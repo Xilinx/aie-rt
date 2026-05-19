@@ -76,7 +76,7 @@ int test_aie_auto_routing_aie2aie_1(XAie_DevInst *DevInst)
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
-	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(4,3));
+	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(4,3), true);
 #endif
 	// step 4: read data from destination tile
 	RC |= XAie_DataMemBlockRead(DevInst, XAie_TileLoc(4,3),  0x2000,
@@ -140,7 +140,7 @@ int test_aie_auto_routing_aie2aie_2(XAie_DevInst *DevInst)
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
-	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(3,3));
+	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(3,3), true);
 #endif
 	XAie_MoveData(routingInstance,  XAie_TileLoc(3,3) /* Source*/,
 			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
@@ -148,7 +148,7 @@ int test_aie_auto_routing_aie2aie_2(XAie_DevInst *DevInst)
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
-	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(3,3), XAie_TileLoc(4,3));
+	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(3,3), XAie_TileLoc(4,3), true);
 #endif
 	// step 4: read data from destination tile
 	RC |= XAie_DataMemBlockRead(DevInst, XAie_TileLoc(4,3),  0x2000,
@@ -215,7 +215,7 @@ int test_aie_auto_routing_aie2aie_3(XAie_DevInst *DevInst)
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
-	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(3,3));
+	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(3,3), true);
 #endif
 	XAie_MoveData(routingInstance,  XAie_TileLoc(3,3) /* Source*/,
 			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
@@ -223,7 +223,7 @@ int test_aie_auto_routing_aie2aie_3(XAie_DevInst *DevInst)
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
-	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(3,3), XAie_TileLoc(2,3));
+	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(3,3), XAie_TileLoc(2,3), true);
 #endif
 	// step 4: read data from destination tile
 	RC |= XAie_DataMemBlockRead(DevInst, XAie_TileLoc(2,3),  0x1000,
