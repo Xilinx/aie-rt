@@ -49,6 +49,13 @@
 /**************************** Macro Definitions ******************************/
 #define XAIE_ECC_BROADCAST_ID		6U
 
+/*
+ * Sentinel stored in IsProd by XAie_SetXprodEnable() to mark a user-requested
+ * disable. Distinct from zero-init (0) and XAIE_ENABLE; resolved to
+ * XAIE_DISABLE by XAie_CfgInitialize() before backend init.
+ */
+#define XAIE_PROD_USER_DISABLE		0xFEU
+
 /************************** Variable Definitions *****************************/
 extern XAie_TileMod AieMod[XAIEGBL_TILE_TYPE_MAX];
 extern XAie_TileMod AieMlMod[XAIEGBL_TILE_TYPE_MAX];
@@ -109,6 +116,44 @@ AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 	DevInst->BaseAddr = PartBaseAddr;
 	DevInst->StartCol = PartStartCol;
 	DevInst->NumCols = PartNumCols;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API configures the IsProd (production) flag of the AI engine device
+* instance. When IsProd is enabled (XAIE_ENABLE), the backend will perform
+* xplm/PM initialization during XAie_CfgInitialize(). When disabled
+* (XAIE_DISABLE), xplm_init is skipped.
+*
+* @param	DevInst: Pointer of AI engine partition instance.
+* @param	Enable: XAIE_ENABLE to enable production flow (xplm_init),
+*			XAIE_DISABLE to skip xplm_init.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		IsProd defaults to XAIE_ENABLE (set by XAie_CfgInitialize()
+*		when the user has not explicitly disabled it). This API must
+*		be called before XAie_CfgInitialize() so that the backend init
+*		step honors the requested setting.
+*
+*******************************************************************************/
+AieRC XAie_SetXprodEnable(XAie_DevInst *DevInst, u8 Enable)
+{
+	if (DevInst == XAIE_NULL || (DevInst->IsReady != 0U)) {
+		XAIE_ERROR("Invalid Device instance to set Xprod enable. DevInst is NULL or IsReady is set\n");
+		return XAIE_INVALID_DEVICE;
+	}
+
+	/*
+	 * Use a sentinel for the user-disabled case so that the
+	 * zero-initialized state of DevInst (IsProd == 0) can still be
+	 * distinguished from an explicit user disable in XAie_CfgInitialize().
+	 */
+	DevInst->IsProd = (Enable == XAIE_DISABLE) ? XAIE_PROD_USER_DISABLE
+						   : XAIE_ENABLE;
 
 	return XAIE_OK;
 }
@@ -196,7 +241,12 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
 	InstPtr->EccStatus = XAIE_ENABLE;
 	InstPtr->TxnList.Next = NULL;
-	InstPtr->IsProd = 0U;
+	/*
+	 * Resolve IsProd before backend init: sentinel -> XAIE_DISABLE,
+	 * anything else (including zero-init) -> XAIE_ENABLE (default).
+	 */
+	InstPtr->IsProd = (InstPtr->IsProd == XAIE_PROD_USER_DISABLE) ?
+				XAIE_DISABLE : XAIE_ENABLE;
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
@@ -674,7 +724,6 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 	_XAie_TxnResourceCleanup(DevInst);
 
 	CurrBackend = DevInst->Backend;
-	DevInst->IsProd = 0U;
 	RC = CurrBackend->Ops.Finish(DevInst->IOInst);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to close backend instance.\n");
@@ -716,7 +765,6 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 
 	/* Release resources for current backend */
 	CurrBackend = DevInst->Backend;
-	DevInst->IsProd = 0U;
 	RC = CurrBackend->Ops.Finish((void *)(DevInst->IOInst));
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to close backend instance."

@@ -26,10 +26,8 @@
 
 #ifdef __AIEBAREMETAL__
 
-#ifdef XAIE_PROD
 #include "pm_init.h"
 #include "xpm_defs.h"
-#endif
 #include "sleep.h"
 #include "xil_cache.h"
 #include "xil_io.h"
@@ -78,9 +76,7 @@ typedef struct {
 	u16 Len;
 } XAie_PmOpTypeLen __attribute__((aligned(4)));
 
-#if defined(XAIE_PROD)
 static u8 XAie_BaremetalUseIoctl2 = 0U;
-#endif
 
 /************************** Function Definitions *****************************/
 
@@ -140,10 +136,8 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
 	XAie_BaremetalIO *IOInst;
-#ifdef XAIE_PROD
 	static XIpiPsu IpiInst;
 	int Ret;
-#endif
 
 	IOInst = (XAie_BaremetalIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -156,19 +150,20 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 	BTREE4_INIT(&IOInst->btree, XAie_BaremetalIO_MemInst_Compare);
 	DevInst->IOInst = (void *)IOInst;
 
-#if defined(XAIE_PROD)
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS)
+	XAie_BaremetalUseIoctl2 = 0U;
+	if (DevInst->IsProd == XAIE_ENABLE &&
+			DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
 		XAie_BaremetalUseIoctl2 = 1U;
+	}
 
-	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIE2PS) {
-		DevInst->IsProd = 1U;
+	if (DevInst->IsProd == XAIE_ENABLE &&
+			DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIE2PS) {
 		Ret = XAie_PmInit(&IpiInst);
 		if (Ret != XST_SUCCESS) {
 			XAIE_ERROR("Failed to initialize PM\n");
 			return Ret;
 		}
 	}
-#endif
 
 	return XAIE_OK;
 }
@@ -215,7 +210,6 @@ static AieRC XAie_BaremetalIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 						u32 NumCols, u32 Ops)
 {
-#if defined(XAIE_PROD)
 	u32 Response;
 	int Ret;
 	if (XAie_BaremetalUseIoctl2 == 0U) {
@@ -257,11 +251,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 		XAIE_ERROR("Failed to write to privileged register. NumCols: %u StartCol: %u PLM Op ID:%u\n", NumCols, StartCol, Ops);
 		return XAIE_ERR;
 	}
-#else
-	(void)StartCol;
-	(void)NumCols;
-	(void)Ops;
-#endif
 
 	return XAIE_OK;
 }
@@ -707,7 +696,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 						 XAie_PartInitOpts *Opts)
 {
 	AieRC RC = XAIE_OK;
-#ifdef XAIE_PROD
 	u32 OptFlags;
 
 	if(Opts != NULL) {
@@ -794,7 +782,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 		}
 	}
 
-#endif
 	return RC;
 }
 
@@ -822,8 +809,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 {
 	AieRC RC = XAIE_OK;
-
-#if defined(XAIE_PROD)
 
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
 				    DevInst->NumCols, AIE_OPS_COL_RST);
@@ -869,7 +854,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 			XAIE_ERROR("Column Gating failed!\n");
 		}
 	}
-#endif
 
 	return RC;
 }
@@ -877,7 +861,6 @@ static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 					      XAie_BackendColumnReq *Args)
 {
-#if defined(XAIE_PROD)
 	AieRC RC;
 
 	u32 TileStatus, NumTiles, Ops;
@@ -910,14 +893,12 @@ AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
 				TileStatus, NumTiles);
 	}
-#endif
 	return XAIE_OK;
 }
 
 AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 					      XAie_BackendTilesArray *Args)
 {
-#if defined(XAIE_PROD)
 	AieRC RC;
 	u32 SetTileStatus;
 
@@ -985,7 +966,6 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 			ColClockStatus, (u32)(DevInst->NumRows - 1U));
 	}
-#endif
 	return XAIE_OK;
 }
 
