@@ -25,7 +25,7 @@ set(COMP_FLAG -Wall -Wextra -D__AIEBAREMETAL__)
 target_compile_options(aienginev2 PRIVATE ${COMP_FLAG})
 
 else ()
-project(xaiengine LANGUAGES C VERSION 3.9)
+project(xaiengine LANGUAGES C VERSION 4.0)
 
 set(CMAKE_C_STANDARD 11)
 

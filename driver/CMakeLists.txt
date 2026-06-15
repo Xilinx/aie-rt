@@ -10,7 +10,7 @@ list (APPEND CMAKE_MODULE_PATH
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/platforms")
 
-project (xaiengine VERSION 3.9)
+project (xaiengine VERSION 4.0)
 
 include (CheckIncludeFiles)
 include (CheckCSourceCompiles)
