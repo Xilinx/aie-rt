@@ -454,7 +454,8 @@ static AieRC XAie_ZephyrMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
 {
 	(void)DevInst;
 #ifdef CONFIG_DCACHE
-	sys_cache_data_flush_range((void *)(uintptr_t)VAddr, (size_t)Size);
+	/* Device wrote via DMA; invalidate so the CPU reads fresh data from DDR. */
+	sys_cache_data_invd_range((void *)(uintptr_t)VAddr, (size_t)Size);
 #endif
 	return XAIE_OK;
 }
@@ -473,10 +474,11 @@ static AieRC XAie_ZephyrMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
 *******************************************************************************/
 static AieRC XAie_ZephyrMemSyncForDev(XAie_MemInst *MemInst)
 {
-	/*
-	Xil_DCacheFlushRange((intptr_t)MemInst->VAddr,
-			(intptr_t)MemInst->Size);
-	*/
+#ifdef CONFIG_DCACHE
+	/* Flush CPU writes out to DDR (clean+invalidate) so the AIE DMA sees them. */
+	sys_cache_data_flush_and_invd_range((void *)(uintptr_t)MemInst->VAddr,
+					    (size_t)MemInst->Size);
+#endif
 	return XAIE_OK;
 }
 
@@ -484,10 +486,9 @@ static AieRC XAie_ZephyrMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
 					 uint64_t Size)
 {
 	(void)DevInst;
-	/*
-	Xil_DCacheFlushRange((intptr_t)VAddr, (intptr_t)Size);
-	*/
-
+#ifdef CONFIG_DCACHE
+	sys_cache_data_flush_and_invd_range((void *)(uintptr_t)VAddr, (size_t)Size);
+#endif
 	return XAIE_OK;
 }
 
