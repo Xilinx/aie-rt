@@ -3,13 +3,17 @@ name: Send PR Diff Patch
 on:
   issue_comment:
     branches:
-      - "main" 
-      - "main-aie" 
+      - "main"
+      - "main-aie"
+      - "main-next"
+      - "main-aie-next"
     types: [created]
   pull_request_review:
     branches:
-      - "main" 
+      - "main"
       - "main-aie"
+      - "main-next"
+      - "main-aie-next"
     types: [submitted]
 
 jobs:
@@ -40,7 +44,7 @@ jobs:
       run: |
         PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ steps.set-pr-number.outputs.pr_number }})
         TARGET_BRANCH=$(echo "$PR_DATA" | jq -r '.base.ref')
-        echo "::set-output name=is_correct_branch::$(echo "$TARGET_BRANCH" | grep -E '^(main|main-aie)$')"
+        echo "::set-output name=is_correct_branch::$(echo "$TARGET_BRANCH" | grep -E '^(main|main-aie|main-next|main-aie-next)$')"
 
   check-approvals:
     runs-on: self-hosted
@@ -77,8 +81,8 @@ jobs:
         echo "::set-output name=target_branch::$PR_BASE_REF"
 
     - name: Check if all reviewers approved
-      if: (github.event_name == 'issue_comment' && github.event.comment.body == 'approved' && (steps.retrieve-pr-data.outputs.target_branch == 'main' || steps.retrieve-pr-data.outputs.target_branch == 'main-aie')) || 
-          (github.event_name == 'pull_request_review' && (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'main-aie') && github.event.review.state == 'approved')
+      if: (github.event_name == 'issue_comment' && github.event.comment.body == 'approved' && (steps.retrieve-pr-data.outputs.target_branch == 'main' || steps.retrieve-pr-data.outputs.target_branch == 'main-aie' || steps.retrieve-pr-data.outputs.target_branch == 'main-next' || steps.retrieve-pr-data.outputs.target_branch == 'main-aie-next')) ||
+          (github.event_name == 'pull_request_review' && (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'main-aie' || github.event.pull_request.base.ref == 'main-next' || github.event.pull_request.base.ref == 'main-aie-next') && github.event.review.state == 'approved')
       continue-on-error: true
       id: approval-check
       env:
@@ -287,6 +291,8 @@ jobs:
         REVIEWS_JSON=$(gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/reviews)
         APPROVED_REVIEWERS_LOGINS=$(echo "$REVIEWS_JSON" | jq -r '[.[] | select(.state=="APPROVED") | .user.login] | unique | .[]')
 
+        CC_EMAILS_ARRAY=( "--cc" "ssw_ci@amd.com" )
+
         for LOGIN in $APPROVED_REVIEWERS_LOGINS; do
         # bypass the review bot which contain the name "bot"
           if [[ "$LOGIN" == *bot* ]]; then
@@ -376,7 +382,7 @@ jobs:
         git config --global user.name "${SUBMITTER_NAME}"
 
         # Send the email with the patch
-        git send-email --confirm=never --force --to "git_aiengine_dev@xilinx.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
+        git send-email --confirm=never --force --to "git_aiengine_dev@amd.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
 
         # Comment on the PR
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
