@@ -41,6 +41,7 @@
 #include "xaiegbl.h"
 #include "xaiegbl_defs.h"
 #include "xaiegbl_regdef.h"
+#include "xaie_debug_dma.h"
 
 /************************** Constant Definitions *****************************/
 
@@ -484,6 +485,170 @@ AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst)
 	}
 
 	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* Extended partition initialization that can additionally arm DMA transaction
+* count debug counters at boot time.
+*
+* This is a thin wrapper over XAie_PartitionInitialize. After the legacy init
+* succeeds, if Opts->DmaTxnCountChGroup is non-zero this function calls
+* XAie_DmaTxnCountEnable() with the same tile group on the requested DMA
+* channels. The call is all-or-nothing: if counter setup fails the partition
+* init is rolled back via XAie_PartitionTeardown so the caller observes a
+* clean uninitialized state.
+*
+* When Opts->DmaTxnCountChGroup is zero (or Opts is NULL), behavior is
+* identical to XAie_PartitionInitialize.
+*
+* Caller must invoke XAie_PartitionTeardown_v2 with the same Opts to release
+* the counters at teardown.
+*
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Opts: Extended partition initialization options. May be NULL,
+*		      in which case behavior matches XAie_PartitionInitialize
+*		      with NULL opts.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+******************************************************************************/
+AieRC XAie_PartitionInitialize_v2(XAie_DevInst *DevInst,
+		XAie_PartInitOpts_v2 *Opts)
+{
+	AieRC RC;
+	XAie_PartInitOpts LegacyOpts;
+	XAie_PartInitOpts *LegacyOptsPtr = XAIE_NULL;
+	XAie_LocType *ExpandedLocs = XAIE_NULL;
+	u32 ExpandedCount = 0U;
+
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if (Opts != XAIE_NULL) {
+		/*
+		 * Translate SubParts (rectangles) to the flat XAie_LocType[]
+		 * that the legacy v1 partition init and its many backends
+		 * still consume. Count first, allocate exact size, populate.
+		 */
+		if ((Opts->SubParts != XAIE_NULL) && (Opts->NumSubParts > 0U)) {
+			u32 i;
+			u32 Idx = 0U;
+
+			for (i = 0U; i < Opts->NumSubParts; i++) {
+				const XAie_Range *Cols =
+						&Opts->SubParts[i].ColRange;
+				const XAie_Range *Rows =
+						&Opts->SubParts[i].RowRange;
+
+				if ((Cols->Num == 0U) || (Rows->Num == 0U)) {
+					XAIE_ERROR("Sub-partition %u has "
+						"empty range\n", i);
+					return XAIE_INVALID_ARGS;
+				}
+				ExpandedCount += (u32)Cols->Num *
+						(u32)Rows->Num;
+			}
+
+			ExpandedLocs = (XAie_LocType *)malloc(
+					(size_t)ExpandedCount *
+					sizeof(XAie_LocType));
+			if (ExpandedLocs == XAIE_NULL) {
+				XAIE_ERROR("Failed to allocate %u tile "
+					"locations for partition init\n",
+					ExpandedCount);
+				return XAIE_ERR;
+			}
+
+			for (i = 0U; i < Opts->NumSubParts; i++) {
+				const XAie_Range *Cols =
+						&Opts->SubParts[i].ColRange;
+				const XAie_Range *Rows =
+						&Opts->SubParts[i].RowRange;
+				u8 Col, Row;
+
+				for (Col = Cols->Start;
+						Col < (u8)(Cols->Start +
+							Cols->Num); Col++) {
+					for (Row = Rows->Start;
+							Row < (u8)(Rows->Start +
+								Rows->Num);
+							Row++) {
+						ExpandedLocs[Idx] =
+							XAie_TileLoc(Col, Row);
+						Idx++;
+					}
+				}
+			}
+		}
+
+		LegacyOpts.Locs = ExpandedLocs;
+		LegacyOpts.NumUseTiles = ExpandedCount;
+		LegacyOpts.InitOpts = Opts->InitOpts;
+		LegacyOptsPtr = &LegacyOpts;
+	}
+
+	RC = XAie_PartitionInitialize(DevInst, LegacyOptsPtr);
+	free(ExpandedLocs);
+	if (RC != XAIE_OK) {
+		return RC;
+	}
+
+	if ((Opts != XAIE_NULL) && (Opts->DmaTxnCountChGroup != 0U)) {
+		RC = XAie_DmaTxnCountEnable(DevInst, Opts->SubParts,
+				Opts->NumSubParts, Opts->DmaTxnCountChGroup);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("DMA txn count enable failed; "
+					"rolling back partition init.\n");
+			(void)XAie_PartitionTeardown(DevInst);
+			return RC;
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* Companion teardown for XAie_PartitionInitialize_v2.
+*
+* If Opts->DmaTxnCountChGroup is non-zero this function calls
+* XAie_DmaTxnCountDisable() to release the perf counters before tearing down
+* the partition. Caller must pass the same channel bitmask that was used at
+* init time. When Opts is NULL or DmaTxnCountChGroup is zero, behavior is
+* identical to XAie_PartitionTeardown.
+*
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Opts: Extended partition options that were passed to
+*		      XAie_PartitionInitialize_v2. May be NULL.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+* @note	If counter Disable fails the function still proceeds with the
+*		partition teardown and returns the teardown's result. The
+*		partition is the more important resource to release.
+*
+******************************************************************************/
+AieRC XAie_PartitionTeardown_v2(XAie_DevInst *DevInst,
+		XAie_PartInitOpts_v2 *Opts)
+{
+	if((DevInst == XAIE_NULL) ||
+			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+		XAIE_ERROR("Invalid Device Instance\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	if ((Opts != XAIE_NULL) && (Opts->DmaTxnCountChGroup != 0U)) {
+		(void)XAie_DmaTxnCountDisable(DevInst, Opts->SubParts,
+				Opts->NumSubParts, Opts->DmaTxnCountChGroup);
+	}
+
+	return XAie_PartitionTeardown(DevInst);
 }
 
 /*****************************************************************************/

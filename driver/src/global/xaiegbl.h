@@ -218,6 +218,19 @@ typedef struct {
 	u8 Num;
 } XAie_Range;
 
+/*
+ * Rectangular tile region: a column range and a row range combined describe
+ * a contiguous rectangle of tiles. Callers pass an array of these to APIs
+ * that operate on groups of tiles (e.g. XAie_DmaTxnCountEnable,
+ * XAie_PartitionInitialize_v2) so a 1xN strip or an MxN block can be
+ * expressed in a few struct entries instead of a flat XAie_LocType[] of
+ * every tile.
+ */
+typedef struct {
+	XAie_Range ColRange; /* {Start, Num} columns */
+	XAie_Range RowRange; /* {Start, Num} rows */
+} XAie_SubPartition;
+
 /* This typedef captures partition information available in the kernel */
 typedef struct {
 	XAie_Range ColRange;
@@ -237,6 +250,20 @@ typedef struct XAie_PartInitOpts {
 	u32 NumUseTiles; /* Number of tiles to use */
 	u32 InitOpts; /* AI engine partition initialization options */
 } XAie_PartInitOpts;
+
+/*
+ * Extended partition initialization options used by
+ * XAie_PartitionInitialize_v2() / XAie_PartitionTeardown_v2(). The first
+ * three fields mirror XAie_PartInitOpts; additional fields request
+ * debug/observability features that are off by default (zero-initialized
+ * struct = legacy behavior).
+ */
+typedef struct XAie_PartInitOpts_v2 {
+	XAie_SubPartition *SubParts; /* Array of rectangular tile regions */
+	u32 NumSubParts; /* Number of entries in the SubParts array */
+	u32 InitOpts; /* AI engine partition initialization options */
+	u32 DmaTxnCountChGroup; /* DMA channel group bitmask. 0 = feature off. */
+} XAie_PartInitOpts_v2;
 
 /*
  *
@@ -650,6 +677,10 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 		XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo);
 AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
 int XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
+AieRC XAie_PartitionInitialize_v2(XAie_DevInst *DevInst,
+		XAie_PartInitOpts_v2 *Opts);
+AieRC XAie_PartitionTeardown_v2(XAie_DevInst *DevInst,
+		XAie_PartInitOpts_v2 *Opts);
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
 int XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
 AieRC XAie_Finish(XAie_DevInst *DevInst);
