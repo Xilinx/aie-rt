@@ -284,14 +284,11 @@ s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 		    Val &= 0x3U;
 		    if (Val == 0U) {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Idle", TRUE);
-		    }
-		    else if (Val == 1U) {
+		    } else if (Val == 1U) {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Starting", TRUE);
-		    }
-		    else if (Val == 2U) {
+		    } else if (Val == 2U) {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Running", TRUE);
-		    }
-		    else {
+		    } else {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Invalid_State", TRUE);
 		    }
 		    break;
@@ -300,8 +297,7 @@ s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    if (Val == 0U) {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_status:okay", TRUE);
-		    }
-		    else {
+		    } else {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_status:channel_overflow", TRUE);
 		    }
 		    break;
@@ -310,8 +306,7 @@ s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 		    CharsWritten--; // to overwrite the comma in the previous write
 		    if (Val == 0U) {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_empty", TRUE);
-			}
-		    else {
+			} else {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_not_empty", TRUE);
 			}
 		    break;
@@ -402,14 +397,11 @@ s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
                     Val &= 0x3U;
                     if (Val == 0U) {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Idle", TRUE);
-                    }
-                    else if (Val == 1U) {
+                    } else if (Val == 1U) {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Starting", TRUE);
-                    }
-                    else if (Val == 2U) {
+                    } else if (Val == 2U) {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Running", TRUE);
-                    }
-                    else {
+                    } else {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Invalid_State", TRUE);
                     }
                     break;
@@ -418,8 +410,7 @@ s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 		    Val &= 0x01U;
 		    if (Val == 0U) {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_status:okay", TRUE);
-		    }
-		    else {
+		    } else {
 		        CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_status:channel_overflow", TRUE);
 		    }
 		    break;
@@ -428,8 +419,7 @@ s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
                     Val &= 0x1U;
                     if (Val == 0U) {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_empty", TRUE);
-					}
-                    else {
+					} else {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Queue_not_empty", TRUE);
 					}
                     break;

@@ -50,7 +50,7 @@
 *
 *******************************************************************************/
 static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
+		const u8 *SectionPtr, const Elf32_Phdr *Phdr)
 {
 	u64 Addr;
 	const XAie_UcMod *UcMod;
@@ -96,7 +96,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
+		const u8 *SectionPtr, const Elf32_Phdr *Phdr)
 {
 	AieRC RC;
 	u64 Addr;
@@ -108,7 +108,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u8 *Tmp = XAIE_NULL;
 	u32 AddrMask, MemSize;
 	u8 Inv = 1U, MemType;
-	const unsigned char *Buffer = SectionPtr;
+	const u8 *Buffer = SectionPtr;
 	AieRC (*BlockWrite)(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 Addr, const void *Src, u32 Size);
 
@@ -222,7 +222,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *ProgSec, const Elf32_Phdr *Phdr)
+		const u8 *ProgSec, const Elf32_Phdr *Phdr)
 {
 	const XAie_UcMod *UcMod;
 
@@ -256,7 +256,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem)
+		const u8* ElfMem)
 {
 	AieRC RC;
 	const Elf32_Ehdr *Ehdr;
@@ -298,7 +298,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 AieRC XAie_LoadUcMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem)
+		const u8* ElfMem)
 {
 	u8 TileType;
 

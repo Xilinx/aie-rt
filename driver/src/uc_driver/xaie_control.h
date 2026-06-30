@@ -44,8 +44,7 @@
 	{ \
           now.tick_low = 0; \
           now.tick_high++; \
-	} \
-	else \
+	} else \
 	{ \
           now.tick_low++ ; \
 	} \

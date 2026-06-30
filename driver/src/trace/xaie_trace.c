@@ -363,8 +363,7 @@ AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	}
-	else {
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 	}
 
@@ -429,8 +428,7 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	}
-	else {
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 	}
 
@@ -496,8 +494,7 @@ AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	}
-	else {
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 	}
 
@@ -697,8 +694,7 @@ AieRC XAie_TracePktConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	}
-	else {
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 	}
 
@@ -798,8 +794,7 @@ AieRC XAie_TraceEventReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	}
-	else {
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
 	}
 

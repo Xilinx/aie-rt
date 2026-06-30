@@ -177,7 +177,7 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_DataMemoryBlockWrite(XAie_DevInst* DevInst, XAie_LocType Loc,
-		u32 Offset, u32 DMBaseAddr, const unsigned char *Src, u32 Size) {
+		u32 Offset, u32 DMBaseAddr, const u8 *Src, u32 Size) {
 	AieRC RC = XAIE_OK;
 	u32 BytePtr = 0, RemBytes = Size, TempWord = 0, Mask = 0;
 	u64 DmAddrRoundDown, DmAddrRoundUp;
@@ -269,7 +269,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 {
 	u32 MemSize, MemAddr;
 	u8 TileType;
-	unsigned char *CharSrc = (unsigned char *)Src;
+	u8 *CharSrc = (u8 *)Src;
 	const XAie_MemMod *MemMod;
 	const XAie_UcMod *UcMod;
 
@@ -328,7 +328,7 @@ AieRC XAie_SharedDataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 MemSize, MemAddr;
 	u8 TileType;
-	unsigned char *CharSrc = (unsigned char *)Src;
+	u8 *CharSrc = (u8 *)Src;
 	const XAie_UcMod *UcMod;
 
 	if((DevInst == XAIE_NULL) ||

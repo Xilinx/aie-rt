@@ -218,7 +218,7 @@ static AieRC _XAie_GetTargetTileLoc(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
+		const u8 *SectionPtr, const Elf32_Phdr *Phdr)
 {
 	u64 Addr;
 	const XAie_CoreMod *CoreMod;
@@ -264,7 +264,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
+		const u8 *SectionPtr, const Elf32_Phdr *Phdr)
 {
 	AieRC RC;
 	u32 OverFlowBytes;
@@ -274,8 +274,8 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 AddrMask;
 	u64 Addr;
 	XAie_LocType TgtLoc;
-	const unsigned char *Buffer = SectionPtr;
-	unsigned char *Tmp = XAIE_NULL;
+	const u8 *Buffer = SectionPtr;
+	u8 *Tmp = XAIE_NULL;
 	const XAie_CoreMod *CoreMod;
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
@@ -383,7 +383,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *ProgSec, const Elf32_Phdr *Phdr,
+		const u8 *ProgSec, const Elf32_Phdr *Phdr,
 		u8 Sections)
 {
 	const XAie_CoreMod *CoreMod;
@@ -411,7 +411,7 @@ static AieRC _XAie_WriteProgramSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 }
 
 static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem, u8 Sections)
+		const u8* ElfMem, u8 Sections)
 {
 	AieRC RC;
 	const Elf32_Ehdr *Ehdr;
@@ -469,7 +469,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 AieRC XAie_LoadElfMem(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* ElfMem)
+		const u8* ElfMem)
 {
 	u8 TileType;
 
@@ -751,7 +751,7 @@ AieRC XAie_LoadElf(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr,
 *
 *******************************************************************************/
 AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char *SectionPtr, const Elf32_Phdr *Phdr)
+		const u8 *SectionPtr, const Elf32_Phdr *Phdr)
 {
 	u8 TileType;
 
@@ -792,7 +792,7 @@ AieRC XAie_LoadElfSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 AieRC XAie_LoadElfSectionBlock(XAie_DevInst *DevInst, XAie_LocType Loc,
-		const unsigned char* SectionPtr, u64 TgtAddr, u32 Size)
+		const u8* SectionPtr, u64 TgtAddr, u32 Size)
 {
 	u8 TileType;
 	u64 Addr;

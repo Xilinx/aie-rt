@@ -1422,8 +1422,7 @@ AieRC _XAieMl_MemTileDmaCheckBdChValidity(u8 BdNum, u8 ChNum)
 {
 	if((BdNum < 24U) && ((ChNum % 2U) == 0U)) {
 		return XAIE_OK;
-	}
-	else if((BdNum >= 24U) && ((ChNum % 2U) == 1U)) {
+	} else if((BdNum >= 24U) && ((ChNum % 2U) == 1U)) {
 		return XAIE_OK;
 	}
 

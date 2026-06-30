@@ -217,8 +217,7 @@ static void _XAie_EndJob(XAie_ControlCodeIO  *ControlCodeInst) {
 		fprintf(ControlCodeInst->ControlCodefp,"WAIT_UC_DMA\t $r0\n");
 		ControlCodeInst->UcPageTextSize += ISA_OPSIZE_WAIT_UC_DMA;
 		ControlCodeInst->UcPageSize += ISA_OPSIZE_WAIT_UC_DMA;
-	}
-	else if(ControlCodeInst->NumShimBDsChained > 0) {
+	} else if(ControlCodeInst->NumShimBDsChained > 0) {
 		fprintf(ControlCodeInst->ControlCodefp,
 				"UC_DMA_WRITE_DES_SYNC\t @UCBD_label_%d\n",
 				ControlCodeInst->UcbdLabelNum);
@@ -417,15 +416,13 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 
 	if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
 		OpSize = ISA_OPSIZE_UC_DMA_WRITE_DES;
-	}
-	else {
+	} else {
 		OpSize = ISA_OPSIZE_UC_DMA_WRITE_DES_SYNC;
 	}
 
 	if(RegOff == ControlCodeInst->CalculatedNextRegOff) {
 		ControlCodeInst->IsAdjacentMemWrite = 1;
-	}
-	else {
+	} else {
 		ControlCodeInst->IsAdjacentMemWrite = 0;
 	}
 
@@ -446,8 +443,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 				_XAie_StartNewPage(ControlCodeInst);
 				_XAie_StartNewJob(ControlCodeInst);
 				ControlCodeInst->IsAdjacentMemWrite = 0;
-			}
-			else {
+			} else {
 				_XAie_UpdateDataLengthDmaBd(ControlCodeInst, (ControlCodeInst->CombinedMemWriteSize + 1));
 			}
 		}
@@ -462,8 +458,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 			if(ControlCodeInst->CombineCommands) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
 				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
-			}
-			else {
+			} else {
 				if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
 					if((ControlCodeInst->UcPageSize + OpSize + ISA_OPSIZE_WAIT_UC_DMA +
 						UC_DMA_BD_SIZE + UC_DMA_WORD_LEN + ControlCodeInst->DataAligner) > ControlCodeInst->PageSizeMax) {
@@ -474,8 +469,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 					fprintf(ControlCodeInst->ControlCodefp,
 							"UC_DMA_WRITE_DES\t $r0, @UCBD_label_%d\n",
 								ControlCodeInst->UcbdLabelNum);
-			}
-			else {
+			} else {
 					if((ControlCodeInst->UcPageSize + OpSize +
 						UC_DMA_BD_SIZE + UC_DMA_WORD_LEN + ControlCodeInst->DataAligner) > ControlCodeInst->PageSizeMax) {
 						_XAie_StartNewPage(ControlCodeInst);
@@ -511,8 +505,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 
 	if(ControlCodeInst->IsAdjacentMemWrite == 1) {
 		ControlCodeInst->CombinedMemWriteSize += 1;
-	}
-	else {
+	} else {
 		ControlCodeInst->CombinedMemWriteSize = 1;
 	}
 	ControlCodeInst->CalculatedNextRegOff = RegOff + sizeof(Value);
@@ -673,8 +666,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 
 	if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
 		OpSize = ISA_OPSIZE_UC_DMA_WRITE_DES;
-	}
-	else {
+	} else {
 		OpSize = ISA_OPSIZE_UC_DMA_WRITE_DES_SYNC;
 	}
 
@@ -686,8 +678,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 
 			if((RegOff == ControlCodeInst->CalculatedNextRegOff) && (ControlCodeInst->PageBreak == 0)) {
 				ControlCodeInst->IsAdjacentMemWrite = 1;
-			}
-			else {
+			} else {
 				ControlCodeInst->IsAdjacentMemWrite = 0;
 			}
 
@@ -720,8 +711,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 						_XAie_StartNewJob(ControlCodeInst);
 						ControlCodeInst->IsAdjacentMemWrite = 0;
 					}
-				}
-				else {
+				} else {
 					if((ControlCodeInst->UcPageSize + OpSize +
 						UC_DMA_BD_SIZE + UC_DMA_WORD_LEN +ControlCodeInst->DataAligner) > ControlCodeInst->PageSizeMax) {
 						_XAie_StartNewPage(ControlCodeInst);
@@ -738,15 +728,13 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 				if(ControlCodeInst->CombineCommands) {
 					fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
 					fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
-				}
-				else {
+				} else {
 					if(ControlCodeInst->Mode != XAIE_SHIM_BD_CHAINING_ENABLE) {
 						if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
 							fprintf(ControlCodeInst->ControlCodefp,
 								"UC_DMA_WRITE_DES\t $r0, @UCBD_label_%d\n",
 								ControlCodeInst->UcbdLabelNum);
-						}
-						else {
+						} else {
 							fprintf(ControlCodeInst->ControlCodefp,
 									"UC_DMA_WRITE_DES_SYNC\t @UCBD_label_%d\n",
 									ControlCodeInst->UcbdLabelNum);
@@ -771,8 +759,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 					if(ControlCodeInst->Mode == XAIE_SHIM_BD_CHAINING_ENABLE) {
 						ControlCodeInst->CombineCommands = 1;
 						ControlCodeInst->NumShimBDsChained++;
-					}
-					else
+					} else
 					{
 						/**
 						 * Note:
@@ -817,8 +804,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 			if(ControlCodeInst->IsAdjacentMemWrite == 1) {
 				_XAie_UpdateDataLengthDmaBd(ControlCodeInst,
 						(ControlCodeInst->CombinedMemWriteSize + IterationSize));
-			}
-			else {
+			} else {
 		fprintf(ControlCodeInst->ControlCodedatafp,
 			"\t UC_DMA_BD\t 0, 0x%lx, @DMAWRITE_data_%d, 0x%x, 0, 0\n",
 			(RegOff + AdjustedOff),  ControlCodeInst->UcDmaDataNum,
@@ -839,11 +825,9 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 	if(PageBreakOccured == 1) {
 		ControlCodeInst->CombinedMemWriteSize =  NewPagePayloadSize;
 		ControlCodeInst->CalculatedNextRegOff =  (u64) ( NewPageRegOff + (NewPagePayloadSize * (sizeof(*Data))) );
-	}
-	else if(ControlCodeInst->IsAdjacentMemWrite == 1) {
+	} else if(ControlCodeInst->IsAdjacentMemWrite == 1) {
 		ControlCodeInst->CombinedMemWriteSize += Size;
-	}
-	else {
+	} else {
 		ControlCodeInst->CombinedMemWriteSize = Size;
 	}
 
@@ -897,8 +881,7 @@ static AieRC XAie_ControlCodeIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u
 			if(ControlCodeInst->CombineCommands) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
 				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
-			}
-			else {
+			} else {
 				fprintf(ControlCodeInst->ControlCodefp,
 						"UC_DMA_WRITE_DES_SYNC\t @UCBD_label_%d\n",
 						ControlCodeInst->UcbdLabelNum);
@@ -962,8 +945,7 @@ static AieRC XAie_ControlCodeIO_AddressPatching(void *IOInst, u32 Arg_Index, u8 
 
 	if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
 		OpSize = ISA_OPSIZE_UC_DMA_WRITE_DES + ISA_OPSIZE_WAIT_UC_DMA;
-	}
-	else {
+	} else {
 		OpSize = ISA_OPSIZE_UC_DMA_WRITE_DES_SYNC;
 	}
 
@@ -1091,8 +1073,7 @@ AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp)
                 ControlCodeInst->UcPageTextSize += ISA_OPSIZE_SAVE_TIMESTAMPS;
 
                 return XAIE_OK;
-        }
-        else {
+        } else {
                 return XAIE_ERR;
         }
 }
@@ -1505,8 +1486,7 @@ AieRC XAie_ControlCodeAddAnnotation(XAie_DevInst *DevInst,
                 fprintf(ControlCodeInst->ControlCodefp,"name: %s\n", Name);
                 fprintf(ControlCodeInst->ControlCodefp,"description: %s\n", Description);
                 return XAIE_OK;
-        }
-        else {
+        } else {
                 return XAIE_ERR;
         }
 }

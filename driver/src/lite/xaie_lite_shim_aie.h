@@ -33,13 +33,11 @@
 ({							\
 	if ((Loc).Col <= 1) {				\
 		(Loc).Col = 2;				\
-	}						\
-	else if ((((Loc).Col + 1) % 4) / 2) {		\
+	} else if ((((Loc).Col + 1) % 4) / 2) {		\
 		(Loc).Col += 1;				\
 	} else if ((((Loc).Col + 2) % 4) / 2) {		\
 		(Loc).Col += 2;				\
-	}						\
-	else						\
+	} else						\
 		(Loc).Col += 3;				\
 })
 

@@ -1903,8 +1903,7 @@ AieRC XAie_DmaGetBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 *Len,
 			DmaMod->BdProp->BufferLen.Mask) +
 			DmaMod->BdProp->LenActualOffset)
 			<< XAIE_DMA_32BIT_TXFER_LEN;
-	}
-	else {
+	} else {
 		*Len = 0;
 	}
 	return XAIE_OK;
@@ -2549,10 +2548,18 @@ static AieRC _XAie_DmaWriteChannelPrepare(XAie_DevInst *DevInst,
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	*Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, DmaMod->ChProp->EnOutofOrder.Lsb, DmaMod->ChProp->EnOutofOrder.Mask) |
-		XAie_SetField(DmaChannelDesc->EnCompression, DmaMod->ChProp->EnCompression.Lsb, DmaMod->ChProp->EnCompression.Mask) |
-		XAie_SetField(DmaChannelDesc->ControllerId, DmaMod->ChProp->ControllerId.Lsb, DmaMod->ChProp->ControllerId.Mask) |
-		XAie_SetField(DmaChannelDesc->FoTMode, DmaMod->ChProp->FoTMode.Lsb, DmaMod->ChProp->FoTMode.Mask);
+	*Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId,
+			DmaMod->ChProp->EnOutofOrder.Lsb,
+			DmaMod->ChProp->EnOutofOrder.Mask) |
+		XAie_SetField(DmaChannelDesc->EnCompression,
+			DmaMod->ChProp->EnCompression.Lsb,
+			DmaMod->ChProp->EnCompression.Mask) |
+		XAie_SetField(DmaChannelDesc->ControllerId,
+			DmaMod->ChProp->ControllerId.Lsb,
+			DmaMod->ChProp->ControllerId.Mask) |
+		XAie_SetField(DmaChannelDesc->FoTMode,
+			DmaMod->ChProp->FoTMode.Lsb,
+			DmaMod->ChProp->FoTMode.Mask);
 
 	return XAIE_OK;
 }

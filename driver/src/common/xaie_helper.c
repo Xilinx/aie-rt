@@ -352,17 +352,17 @@ u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
  * that may not have strcasecmp() available.
  */
 static s32 xaie_strcasecmp(const char *s1, const char *s2) {
-	unsigned char c1, c2;
+	u8 c1, c2;
 
 	while ((*s1 && *s2) != 0U) {
-		c1 = (unsigned char)*s1;
-		c2 = (unsigned char)*s2;
+		c1 = (u8)*s1;
+		c2 = (u8)*s2;
 
 		/* Convert to lowercase */
-		if (c1 >= (unsigned char)'A' && c1 <= (unsigned char)'Z') {
+		if (c1 >= (u8)'A' && c1 <= (u8)'Z') {
 			c1 += 'a' - 'A';
 		}
-		if (c2 >= (unsigned char)'A' && c2 <= (unsigned char)'Z') {
+		if (c2 >= (u8)'A' && c2 <= (u8)'Z') {
 			c2 += 'a' - 'A';
 		}
 
@@ -375,12 +375,12 @@ static s32 xaie_strcasecmp(const char *s1, const char *s2) {
 	}
 
 	/* Handle different string lengths */
-	c1 = (unsigned char)*s1;
-	c2 = (unsigned char)*s2;
-	if (c1 >= (unsigned char)'A' && c1 <= (unsigned char)'Z') {
+	c1 = (u8)*s1;
+	c2 = (u8)*s2;
+	if (c1 >= (u8)'A' && c1 <= (u8)'Z') {
 		c1 += 'a' - 'A';
 	}
-	if (c2 >= (unsigned char)'A' && c2 <= (unsigned char)'Z') {
+	if (c2 >= (u8)'A' && c2 <= (u8)'Z') {
 		c2 += 'a' - 'A';
 	}
 

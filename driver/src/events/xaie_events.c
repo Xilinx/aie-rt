@@ -1432,8 +1432,8 @@ AieRC XAie_EventEdgeControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	u32 EventVal = (u32)Event;
 	if((EventVal < EvntMod->EventMin) || (EventVal > EvntMod->EventMax)) {
-		XAIE_ERROR("Invalid Event id. Event:%u EventMin:%u EventMax:%u\n",
-				EventVal, EvntMod->EventMin, EvntMod->EventMax);
+		XAIE_ERROR("Invalid Event id. Event:%u Col:%u Row:%u EventMin:%u EventMax:%u\n",
+				EventVal, Loc.Col, Loc.Row, EvntMod->EventMin, EvntMod->EventMax);
 		return XAIE_INVALID_ARGS;
 	}
 

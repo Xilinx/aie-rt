@@ -116,8 +116,7 @@ void uc_dma_process_dm2mm_responses()
                 #endif
                 wait_handle_release(task->wait_handle);
             }
-        }
-        else
+        } else
         {
             return;
         }
@@ -252,8 +251,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
     if (op == ATOMICOP_NONE)
     {
         return true;
-    }
-    else if (op == ATOMICOP_FETCHADD)
+    } else if (op == ATOMICOP_FETCHADD)
     {
         assert(payload_dwords == 1);
 
@@ -270,8 +268,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
             addr_low,
             (void *)data_ptr,
             sizeof(uint64_t));
-    }
-    else if (op == ATOMICOP_SWAP)
+    } else if (op == ATOMICOP_SWAP)
     {
         assert(payload_dwords == 1);
 
@@ -282,8 +279,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
             addr_low,
             (void *)data_ptr,
             sizeof(uint64_t));
-    }
-    else if (op == ATOMICOP_CAS)
+    } else if (op == ATOMICOP_CAS)
     {
         assert(payload_dwords == 2);
 
@@ -303,8 +299,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
                 (void *)data_ptr,
                 sizeof(uint64_t));
         }
-    }
-    else
+    } else
     {
         (void)payload_dwords; //avoid compile warning
         return false;

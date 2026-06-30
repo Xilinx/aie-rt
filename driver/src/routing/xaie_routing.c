@@ -236,8 +236,7 @@ AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance,
 	XAIE_DBG("      \"BDState\": [");
 	if (_XAie_isMemTile(RoutingInstance, XAie_TileLoc(col, row))) {
 		_XAie_printBitfield((s32)(constraint->BDState), 48);
-	}
-	else {
+	} else {
 		_XAie_printBitfield((s32)(constraint->BDState), 16);
 	}
 	XAIE_DBG("],\n");
@@ -378,8 +377,6 @@ static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const X
 			} else if (dRow == 0 && dCol == 1) {
 				/* Right */
 				mark = '>';
-			} else {
-				/* No action required */
 			}
 		}
 
@@ -639,8 +636,7 @@ static int32_t findAvailableChannelIDforShimTile(const XAie_RoutingInstance *rou
 				return (s32)(constraint->Host2AIEPorts[i].channel);
 			}
 		}
-	}
-	else {
+	} else {
 		for (int32_t i = 0; i < constraint->AIE2HostPortCount; i++) {
 			if (constraint->AIE2HostPorts[i].port == port) {
 				// Found a matching stream
@@ -846,8 +842,7 @@ s32 _XAie_findFirstMatchingStream(XAie_RoutingInstance* RoutingInstance, XAie_Lo
 					return (s32)(constraint->AIE2HostPorts[i].port);
 				}
 			}
-		}
-		else {
+		} else {
 			for (int32_t i = 0; i < constraint->Host2AIEPortCount; i++) {
 				if (constraint->Host2AIEPorts[i].availability) {
 					/* Found a available port */
@@ -874,8 +869,7 @@ s32 _XAie_findFirstMatchingStream(XAie_RoutingInstance* RoutingInstance, XAie_Lo
 		case DMA:
 			if (isEndTile) {
 				portAvailability = constraint->S2MM_State;
-			}
-			else {
+			} else {
 				portAvailability = constraint->MM2S_State;
 			}
 			break;
@@ -1384,8 +1378,7 @@ AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_LocType source,
 				 */
 				_XAie_updatePortAvailabilityForShimDmaToAie(routingInstance,
 					currentStep->sourceTile, currentStep->sourceStream, true);
-			}
-			else {
+			} else {
 				//currently there is no API to disable ShimDMA to AIEStream Port
 				// int RC = XAie_DisableAieToShimDmaStrmPort(DevInst, currentStep->sourceTile,
 				//     currentStep->sourceStream);
@@ -1611,13 +1604,11 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 				Sourceconstraint->routesDB = (XAie_ProgrammedRoutes *)aligned_alloc(16,
 								sizeof(XAie_ProgrammedRoutes));
 				Sourceconstraint->routesDB->routePath = CurrRoutingPath;
-			}
-			else {
+			} else {
 				_XAie_addRouteInRoutesDB(&(Sourceconstraint->routesDB),
 							CurrRoutingPath);
 			}
-		}
-		else {
+		} else {
 			XAie_LocType SourceTile = path[i];
 			XAie_LocType DestinationTile = path[i + 1];
 
@@ -1632,8 +1623,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 
 			if (_XAie_isShimTile(routingInstance, SourceTile)) {
 				actualdirSource = (s32)lastDir;
-			}
-			else {
+			} else {
 				actualdirSource = (i == 0) ? DMA : lastDir;
 			}
 
@@ -1644,12 +1634,10 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 					sourceStream = _XAie_findFirstMatchingStream(
 							routingInstance, SourceTile,
 							actualdirSource, false);
-				}
-				else {
+				} else {
 					sourceStream = lastStream;
 				}
-			}
-			else {
+			} else {
 				sourceStream = _XAie_findFirstMatchingStream(
 						routingInstance, SourceTile,
 						actualdirSource, false);
@@ -2343,8 +2331,7 @@ AieRC XAie_ConfigHostEdgeConstraints(const XAie_RoutingInstance *routingInstance
 		if (Constraint.HostToAie) {
 			coreConstraint->Host2AIEPorts = Constraint.channelPortMappings;
 			coreConstraint->Host2AIEPortCount = Constraint.channelPortMappingCount;
-		}
-		else {
+		} else {
 			coreConstraint->AIE2HostPorts = Constraint.channelPortMappings;
 			coreConstraint->AIE2HostPortCount = Constraint.channelPortMappingCount;
 		}
@@ -2606,8 +2593,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 		defaultAIE2HostPortChannelMapping[1].port = 3;
 		defaultAIE2HostPortChannelMapping[1].channel = 1;
 		defaultAIE2HostPortChannelMapping[1].availability = true;
-	}
-	else {
+	} else {
 		defaultAIE2HostPortChannelMapping[0].port = 2;
 		defaultAIE2HostPortChannelMapping[0].channel = 0;
 		defaultAIE2HostPortChannelMapping[0].availability = true;
@@ -2677,8 +2663,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 				CurrCoreConstraint->mm2sChannelsInUse.MM2S_ports = NULL;
 				CurrCoreConstraint->mm2sChannelsInUse.MM2S_portCount = 0;
 				CurrCoreConstraint->isCoreExecuting = false;
-			}
-			else if (isAieTile) {
+			} else if (isAieTile) {
 				CurrCoreConstraint->isAutoConfigured = false;
 				CurrCoreConstraint->tile_type = 2;
 				/* set 2 bits and rest 0 */
@@ -2723,8 +2708,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 				CurrCoreConstraint->mm2sChannelsInUse.MM2S_ports = NULL;
 				CurrCoreConstraint->mm2sChannelsInUse.MM2S_portCount = 0;
 				CurrCoreConstraint->isCoreExecuting = false;
-			}
-			else if (isShimTileRow) {
+			} else if (isShimTileRow) {
 				CurrCoreConstraint->isAutoConfigured = false;
 				CurrCoreConstraint->tile_type = 0;
 				/* 2 S2MM channels? */

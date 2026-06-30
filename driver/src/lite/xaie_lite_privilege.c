@@ -339,8 +339,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, const XAie_PartInitOpt
 		}
 		_XAie_LSetPartIsolationAfterRst(DevInst, IsolationFlags);
 
-	}
-	else
+	} else
 	{
 		XAIE_ERROR("Invalid Device Partition Soft Partition Info. StartCol:%u Numcols:%u\n",DevPartInfo->StartCol,DevPartInfo->NumCols);
 		return XAIE_INVALID_ARGS;
@@ -461,8 +460,7 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 					ColClockStatus, DevInst->NumRows - 1);
 		}
-	}
-	else {
+	} else {
 			for(u32 C = 0; C < DevInst->NumCols; C++) {
 			XAie_LocType Loc;
 			u32 ColClockStatus;

@@ -673,8 +673,7 @@ static AieRC _XAie_ZephyrIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 		if(RC != XAIE_OK) {
 			return RC;
 		}
-	}
-	else {
+	} else {
 		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, XAIE_CLEAR_ISOLATION);
 		if(RC != XAIE_OK) {
 			return RC;
