@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include "xaie_helper.h"
 
-#if defined(__AIEBAREMETAL__) || defined(__AIEZEPHYR__)
+#ifdef __AIEBAREMETAL__
 
 #include "pm_api_sys.h"
 #include "pm_client.h"

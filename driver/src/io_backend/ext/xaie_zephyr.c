@@ -28,8 +28,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/cache.h>
 
-#include "pm_init.h"
-#include "xpm_defs.h"
 #endif
 
 #include "xaie_helper.h"
@@ -106,8 +104,10 @@ static AieRC XAie_ZephyrIO_Finish(void *IOInst)
 static AieRC XAie_ZephyrIO_Init(XAie_DevInst *DevInst)
 {
 	XAie_ZephyrIO *IOInst;
+#if defined(XAIE_PROD)
 	static XIpiPsu IpiInst;
 	int Ret;
+#endif
 
 	IOInst = (XAie_ZephyrIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -120,14 +120,17 @@ static AieRC XAie_ZephyrIO_Init(XAie_DevInst *DevInst)
 	BTREE4_INIT(&IOInst->btree, XAie_ZephyrIO_MemInst_Compare);
 	DevInst->IOInst = (void *)IOInst;
 
-	if (DevInst->IsProd == XAIE_ENABLE &&
-			DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIEML) {
+#if defined(XAIE_PROD)
+	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIEML) {
+		DevInst->IsProd = 1U;
+
 		Ret = XAie_PmInit(&IpiInst);
 		if (Ret != XST_SUCCESS) {
 			XAIE_ERROR("Failed to initialize PM\n");
 			return Ret;
 		}
 	}
+#endif
 
 	return XAIE_OK;
 }
@@ -174,6 +177,7 @@ static AieRC XAie_ZephyrIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 static AieRC _XAie_ZephyrIO_PrivilegeWrite32(u32 StartCol,
 						u32 NumCols, u32 Ops)
 {
+#if defined(XAIE_PROD)
 	u32 Response;
 	int Ret;
 
@@ -183,6 +187,7 @@ static AieRC _XAie_ZephyrIO_PrivilegeWrite32(u32 StartCol,
 		XAIE_ERROR("Failed to write to privileged register.\n");
 		return XAIE_ERR;
 	}
+#endif
 	return XAIE_OK;
 }
 
@@ -633,6 +638,7 @@ static AieRC _XAie_ZephyrIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 						 XAie_PartInitOpts *Opts)
 {
 	AieRC RC = XAIE_OK;
+#ifdef XAIE_PROD
 	u32 OptFlags;
 
 	if(Opts != NULL) {
@@ -719,6 +725,7 @@ static AieRC _XAie_ZephyrIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 		}
 	}
 
+#endif
 	return RC;
 }
 
@@ -746,6 +753,8 @@ static AieRC _XAie_ZephyrIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 static AieRC _XAie_ZephyrIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 {
 	AieRC RC = XAIE_OK;
+
+#if defined(XAIE_PROD)
 
 	RC = _XAie_ZephyrIO_PrivilegeWrite32(DevInst->StartCol,
 				    DevInst->NumCols, AIE_OPS_COL_RST);
@@ -791,6 +800,7 @@ static AieRC _XAie_ZephyrIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 			XAIE_ERROR("Column Gating failed!\n");
 		}
 	}
+#endif
 
 	return RC;
 }
@@ -798,6 +808,7 @@ static AieRC _XAie_ZephyrIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 AieRC _XAie_ZephyrIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 					      XAie_BackendColumnReq *Args)
 {
+#ifdef XAIE_PROD
 	AieRC RC;
 
 	u32 TileStatus, NumTiles, Ops;
@@ -830,6 +841,7 @@ AieRC _XAie_ZephyrIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
 				TileStatus, NumTiles);
 	}
+#endif
 
 	return XAIE_OK;
 }
@@ -837,6 +849,7 @@ AieRC _XAie_ZephyrIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 AieRC _XAie_ZephyrIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 					      XAie_BackendTilesArray *Args)
 {
+#ifdef XAIE_PROD
 	AieRC RC;
 	u32 SetTileStatus;
 
@@ -904,6 +917,7 @@ AieRC _XAie_ZephyrIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 			ColClockStatus, (u32)(DevInst->NumRows - 1U));
 	}
+#endif
 	return XAIE_OK;
 }
 
