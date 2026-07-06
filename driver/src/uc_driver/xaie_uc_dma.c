@@ -21,7 +21,7 @@
 
 // === Private ===
 
-#define UC_DMA_TASK_QUEUE_DEPTH         16
+#define UC_DMA_TASK_QUEUE_DEPTH         16U
 #define UC_DMA_RESPONSE_IS_VALID(x)     (((x) & (1UL << 31)) != 0)
 #define UC_DMA_RESPONSE_GET_BD_PTR(x)   (((x) & 0x7FFFFFFF))
 #define UC_DMA_IS_RUNNING(x)  (((x) & 0x1F01) != 0)
@@ -86,12 +86,14 @@ void uc_dma_process_responses()
     {
         const unsigned int queue_index = queue_pop(&uc_dma_dm2mm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH);
         assert(queue_index != INVALID_QUEUE_ENTRY);
-
-        const uc_dma_active_task_t *task = &_uc_dma_dm2mm_active_tasks[queue_index];
-#ifdef WITH_ASSERT
-        assert(task->bd_ptr == UC_DMA_RESPONSE_GET_BD_PTR(response));
-#endif
-        wait_handle_release(task->wait_handle);
+        if(queue_index < UC_DMA_TASK_QUEUE_DEPTH)
+        {
+            const uc_dma_active_task_t *task = &_uc_dma_dm2mm_active_tasks[queue_index];
+            #ifdef WITH_ASSERT
+            assert(task->bd_ptr == UC_DMA_RESPONSE_GET_BD_PTR(response));
+            #endif
+            wait_handle_release(task->wait_handle);
+        }
     }
 }
 
@@ -106,12 +108,14 @@ void uc_dma_process_dm2mm_responses()
         {
             const unsigned int queue_index = queue_pop(&uc_dma_dm2mm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH);
             assert(queue_index != INVALID_QUEUE_ENTRY);
-
-            const uc_dma_active_task_t *task = &_uc_dma_dm2mm_active_tasks[queue_index];
-#ifdef WITH_ASSERT
-            assert(task->bd_ptr == UC_DMA_RESPONSE_GET_BD_PTR(response));
-#endif
-            wait_handle_release(task->wait_handle);
+            if(queue_index < UC_DMA_TASK_QUEUE_DEPTH)
+            {
+                const uc_dma_active_task_t *task = &_uc_dma_dm2mm_active_tasks[queue_index];
+                #ifdef WITH_ASSERT
+                assert(task->bd_ptr == UC_DMA_RESPONSE_GET_BD_PTR(response));
+                #endif
+                wait_handle_release(task->wait_handle);
+            }
         }
         else
         {
@@ -163,14 +167,16 @@ uint16_t uc_dma_dm2mm_push_task(const uint32_t bd_ptr)
 
     const unsigned int queue_index = queue_push_nocheck(&uc_dma_dm2mm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH);
     assert(queue_index != INVALID_QUEUE_ENTRY);
+    if(queue_index < UC_DMA_TASK_QUEUE_DEPTH)
+    {
+        uc_dma_active_task_t *task = &_uc_dma_dm2mm_active_tasks[queue_index];
+        #ifdef WITH_ASSERT
+        task->bd_ptr = bd_ptr;
+        #endif
+        task->wait_handle = wait_handle;
 
-    uc_dma_active_task_t *task = &_uc_dma_dm2mm_active_tasks[queue_index];
-#ifdef WITH_ASSERT
-    task->bd_ptr = bd_ptr;
-#endif
-    task->wait_handle = wait_handle;
-
-    reg_write32(REG_UC_DMA_DM2MM_TASK_QUEUE_PUSH, bd_ptr);
+        reg_write32(REG_UC_DMA_DM2MM_TASK_QUEUE_PUSH, bd_ptr);
+    }
 
     return wait_handle;
 }
@@ -193,13 +199,16 @@ uint16_t uc_dma_mm2dm_push_task(uint32_t bd_ptr)
     const unsigned int queue_index = queue_push_nocheck(&uc_dma_mm2dm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH);
     assert(queue_index != INVALID_QUEUE_ENTRY);
 
-    uc_dma_active_task_t *task = &_uc_dma_mm2dm_active_tasks[queue_index];
-#ifdef WITH_ASSERT
-    task->bd_ptr = bd_ptr;
-#endif
-    task->wait_handle = wait_handle;
+    if(queue_index < UC_DMA_TASK_QUEUE_DEPTH)
+    {
+        uc_dma_active_task_t *task = &_uc_dma_mm2dm_active_tasks[queue_index];
+        #ifdef WITH_ASSERT
+        task->bd_ptr = bd_ptr;
+        #endif
+        task->wait_handle = wait_handle;
 
-    reg_write32(REG_UC_DMA_MM2DM_TASK_QUEUE_PUSH, bd_ptr);
+        reg_write32(REG_UC_DMA_MM2DM_TASK_QUEUE_PUSH, bd_ptr);
+    }
 
     return wait_handle;
 }
