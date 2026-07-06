@@ -11,6 +11,7 @@
 *
 * This file contains implementation of transaction buffer processing in uC.
 ******************************************************************************/
+#include <unistd.h>
 
 #include "xaie_txn_buffer.h"
 #include "xaie_regdb_uc_module_core.h"
@@ -95,6 +96,8 @@ void uc_block_set32(uint64_t reg_offset, uint32_t data, uint32_t size)
 // Execute a command passed in struct txn_cmd. cmd_size is not being used currently but kept for future usage.
 int  uc_execute_txn_buffer_cmds(txn_cmd *cmd, uint32_t Flags, uint32_t *cmd_size)
 {
+	(void)Flags;
+	(void)cmd_size;
 	assert(cmd->opcode < XAIE_IO_CUSTOM_OP_BEGIN);
 	int ret = 0;
 

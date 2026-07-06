@@ -16,6 +16,7 @@
 #include <unistd.h>
 #endif
 
+#include "xaie_txn_buffer.h"
 #include "xaie_uc_core.h"
 #include "xaie_events_aie.h"
 #include "xaie_feature_config.h"
@@ -58,7 +59,9 @@ void uc_core_enable(uint8_t row, uint8_t col)
 	reg_addr = XAIE2PSGBL_CORE_MODULE_CORE_CONTROL +
 		get_tile_address(row, col);
 
-	return uc_mask_write32(reg_addr, mask, value);
+	uc_mask_write32(reg_addr, mask, value);
+
+	return;
 }
 
 void uc_get_core_status(uint8_t row, uint8_t col, uint32_t* core_status)
