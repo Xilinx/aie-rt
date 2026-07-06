@@ -155,20 +155,19 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 	BTREE4_INIT(&IOInst->btree, XAie_BaremetalIO_MemInst_Compare);
 	DevInst->IOInst = (void *)IOInst;
 
-	XAie_BaremetalUseIoctl2 = 0U;
-	if (DevInst->IsProd == XAIE_ENABLE &&
-			DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
+#if defined(XAIE_PROD)
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS)
 		XAie_BaremetalUseIoctl2 = 1U;
-	}
 
-	if (DevInst->IsProd == XAIE_ENABLE &&
-			DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIE2PS) {
+	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIE2PS) {
+		DevInst->IsProd = 1U;
 		Ret = XAie_PmInit(&IpiInst);
 		if (Ret != XST_SUCCESS) {
 			XAIE_ERROR("Failed to initialize PM\n");
 			return Ret;
 		}
 	}
+#endif
 
 	return XAIE_OK;
 }
