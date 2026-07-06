@@ -26,8 +26,11 @@
 
 #ifdef __AIEBAREMETAL__
 
+#ifdef XAIE_PROD
 #include "pm_init.h"
 #include "xpm_defs.h"
+#endif
+
 #include "sleep.h"
 #include "xil_cache.h"
 #include "xil_io.h"
@@ -136,8 +139,10 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 {
 	XAie_BaremetalIO *IOInst;
+#if defined(XAIE_PROD)
 	static XIpiPsu IpiInst;
 	int Ret;
+#endif
 
 	IOInst = (XAie_BaremetalIO *)malloc(sizeof(*IOInst));
 	if(IOInst == NULL) {
@@ -210,6 +215,7 @@ static AieRC XAie_BaremetalIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 						u32 NumCols, u32 Ops)
 {
+#if defined(XAIE_PROD)
 	u32 Response;
 	int Ret;
 	if (XAie_BaremetalUseIoctl2 == 0U) {
@@ -251,7 +257,7 @@ static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 		XAIE_ERROR("Failed to write to privileged register. NumCols: %u StartCol: %u PLM Op ID:%u\n", NumCols, StartCol, Ops);
 		return XAIE_ERR;
 	}
-
+#endif
 	return XAIE_OK;
 }
 /*****************************************************************************/
@@ -695,7 +701,9 @@ static AieRC _XAie_BaremetalIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 						 XAie_PartInitOpts *Opts)
 {
+#ifdef XAIE_PROD
 	AieRC RC = XAIE_OK;
+
 	u32 OptFlags;
 
 	if(Opts != NULL) {
@@ -783,6 +791,9 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 	}
 
 	return RC;
+#else
+	return XAIE_OK;
+#endif
 }
 
 /*****************************************************************************/
@@ -808,7 +819,8 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 *******************************************************************************/
 static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 {
-	AieRC RC = XAIE_OK;
+#if defined(XAIE_PROD)
+	AieRC RC;
 
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
 				    DevInst->NumCols, AIE_OPS_COL_RST);
@@ -856,11 +868,15 @@ static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 	}
 
 	return RC;
+#else
+	return XAIE_OK;
+#endif
 }
 
 AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 					      XAie_BackendColumnReq *Args)
 {
+#ifdef XAIE_PROD
 	AieRC RC;
 
 	u32 TileStatus, NumTiles, Ops;
@@ -893,12 +909,15 @@ AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
 				TileStatus, NumTiles);
 	}
+#endif
+
 	return XAIE_OK;
 }
 
 AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 					      XAie_BackendTilesArray *Args)
 {
+#ifdef XAIE_PROD
 	AieRC RC;
 	u32 SetTileStatus;
 
@@ -966,6 +985,7 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 			ColClockStatus, (u32)(DevInst->NumRows - 1U));
 	}
+#endif
 	return XAIE_OK;
 }
 
