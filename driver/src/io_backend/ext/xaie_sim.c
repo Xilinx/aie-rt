@@ -718,7 +718,7 @@ AieRC XAie_SimMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
 static AieRC XAie_SimMemSyncForCPU(XAie_MemInst *MemInst)
 {
 	uint32_t *va = MemInst->VAddr;
-	uint32_t *pa = MemInst->DevAddr;
+	uint32_t *pa = (uint32_t *)MemInst->DevAddr;
 	int i;
 
 	for (i = 0; i < MemInst->Size >> 2; i++) {
@@ -771,7 +771,7 @@ AieRC XAie_SimMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
 
 static AieRC XAie_SimMemSyncForDev(XAie_MemInst *MemInst)
 {
-	uint32_t *pa = MemInst->DevAddr;
+	uint32_t *pa = (uint32_t *)MemInst->DevAddr;
 	uint32_t *va = MemInst->VAddr;
 	int i;
 

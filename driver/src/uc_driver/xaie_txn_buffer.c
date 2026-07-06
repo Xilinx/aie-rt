@@ -15,6 +15,8 @@
 #include "xaie_txn_buffer.h"
 #include "xaie_regdb_uc_module_core.h"
 
+#include <unistd.h>
+
 void uc_read32(uint64_t reg_offset, uint32_t *data)
 {
 	*data = *((uint32_t *)(AIE2PS_UC_MODULE_CORE__ARRAY_AXI_MM + reg_offset));

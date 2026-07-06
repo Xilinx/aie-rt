@@ -26,6 +26,7 @@
 #include "xaiegbl.h"
 #include "xaiegbl_regdef.h"
 #include "xaiegbl_params.h"
+#include "xaie_txn_buffer.h"
 
 #define ROW_SHIFT 20
 #define COL_SHIFT 25
