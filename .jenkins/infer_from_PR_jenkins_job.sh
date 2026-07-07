@@ -1,21 +1,21 @@
 #!/bin/bash
 
-# Jenkins already provides these variables and has merged the PR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=ci_common.sh
+source "${SCRIPT_DIR}/ci_common.sh"
+
+# CI provides these variables; the workspace already contains the merged PR code.
 echo "GITHUB_PR_TRIGGER_SENDER_AUTHOR: $GITHUB_PR_TRIGGER_SENDER_AUTHOR"
 echo "GITHUB_PR_URL: $GITHUB_PR_URL"
 echo "GITHUB_PR_NUMBER: $GITHUB_PR_NUMBER"
 echo "Source Branch: $GITHUB_PR_SOURCE_BRANCH"
 echo "Target Branch: $GITHUB_PR_TARGET_BRANCH"
 
-# Current directory already contains the merged PR code
 echo "Current workspace already contains merged PR code at: $(pwd)"
 WORKSPACE_DIR=$(pwd)
 
-# Parse owner and repo from PR URL
-REPO_URL=$(echo $GITHUB_PR_URL | sed 's/https:\/\/gitenterprise.xilinx.com\///' | sed 's/\/pull.*//')
-OWNER=$(echo $REPO_URL | cut -d'/' -f1)
-REPO=$(echo $REPO_URL | cut -d'/' -f2)
-DEST_REPO="${OWNER}/${REPO}"
+# Parse owner/repo from GitHub or gitenterprise PR URL
+DEST_REPO="$(ci_parse_pr_repo)"
 DEST_BRANCH=${GITHUB_PR_TARGET_BRANCH}
 
 echo "Destination Repository: $DEST_REPO"
@@ -49,7 +49,7 @@ function extract_issue_count {
     grep "$issue" "$file" | awk -F': ' '{print $2}'
 }
 
-# Run Infer on SOURCE (merged PR code in Jenkins workspace)
+# Run Infer on SOURCE (merged PR code in CI workspace)
 echo "Running Infer analysis on merged PR code..."
 rm -rf infer-source
 mkdir -p infer-source
@@ -71,7 +71,7 @@ cd ../../..
 # Run Infer on DESTINATION (target branch)
 echo "Cloning destination branch for comparison..."
 rm -rf infer-dest
-git clone "https://gitenterprise.xilinx.com/${DEST_REPO}.git" infer-dest || {
+ci_git_clone_full "$DEST_REPO" infer-dest || {
     echo "Error: Failed to clone destination repository"
     exit 1
 }

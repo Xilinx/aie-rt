@@ -1,14 +1,16 @@
 #!/bin/bash
 
-# Jenkins already provides these variables and has merged the PR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=ci_common.sh
+source "${SCRIPT_DIR}/ci_common.sh"
+
+# CI provides these variables; the workspace already contains the merged PR code.
 echo "GITHUB_PR_TRIGGER_SENDER_AUTHOR: $GITHUB_PR_TRIGGER_SENDER_AUTHOR"
 echo "GITHUB_PR_URL: $GITHUB_PR_URL"
 echo "GITHUB_PR_NUMBER: $GITHUB_PR_NUMBER"
 echo "Source Branch: $GITHUB_PR_SOURCE_BRANCH"
 echo "Target Branch: $GITHUB_PR_TARGET_BRANCH"
 
-# Current directory already contains the merged PR code
-# Jenkins has already done: git clone + git checkout + git merge
 echo "Current workspace already contains merged PR code at: $(pwd)"
 WORKSPACE_DIR=$(pwd)
 
@@ -21,7 +23,7 @@ cd .. || {
 
 rm -rf cpputest
 CPPUTEST_DIR="$(pwd)/cpputest"
-git clone https://gitenterprise.xilinx.com/ai-engine/cpputest.git $CPPUTEST_DIR || {
+ci_git_clone cpputest "$CPPUTEST_DIR" || {
     echo "Error: Failed to clone cpputest repository"
     exit 1
 }

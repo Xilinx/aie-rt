@@ -23,15 +23,17 @@ echo "✓ Cleanup completed"
 echo "=========================================="
 echo ""
 
-# Jenkins already provides these variables and has merged the PR
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=ci_common.sh
+source "${SCRIPT_DIR}/ci_common.sh"
+
+# CI provides these variables; the workspace already contains the merged PR code.
 echo "GITHUB_PR_TRIGGER_SENDER_AUTHOR: $GITHUB_PR_TRIGGER_SENDER_AUTHOR"
 echo "GITHUB_PR_URL: $GITHUB_PR_URL"
 echo "GITHUB_PR_NUMBER: $GITHUB_PR_NUMBER"
 echo "Source Branch: $GITHUB_PR_SOURCE_BRANCH"
 echo "Target Branch: $GITHUB_PR_TARGET_BRANCH"
 
-# Current directory already contains the merged PR code
-# Jenkins has already done: git clone + git checkout + git merge
 echo "Current workspace already contains merged PR code at: $(pwd)"
 WORKSPACE_DIR=$(pwd)
 
@@ -49,7 +51,7 @@ if [ -d "aieml-tests-gen2" ]; then
     rm -rf aieml-tests-gen2
 fi
 
-git clone https://gitenterprise.xilinx.com/ai-engine/aieml-tests.git aieml-tests-gen2 || {
+ci_git_clone aieml-tests aieml-tests-gen2 || {
     echo "Error: Failed to clone aieml-tests repository"
     exit 1
 }
@@ -67,6 +69,7 @@ cp -r "$WORKSPACE_DIR/." ./aie-rt/ || {
 }
 
 echo "Successfully set up aie-rt in aieml-tests directory"
+ci_print_repo_revisions "$WORKSPACE_DIR" "$(pwd)"
 
 # Set environment and build/test
 echo "Setting up Vitis environment..."
@@ -92,31 +95,41 @@ export LD_LIBRARY_PATH=$PWD/../objects/:$LD_LIBRARY_PATH
 
 echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
 
-# Run make run_sim and store output in a file
+# Run make run_sim; capture stdout and stderr separately
 echo "Running simulations..."
-make run_sim > sim_output.txt << EOF
+set +e
+make run_sim > sim_output.txt 2> sim_stderr.txt << EOF
 all
 EOF
+sim_ret=$?
+set -e
 
-# Define the list of tests that are allowed to fail
-allowed_to_fail=("test_aie_col_status" "test_aie_dma_event")
+ci_publish_sim_logs "$WORKSPACE_DIR" "aieml_sim_output"
 
-# Use grep and awk to extract the names of the failing tests from sim_output.txt
-failing_tests=($(grep ' failed' sim_output.txt 2>/dev/null | awk '{print $(NF-1)}'))
-
-if [ ${#failing_tests[@]} -eq 0 ] && [ ! -f sim_output.txt ]; then
-  echo "Error: sim_output.txt does not exist. Marking build as failed."
-  exit 1
+if [ ! -f sim_output.txt ]; then
+    echo "Error: sim_output.txt does not exist (make run_sim exit code: $sim_ret)"
+    exit 1
 fi
 
-# Function to check if a test is in the allowed_to_fail list
-is_allowed_to_fail() {
-    local test=$1
-    for allowed_test in "${allowed_to_fail[@]}"; do
-        [[ $test == $allowed_test ]] && return 0
-    done
-    return 1
-}
+# Fail early if the suite stopped during generate_intr (avoids false "all passed")
+if ! ci_sim_check_suite_complete sim_output.txt; then
+    ci_publish_sim_logs "$WORKSPACE_DIR" "aieml_sim_output"
+    if [ -f sim_stderr.txt ]; then
+        echo ""
+        echo "=== Last 20 lines of sim_stderr.txt ==="
+        tail -20 sim_stderr.txt
+    fi
+    exit 1
+fi
+
+# Define the list of tests that are allowed to fail
+CI_ALLOWED_TO_FAIL=("test_aie_col_status" "test_aie_dma_event" "test_aie_pm_err_injection" "test_aie_shimdma_loopback" "test_aie_shimdma_loopback_profile")
+
+# Extract test names from lines containing " failed" (handles both
+# "test_foo failed." and "Partition initialization failed for test_foo.")
+mapfile -t failing_tests < <(grep ' failed' sim_output.txt | grep -oE 'test_[a-zA-Z0-9_]+' | sort -u)
+
+ci_print_sim_summary "$sim_ret" sim_output.txt "${failing_tests[@]}"
 
 # Check each failing test to see if it's allowed to fail
 echo "Checking test results..."
@@ -130,18 +143,25 @@ else
 fi
 
 for failing_test in "${failing_tests[@]}"; do
-    if ! is_allowed_to_fail "$failing_test"; then
+    if ! ci_is_allowed_to_fail "$failing_test" "${CI_ALLOWED_TO_FAIL[@]}"; then
         echo ""
         echo "=========================================="
         echo "FAILURE: Test $failing_test is not allowed to fail"
         echo "=========================================="
         echo ""
         cat sim_output.txt
+        ci_publish_sim_logs "$WORKSPACE_DIR" "aieml_sim_output"
         exit 1
     else
         echo "  ℹ Test $failing_test failed but is in allowed_to_fail list"
     fi
 done
+
+if [ "$sim_ret" -ne 0 ] && [ ${#failing_tests[@]} -eq 0 ]; then
+    echo "Error: make run_sim failed with exit code $sim_ret but no failing tests were parsed"
+    cat sim_output.txt
+    exit 1
+fi
 
 echo ""
 echo "✓ Test validation completed successfully"

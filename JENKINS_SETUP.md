@@ -1,5 +1,10 @@
 # Jenkins Job Configuration Guide
 
+> **Note:** CI for `AMD-AECG-AIENGINE/aie-rt` on GitHub is migrating to GitHub Actions.
+> See [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md) for the current GitHub Actions
+> runner and workflow setup. This Jenkins guide remains for reference until Jenkins jobs
+> are decommissioned.
+
 This guide explains how to configure 4 separate Jenkins Multibranch Pipeline jobs to run individual test suites and report their status separately on GitHub PRs.
 
 ## Overview

@@ -215,6 +215,8 @@ jobs:
       if: steps.approval-check.outputs.all_conditions_met == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GHB_TKN }}
+        CI_GITHUB_TOKEN: ${{ secrets.GHB_TKN }}
       run: |
         # Extract Information from GitHub Event
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }} 
@@ -244,8 +246,8 @@ jobs:
         SOURCE_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .head.ref)
         TARGET_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .base.ref)
 
-        # Clone the target repository
-        git clone https://gitenterprise.xilinx.com/${{ github.repository }}.git target-repo
+        # Clone the target repository from GitHub (clear LD_LIBRARY_PATH for git on build hosts)
+        LD_LIBRARY_PATH= git clone "https://x-access-token:${CI_GITHUB_TOKEN}@github.com/${{ github.repository }}.git" target-repo
 
         cd target-repo
 

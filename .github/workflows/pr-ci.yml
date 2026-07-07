@@ -1,0 +1,213 @@
+name: AIE-RT PR CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, main-aie, main-next, main-aie-next]
+
+permissions:
+  contents: read
+  statuses: write
+  pull-requests: read
+
+env:
+  GITHUB_ORG: AMD-AECG-AIENGINE
+
+jobs:
+  aieml-tests:
+    name: AIE_Driver_AIEML_Tests_From_PR
+    runs-on: self-hosted
+    concurrency:
+      group: aieml-simulator-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout merged PR
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run AIEML tests
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_PR_SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          GITHUB_PR_TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+          GITHUB_PR_TRIGGER_SENDER_AUTHOR: ${{ github.event.pull_request.user.login }}
+          CI_GITHUB_TOKEN: ${{ secrets.GHB_TKN }}
+        run: bash -x ./.jenkins/aie_driver_AIEML_Tests_from_PR.sh
+
+      - name: Upload simulation log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aieml-sim-output-pr-${{ github.event.pull_request.number }}
+          path: |
+            aieml_sim_output.txt
+            aieml_sim_output_stderr.txt
+          if-no-files-found: ignore
+
+      - name: Post commit status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const description = state === 'success' ? 'AIEML Tests Passed' : 'AIEML Tests Failed';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state,
+              context: 'AIE_Driver_AIEML_Tests_From_PR',
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+  aie2ps-tests:
+    name: AIE_Driver_AIEML_AIE2PS_Tests_From_PR
+    runs-on: self-hosted
+    concurrency:
+      group: aieml-simulator-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout merged PR
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run AIE2PS tests
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_PR_SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          GITHUB_PR_TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+          GITHUB_PR_TRIGGER_SENDER_AUTHOR: ${{ github.event.pull_request.user.login }}
+          CI_GITHUB_TOKEN: ${{ secrets.GHB_TKN }}
+        run: bash -x ./.jenkins/aie_driver_AIEML_AIE2PS_Tests_from_PR.sh
+
+      - name: Upload simulation log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aie2ps-sim-output-pr-${{ github.event.pull_request.number }}
+          path: |
+            aie2ps_sim_output.txt
+            aie2ps_sim_output_stderr.txt
+          if-no-files-found: ignore
+
+      - name: Post commit status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const description = state === 'success' ? 'AIE2PS Tests Passed' : 'AIE2PS Tests Failed';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state,
+              context: 'AIE_Driver_AIEML_AIE2PS_Tests_From_PR',
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+  unit-tests:
+    name: AIE_Driver_Build_UT_From_PR
+    runs-on: self-hosted
+    steps:
+      - name: Checkout merged PR
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run unit tests
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_PR_SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          GITHUB_PR_TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+          GITHUB_PR_TRIGGER_SENDER_AUTHOR: ${{ github.event.pull_request.user.login }}
+          CI_GITHUB_TOKEN: ${{ secrets.GHB_TKN }}
+        run: bash -x ./.jenkins/build_UT_from_PR_jenkins_job.sh
+
+      - name: Post commit status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const description = state === 'success' ? 'Unit Tests Passed' : 'Unit Tests Failed';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state,
+              context: 'AIE_Driver_Build_UT_From_PR',
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+  infer:
+    name: AIE_Driver_Infer_From_PR
+    runs-on: self-hosted
+    steps:
+      - name: Checkout merged PR
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Infer analysis
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_PR_SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          GITHUB_PR_TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+          GITHUB_PR_TRIGGER_SENDER_AUTHOR: ${{ github.event.pull_request.user.login }}
+          CI_GITHUB_TOKEN: ${{ secrets.GHB_TKN }}
+        run: bash -x ./.jenkins/infer_from_PR_jenkins_job.sh
+
+      - name: Post commit status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const description = state === 'success' ? 'Infer Analysis Passed' : 'Infer Analysis Failed';
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request.head.sha,
+              state,
+              context: 'AIE_Driver_Infer_From_PR',
+              description,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+  notify:
+    name: CI Summary Notification
+    runs-on: self-hosted
+    needs: [aieml-tests, aie2ps-tests, unit-tests, infer]
+    if: always() && !cancelled()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send combined summary email
+        continue-on-error: true
+        env:
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_PR_SOURCE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          GITHUB_PR_TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+          GITHUB_PR_TRIGGER_SENDER_AUTHOR: ${{ github.event.pull_request.user.login }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RESULT_AIEML: ${{ needs.aieml-tests.result }}
+          RESULT_AIE2PS: ${{ needs.aie2ps-tests.result }}
+          RESULT_UNITTEST: ${{ needs.unit-tests.result }}
+          RESULT_INFER: ${{ needs.infer.result }}
+        run: bash ./.jenkins/send_ci_summary_email.sh
