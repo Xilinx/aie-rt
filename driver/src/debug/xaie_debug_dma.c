@@ -10,9 +10,9 @@
 * @{
 *
 * This file contains routines for DMA transaction count debug APIs.
-* These APIs use performance counters to track DMA Start and End events,
-* exposing how many DMA work units were started and how many BDs (i.e.,
-* data deliveries) completed for verifying DMA progress and debugging hangs.
+* These APIs use a performance counter per channel to track the DMA
+* FINISHED_BD event, exposing how many BDs (i.e., data deliveries) a
+* channel has completed, for verifying DMA progress and debugging hangs.
 *
 * <pre>
 * MODIFICATION HISTORY:
@@ -20,6 +20,9 @@
 * Ver   Who     Date        Changes
 * ----- ------  --------    ---------------------------------------------------
 * 1.0   yosong  04/30/2026  Initial creation
+* 1.1   yosong  07/13/2026  Drop Start-event tracking; count BD completions
+*                           (FINISHED_BD) only, per generation-agnostic
+*                           single-counter design
 *
 * </pre>
 *
@@ -32,99 +35,75 @@
 #include "xaie_perfcnt.h"
 
 /***************************** Macro Definitions *****************************/
-#define XAIE_DMA_TXN_COUNTERS_PER_CH	2U
+#define XAIE_DMA_TXN_COUNTERS_PER_CH	1U
 
 /***************************** Type Definitions ******************************/
 typedef struct {
 	XAie_ModuleType Module;
-	XAie_Events StartEvent;
-	XAie_Events EndEvent;
-} XAie_DmaTxnChEvents;
+	XAie_Events FinishedBdEvent;
+} XAie_DmaTxnChEvent;
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
-* Resolve the module type and Start / End events for a given tile type and
-* DMA channel flag. The generation determines the Start event; the End event
-* is always BD-level so EndCount directly reflects how many BDs (= data
-* deliveries) the channel completed.
-*   - Gen1 AIE:        Start = START_BD,   End = FINISHED_BD  (symmetric pair)
-*   - AIE-ML and later: Start = START_TASK, End = FINISHED_BD  (asymmetric:
-*                       one Start per task push, one End per BD completion)
+* Resolve the module type and BD-completion event for a given tile type and
+* DMA channel flag. FINISHED_BD is present on every generation, so unlike the
+* Start-side event (which differs between Gen1 AIE and AIE-ML+, and doesn't
+* exist at all on AIE-ML+), no generation branch is needed here.
 *
 * @param	TileType: Tile type from GetTTypefromLoc
-* @param	DevGen: Device generation (XAIE_DEV_GEN_*)
 * @param	DmaChFlag: Single-bit DMA channel flag (e.g. XAIE_DMA_CH_S2MM_0)
-* @param	Events: Output structure populated on success
+* @param	Event: Output structure populated on success
 *
 * @return	XAIE_OK on success, XAIE_INVALID_ARGS for unsupported combos.
 *
 ******************************************************************************/
-static AieRC _XAie_DmaTxnCountGetChEvents(u8 TileType, u8 DevGen,
-		u32 DmaChFlag, XAie_DmaTxnChEvents *Events)
+static AieRC _XAie_DmaTxnCountGetChEvent(u8 TileType, u32 DmaChFlag,
+		XAie_DmaTxnChEvent *Event)
 {
-	u8 IsGen1 = (DevGen == XAIE_DEV_GEN_AIE) ? 1U : 0U;
-
 	switch (TileType) {
 	case XAIEGBL_TILE_TYPE_AIETILE:
-		Events->Module = XAIE_MEM_MOD;
+		Event->Module = XAIE_MEM_MOD;
 		switch (DmaChFlag) {
 		case XAIE_DMA_CH_S2MM_0:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_S2MM_0_START_BD_MEM :
-				XAIE_EVENT_DMA_S2MM_0_START_TASK_MEM;
-			Events->EndEvent = XAIE_EVENT_DMA_S2MM_0_FINISHED_BD_MEM;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_S2MM_0_FINISHED_BD_MEM;
 			return XAIE_OK;
 		case XAIE_DMA_CH_S2MM_1:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_S2MM_1_START_BD_MEM :
-				XAIE_EVENT_DMA_S2MM_1_START_TASK_MEM;
-			Events->EndEvent = XAIE_EVENT_DMA_S2MM_1_FINISHED_BD_MEM;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_S2MM_1_FINISHED_BD_MEM;
 			return XAIE_OK;
 		case XAIE_DMA_CH_MM2S_0:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_MM2S_0_START_BD_MEM :
-				XAIE_EVENT_DMA_MM2S_0_START_TASK_MEM;
-			Events->EndEvent = XAIE_EVENT_DMA_MM2S_0_FINISHED_BD_MEM;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_MM2S_0_FINISHED_BD_MEM;
 			return XAIE_OK;
 		case XAIE_DMA_CH_MM2S_1:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_MM2S_1_START_BD_MEM :
-				XAIE_EVENT_DMA_MM2S_1_START_TASK_MEM;
-			Events->EndEvent = XAIE_EVENT_DMA_MM2S_1_FINISHED_BD_MEM;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_MM2S_1_FINISHED_BD_MEM;
 			return XAIE_OK;
 		default:
 			return XAIE_INVALID_ARGS;
 		}
 	case XAIEGBL_TILE_TYPE_MEMTILE:
-		/* Mem tile only exists on AIE-ML and later (Gen1 AIE has no
-		 * mem tile), so no IsGen1 branch is needed. Channel flags map
-		 * to SEL0/SEL1 event taps; caller routes a physical channel
-		 * onto a tap with XAie_EventSelectDmaChannel(). */
-		Events->Module = XAIE_MEM_MOD;
+		/* Channel flags map to SEL0/SEL1 event taps; caller routes a
+		 * physical channel onto a tap with
+		 * XAie_EventSelectDmaChannel(). */
+		Event->Module = XAIE_MEM_MOD;
 		switch (DmaChFlag) {
 		case XAIE_DMA_CH_S2MM_0:
-			Events->StartEvent =
-				XAIE_EVENT_DMA_S2MM_SEL0_START_TASK_MEM_TILE;
-			Events->EndEvent =
+			Event->FinishedBdEvent =
 				XAIE_EVENT_DMA_S2MM_SEL0_FINISHED_BD_MEM_TILE;
 			return XAIE_OK;
 		case XAIE_DMA_CH_S2MM_1:
-			Events->StartEvent =
-				XAIE_EVENT_DMA_S2MM_SEL1_START_TASK_MEM_TILE;
-			Events->EndEvent =
+			Event->FinishedBdEvent =
 				XAIE_EVENT_DMA_S2MM_SEL1_FINISHED_BD_MEM_TILE;
 			return XAIE_OK;
 		case XAIE_DMA_CH_MM2S_0:
-			Events->StartEvent =
-				XAIE_EVENT_DMA_MM2S_SEL0_START_TASK_MEM_TILE;
-			Events->EndEvent =
+			Event->FinishedBdEvent =
 				XAIE_EVENT_DMA_MM2S_SEL0_FINISHED_BD_MEM_TILE;
 			return XAIE_OK;
 		case XAIE_DMA_CH_MM2S_1:
-			Events->StartEvent =
-				XAIE_EVENT_DMA_MM2S_SEL1_START_TASK_MEM_TILE;
-			Events->EndEvent =
+			Event->FinishedBdEvent =
 				XAIE_EVENT_DMA_MM2S_SEL1_FINISHED_BD_MEM_TILE;
 			return XAIE_OK;
 		default:
@@ -132,31 +111,23 @@ static AieRC _XAie_DmaTxnCountGetChEvents(u8 TileType, u8 DevGen,
 		}
 	case XAIEGBL_TILE_TYPE_SHIMNOC:
 	case XAIEGBL_TILE_TYPE_SHIMPL:
-		Events->Module = XAIE_PL_MOD;
+		Event->Module = XAIE_PL_MOD;
 		switch (DmaChFlag) {
 		case XAIE_DMA_CH_S2MM_0:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_S2MM_0_START_BD_PL :
-				XAIE_EVENT_DMA_S2MM_0_START_TASK_PL;
-			Events->EndEvent = XAIE_EVENT_DMA_S2MM_0_FINISHED_BD_PL;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_S2MM_0_FINISHED_BD_PL;
 			return XAIE_OK;
 		case XAIE_DMA_CH_S2MM_1:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_S2MM_1_START_BD_PL :
-				XAIE_EVENT_DMA_S2MM_1_START_TASK_PL;
-			Events->EndEvent = XAIE_EVENT_DMA_S2MM_1_FINISHED_BD_PL;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_S2MM_1_FINISHED_BD_PL;
 			return XAIE_OK;
 		case XAIE_DMA_CH_MM2S_0:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_MM2S_0_START_BD_PL :
-				XAIE_EVENT_DMA_MM2S_0_START_TASK_PL;
-			Events->EndEvent = XAIE_EVENT_DMA_MM2S_0_FINISHED_BD_PL;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_MM2S_0_FINISHED_BD_PL;
 			return XAIE_OK;
 		case XAIE_DMA_CH_MM2S_1:
-			Events->StartEvent = IsGen1 ?
-				XAIE_EVENT_DMA_MM2S_1_START_BD_PL :
-				XAIE_EVENT_DMA_MM2S_1_START_TASK_PL;
-			Events->EndEvent = XAIE_EVENT_DMA_MM2S_1_FINISHED_BD_PL;
+			Event->FinishedBdEvent =
+				XAIE_EVENT_DMA_MM2S_1_FINISHED_BD_PL;
 			return XAIE_OK;
 		default:
 			return XAIE_INVALID_ARGS;
@@ -220,11 +191,10 @@ static u8 _XAie_DmaTxnCountGetMaxCounters(XAie_DevInst *DevInst, u8 TileType,
 /*****************************************************************************/
 /**
 * Configure a single tile's perf counters for the requested DMA channels.
-* Each selected channel consumes a counter pair: one for the Start event and
-* one for the End event. The exact event family depends on the device
-* generation (BD-level on Gen1, task-level on AIE-ML+); see
-* _XAie_DmaTxnCountGetChEvents. Counters are packed starting from index 0 in
-* bit order so Disable/Get can use the same algorithm to locate them.
+* Each selected channel consumes one counter, bound to FINISHED_BD as both
+* the Start and Stop event so it increments once per BD completed. Counters
+* are packed starting from index 0 in bit order so Disable/Get can use the
+* same algorithm to locate them.
 *
 * @param	DevInst: Device Instance
 * @param	Loc: Tile location
@@ -240,7 +210,7 @@ static AieRC _XAie_DmaTxnCountEnableTile(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u32 DmaChGroup)
 {
 	AieRC RC;
-	u8 TileType, DevGen, MaxCounters, CounterIdx = 0U;
+	u8 TileType, MaxCounters, CounterIdx = 0U;
 	XAie_ModuleType Module = XAIE_MEM_MOD;
 	u32 NumChannels;
 	u32 Bit;
@@ -250,7 +220,6 @@ static AieRC _XAie_DmaTxnCountEnableTile(XAie_DevInst *DevInst,
 		XAIE_ERROR("Invalid tile location\n");
 		return XAIE_INVALID_TILE;
 	}
-	DevGen = DevInst->DevProp.DevGen;
 
 	/*
 	 * Module is determined by tile type: shim uses PL, AIE/Mem tiles use
@@ -258,10 +227,10 @@ static AieRC _XAie_DmaTxnCountEnableTile(XAie_DevInst *DevInst,
 	 */
 	for (Bit = 1U; Bit <= XAIE_DMA_CH_ALL; Bit <<= 1U) {
 		if ((DmaChGroup & Bit) != 0U) {
-			XAie_DmaTxnChEvents Probe;
+			XAie_DmaTxnChEvent Probe;
 
-			RC = _XAie_DmaTxnCountGetChEvents(TileType, DevGen,
-					Bit, &Probe);
+			RC = _XAie_DmaTxnCountGetChEvent(TileType, Bit,
+					&Probe);
 			if (RC != XAIE_OK) {
 				return RC;
 			}
@@ -284,53 +253,39 @@ static AieRC _XAie_DmaTxnCountEnableTile(XAie_DevInst *DevInst,
 	}
 
 	for (Bit = 1U; Bit <= XAIE_DMA_CH_ALL; Bit <<= 1U) {
-		XAie_DmaTxnChEvents ChEvents;
-		u8 StartCounter, EndCounter;
+		XAie_DmaTxnChEvent ChEvent;
+		u8 Counter;
 
 		if ((DmaChGroup & Bit) == 0U) {
 			continue;
 		}
 
-		RC = _XAie_DmaTxnCountGetChEvents(TileType, DevGen, Bit,
-				&ChEvents);
+		RC = _XAie_DmaTxnCountGetChEvent(TileType, Bit, &ChEvent);
 		if (RC != XAIE_OK) {
-			XAIE_ERROR("Tile (%u,%u): no events for channel "
+			XAIE_ERROR("Tile (%u,%u): no event for channel "
 				"flag 0x%x\n", Loc.Col, Loc.Row, Bit);
 			return RC;
 		}
 
-		StartCounter = CounterIdx;
-		EndCounter = (u8)(CounterIdx + 1U);
+		Counter = CounterIdx;
 		CounterIdx = (u8)(CounterIdx + XAIE_DMA_TXN_COUNTERS_PER_CH);
 
 		/*
 		 * Per AIE arch spec, setting the same event for both Start
 		 * and Stop makes the counter increment once per occurrence.
 		 */
-		RC = XAie_PerfCounterControlSet(DevInst, Loc, ChEvents.Module,
-				StartCounter, ChEvents.StartEvent,
-				ChEvents.StartEvent);
+		RC = XAie_PerfCounterControlSet(DevInst, Loc, ChEvent.Module,
+				Counter, ChEvent.FinishedBdEvent,
+				ChEvent.FinishedBdEvent);
 		if (RC != XAIE_OK) {
-			XAIE_ERROR("Tile (%u,%u): failed to configure start "
-				"counter %u\n", Loc.Col, Loc.Row,
-				StartCounter);
+			XAIE_ERROR("Tile (%u,%u): failed to configure "
+				"counter %u\n", Loc.Col, Loc.Row, Counter);
 			return RC;
 		}
 
-		RC = XAie_PerfCounterControlSet(DevInst, Loc, ChEvents.Module,
-				EndCounter, ChEvents.EndEvent,
-				ChEvents.EndEvent);
-		if (RC != XAIE_OK) {
-			XAIE_ERROR("Tile (%u,%u): failed to configure end "
-				"counter %u\n", Loc.Col, Loc.Row, EndCounter);
-			return RC;
-		}
-
-		/* Zero the counters so reads start from a known baseline. */
-		(void)XAie_PerfCounterReset(DevInst, Loc, ChEvents.Module,
-				StartCounter);
-		(void)XAie_PerfCounterReset(DevInst, Loc, ChEvents.Module,
-				EndCounter);
+		/* Zero the counter so reads start from a known baseline. */
+		(void)XAie_PerfCounterReset(DevInst, Loc, ChEvent.Module,
+				Counter);
 	}
 
 	return XAIE_OK;
@@ -339,32 +294,30 @@ static AieRC _XAie_DmaTxnCountEnableTile(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 * This API enables DMA transaction counting on a group of tiles by configuring
-* performance counters to count Start/End DMA events. Each selected channel
-* consumes 2 perf counters per tile (one for the Start event, one for the End
-* event).
-*
-* The End counter always counts BD completions (= data deliveries) on every
-* generation. The Start counter counts whatever Start event the chip exposes:
-*   - Gen1 AIE (XAIE_DEV_GEN_AIE): Start = START_BD, End = FINISHED_BD.
-*     Symmetric pair: one Start tick and one End tick per BD entered/done.
-*   - AIE-ML and later: Start = START_TASK, End = FINISHED_BD.
-*     Asymmetric pair: one Start tick per task pushed, one End tick per BD
-*     completed within the task. For example, a single task that walks a
-*     3-BD chain reports StartCount=1, EndCount=3.
+* one performance counter per selected channel to count the FINISHED_BD
+* event, i.e. BD completions (= data deliveries). This is generation-agnostic:
+* FINISHED_BD exists on every AIE generation, unlike a "Start" event, which
+* differs between Gen1 AIE (START_BD) and AIE-ML+ (START_TASK, and is
+* asymmetric there: one Start tick per task pushed vs. one End tick per BD
+* completed within that task). Start-side tracking is intentionally not
+* provided; the caller already knows how many transactions it submitted in
+* software and only needs a hardware-observed completion count to compare
+* against.
 *
 * Implications for callers:
 *   - EndCount directly answers "how many BDs of data were transferred?"
 *     on every chip. This is the primary debugging signal.
 *   - Hang detection: take two snapshots over time; if EndCount stops
 *     advancing while data is supposed to flow, the channel is hung.
-*   - Completion test: on Gen1, all-done means EndCount == StartCount;
-*     on AIE-ML+ the ratio depends on BDs-per-task and repeatCount, so
-*     callers compare EndCount against an expected total they know.
+*   - Completion test: compare EndCount against the number of BDs/tasks the
+*     caller submitted (tracked in software) to know if a channel is done,
+*     in-flight, or stuck.
 *
 * Counter budget per tile (rejected with XAIE_ERR if exceeded):
-*   - AIE tile mem module: 2 counters (1 channel)
-*   - Mem tile (AIE-ML+):  4 counters (2 channels)
-*   - Shim tile:           2 counters (1 channel); 6 on AIE2PS (3 channels)
+*   - AIE tile mem module: 2 counters (2 channels)
+*   - Mem tile (AIE-ML+):  4 counters (4 channels, i.e. all of them)
+*   - Shim tile:           2 counters (2 channels); 6 on AIE2PS (all 4
+*                          channels, with counters to spare)
 *
 * Mem-tile note: flags map to SEL0/SEL1 event taps. Caller selects which
 * physical channel each tap watches via XAie_EventSelectDmaChannel().
@@ -452,7 +405,7 @@ static AieRC _XAie_DmaTxnCountDisableTile(XAie_DevInst *DevInst,
 {
 	AieRC RC;
 	AieRC FirstErr = XAIE_OK;
-	u8 TileType, DevGen, MaxCounters, CounterIdx = 0U;
+	u8 TileType, MaxCounters, CounterIdx = 0U;
 	XAie_ModuleType Module = XAIE_MEM_MOD;
 	u32 NumChannels;
 	u32 Bit;
@@ -462,14 +415,13 @@ static AieRC _XAie_DmaTxnCountDisableTile(XAie_DevInst *DevInst,
 		XAIE_ERROR("Invalid tile location\n");
 		return XAIE_INVALID_TILE;
 	}
-	DevGen = DevInst->DevProp.DevGen;
 
 	for (Bit = 1U; Bit <= XAIE_DMA_CH_ALL; Bit <<= 1U) {
 		if ((DmaChGroup & Bit) != 0U) {
-			XAie_DmaTxnChEvents Probe;
+			XAie_DmaTxnChEvent Probe;
 
-			RC = _XAie_DmaTxnCountGetChEvents(TileType, DevGen,
-					Bit, &Probe);
+			RC = _XAie_DmaTxnCountGetChEvent(TileType, Bit,
+					&Probe);
 			if (RC != XAIE_OK) {
 				return RC;
 			}
@@ -490,15 +442,14 @@ static AieRC _XAie_DmaTxnCountDisableTile(XAie_DevInst *DevInst,
 	}
 
 	for (Bit = 1U; Bit <= XAIE_DMA_CH_ALL; Bit <<= 1U) {
-		XAie_DmaTxnChEvents ChEvents;
-		u8 StartCounter, EndCounter;
+		XAie_DmaTxnChEvent ChEvent;
+		u8 Counter;
 
 		if ((DmaChGroup & Bit) == 0U) {
 			continue;
 		}
 
-		RC = _XAie_DmaTxnCountGetChEvents(TileType, DevGen, Bit,
-				&ChEvents);
+		RC = _XAie_DmaTxnCountGetChEvent(TileType, Bit, &ChEvent);
 		if (RC != XAIE_OK) {
 			if (FirstErr == XAIE_OK) {
 				FirstErr = RC;
@@ -506,26 +457,17 @@ static AieRC _XAie_DmaTxnCountDisableTile(XAie_DevInst *DevInst,
 			continue;
 		}
 
-		StartCounter = CounterIdx;
-		EndCounter = (u8)(CounterIdx + 1U);
+		Counter = CounterIdx;
 		CounterIdx = (u8)(CounterIdx + XAIE_DMA_TXN_COUNTERS_PER_CH);
 
 		RC = XAie_PerfCounterControlReset(DevInst, Loc,
-				ChEvents.Module, StartCounter);
+				ChEvent.Module, Counter);
 		if ((RC != XAIE_OK) && (FirstErr == XAIE_OK)) {
 			FirstErr = RC;
 		}
 
-		RC = XAie_PerfCounterControlReset(DevInst, Loc,
-				ChEvents.Module, EndCounter);
-		if ((RC != XAIE_OK) && (FirstErr == XAIE_OK)) {
-			FirstErr = RC;
-		}
-
-		(void)XAie_PerfCounterReset(DevInst, Loc, ChEvents.Module,
-				StartCounter);
-		(void)XAie_PerfCounterReset(DevInst, Loc, ChEvents.Module,
-				EndCounter);
+		(void)XAie_PerfCounterReset(DevInst, Loc, ChEvent.Module,
+				Counter);
 	}
 
 	return FirstErr;
@@ -534,9 +476,9 @@ static AieRC _XAie_DmaTxnCountDisableTile(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 * This API disables DMA transaction counting on a group of tiles by tearing
-* down the performance counters that XAie_DmaTxnCountEnable configured. Both
-* the Start and End counters of every selected channel are reset: the control
-* register is cleared (un-binds the events) and the counter value is zeroed.
+* down the performance counters that XAie_DmaTxnCountEnable configured. The
+* counter of every selected channel is reset: the control register is
+* cleared (un-binds the event) and the counter value is zeroed.
 *
 * The DmaChGroup must match the value passed to XAie_DmaTxnCountEnable so the
 * same counter indices are torn down. Disable is best-effort across the tile
@@ -608,22 +550,21 @@ AieRC XAie_DmaTxnCountDisable(XAie_DevInst *DevInst,
 
 /*****************************************************************************/
 /**
-* Compute the counter pair indices that Enable assigned to DmaChFlag, given
-* the original DmaChGroup. Enable packs counter pairs in low-to-high bit
-* order: the Nth set bit consumes counter indices 2*N (Start) and 2*N+1
-* (End). DmaChFlag must be one of the bits set in DmaChGroup.
+* Compute the counter index that Enable assigned to DmaChFlag, given the
+* original DmaChGroup. Enable packs counters in low-to-high bit order: the
+* Nth set bit consumes counter index N. DmaChFlag must be one of the bits
+* set in DmaChGroup.
 *
 * @param	DmaChGroup: Bitmask passed to Enable
 * @param	DmaChFlag: Single channel flag to locate within DmaChGroup
-* @param	StartCounter: Output Start counter index
-* @param	EndCounter: Output End counter index
+* @param	Counter: Output counter index
 *
 * @return	XAIE_OK on success, XAIE_INVALID_ARGS if DmaChFlag is not in
 *		DmaChGroup.
 *
 ******************************************************************************/
 static AieRC _XAie_DmaTxnCountResolveCounter(u32 DmaChGroup, u32 DmaChFlag,
-		u8 *StartCounter, u8 *EndCounter)
+		u8 *Counter)
 {
 	u32 Bit;
 	u32 Slot = 0U;
@@ -633,9 +574,7 @@ static AieRC _XAie_DmaTxnCountResolveCounter(u32 DmaChGroup, u32 DmaChFlag,
 			continue;
 		}
 		if (Bit == DmaChFlag) {
-			*StartCounter = (u8)(Slot *
-					XAIE_DMA_TXN_COUNTERS_PER_CH);
-			*EndCounter = (u8)(*StartCounter + 1U);
+			*Counter = (u8)(Slot * XAIE_DMA_TXN_COUNTERS_PER_CH);
 			return XAIE_OK;
 		}
 		Slot++;
@@ -646,14 +585,13 @@ static AieRC _XAie_DmaTxnCountResolveCounter(u32 DmaChGroup, u32 DmaChFlag,
 
 /*****************************************************************************/
 /**
-* This API reads the DMA transaction counts for one channel previously set up
-* by XAie_DmaTxnCountEnable. See XAie_DmaTxnCountEnable for the per-generation
-* event mapping. EndCount always reflects BD completions (= data deliveries);
-* StartCount reflects BD pushes on Gen1 and task pushes on AIE-ML+.
+* This API reads the DMA BD-completion count for one channel previously set
+* up by XAie_DmaTxnCountEnable. See XAie_DmaTxnCountEnable for details;
+* EndCount reflects BD completions (= data deliveries) on every generation.
 *
 * The caller passes the same DmaChGroup that was given to Enable, plus the
-* single DmaChFlag bit identifying which channel to read. Counter indices are
-* derived deterministically from bit position in DmaChGroup (matching the
+* single DmaChFlag bit identifying which channel to read. The counter index
+* is derived deterministically from bit position in DmaChGroup (matching the
 * repo's FAL-style "track-the-counter-index" convention rather than reading
 * the perf-control register back).
 *
@@ -663,20 +601,17 @@ static AieRC _XAie_DmaTxnCountResolveCounter(u32 DmaChGroup, u32 DmaChFlag,
 *			tile
 * @param	DmaChFlag: Single channel flag (e.g. XAIE_DMA_CH_S2MM_0); must
 *			be one of the bits set in DmaChGroup
-* @param	StartCount: Pointer to store Start event count
-* @param	EndCount: Pointer to store End event count (BD completions)
+* @param	EndCount: Pointer to store BD completion count
 *
 * @return	XAIE_OK on success, error code on failure.
 *
 ******************************************************************************/
 AieRC XAie_DmaTxnCountGet(XAie_DevInst *DevInst, XAie_LocType Loc,
-		u32 DmaChGroup, u32 DmaChFlag, u32 *StartCount,
-		u32 *EndCount)
+		u32 DmaChGroup, u32 DmaChFlag, u32 *EndCount)
 {
 	AieRC RC;
 	u8 TileType;
-	u8 StartCounter = 0U;
-	u8 EndCounter = 0U;
+	u8 Counter = 0U;
 	XAie_ModuleType Module;
 
 	if ((DevInst == XAIE_NULL) ||
@@ -685,7 +620,7 @@ AieRC XAie_DmaTxnCountGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if ((StartCount == XAIE_NULL) || (EndCount == XAIE_NULL)) {
+	if (EndCount == XAIE_NULL) {
 		XAIE_ERROR("Null count pointer\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -722,18 +657,10 @@ AieRC XAie_DmaTxnCountGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	RC = _XAie_DmaTxnCountResolveCounter(DmaChGroup, DmaChFlag,
-			&StartCounter, &EndCounter);
+	RC = _XAie_DmaTxnCountResolveCounter(DmaChGroup, DmaChFlag, &Counter);
 	if (RC != XAIE_OK) {
 		return RC;
 	}
 
-	RC = XAie_PerfCounterGet(DevInst, Loc, Module, StartCounter,
-			StartCount);
-	if (RC != XAIE_OK) {
-		return RC;
-	}
-
-	return XAie_PerfCounterGet(DevInst, Loc, Module, EndCounter,
-			EndCount);
+	return XAie_PerfCounterGet(DevInst, Loc, Module, Counter, EndCount);
 }

@@ -35,7 +35,6 @@ int _XAie_TestDebugDmaLoopback(XAie_DevInst *DevInst,
 	XAie_DmaDesc Tile_2_S2MM;
 	uint32_t data[NUM_ELEMS];
 	u8 PendingBd = 1U;
-	u32 StartCount = 0U;
 	u32 EndCount = 0U;
 
 	for (u8 i = 0U; i < NUM_ELEMS; i++) {
@@ -122,7 +121,7 @@ int _XAie_TestDebugDmaLoopback(XAie_DevInst *DevInst,
 
 	for (u8 i = 0U; i < 2U; i++) {
 		RC = XAie_DmaTxnCountGet(DevInst, MonTiles[i], ChGroup,
-				XAIE_DMA_CH_MM2S_0, &StartCount, &EndCount);
+				XAIE_DMA_CH_MM2S_0, &EndCount);
 		if (RC != XAIE_OK) {
 			printf("[stest/test_debug_dma] "
 				"XAie_DmaTxnCountGet failed on tile (%u,%u): "
@@ -131,9 +130,8 @@ int _XAie_TestDebugDmaLoopback(XAie_DevInst *DevInst,
 			return -1;
 		}
 		printf("[stest/test_debug_dma] tile (%u,%u) MM2S Ch 0: "
-			"StartCount=%u EndCount=%u\n",
-			MonTiles[i].Col, MonTiles[i].Row,
-			StartCount, EndCount);
+			"EndCount=%u\n",
+			MonTiles[i].Col, MonTiles[i].Row, EndCount);
 		if (EndCount == 0U) {
 			printf("[stest/test_debug_dma] "
 				"FAIL: EndCount stayed at 0 on (%u,%u)\n",

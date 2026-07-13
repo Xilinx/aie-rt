@@ -117,21 +117,20 @@ TEST(DmaTxnCountApis, GetTxnCount)
 	AieRC RC;
 	XAie_SubPartition Sub = DMA_TXN_AIE_SUBPART;
 	XAie_LocType TileLoc = DMA_TXN_AIE_TILE;
-	u32 StartCount = 0xDEADBEEF, EndCount = 0xDEADBEEF;
+	u32 EndCount = 0xDEADBEEF;
 	u32 ChGroup = XAIE_DMA_CH_S2MM_0;
 
 	RC = XAie_DmaTxnCountEnable(&DevInst, &Sub, 1, ChGroup);
 	CHECK_EQUAL(XAIE_OK, RC);
 
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup,
-			XAIE_DMA_CH_S2MM_0, &StartCount, &EndCount);
+			XAIE_DMA_CH_S2MM_0, &EndCount);
 	CHECK_EQUAL(XAIE_OK, RC);
 	/*
-	 * Simulated IO backend returns synthetic values, not what was
+	 * Simulated IO backend returns a synthetic value, not what was
 	 * written, so the actual count is verified by the system test.
-	 * Just confirm Get touched both output buffers.
+	 * Just confirm Get touched the output buffer.
 	 */
-	CHECK(StartCount != 0xDEADBEEF);
 	CHECK(EndCount != 0xDEADBEEF);
 
 	RC = XAie_DmaTxnCountDisable(&DevInst, &Sub, 1, ChGroup);
@@ -142,21 +141,22 @@ TEST(DmaTxnCountApis, GetSecondChannelInGroup)
 {
 	AieRC RC;
 	/*
-	 * Mem tile has 4 perf counters so a 2-channel group fits. Reading
-	 * the second flag (MM2S_0) exercises counter slot 1 (idx 2/3) — the
-	 * deterministic packing must resolve it correctly.
+	 * Mem tile has 4 perf counters, one per channel, so all 4 channels
+	 * fit in one group. Reading the last flag (MM2S_1) exercises
+	 * counter slot 3 — the deterministic packing must resolve it
+	 * correctly.
 	 */
 #if XAIE_MEM_TILE_NUM_ROWS > 0
 	XAie_SubPartition Sub = { {1, 1}, {XAIE_MEM_TILE_ROW_START, 1} };
 	XAie_LocType TileLoc = XAie_TileLoc(1, XAIE_MEM_TILE_ROW_START);
-	u32 ChGroup = XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_MM2S_0;
-	u32 StartCount, EndCount;
+	u32 ChGroup = XAIE_DMA_CH_ALL;
+	u32 EndCount;
 
 	RC = XAie_DmaTxnCountEnable(&DevInst, &Sub, 1, ChGroup);
 	CHECK_EQUAL(XAIE_OK, RC);
 
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup,
-			XAIE_DMA_CH_MM2S_0, &StartCount, &EndCount);
+			XAIE_DMA_CH_MM2S_1, &EndCount);
 	CHECK_EQUAL(XAIE_OK, RC);
 
 	RC = XAie_DmaTxnCountDisable(&DevInst, &Sub, 1, ChGroup);
@@ -168,39 +168,35 @@ TEST(DmaTxnCountApis, GetRejectsBadArgs)
 {
 	AieRC RC;
 	XAie_LocType TileLoc = DMA_TXN_AIE_TILE;
-	u32 StartCount, EndCount;
+	u32 EndCount;
 	u32 ChGroup = XAIE_DMA_CH_S2MM_0;
 
 	RC = XAie_DmaTxnCountGet(NULL, TileLoc, ChGroup, XAIE_DMA_CH_S2MM_0,
-			&StartCount, &EndCount);
+			&EndCount);
 	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
 
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup,
-			XAIE_DMA_CH_S2MM_0, NULL, &EndCount);
-	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
-
-	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup,
-			XAIE_DMA_CH_S2MM_0, &StartCount, NULL);
+			XAIE_DMA_CH_S2MM_0, NULL);
 	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
 
 	/* Empty DmaChGroup */
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, 0U,
-			XAIE_DMA_CH_S2MM_0, &StartCount, &EndCount);
+			XAIE_DMA_CH_S2MM_0, &EndCount);
 	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
 
 	/* DmaChFlag must be exactly one channel bit. */
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup, 0U,
-			&StartCount, &EndCount);
+			&EndCount);
 	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
 
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup,
 			XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_MM2S_0,
-			&StartCount, &EndCount);
+			&EndCount);
 	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
 
 	/* DmaChFlag not present in DmaChGroup */
 	RC = XAie_DmaTxnCountGet(&DevInst, TileLoc, ChGroup,
-			XAIE_DMA_CH_MM2S_1, &StartCount, &EndCount);
+			XAIE_DMA_CH_MM2S_1, &EndCount);
 	CHECK_EQUAL(XAIE_INVALID_ARGS, RC);
 }
 
@@ -235,11 +231,12 @@ TEST(DmaTxnCountApis, ExceedsCounterBudgetRejected)
 	XAie_SubPartition Sub = DMA_TXN_AIE_SUBPART;
 
 	/*
-	 * AIE tile memory module has 2 perf counters; each channel needs 2.
-	 * Requesting 2 channels (4 counters) must be rejected.
+	 * AIE tile memory module has 2 perf counters; each channel needs 1.
+	 * Requesting 3 channels (3 counters) must be rejected.
 	 */
 	RC = XAie_DmaTxnCountEnable(&DevInst, &Sub, 1,
-			XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_MM2S_0);
+			XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_S2MM_1 |
+			XAIE_DMA_CH_MM2S_0);
 	CHECK_EQUAL(XAIE_ERR, RC);
 }
 
@@ -310,13 +307,16 @@ TEST(DmaTxnCountApis, EnableDisableEnableReusesCounters)
 #define DMA_TXN_MEM_TILE	XAie_TileLoc(1, XAIE_MEM_TILE_ROW_START)
 #define DMA_TXN_MEM_SUBPART	{ {1, 1}, {XAIE_MEM_TILE_ROW_START, 1} }
 
-TEST(DmaTxnCountApis, MemTileTwoChannels)
+TEST(DmaTxnCountApis, MemTileAllFourChannels)
 {
 	AieRC RC;
 	XAie_SubPartition Sub = DMA_TXN_MEM_SUBPART;
-	u32 ChGroup = XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_MM2S_0;
+	u32 ChGroup = XAIE_DMA_CH_ALL;
 
-	/* Mem tile has 4 perf counters: two channels (4 counters) fit. */
+	/*
+	 * Mem tile has 4 perf counters, one per channel: all 4 channels fit
+	 * concurrently now that each channel only needs 1 counter.
+	 */
 	RC = XAie_DmaTxnCountEnable(&DevInst, &Sub, 1, ChGroup);
 	CHECK_EQUAL(XAIE_OK, RC);
 
@@ -383,16 +383,14 @@ TEST(PartitionInitV2Apis, NonZeroChGroupArmsCounters)
 	CHECK_EQUAL(XAIE_OK, RC);
 
 	/*
-	 * The counters are armed; verify Get sees them via the same opts.
+	 * The counter is armed; verify Get sees it via the same opts.
 	 * (Read-back values are not meaningful in the simulated IO backend;
 	 * we just confirm Get does not error out.)
 	 */
-	u32 StartCount = 0xDEADBEEF;
 	u32 EndCount = 0xDEADBEEF;
 	RC = XAie_DmaTxnCountGet(&DevInst, Tile, Opts.DmaTxnCountChGroup,
-			XAIE_DMA_CH_S2MM_0, &StartCount, &EndCount);
+			XAIE_DMA_CH_S2MM_0, &EndCount);
 	CHECK_EQUAL(XAIE_OK, RC);
-	CHECK(StartCount != 0xDEADBEEF);
 	CHECK(EndCount != 0xDEADBEEF);
 
 	RC = XAie_PartitionTeardown_v2(&DevInst, &Opts);
@@ -407,12 +405,12 @@ TEST(PartitionInitV2Apis, BudgetOverrunRollsBack)
 	Opts.NumSubParts = 1;
 	Opts.InitOpts = XAIE_PART_INIT_OPT_DEFAULT;
 	/*
-	 * AIE tile mem module has only 2 perf counters; asking for 2
-	 * channels (4 counters) must fail at counter setup and the wrapper
+	 * AIE tile mem module has only 2 perf counters; asking for 3
+	 * channels (3 counters) must fail at counter setup and the wrapper
 	 * must roll back the partition init.
 	 */
-	Opts.DmaTxnCountChGroup =
-			XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_MM2S_0;
+	Opts.DmaTxnCountChGroup = XAIE_DMA_CH_S2MM_0 | XAIE_DMA_CH_S2MM_1 |
+			XAIE_DMA_CH_MM2S_0;
 
 	AieRC RC = XAie_PartitionInitialize_v2(&DevInst, &Opts);
 	CHECK(XAIE_OK != RC);

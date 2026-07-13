@@ -11,11 +11,10 @@
 *
 * Header file for DMA transaction count debug APIs.
 *
-* These APIs program performance counters to count Start and End DMA events
-* per channel. The End counter always tracks BD completions (= data
-* deliveries) so it directly answers "how many BDs of data were transferred
-* on this channel?". The Start counter tracks BD pushes on Gen1 AIE and task
-* pushes on AIE-ML+ (since AIE-ML+ has no START_BD event).
+* These APIs program a performance counter per channel to count how many BDs
+* (i.e., data deliveries) a DMA channel has completed. This directly answers
+* "how many BDs of data were transferred on this channel?" and, by sampling
+* the count over time, "has this channel stalled?".
 *
 * <pre>
 * MODIFICATION HISTORY:
@@ -23,6 +22,9 @@
 * Ver   Who      Date        Changes
 * ----- ------   --------    --------------------------------------------------
 * 1.0   yosong   04/30/2026  Initial creation
+* 1.1   yosong   07/13/2026  Drop Start-event tracking; count BD completions
+*                            (FINISHED_BD) only, per generation-agnostic
+*                            single-counter design
 *
 * </pre>
 *
@@ -55,7 +57,7 @@ AieRC XAie_DmaTxnCountDisable(XAie_DevInst *DevInst,
 		XAie_SubPartition *SubParts, u32 NumSubParts, u32 DmaChGroup);
 AieRC XAie_DmaTxnCountGet(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u32 DmaChGroup, u32 DmaChFlag,
-		u32 *StartCount, u32 *EndCount);
+		u32 *EndCount);
 
 #endif		/* end of protection macro */
 /** @} */

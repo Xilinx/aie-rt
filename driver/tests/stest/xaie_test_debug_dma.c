@@ -13,9 +13,7 @@
 /*****************************************************************************/
 /**
 * Run the standard two-tile MM2S<->S2MM DMA loopback while transaction
-* counting is enabled on MM2S Ch 0 of each tile. AIE tile mem modules have
-* only 2 perf counters, so monitoring a single channel per tile is the
-* maximum.
+* counting is enabled on MM2S Ch 0 of each tile.
 *
 * This variant uses XAie_DmaTxnCount{Enable,Disable} directly. The v2
 * variant (test_debug_dma_txn_count_v2) drives the same loopback through
