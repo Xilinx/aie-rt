@@ -39,7 +39,7 @@ static int _XAie_findAvailableBufferID(XAie_RoutingInstance *routingInstance, XA
 static bool _XAie_isAdjTileValidForCurrTile(XAie_RoutingInstance* RoutingInstance, XAie_RouteConstraints* RouteConstraints,
                     XAie_LocType currentTile, XAie_LocType adjTile, StrmSwPortType direction, bool** visited);
 static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination, XAie_LocType *path, int pathLength);
-static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstance, XAie_LocType source, void* SourceObject, u32 data_size, void* DestinationObject,
+static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject, u32 data_size, XAie_MemInst* DestinationObject,
                               XAie_LocType destination, XAie_BDs* BDs);
 static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance, XAie_RouteConstraints* RouteConstraints, XAie_LocType source, XAie_LocType destination, XAie_LocType *path, int *pathLength);
 static bool _XAie_isTileBlackListed(XAie_LocType CurrTile, XAie_RouteConstraints* RouteConstraints);
@@ -52,7 +52,8 @@ static void _XAie_FreeRouteFromRoutesDB(XAie_ProgrammedRoutes** head, XAie_LocTy
 static void _XAie_FreeRoutingSteps(XAie_RoutingStep* step);
 static XAie_RoutingPath* _XAie_findRouteInRouteDB(XAie_ProgrammedRoutes* routesDB, XAie_LocType source, XAie_LocType destination);
 static void _XAie_addRouteInRoutesDB(XAie_ProgrammedRoutes** head, XAie_RoutingPath* routePath);
-
+static AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject, u32 data_size, XAie_MemInst* DestinationObject,
+	XAie_LocType destination);
 #endif	/* End of protection macro */
 
 /** @} */

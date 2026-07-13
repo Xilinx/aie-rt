@@ -144,8 +144,8 @@ typedef struct {
 AieRC XAie_dumpConstraintsToPrint(XAie_RoutingInstance* RoutingInstance);
 AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* RoutingInstance, u8 row, u8 col);
 AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, XAie_CoreConstraint* constraint, u8 row, u8 col) ;
-AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, void* SourceObject, u32 data_size, void* DestinationObject,
-              XAie_LocType destination);
+
+
 AieRC XAie_MoveDataExternal2Aie(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject,
 			u32 data_size, u32 DestinationObject, XAie_LocType destination);
 AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocType source, u32 SourceObject,
@@ -178,13 +178,6 @@ static inline AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* Rou
 }
 
 static inline AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, XAie_CoreConstraint* constraint, u8 row, u8 col)
-{
-	return XAIE_ERR;
-}
-
-static inline AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source,
-				  void* SourceObject, u32 data_size, void* DestinationObject,
-				  XAie_LocType destination)
 {
 	return XAIE_ERR;
 }

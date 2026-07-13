@@ -1739,7 +1739,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
  *
  ******************************************************************************/
 static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstance,
-		XAie_LocType source, void* SourceObject, u32 data_size, void* DestinationObject,
+		XAie_LocType source, XAie_MemInst* SourceObject, u32 data_size, XAie_MemInst* DestinationObject,
 		XAie_LocType destination, XAie_BDs* BDs)
 {
 	XAie_DevInst *DevInst = routingInstance->DeviceInstance;
@@ -1834,8 +1834,8 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
  * @note		None.
  *
  ******************************************************************************/
-AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, void* SourceObject,
-			u32 data_size, void* DestinationObject, XAie_LocType destination)
+static AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject,
+			u32 data_size, XAie_MemInst* DestinationObject, XAie_LocType destination)
 {
 	XAie_DevInst *DevInst = routingInstance->DeviceInstance;
 	int RC = XAIE_OK;
@@ -1957,8 +1957,8 @@ AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType source, 
  ******************************************************************************/
 AieRC XAie_MoveDataExternal2Aie(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject,
 			u32 data_size, u32 DestinationObject, XAie_LocType destination) {
-	return XAie_MoveData(routingInstance, source, (void*)SourceObject,
-			data_size, (void*)(uintptr_t)DestinationObject, destination);
+	return XAie_MoveData(routingInstance, source, SourceObject,
+			data_size, (XAie_MemInst*)(uintptr_t)DestinationObject, destination);
 }
 
 /*****************************************************************************/
@@ -1978,8 +1978,8 @@ AieRC XAie_MoveDataExternal2Aie(XAie_RoutingInstance *routingInstance, XAie_LocT
  ******************************************************************************/
 AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocType source, u32 SourceObject,
 			u32 data_size, XAie_MemInst* DestinationObject, XAie_LocType destination) {
-	return XAie_MoveData(routingInstance, source, (void*)(uintptr_t)SourceObject,
-			data_size, (void*)DestinationObject, destination);
+	return XAie_MoveData(routingInstance, source, (XAie_MemInst*)(uintptr_t)SourceObject,
+			data_size, DestinationObject, destination);
 }
 
 

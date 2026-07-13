@@ -70,9 +70,9 @@ int test_aie_auto_routing_aie2aie_1(XAie_DevInst *DevInst)
 
 
 	// step 3: move data to destination tile
-	XAie_MoveData(routingInstance,  XAie_TileLoc(2,3) /* Source*/,
-			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
-			(void*)(0x2000), XAie_TileLoc(4,3) /* destination*/);
+	XAie_MoveDataAie2External(routingInstance,  XAie_TileLoc(2,3) /* Source*/,
+	        (u32)(uintptr_t)(0x2000), DATA_SIZE*sizeof(uint32_t),
+			(XAie_MemInst*)(uintptr_t)(0x2000), XAie_TileLoc(4,3) /* destination*/);
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
@@ -134,17 +134,17 @@ int test_aie_auto_routing_aie2aie_2(XAie_DevInst *DevInst)
 
 
 	// step 3: move data to destination tile
-	XAie_MoveData(routingInstance,  XAie_TileLoc(2,3) /* Source*/,
-			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
-			(void*)(0x2000), XAie_TileLoc(3,3) /* destination*/);
+	XAie_MoveDataAie2External(routingInstance,  XAie_TileLoc(2,3) /* Source*/,
+	        (u32)(uintptr_t)(0x2000), DATA_SIZE*sizeof(uint32_t),
+			(XAie_MemInst*)(uintptr_t)(0x2000), XAie_TileLoc(3,3) /* destination*/);
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
 	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(3,3), true);
 #endif
-	XAie_MoveData(routingInstance,  XAie_TileLoc(3,3) /* Source*/,
-			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
-			(void*)(0x2000), XAie_TileLoc(4,3) /* destination*/);
+    XAie_MoveDataAie2External(routingInstance,  XAie_TileLoc(3,3) /* Source*/,
+	        (u32)(uintptr_t)(0x2000), DATA_SIZE*sizeof(uint32_t),
+			(XAie_MemInst*)(uintptr_t)(0x2000), XAie_TileLoc(4,3) /* destination*/);
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
@@ -209,17 +209,17 @@ int test_aie_auto_routing_aie2aie_3(XAie_DevInst *DevInst)
 
 
 	// step 3: move data to destination tile
-	XAie_MoveData(routingInstance,  XAie_TileLoc(2,3) /* Source*/,
-			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
-			(void*)(0x2000), XAie_TileLoc(3,3) /* destination*/);
+	XAie_MoveDataAie2External(routingInstance,  XAie_TileLoc(2,3) /* Source*/,
+	        (u32)(uintptr_t)(0x2000), DATA_SIZE*sizeof(uint32_t),
+			(XAie_MemInst*)(uintptr_t)(0x2000), XAie_TileLoc(3,3) /* destination*/);
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
 	XAie_RouteDmaWait(routingInstance, XAie_TileLoc(2,3), XAie_TileLoc(3,3), true);
 #endif
-	XAie_MoveData(routingInstance,  XAie_TileLoc(3,3) /* Source*/,
-			(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
-			(void*)(0x1000), XAie_TileLoc(2,3) /* destination*/);
+    XAie_MoveDataAie2External(routingInstance,  XAie_TileLoc(3,3) /* Source*/,
+	        (u32)(uintptr_t)(0x2000), DATA_SIZE*sizeof(uint32_t),
+			(XAie_MemInst*)(uintptr_t)(0x1000), XAie_TileLoc(2,3) /* destination*/);
 
 #if AIE_GEN == XAIE_DEV_GEN_AIE2PS
 	//Wait until the data transfer completes.
@@ -290,9 +290,9 @@ int test_aie_auto_routing_shim2aie(XAie_DevInst *DevInst)
 	XAie_MemSyncForDev(InputData);
 
 	// step 3: move data to destination tile
-	XAie_MoveData(routingInstance,  XAie_TileLoc(2,0) /* Source*/,
-		((void*)(InputData)), DATA_SIZE*sizeof(uint32_t),
-		(void*)(0x2000), XAie_TileLoc(4,4) /* destination*/);
+	XAie_MoveDataExternal2Aie(routingInstance,  XAie_TileLoc(2,0) /* Source*/,
+		(InputData), DATA_SIZE*sizeof(uint32_t),
+		(u32)(uintptr_t)(0x2000), XAie_TileLoc(4,4) /* destination*/);
 
 	// step 4: read data from destination tile
 	RC |= XAie_DataMemBlockRead(DevInst, XAie_TileLoc(4,4),  0x2000,
@@ -358,9 +358,9 @@ int test_aie_auto_routing_aie2shim(XAie_DevInst *DevInst)
 	XAie_MemSyncForDev(OutputData);
 
 	// step 3: move data to destination tile
-	XAie_MoveData(routingInstance,  XAie_TileLoc(4,4) /* Source*/,
-		(void*)(0x2000), DATA_SIZE*sizeof(uint32_t),
-		((void*)(OutputData)), XAie_TileLoc(35,0) /* destination*/);
+	XAie_MoveDataAie2External(routingInstance,  XAie_TileLoc(4,4) /* Source*/,
+	    (u32)(uintptr_t)(0x2000), DATA_SIZE*sizeof(uint32_t),
+		(OutputData), XAie_TileLoc(35,0) /* destination*/);
 
 	// step 5 validate data
 	for(uint8_t i = 0U; i < DATA_SIZE; i++) {
@@ -428,9 +428,9 @@ int test_aie_auto_routing_shim2shim(XAie_DevInst *DevInst)
 	XAie_MemSyncForDev(OutputData);
 
 	// step 3: move data to destination tile
-	XAie_MoveData(routingInstance,  XAie_TileLoc(2,0) /* Source*/,
-		(void*)(InputData), DATA_SIZE*sizeof(uint32_t),
-		((void*)(OutputData)), XAie_TileLoc(35,0) /* destination*/);
+	XAie_MoveDataExternal2Aie(routingInstance,  XAie_TileLoc(2,0) /* Source*/,
+		(InputData), DATA_SIZE*sizeof(uint32_t),
+		(u32)(uintptr_t)(OutputData), XAie_TileLoc(35,0) /* destination*/);
 
 	// step 5 validate data
 	for(uint8_t i = 0U; i < DATA_SIZE; i++) {
