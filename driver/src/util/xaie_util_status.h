@@ -102,9 +102,9 @@ enum DmaStatus_MM2S_enum{
 #define TRUE   1u
 #define FALSE  0u
 
-int XAie_CoreStatus_CSV(u32 Reg, char *Buf);
-int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 );
-int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 );
+s32 XAie_CoreStatus_CSV(u32 Reg, char *Buf);
+s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType);
+s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType);
 
 #define MAX_CHAR_ARRAY_SIZE   400
 #endif  /* XAIE_FEATURE_UTIL_STATUS_ENABLE */

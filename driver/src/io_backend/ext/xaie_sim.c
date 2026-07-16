@@ -70,7 +70,7 @@ typedef struct {
 /************************** Function Definitions *****************************/
 #ifdef __AIESIM__
 
-static int XAie_SimIO_MemInst_Compare(void *a, void *b)
+static s32 XAie_SimIO_MemInst_Compare(void *a, void *b)
 {
 	XAie_MemInst *MemA = (XAie_MemInst *)a;
 	XAie_MemInst *MemB = (XAie_MemInst *)b;
@@ -258,8 +258,9 @@ static AieRC XAie_SimIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 	u32 RegVal;
 
 	/* Increment Timeout value to 1 if user passed value is 1 */
-	if(TimeOutUs == 0U)
+	if(TimeOutUs == 0U) {
 		TimeOutUs++;
+	}
 
 	while(TimeOutUs > 0U) {
 		XAie_SimIO_Read32(IOInst, RegOff, &RegVal);
@@ -318,8 +319,9 @@ static AieRC XAie_SimIO_BlockWrite32(void *IOInst, u64 RegOff, const u32 *Data,
 *******************************************************************************/
 static AieRC XAie_SimIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u32 Size)
 {
-	for(u32 i = 0U; i < Size; i++)
+	for(u32 i = 0U; i < Size; i++) {
 		XAie_SimIO_Write32(IOInst, RegOff+ i * 4U, Data);
+	}
 
 	return XAIE_OK;
 }
@@ -423,8 +425,9 @@ static AieRC _XAie_SimIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 
 
 	/* Increment Timeout value to 1 if user passed value is 1 */
-	if(TimeOutUs == 0U)
+	if(TimeOutUs == 0U) {
 		TimeOutUs++;
+	}
 
 	while(TimeOutUs > 0U) {
 		XAie_SimIO_NpiRead32(IOInst, RegOff, &RegVal);
@@ -506,7 +509,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	struct XAie_DevMem *Head = &IOInst->DevMem;
 	struct XAie_DevMem *Pos;
 	u64 Align = Size % 4;
-	int Ret;
+	s32 Ret;
 
 	if (Align) {
 		Size = Size + (4 - Align);
@@ -519,8 +522,9 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			struct XAie_DevMem *Next = Pos->Next;
 			XAie_MemInst *MemInst;
 
-			if (!Node)
+			if (!Node) {
 				return NULL;
+			}
 			MemInst = &Node->MemInst;
 			MemInst->VAddr = malloc(Size);
 			if (!MemInst->VAddr) {
@@ -578,8 +582,9 @@ ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
 	Pos = DevMem;
 
 	while (Pos) {
-		if (Pos->Free)
+		if (Pos->Free) {
 			Free += Pos->Size;
+		}
 		Pos = Pos->Next;
 	}
 
@@ -596,8 +601,9 @@ ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
 	Pos = DevMem;
 
 	while (Pos) {
-		if (!Pos->Free)
+		if (!Pos->Free) {
 			use += Pos->Size;
+		}
 		Pos = Pos->Next;
 	}
 
@@ -616,10 +622,11 @@ void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
 	Pos = DevMem;
 
 	while (Pos) {
-		if (Pos->Free)
+		if (Pos->Free) {
 			Free += Pos->Size;
-		else
+		} else {
 			use += Pos->Size;
+		}
 		XAIE_DBG("[%d]: free: %d size: 0x%llx\n", i, Pos->Free, Pos->Size);
 		Pos = Pos->Next;
 		i++;
@@ -633,8 +640,9 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	struct XAie_DevMem *Node, *Next, *Prev;
 	XAie_SimIO *IOInst;
 
-	if (!MemInst)
+	if (!MemInst) {
 		return XAIE_OK;
+	}
 	Node = container_of(MemInst, struct XAie_DevMem, MemInst);
 	Next = Node->Next;
 	Prev = Node->Prev;
@@ -647,8 +655,9 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	if (Next && Next->Free) {
 		Node->Size += Next->Size;
 		Node->Next = Next->Next;
-		if (Next->Next)
+		if (Next->Next) {
 			Next->Next->Prev = Node;
+		}
 		free(Next);
 		Next = Node->Next;
 	}
@@ -704,8 +713,9 @@ AieRC XAie_SimMemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr,
 	NodeStart = (uint64_t)Node->VAddr;
 	NodeEnd = NodeStart + Node->Size;
 	if (!((VAddrStart >= NodeStart) &&
-		(VAddrEnd <= NodeEnd)))
+		(VAddrEnd <= NodeEnd))) {
 		return XAIE_INVALID_RANGE;
+	}
 	Offset = VAddrStart - NodeStart;
 	pa = (uint32_t *)(Node->DevAddr + Offset);
 	for (i = 0; i < (Size >> 2); i++) {
@@ -757,8 +767,9 @@ AieRC XAie_SimMemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr,
 	NodeStart = (uint64_t)Node->VAddr;
 	NodeEnd = NodeStart + Node->Size;
 	if (!((VAddrStart >= NodeStart) &&
-		(VAddrEnd <= NodeEnd)))
+		(VAddrEnd <= NodeEnd))) {
 		return XAIE_INVALID_RANGE;
+	}
 	Offset = VAddrStart - NodeStart;
 	pa = (uint32_t *)(Node->DevAddr + Offset);
 	for (i = 0; i < (Size >> 2); i++) {
@@ -930,19 +941,19 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	return NULL;
 }
 
-ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
+static ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
 {
 	(void)DevInst;
 	return 0;
 }
 
-ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
+static ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
 {
 	(void)DevInst;
 	return 0;
 }
 
-void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
+static void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
 {
 	(void)DevInst;
 }
@@ -1016,22 +1027,22 @@ static AieRC XAie_SimMemDetach(XAie_MemInst *MemInst)
 }
 
 static u64 XAie_SimIOGetAttr(void *IOInst, XAie_BackendAttrType Attr) {
-	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
+	const XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
 	switch (Attr) {
-		case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
+	case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
 			return SimIOInst->CoreModOverride.ProgMemSize;
-		default:
+	default:
 			return 0L;
 	}
 }
 
-AieRC XAie_SimIOSetAttr(void *IOInst, XAie_BackendAttrType Attr, u64 AttrVal) {
+static AieRC XAie_SimIOSetAttr(void *IOInst, XAie_BackendAttrType Attr, u64 AttrVal) {
 	XAie_SimIO *SimIOInst = (XAie_SimIO *)IOInst;
 	switch (Attr) {
-		case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
+	case XAIE_BACKEND_ATTR_CORE_PROG_MEM_SIZE:
 			SimIOInst->CoreModOverride.ProgMemSize = (u32) AttrVal;
 			return XAIE_OK;
-		default:
+	default:
 			return XAIE_ERR;
 	}
 }

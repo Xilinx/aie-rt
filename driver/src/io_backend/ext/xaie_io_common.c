@@ -44,13 +44,13 @@
 *
 *******************************************************************************/
 void _XAie_IOCommon_MarkTilesInUse(XAie_DevInst *DevInst,
-		XAie_BackendTilesArray *Args)
+		const XAie_BackendTilesArray *Args)
 {
 	/* Setup the requested tiles bitmap locally */
 	if (Args->Locs == NULL) {
 		u32 StartBit, NumTiles;
 
-		NumTiles = (u32)(DevInst->NumCols * (DevInst->NumRows - 1U));
+		NumTiles = (u32)DevInst->NumCols * (DevInst->NumRows - 1U);
 		/* Loc is NULL, it suggests all tiles are requested */
 		StartBit = _XAie_GetTileBitPosFromLoc(DevInst,
 					XAie_TileLoc(0, 1));

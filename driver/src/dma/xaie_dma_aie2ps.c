@@ -106,8 +106,8 @@ AieRC _XAie2PS_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
 ******************************************************************************/
 static AieRC _XAie2PS_DmaMemTileCheckPaddingConfig(XAie_DmaDesc *DmaDesc)
 {
-	XAie_AieMlDimDesc *DDesc = DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc;
-	XAie_PadDesc *PDesc = DmaDesc->PadDesc;
+	const XAie_AieMlDimDesc *DDesc = DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc;
+	const XAie_PadDesc *PDesc = DmaDesc->PadDesc;
 
 	for(u8 Dim = 0U; Dim < XAIE2PS_DMA_PAD_NUM_DIMS; Dim++) {
 		u8 Before = DmaDesc->PadDesc[Dim].Before;
@@ -372,7 +372,7 @@ AieRC _XAie2PS_ShimDmaWriteBdPrep(XAie_DevInst *DevInst,
 	DmaMod = DevInst->DevProp.DevMod[DmaDesc->TileType].DmaMod;
 	BdProp = DmaMod->BdProp;
 
-	BdBaseAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset;
+	BdBaseAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset);
 
 	/* Setup BdWord with the right values from DmaDesc */
 	BdWord[0U] = XAie_SetField(DmaDesc->AddrDesc.Length,
@@ -691,7 +691,7 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 	u64 RegAddr;
 	u32 RegVal, Mask;
 
-	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
+	RegAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Idx * 4U;
 
@@ -706,7 +706,7 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
+	RegAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Idx * 4U;
 
@@ -722,7 +722,7 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	RegAddr = DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset +
+	RegAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Idx * 4U;
 

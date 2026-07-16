@@ -114,7 +114,7 @@ static const char* XAie_DmaMM2SStatus_Strings[] = {
 * @note		Internal only.
 *
 *******************************************************************************/
-static int _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
+static s32 _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
 {
     int len = 0;
 
@@ -152,9 +152,9 @@ static int _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
 * @note		Internal only.
 *
 ******************************************************************************/
-static void _XAie_ToString(char str[], int num)
+static void _XAie_ToString(char str[], s32 num)
 {
-    int i, rem, len = 0, n;
+    s32 i, rem, len = 0, n;
 
     n = num;
 
@@ -194,7 +194,7 @@ static void _XAie_ToString(char str[], int num)
 * @note         None.
 *
 ******************************************************************************/
-int XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
+s32 XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
 
     int CharsWritten = 0;        // characters written
     u8  Shift 	= 0;
@@ -246,7 +246,7 @@ int XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
 * @note         None.
 *
 ******************************************************************************/
-int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
+s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 
     int CharsWritten = 0;
     enum DmaStatus_S2MM_enum Flag = 0;
@@ -361,7 +361,7 @@ int XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 * @note         None.
 *
 ******************************************************************************/
-int XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
+s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 
     int CharsWritten = 0;
     enum DmaStatus_MM2S_enum Flag = 0;

@@ -115,8 +115,9 @@ static AieRC _XAie_UpdateDataLengthDmaBd(XAie_ControlCodeIO *ControlCodeInst, u3
                 fseek(ControlCodeInst->ControlCodedatafp, Position, SEEK_SET);
                 Data = fgetc(ControlCodeInst->ControlCodedatafp);
 
-                if (Data == ',')
+                if (Data == ',') {
                         Count++;
+                }
 
                 if (Count == 3U) {
                         fseek(ControlCodeInst->ControlCodedatafp, Position + 1, SEEK_SET);
@@ -124,8 +125,9 @@ static AieRC _XAie_UpdateDataLengthDmaBd(XAie_ControlCodeIO *ControlCodeInst, u3
                         break;
                 }
 
-                if (Data == '\n' && Position != FileSize - 1)
+                if (Data == '\n' && Position != FileSize - 1) {
                         break;
+                }
 
                 Position--;
         }
@@ -798,8 +800,9 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 
 			NewPagePayloadSize = Size - TempItrSize;
 
-			if (ControlCodeInst->IsAdjacentMemWrite == 0)
+			if (ControlCodeInst->IsAdjacentMemWrite == 0) {
 				ControlCodeInst->UcPageSize += UC_DMA_BD_SIZE;
+			}
 			for (IterationSize = TempItrSize; IterationSize < Size; IterationSize++) {
 				 if( (ControlCodeInst->UcPageSize + UC_DMA_WORD_LEN + ControlCodeInst->DataAligner) > ControlCodeInst->PageSizeMax )
 				 {
@@ -984,22 +987,24 @@ static AieRC XAie_ControlCodeIO_AddressPatching(void *IOInst, u32 Arg_Index, u8 
 			_XAie_StartNewJob(ControlCodeInst);
 		}
 
-		if(ControlCodeInst->ScrachpadName == NULL)
+		if(ControlCodeInst->ScrachpadName == NULL) {
 			fprintf(ControlCodeInst->ControlCodefp,
 					"APPLY_OFFSET_57\t @DMAWRITE_data_%d, %d, %d\n",
 					ControlCodeInst->UcDmaDataNum,
 					Num_BDs, Arg_Index);
-		else
+		} else {
 			fprintf(ControlCodeInst->ControlCodefp,
                                         "APPLY_OFFSET_57\t @DMAWRITE_data_%d, %d, %d, @%s\n",
                                         ControlCodeInst->UcDmaDataNum,
                                         Num_BDs, Arg_Index, ControlCodeInst->ScrachpadName);
+		}
 		ControlCodeInst->UcPageTextSize += ISA_OPSIZE_APPLY_OFFSET_57;
 		ControlCodeInst->UcPageSize += ISA_OPSIZE_APPLY_OFFSET_57;
 	}
 
-        if(ControlCodeInst->ScrachpadName)
+        if(ControlCodeInst->ScrachpadName) {
                 free(ControlCodeInst->ScrachpadName);
+        }
         ControlCodeInst->ScrachpadName = NULL;
 
 	return XAIE_OK;
@@ -1087,8 +1092,9 @@ AieRC XAie_ControlCodeSaveTimestamp(XAie_DevInst *DevInst, u32 Timestamp)
 
                 return XAIE_OK;
         }
-        else
+        else {
                 return XAIE_ERR;
+        }
 }
 
 /*****************************************************************************/
@@ -1500,8 +1506,9 @@ AieRC XAie_ControlCodeAddAnnotation(XAie_DevInst *DevInst,
                 fprintf(ControlCodeInst->ControlCodefp,"description: %s\n", Description);
                 return XAIE_OK;
         }
-        else
+        else {
                 return XAIE_ERR;
+        }
 }
 
 /*****************************************************************************/
@@ -1520,9 +1527,9 @@ AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad)
         XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)DevInst->IOInst;
 
         ControlCodeInst->ScrachpadName = (char *)calloc(strlen(Scrachpad) + 1, sizeof(char));
-        if(ControlCodeInst->ScrachpadName == NULL)
+        if(ControlCodeInst->ScrachpadName == NULL) {
                 return XAIE_ERR;
-        else {
+        } else {
                 strncpy(ControlCodeInst->ScrachpadName, Scrachpad, strlen(Scrachpad));
                 return XAIE_OK;
         }

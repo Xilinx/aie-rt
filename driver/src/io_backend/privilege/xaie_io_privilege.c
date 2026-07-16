@@ -547,7 +547,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	}
 
 	/* Enable only the tiles requested in Opts parameter */
-        if(Opts != NULL && Opts->NumUseTiles > 0) {
+        if(Opts != NULL && (Opts->NumUseTiles > 0U)) {
                 XAie_BackendTilesArray TilesArray;
 
                 TilesArray.NumTiles = Opts->NumUseTiles;
@@ -580,7 +580,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			Loc = XAie_TileLoc(C, 1);
 			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				       ColClockStatus, DevInst->NumRows - 1);
+				       ColClockStatus, (u32)DevInst->NumRows - 1U);
 		}
 	}
 
@@ -825,7 +825,7 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	if(Loc == XAIE_NULL) {
 		for(u32 col = 0; col < DevInst->NumCols; col++) {
-			XAie_LocType TileLoc = XAie_TileLoc(col, 0);
+			XAie_LocType TileLoc = XAie_TileLoc((u8)col, 0);
 			RegAddr = NocDma->NocDmaPauseReg->RegOff +
 				XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col);
 			XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
@@ -860,7 +860,7 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
  * * @return	XAIE_OK on success, Error code on failure.
  *
  * ******************************************************************************/
-AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
+AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, const XAie_LocType *Loc,
 		UcDmaDir_enum Dir, u8 Pause)
 {
 	u64 RegAddr;
@@ -904,7 +904,7 @@ AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	if(Loc == XAIE_NULL) {
 		for(u32 col = 0; col < DevInst->NumCols; col++) {
-			XAie_LocType TileLoc = XAie_TileLoc(col, 0);
+			XAie_LocType TileLoc = XAie_TileLoc((u8)col, 0);
 			RegAddr = UcDma->UcDmaPauseReg->RegOff +
 				XAie_GetTileAddr(DevInst, TileLoc.Row, TileLoc.Col);
 			XAie_MaskWrite32(DevInst, RegAddr, Mask, FldVal);
@@ -999,7 +999,7 @@ AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 	(void)Args;
 	return XAIE_FEATURE_NOT_SUPPORTED;
 }
-AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
+AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, const XAie_LocType *Loc,
 		UcDmaDir_enum Dir, u8 Pause)
 {
 	(void)DevInst;

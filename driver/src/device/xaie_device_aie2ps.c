@@ -51,11 +51,11 @@ u8 _XAie2PS_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	if(Loc.Row == 0U) {
 		return XAIEGBL_TILE_TYPE_SHIMNOC;
-	} else if(Loc.Row >= DevInst->MemTileRowStart &&
+	} else if((Loc.Row >= DevInst->MemTileRowStart) &&
 			(Loc.Row < (DevInst->MemTileRowStart +
 				     DevInst->MemTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_MEMTILE;
-	} else if (Loc.Row >= DevInst->AieTileRowStart &&
+	} else if ((Loc.Row >= DevInst->AieTileRowStart) &&
 			(Loc.Row < (DevInst->AieTileRowStart +
 				     DevInst->AieTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_AIETILE;
@@ -93,10 +93,10 @@ AieRC _XAie2PS_SetAxiMMIsolation(XAie_DevInst* DevInst, u8 IsolationFlags)
 			}
 		}
 
-		if(Col == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
+		if((Col == 0U) && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
 			RegVal |= AxiMMTileCtrlMod->AxiMMIsolateWest.Mask;
 		}
-		if(Col == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
+		if((Col == (u8)(DevInst->NumCols - 1U)) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
 			RegVal |= AxiMMTileCtrlMod->AxiMMIsolateEast.Mask;
 		}
 
@@ -263,10 +263,10 @@ AieRC _XAie2PS_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 		}
 	}
 
-	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol, 1));
+	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc((u8)Args->StartCol, 1));
 	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
 
-	if(Args->Enable) {
+	if(Args->Enable != 0U) {
 		/*
 		 * Set bitmap from start column to Start+Number of columns
 		 */

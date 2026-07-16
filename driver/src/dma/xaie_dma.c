@@ -403,7 +403,7 @@ AieRC XAie_DmaSetAddrOffsetLen(XAie_DmaDesc *DmaDesc, XAie_MemInst *MemInst,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if (Offset >= MemInst->Size || Offset + Len > MemInst->Size) {
+	if (Offset >= MemInst->Size || ((Offset + Len) > MemInst->Size)) {
 		XAIE_ERROR("Invalid Arguments, Invalid Offset, Len. Offset:%llu Len:%u MemInst->Size:%llu\n",
 				Offset, Len, MemInst->Size);
 		return XAIE_INVALID_ARGS;
@@ -667,7 +667,7 @@ AieRC XAie_DmaSetNextBd_16(XAie_DmaDesc *DmaDesc, u16 NextBd, u8 EnableNextBd)
 		return XAIE_INVALID_BD_NUM;
 	}
 
-	DmaDesc->BdEnDesc.NxtBd = NextBd;
+	DmaDesc->BdEnDesc.NxtBd = (u8)NextBd;
 	DmaDesc->BdEnDesc.UseNxtBd = EnableNextBd;
 
 	return XAIE_OK;
@@ -768,7 +768,7 @@ AieRC XAie_DmaSetAxi(XAie_DmaDesc *DmaDesc, u8 Smid, u8 BurstLen, u8 Qos,
 		return XAIE_INVALID_API_POINTER;
 	}
 	if (DmaDesc->DmaMod->AxiBurstLenCheck(BurstLen,
-					      &DmaDesc->AxiDesc.BurstLen)) {
+					      &DmaDesc->AxiDesc.BurstLen) != 0U) {
 		XAIE_ERROR("Invalid Burst length. BurstLen: %u\n", BurstLen);
 		return XAIE_INVALID_BURST_LENGTH;
 	}
@@ -884,7 +884,7 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 * @note		None.
 *
 ******************************************************************************/
-int XAie_DmaWriteBdAsync(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+s32 XAie_DmaWriteBdAsync(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 			 XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes)
 {
 	const XAie_DmaMod *DmaMod;
@@ -896,26 +896,26 @@ int XAie_DmaWriteBdAsync(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 	if((DmaDesc == XAIE_NULL) ||
 	   (DmaDesc->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Arguments\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if(DmaDesc->TileType != DevInst->DevOps->GetTTypefromLoc(DevInst, Loc)) {
 		XAIE_ERROR("Tile type mismatch\n");
-		AsyncRes->res = XAIE_INVALID_TILE;
+		AsyncRes->res = (s32)XAIE_INVALID_TILE;
 		return 0;
 	}
 
 	DmaMod = DmaDesc->DmaMod;
 	if(BdNum > DmaMod->NumBds) {
 		XAIE_ERROR("Invalid BD number\n");
-		AsyncRes->res = XAIE_INVALID_BD_NUM;
+		AsyncRes->res = (s32)XAIE_INVALID_BD_NUM;
 		return 0;
 	}
 
 	if (DevInst->Backend->Ops.WriteBdAsync == NULL) {
 		XAIE_ERROR("Invalid WriteBdAsync pointer\n");
-		AsyncRes->res = XAIE_FEATURE_NOT_SUPPORTED;
+		AsyncRes->res = (s32)XAIE_FEATURE_NOT_SUPPORTED;
 		return 0;
 	}
 
@@ -1284,7 +1284,7 @@ AieRC XAie_DmaChannelPushBdToQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	return XAie_Write32(DevInst, Addr + (u64)(DmaMod->ChProp->StartBd.Idx * 4U),
+	return XAie_Write32(DevInst, Addr + ((u64)DmaMod->ChProp->StartBd.Idx * 4U),
 			BdNum);
 }
 
@@ -1315,7 +1315,7 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 *		channel.
 *
 ******************************************************************************/
-int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 				      XAie_DmaDirection Dir, u16 BdNum, XAie_AsyncRes *AsyncRes)
 {
 	AieRC RC;
@@ -1331,39 +1331,39 @@ int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if(Dir >= DMA_MAX) {
 		XAIE_ERROR("Invalid DMA direction\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
 		XAIE_ERROR("Invalid Tile Type\n");
-		AsyncRes->res = XAIE_INVALID_TILE;
+		AsyncRes->res = (s32)XAIE_INVALID_TILE;
 		return 0;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(ChNum > DmaMod->NumChannels) {
 		XAIE_ERROR("Invalid Channel number\n");
-		AsyncRes->res = XAIE_INVALID_CHANNEL_NUM;
+		AsyncRes->res = (s32)XAIE_INVALID_CHANNEL_NUM;
 		return 0;
 	}
 
 	if(BdNum > DmaMod->NumBds) {
 		XAIE_ERROR("Invalid BD number\n");
-		AsyncRes->res = XAIE_INVALID_BD_NUM;
+		AsyncRes->res = (s32)XAIE_INVALID_BD_NUM;
 		return 0;
 	}
 
 	RC = DmaMod->BdChValidity(BdNum, ChNum);
 	if (RC != XAIE_OK) {
-		AsyncRes->res = RC;
+		AsyncRes->res = (s32)RC;
 		return 0;
 	}
 
@@ -1371,7 +1371,7 @@ int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	return XAie_Write32Async(DevInst, Addr + (u64)(DmaMod->ChProp->StartBd.Idx * 4U),
+	return XAie_Write32Async(DevInst, Addr + ((u64)DmaMod->ChProp->StartBd.Idx * 4U),
 			BdNum, AsyncRes);
 }
 
@@ -1426,7 +1426,7 @@ static AieRC _XAie_DmaChannelControlPrepare(XAie_DevInst *DevInst,
 	*Addr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels +
-		(u64)(DmaMod->ChProp->Enable.Idx * 4U);
+		((u64)DmaMod->ChProp->Enable.Idx * 4U);
 
 	*Mask = DmaMod->ChProp->Enable.Mask;
 
@@ -1483,7 +1483,7 @@ static AieRC _XAie_DmaChannelControl(XAie_DevInst *DevInst, XAie_LocType Loc,
 * @note		Internal only.
 *
 ******************************************************************************/
-static int _XAie_DmaChannelControlAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
+static s32 _XAie_DmaChannelControlAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 Enable, XAie_AsyncRes *AsyncRes)
 {
 	AieRC RC;
@@ -1497,7 +1497,7 @@ static int _XAie_DmaChannelControlAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RC = _XAie_DmaChannelControlPrepare(DevInst, Loc, ChNum, Dir, &Addr, &Mask);
 	if(RC != XAIE_OK) {
-		AsyncRes->res = RC;
+		AsyncRes->res = (s32)RC;
 		return 0;
 	}
 
@@ -1543,7 +1543,7 @@ AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note		None.
 *
 ******************************************************************************/
-int XAie_DmaChannelEnableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaChannelEnableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes)
 {
 	return _XAie_DmaChannelControlAsync(DevInst, Loc, ChNum, Dir, XAIE_ENABLE, AsyncRes);
@@ -1588,7 +1588,7 @@ AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note		None.
 *
 ******************************************************************************/
-int XAie_DmaChannelDisableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaChannelDisableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes)
 {
 	return _XAie_DmaChannelControlAsync(DevInst, Loc, ChNum, Dir, XAIE_DISABLE, AsyncRes);
@@ -1795,7 +1795,7 @@ AieRC XAie_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		TimeOutUs = XAIE_DMA_WAITFORDONE_DEF_WAIT_TIME_US;
 	}
 
-	if (DmaMod->WaitforBdTaskQueue) {
+	if (DmaMod->WaitforBdTaskQueue != NULL) {
 		return DmaMod->WaitforBdTaskQueue(DevInst, Loc, DmaMod, ChNum, Dir,
 			TimeOutUs);
 	} else {
@@ -1979,11 +1979,11 @@ AieRC XAie_DmaChannelSetStartQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 *		This API doesn't support out of order.
 *
 ******************************************************************************/
-int XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
+s32 XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue, XAie_AsyncRes *AsyncRes)
 {
-	XAie_DmaDeclareQueueConfig(DmaQueueDesc, BdNum, RepeatCount,
+	XAie_DmaDeclareQueueConfig(DmaQueueDesc, (u8)BdNum, RepeatCount,
 			EnTokenIssue, XAIE_DISABLE);
 
 	return XAie_DmaChannelSetStartQueueGenericAsync(DevInst, Loc, ChNum, Dir,
@@ -2011,7 +2011,7 @@ int XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 static AieRC _XAie_DmaChannelSetStartQueuePrepare(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
-		XAie_DmaQueueDesc *DmaQueueDesc, u64 *Addr, u32 *Val)
+		const XAie_DmaQueueDesc *DmaQueueDesc, u64 *Addr, u32 *Val)
 {
 	AieRC RC;
 	u8 TileType;
@@ -2194,7 +2194,7 @@ AieRC XAie_DmaUpdateBdLen_16(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Len,
 * @note		This feature is not supported for AIE.
 *
 ******************************************************************************/
-int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
+s32 XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc, XAie_AsyncRes *AsyncRes)
 {
@@ -2210,7 +2210,7 @@ int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
 	RC = _XAie_DmaChannelSetStartQueuePrepare(DevInst, Loc, ChNum, Dir,
 			DmaQueueDesc, &Addr, &Val);
 	if(RC != XAIE_OK) {
-		AsyncRes->res = RC;
+		AsyncRes->res = (s32)RC;
 		return 0;
 	}
 
@@ -2508,7 +2508,7 @@ AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
 *
 ******************************************************************************/
 static AieRC _XAie_DmaWriteChannelPrepare(XAie_DevInst *DevInst,
-		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
+		const XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u64 *Addr, u32 *Val)
 {
 	const XAie_DmaMod *DmaMod;
@@ -2549,14 +2549,10 @@ static AieRC _XAie_DmaWriteChannelPrepare(XAie_DevInst *DevInst,
 		DmaMod->ChCtrlBase + ChNum * DmaMod->ChIdxOffset +
 		(u8)Dir * DmaMod->ChIdxOffset * DmaMod->NumChannels;
 
-	*Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, (DmaMod->ChProp->EnOutofOrder.Lsb),
-			(DmaMod->ChProp->EnOutofOrder.Mask)) |
-		XAie_SetField(DmaChannelDesc->EnCompression, (DmaMod->ChProp->EnCompression.Lsb),
-			(DmaMod->ChProp->EnCompression.Mask)) |
-		XAie_SetField(DmaChannelDesc->ControllerId, (DmaMod->ChProp->ControllerId.Lsb),
-			(DmaMod->ChProp->ControllerId.Mask)) |
-		XAie_SetField(DmaChannelDesc->FoTMode, (DmaMod->ChProp->FoTMode.Lsb),
-			(DmaMod->ChProp->FoTMode.Mask));
+	*Val = XAie_SetField(DmaChannelDesc->EnOutofOrderId, DmaMod->ChProp->EnOutofOrder.Lsb, DmaMod->ChProp->EnOutofOrder.Mask) |
+		XAie_SetField(DmaChannelDesc->EnCompression, DmaMod->ChProp->EnCompression.Lsb, DmaMod->ChProp->EnCompression.Mask) |
+		XAie_SetField(DmaChannelDesc->ControllerId, DmaMod->ChProp->ControllerId.Lsb, DmaMod->ChProp->ControllerId.Mask) |
+		XAie_SetField(DmaChannelDesc->FoTMode, DmaMod->ChProp->FoTMode.Lsb, DmaMod->ChProp->FoTMode.Mask);
 
 	return XAIE_OK;
 }
@@ -2616,7 +2612,7 @@ AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 * @note		This API works only for AIE-ML and has no effect on AIE.
 *
 ******************************************************************************/
-int XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
+s32 XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes)
 {
@@ -2632,7 +2628,7 @@ int XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
 	RC = _XAie_DmaWriteChannelPrepare(DevInst, DmaChannelDesc, Loc, ChNum,
 			Dir, &Addr, &Val);
 	if(RC != XAIE_OK) {
-		AsyncRes->res = RC;
+		AsyncRes->res = (s32)RC;
 		return 0;
 	}
 
@@ -2654,7 +2650,7 @@ int XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
 *		configure the buffer descriptor field in the hardware.
 *
 *******************************************************************************/
-AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, XAie_DmaPadTensor *PadTensor)
+AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, const XAie_DmaPadTensor *PadTensor)
 {
 	const XAie_DmaMod *DmaMod;
 	if((DmaDesc == XAIE_NULL) || (PadTensor == XAIE_NULL) ||
@@ -2898,7 +2894,7 @@ AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offse
 *		memory instances.
 *
 ******************************************************************************/
-int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
+s32 XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
 				 u16 BdNum, XAie_AsyncRes *AsyncRes)
 {
 	const XAie_DmaMod *DmaMod;
@@ -2911,7 +2907,7 @@ int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Of
 	}
 	if (MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid Memory Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
@@ -2919,19 +2915,19 @@ int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Of
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if(TileType != XAIEGBL_TILE_TYPE_SHIMNOC) {
 		XAIE_ERROR("Invalid Tile Type\n");
-		AsyncRes->res = XAIE_INVALID_TILE;
+		AsyncRes->res = (s32)XAIE_INVALID_TILE;
 		return 0;
 	}
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 	if(BdNum > DmaMod->NumBds) {
 		XAIE_ERROR("Invalid BD number\n");
-		AsyncRes->res = XAIE_INVALID_BD_NUM;
+		AsyncRes->res = (s32)XAIE_INVALID_BD_NUM;
 		return 0;
 	}
 	if (DevInst->Backend->Ops.UpdateShimDmaBdAddrOffAsync == NULL) {
 		XAIE_ERROR("Async Update BD Addr Off API not supported by backend\n");
-		AsyncRes->res = XAIE_FEATURE_NOT_SUPPORTED;
+		AsyncRes->res = (s32)XAIE_FEATURE_NOT_SUPPORTED;
 		return 0;
 	}
 	return DevInst->Backend->Ops.UpdateShimDmaBdAddrOffAsync(MemInst, Loc, Offset, BdNum, AsyncRes);
@@ -3036,7 +3032,7 @@ AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 * @note		None.
 *
 ******************************************************************************/
-int XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		u32 PadValue, XAie_AsyncRes *AsyncRes)
 {
 	AieRC RC;
@@ -3049,7 +3045,7 @@ int XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 
 	RC = _XAie_DmaSetPadValuePrepare(DevInst, Loc, ChNum, &Addr);
 	if(RC != XAIE_OK) {
-		AsyncRes->res = RC;
+		AsyncRes->res = (s32)RC;
 		return 0;
 	}
 

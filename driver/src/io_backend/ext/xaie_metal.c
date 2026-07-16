@@ -82,9 +82,10 @@ static AieRC XAie_MetalIO_Finish(void *IOInst)
 	XAie_MetalIO *MetalIOInst = (XAie_MetalIO *)IOInst;
 
 	munmap((void *)MetalIOInst->BaseAddr, MetalIOInst->MapSize);
-	if(MetalIOInst->NpiBaseAddr != NULL)
+	if(MetalIOInst->NpiBaseAddr != NULL) {
 		munmap((void *)MetalIOInst->NpiBaseAddr,
 				MetalIOInst->NpiMapSize);
+	}
 	close(MetalIOInst->DevFd);
 
 	return XAIE_OK;
@@ -183,16 +184,18 @@ static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 			return XAIE_ERR;
 		}
 		if((strcmp(DirEntry->d_name, ".") == 0) ||
-				(strcmp(DirEntry->d_name, "..") == 0))
+				(strcmp(DirEntry->d_name, "..") == 0)) {
 			continue;
+		}
 		sprintf(path, "%s/%s/name", XAIE_UIO_SYSFS_PATH,
 				DirEntry->d_name);
 		DevFile = fopen(path, "r");
 		fgets(DevName, XAIE_UIO_DRIVER_PATH_MAX, DevFile);
 		fclose(DevFile);
 		if(strncmp(DevName, "xilinx-aiengine",
-					strlen("xilinx-aiengine")) == 0)
+					strlen("xilinx-aiengine")) == 0) {
 			break;
+		}
 	}
 
 	sprintf(path, "/dev/%s", DirEntry->d_name);

@@ -778,7 +778,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	/* Get reset event for given counter and store in the event pointer */
-	RegEvent = RegEvent >> Counter * PerfMod->ResetShift;
+	RegEvent = RegEvent >> (Counter * PerfMod->ResetShift);
 	RegEvent &= PerfMod->Reset.Mask;
 	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, (u16)RegEvent,
 			ResetEvent);
@@ -1504,7 +1504,7 @@ AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Mask = UcMdm->PerfCtrl->Stop.Mask;
 	FldVal = 1U << UcMdm->PerfCtrl->Stop.Lsb;
 	/* If sample enabled, also set sample bit */
-	if (SampleEnable) {
+	if (SampleEnable != 0U) {
 		Mask |= UcMdm->PerfCtrl->Sample.Mask;
 		FldVal |= 1U << UcMdm->PerfCtrl->Sample.Lsb;
 	}

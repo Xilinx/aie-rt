@@ -185,7 +185,7 @@ AieRC _XAieMl_LockGetValue(XAie_DevInst *DevInst, const XAie_LockMod *LockMod,
 	u64 RegAddr;
 	AieRC RC;
 
-	RegAddr = Lock.LockId * LockMod->LockSetValOff +
+	RegAddr = (Lock.LockId * LockMod->LockSetValOff) +
 		LockMod->LockSetValBase +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 

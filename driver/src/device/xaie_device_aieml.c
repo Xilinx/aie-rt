@@ -67,11 +67,11 @@ u8 _XAieMl_GetTTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 		return XAIEGBL_TILE_TYPE_SHIMNOC;
 
-	} else if(Loc.Row >= DevInst->MemTileRowStart &&
+	} else if((Loc.Row >= DevInst->MemTileRowStart) &&
 			(Loc.Row < (DevInst->MemTileRowStart +
 				     DevInst->MemTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_MEMTILE;
-	} else if (Loc.Row >= DevInst->AieTileRowStart &&
+	} else if ((Loc.Row >= DevInst->AieTileRowStart) &&
 			(Loc.Row < (DevInst->AieTileRowStart +
 				     DevInst->AieTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_AIETILE;
@@ -166,10 +166,11 @@ AieRC _XAieMl_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
 				Dir = XAIE_ISOLATE_EAST_MASK;
 			}
 		}
-		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
+
+		if((C == 0U) && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
 			Dir |= XAIE_ISOLATE_WEST_MASK;
 		}
-		if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
+		if((C == (u8)(DevInst->NumCols - 1U)) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
 			Dir |= XAIE_ISOLATE_EAST_MASK;
 		}
 
@@ -233,9 +234,9 @@ AieRC _XAieMl_PartMemZeroInit(XAie_DevInst *DevInst)
 					return RC;
 				}
 
-				if((C == DevInst->NumCols - 1U) &&
-						(R == DevInst->NumRows - 1U) &&
-						(M == NumMods - 1U)) {
+				if((C == (DevInst->NumCols - 1U)) &&
+						(R == (DevInst->NumRows - 1U)) &&
+						(M == (NumMods - 1U))) {
 					RegAddr = MCtrlMod[M].MemCtrlRegOff +
 						XAie_GetTileAddr(DevInst,
 								Loc.Row,
@@ -316,7 +317,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		u32 NumTiles;
 
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
-		NumTiles = (u32)((DevInst->NumRows - 1U) * (DevInst->NumCols));
+		NumTiles = (u32)(DevInst->NumRows - 1U) * (DevInst->NumCols);
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
@@ -342,7 +343,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, DevInst->NumRows - 1);
+				ColClockStatus, (u32)DevInst->NumRows - 1U);
 	}
 
 	for(u32 i = 0; i < Args->NumTiles; i++) {
@@ -361,7 +362,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 */
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				XAie_TileLoc(Args->Locs[i].Col, 1));
-		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus) != 0U) {
 			continue;
 		}
 
@@ -378,7 +379,7 @@ AieRC _XAieMl_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		 * Shim row is already set, so use NumRows-1
 		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, (u32)(DevInst->NumRows - 1U));
+				ColClockStatus, (u32)DevInst->NumRows - 1U);
 	}
 
 	return XAIE_OK;
@@ -498,7 +499,7 @@ AieRC _XAieMl_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc(Args->StartCol, 1));
 	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
 
-	if(Args->Enable) {
+	if(Args->Enable != 0U) {
 		/*
 		 * Set bitmap from start column to Start+Number of columns
 		 */

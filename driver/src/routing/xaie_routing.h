@@ -58,8 +58,8 @@ typedef struct XAie_HostAieConstraint {
 
 typedef struct XAie_RoutingStep {
     XAie_LocType sourceTile;
-    int sourceStream;
-    int destStream;
+    s32 sourceStream;
+    s32 destStream;
     StrmSwPortType source_direction;
     StrmSwPortType dest_direction;
     struct XAie_RoutingStep *next; // Pointer to the next step in the path
@@ -135,7 +135,7 @@ typedef struct XAie_RoutingInstance {
 } XAie_RoutingInstance;
 
 typedef struct {
-    int front, rear, size;
+    int32_t front, rear, size;
     unsigned capacity;
     XAie_LocType* array;
 } Queue;
@@ -143,9 +143,7 @@ typedef struct {
 #ifdef XAIE_FEATURE_ROUTING_ENABLE
 AieRC XAie_dumpConstraintsToPrint(XAie_RoutingInstance* RoutingInstance);
 AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* RoutingInstance, u8 row, u8 col);
-AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, XAie_CoreConstraint* constraint, u8 row, u8 col) ;
-
-
+AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, const XAie_CoreConstraint* constraint, u8 row, u8 col) ;
 AieRC XAie_MoveDataExternal2Aie(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject,
 			u32 data_size, u32 DestinationObject, XAie_LocType destination);
 AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocType source, u32 SourceObject,
@@ -153,17 +151,17 @@ AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocT
 
 AieRC XAie_Route(XAie_RoutingInstance *routingInstance,  XAie_RouteConstraints* RouteConstraints, XAie_LocType source, XAie_LocType destination);
 AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination, bool ShouldModifyCoreConfig);
-AieRC XAie_RoutesReveal(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination);
+AieRC XAie_RoutesReveal(const XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination);
 AieRC XAie_RouteDmaWait(XAie_RoutingInstance *routingInstance, XAie_LocType sourcetile, XAie_LocType tile, bool isS2MM);
-AieRC XAie_CoreWait(XAie_RoutingInstance *routingInstance, XAie_LocType tile);
-AieRC XAie_Run(XAie_RoutingInstance* routingInstance, uint32_t count);
-AieRC XAie_SetCoreExecute(XAie_RoutingInstance *routingInstance, XAie_LocType tile, bool isExecute);
+AieRC XAie_CoreWait(const XAie_RoutingInstance *routingInstance, XAie_LocType tile);
+AieRC XAie_Run(const XAie_RoutingInstance* routingInstance, uint32_t count);
+AieRC XAie_SetCoreExecute(const XAie_RoutingInstance *routingInstance, XAie_LocType tile, bool isExecute);
 void XAieRoutingInstance_free(XAie_RoutingInstance* RoutingInstance);
-AieRC XAie_ConfigHostEdgeConstraints(XAie_RoutingInstance *routingInstance, XAie_HostAieConstraint UserResCon);
-AieRC XAie_ResetHostEdgeConstraints(XAie_RoutingInstance *routingInstance);
+AieRC XAie_ConfigHostEdgeConstraints(const XAie_RoutingInstance *routingInstance, XAie_HostAieConstraint UserResCon);
+AieRC XAie_ResetHostEdgeConstraints(const XAie_RoutingInstance *routingInstance);
 XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst);
-AieRC XAie_RoutingSwitchReset(XAie_RoutingInstance *routingInstance, XAie_LocType* listOfTiles, uint32_t NoOfTiles);
-void XAie_DumpRoutingSwitchInfo(XAie_RoutingInstance *routingInstance, XAie_LocType* listOfTiles, uint32_t NoOfTiles);
+AieRC XAie_RoutingSwitchReset(const XAie_RoutingInstance *routingInstance, const XAie_LocType* listOfTiles, uint32_t NoOfTiles);
+void XAie_DumpRoutingSwitchInfo(const XAie_RoutingInstance *routingInstance, const XAie_LocType* listOfTiles, uint32_t NoOfTiles);
 
 #else /* XAIE_FEATURE_ROUTING_ENABLE */
 
@@ -177,7 +175,7 @@ static inline AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* Rou
 	return XAIE_ERR;
 }
 
-static inline AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, XAie_CoreConstraint* constraint, u8 row, u8 col)
+static inline AieRC XAie_coreConstraintToPrint(XAie_RoutingInstance* RoutingInstance, const XAie_CoreConstraint* constraint, u8 row, u8 col)
 {
 	return XAIE_ERR;
 }
@@ -194,7 +192,7 @@ static inline AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_Loc
 	return XAIE_ERR;
 }
 
-static inline AieRC XAie_RoutesReveal(XAie_RoutingInstance *routingInstance, XAie_LocType source,
+static inline AieRC XAie_RoutesReveal(const XAie_RoutingInstance *routingInstance, XAie_LocType source,
 				      XAie_LocType destination)
 {
 	return XAIE_ERR;
@@ -205,17 +203,17 @@ static inline AieRC XAie_RouteDmaWait(XAie_RoutingInstance *routingInstance, XAi
 	return XAIE_ERR;
 }
 
-static inline AieRC XAie_CoreWait(XAie_RoutingInstance *routingInstance, XAie_LocType tile)
+static inline AieRC XAie_CoreWait(const XAie_RoutingInstance *routingInstance, XAie_LocType tile)
 {
 	return XAIE_ERR;
 }
 
-static inline AieRC XAie_Run(XAie_RoutingInstance* routingInstance, uint32_t count)
+static inline AieRC XAie_Run(const XAie_RoutingInstance* routingInstance, uint32_t count)
 {
 	return XAIE_ERR;
 }
 
-static inline AieRC XAie_SetCoreExecute(XAie_RoutingInstance *routingInstance, XAie_LocType tile, bool isExecute)
+static inline AieRC XAie_SetCoreExecute(const XAie_RoutingInstance *routingInstance, XAie_LocType tile, bool isExecute)
 {
 	return XAIE_ERR;
 }
@@ -225,12 +223,12 @@ static inline void XAieRoutingInstance_free(XAie_RoutingInstance* RoutingInstanc
 	return;
 }
 
-static inline AieRC XAie_ConfigHostEdgeConstraints(XAie_RoutingInstance *routingInstance, XAie_HostAieConstraint UserResCon)
+static inline AieRC XAie_ConfigHostEdgeConstraints(const XAie_RoutingInstance *routingInstance, XAie_HostAieConstraint UserResCon)
 {
 	return XAIE_ERR;
 }
 
-static inline AieRC XAie_ResetHostEdgeConstraints(XAie_RoutingInstance *routingInstance)
+static inline AieRC XAie_ResetHostEdgeConstraints(const XAie_RoutingInstance *routingInstance)
 {
 	return XAIE_ERR;
 }
@@ -240,12 +238,12 @@ static inline XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevIns
 	return NULL;
 }
 
-static inline AieRC XAie_RoutingSwitchReset(XAie_RoutingInstance *routingInstance, XAie_LocType* listOfTiles, uint32_t NoOfTiles)
+static inline AieRC XAie_RoutingSwitchReset(const XAie_RoutingInstance *routingInstance, const XAie_LocType* listOfTiles, uint32_t NoOfTiles)
 {
 	return XAIE_ERR;
 }
 
-static inline void XAie_DumpRoutingSwitchInfo(XAie_RoutingInstance *routingInstance, XAie_LocType* listOfTiles, uint32_t NoOfTiles)
+static inline void XAie_DumpRoutingSwitchInfo(const XAie_RoutingInstance *routingInstance, const XAie_LocType* listOfTiles, uint32_t NoOfTiles)
 {
 	return;
 }

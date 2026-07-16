@@ -62,8 +62,8 @@
 #define XAIE2PS_SHIMDMA_NUM_BD_WORDS			9U
 #define XAIE2PS_MEMTILEDMA_NUM_BD_WORDS		8U
 /************************** Variable Definitions *****************************/
-const u8 TransactionHeaderVersion_Major = 0;
-const u8 TransactionHeaderVersion_Minor = 1;
+static const u8 TransactionHeaderVersion_Major = 0;
+static const u8 TransactionHeaderVersion_Minor = 1;
 
 /**
  Define the global log level variable with a default value.
@@ -101,11 +101,11 @@ u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 		return XAIEGBL_TILE_TYPE_SHIMNOC;
 
-	} else if(Loc.Row >= DevInst->MemTileRowStart &&
+	} else if((Loc.Row >= DevInst->MemTileRowStart) &&
 			(Loc.Row < (DevInst->MemTileRowStart +
 				     DevInst->MemTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_MEMTILE;
-	} else if (Loc.Row >= DevInst->AieTileRowStart &&
+	} else if ((Loc.Row >= DevInst->AieTileRowStart) &&
 			(Loc.Row < (DevInst->AieTileRowStart +
 				     DevInst->AieTileNumRows))) {
 		return XAIEGBL_TILE_TYPE_AIETILE;
@@ -136,7 +136,7 @@ AieRC XAie_CheckModule(XAie_DevInst *DevInst,
 	u8 TileType;
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(TileType == XAIEGBL_TILE_TYPE_AIETILE && Module > XAIE_CORE_MOD) {
+	if(TileType == XAIEGBL_TILE_TYPE_AIETILE && (Module > XAIE_CORE_MOD)) {
 		XAIE_ERROR("Invalid Module.Col:%u Row:%u TileType:%u Module:%u\n",Loc.Col, Loc.Row, TileType, Module);
 		return XAIE_INVALID_ARGS;
 	}
@@ -269,7 +269,7 @@ AieRC _XAie_GetSlaveIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Slave,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
+	RegAddr = PortPtr->PortBaseAddr + (StrmMod->PortOffset * PortNum);
 	*SlaveIdx = (u8)((RegAddr - BaseAddr) / 4U);
 
 	return XAIE_OK;
@@ -308,7 +308,7 @@ AieRC _XAie_GetMstrIdx(const XAie_StrmMod *StrmMod, StrmSwPortType Master,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	RegAddr = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
+	RegAddr = PortPtr->PortBaseAddr + (StrmMod->PortOffset * PortNum);
 	*MasterIdx = (u8)((RegAddr - BaseAddr) / 4U);
 
 	return XAIE_OK;
@@ -351,21 +351,24 @@ u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
  * Case-insensitive string comparison implementation for embedded systems
  * that may not have strcasecmp() available.
  */
-static int xaie_strcasecmp(const char *s1, const char *s2) {
+static s32 xaie_strcasecmp(const char *s1, const char *s2) {
 	unsigned char c1, c2;
 
-	while (*s1 && *s2) {
+	while ((*s1 && *s2) != 0U) {
 		c1 = (unsigned char)*s1;
 		c2 = (unsigned char)*s2;
 
 		/* Convert to lowercase */
-		if (c1 >= 'A' && c1 <= 'Z')
+		if (c1 >= (unsigned char)'A' && c1 <= (unsigned char)'Z') {
 			c1 += 'a' - 'A';
-		if (c2 >= 'A' && c2 <= 'Z')
+		}
+		if (c2 >= (unsigned char)'A' && c2 <= (unsigned char)'Z') {
 			c2 += 'a' - 'A';
+		}
 
-		if (c1 != c2)
-			return c1 - c2;
+		if (c1 != c2) {
+			return (s32)(c1 - c2);
+		}
 
 		s1++;
 		s2++;
@@ -374,12 +377,14 @@ static int xaie_strcasecmp(const char *s1, const char *s2) {
 	/* Handle different string lengths */
 	c1 = (unsigned char)*s1;
 	c2 = (unsigned char)*s2;
-	if (c1 >= 'A' && c1 <= 'Z')
+	if (c1 >= (unsigned char)'A' && c1 <= (unsigned char)'Z') {
 		c1 += 'a' - 'A';
-	if (c2 >= 'A' && c2 <= 'Z')
+	}
+	if (c2 >= (unsigned char)'A' && c2 <= (unsigned char)'Z') {
 		c2 += 'a' - 'A';
+	}
 
-	return c1 - c2;
+	return (s32)(c1 - c2);
 }
 
 /**
@@ -396,14 +401,21 @@ static void _XAie_LoggerInit(void) {
 }
 
 void XAie_LoggerInit(const char *AieLevelEnv) {
-    if (AieLevelEnv) {
-        if (xaie_strcasecmp(AieLevelEnv, "FATAL") == 0) AieLogLevel = XAIE_LOG_LEVEL_FATAL;
-        else if (xaie_strcasecmp(AieLevelEnv, "ERROR") == 0) AieLogLevel = XAIE_LOG_LEVEL_ERROR;
-        else if (xaie_strcasecmp(AieLevelEnv, "WARN")  == 0) AieLogLevel = XAIE_LOG_LEVEL_WARN;
-        else if (xaie_strcasecmp(AieLevelEnv, "INFO")  == 0) AieLogLevel = XAIE_LOG_LEVEL_INFO;
-        else if (xaie_strcasecmp(AieLevelEnv, "DEBUG") == 0) AieLogLevel = XAIE_LOG_LEVEL_DEBUG;
-        else if (xaie_strcasecmp(AieLevelEnv, "TRACE") == 0) AieLogLevel = XAIE_LOG_LEVEL_TRACE;
-    }
+	if (AieLevelEnv != NULL) {
+		if (xaie_strcasecmp(AieLevelEnv, "FATAL") == 0) {
+			AieLogLevel = XAIE_LOG_LEVEL_FATAL;
+		} else if (xaie_strcasecmp(AieLevelEnv, "ERROR") == 0) {
+			AieLogLevel = XAIE_LOG_LEVEL_ERROR;
+		} else if (xaie_strcasecmp(AieLevelEnv, "WARN")  == 0) {
+			AieLogLevel = XAIE_LOG_LEVEL_WARN;
+		} else if (xaie_strcasecmp(AieLevelEnv, "INFO")  == 0) {
+			AieLogLevel = XAIE_LOG_LEVEL_INFO;
+		} else if (xaie_strcasecmp(AieLevelEnv, "DEBUG") == 0) {
+			AieLogLevel = XAIE_LOG_LEVEL_DEBUG;
+		} else if (xaie_strcasecmp(AieLevelEnv, "TRACE") == 0) {
+			AieLogLevel = XAIE_LOG_LEVEL_TRACE;
+		}
+	}
 }
 
 void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
@@ -516,7 +528,7 @@ void _XAie_ClrBitInBitmap(u32 *Bitmap, u32 StartBit, u32 NumBit)
 {
 	for(u32 i = StartBit; i < StartBit + NumBit; i++) {
 		Bitmap[i / (sizeof(Bitmap[0]) * 8U)] &=
-			~(u32)((1U << (i % (sizeof(Bitmap[0]) * 8U))));
+			(u32)(~(1U << (i % (sizeof(Bitmap[0]) * 8U))));
 	}
 }
 
@@ -558,7 +570,7 @@ void _XAie_AppendPartitionToList(XAie_DevInst *DevInst,
 * @return	 Partition Fd  on success, negetive values on failure.
 *
 *******************************************************************************/
-int _XAie_MatchPartitionList(XAie_DevInst *DevInst, u32 PartitionId)
+s32 _XAie_MatchPartitionList(XAie_DevInst *DevInst, u32 PartitionId)
 {
 	XAie_List *NodePtr;
 	XAie_PartitionList *ListNode;
@@ -761,7 +773,7 @@ void BuffHexDump(char* buff,u32 size) {
 	printf("\n");
 }
 
-static int TxnCmdDump(XAie_TxnCmd* cmd) {
+static s32 TxnCmdDump(XAie_TxnCmd* cmd) {
 	XAIE_DBG("TxnCmdDump Called for %d and size %d\n",cmd->Opcode,cmd->Size);
 	BuffHexDump((char *)(uintptr_t)(cmd->DataPtr),cmd->Size);
 	return 0;
@@ -784,7 +796,7 @@ static AieRC _XAie_ReallocCmdBuf(XAie_TxnInst *TxnInst)
 {
 	TxnInst->CmdBuf = (XAie_TxnCmd *)realloc((void *)TxnInst->CmdBuf,
 			sizeof(XAie_TxnCmd) *
-			(u64)(TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS));
+			((u64)TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS));
 	if(TxnInst->CmdBuf == NULL) {
 		XAIE_ERROR("Failed reallocate memory for transaction buffer "
 				"with id: %d\n", TxnInst->Tid);
@@ -836,7 +848,7 @@ AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags)
 
 	XAIE_DBG("Transaction buffer allocated with id: %ld\n", Inst->Tid);
 	Inst->Flags = Flags;
-	if(Flags & XAIE_TXN_AUTO_FLUSH_MASK) {
+	if((Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) {
 		XAIE_DBG("Auto flush is enabled for transaction buffer with "
 				"id: %ld\n", Inst->Tid);
 	} else {
@@ -1005,7 +1017,7 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 			return XAIE_ERR;
 		}
 	} else {
-		if(TxnInst->Flags & XAIE_TXN_INST_EXPORTED_MASK) {
+		if((TxnInst->Flags & XAIE_TXN_INST_EXPORTED_MASK) != 0U) {
 			Inst = TxnInst;
 		} else {
 			XAIE_ERROR("Transaction instance was not exported.\n");
@@ -1020,7 +1032,7 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 	}
 
 	/* Do not free resources if transaction is exported */
-	if(Inst->Flags & XAIE_TXN_INST_EXPORTED_MASK) {
+	if((Inst->Flags & XAIE_TXN_INST_EXPORTED_MASK) != 0U) {
 		return XAIE_OK;
 	}
 
@@ -1585,7 +1597,7 @@ AieRC XAie_AsyncWait(XAie_DevInst *DevInst)
 * @note		None.
 *
 ******************************************************************************/
-int XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRes *AsyncRes)
+s32 XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRes *AsyncRes)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
 
@@ -1596,7 +1608,7 @@ int XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRe
 	if (Backend->Ops.Write32Async == NULL) {
 		XAIE_ERROR("Asynchronous write operation is not supported "
 				"by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 
@@ -1717,7 +1729,7 @@ AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value)
 			Value);
 }
 
-int XAie_MaskWrite32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
+s32 XAie_MaskWrite32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			  XAie_AsyncRes *AsyncRes)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
@@ -1729,7 +1741,7 @@ int XAie_MaskWrite32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value
 	if (Backend->Ops.MaskWrite32Async == NULL) {
 		XAIE_ERROR("Asynchronous mask write operation is not supported "
 				"by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 
@@ -1810,7 +1822,7 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 * @note		None.
 *
 ******************************************************************************/
-int XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
+s32 XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 			   u32 Size, XAie_AsyncRes *AsyncRes)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
@@ -1822,7 +1834,7 @@ int XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 	if (Backend->Ops.BlockWrite64BytesAsync == NULL) {
 		XAIE_ERROR("Asynchronous block write operation is not supported "
 				"by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 
@@ -1850,7 +1862,7 @@ int XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 * @note		Does not support PM/DM memory writes.
 *
 ******************************************************************************/
-int XAie_BlockWrite32Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
+s32 XAie_BlockWrite32Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 			   u32 Size, XAie_AsyncRes *AsyncRes)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
@@ -1862,7 +1874,7 @@ int XAie_BlockWrite32Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 	if (Backend->Ops.BlockWrite32Async == NULL) {
 		XAIE_ERROR("Asynchronous block write32 operation is not "
 				"supported by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 
@@ -1889,7 +1901,7 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 					Data, Size);
 		}
 
-		if(TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) {
+		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) {
 			/* Flush command buffer */
 			XAIE_DBG("Auto flushing contents of the transaction "
 					"buffer.\n");
@@ -1951,7 +1963,7 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 					Size);
 		}
 
-		if(TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) {
+		if((TxnInst->Flags & XAIE_TXN_AUTO_FLUSH_MASK) != 0U) {
 			/* Flush command buffer */
 			XAIE_DBG("Auto flushing contents of the transaction "
 					"buffer.\n");
@@ -2008,7 +2020,7 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 * @note		Does not support PM/DM memory regions.
 *
 ******************************************************************************/
-int XAie_BlockSet32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Data,
+s32 XAie_BlockSet32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Data,
 			 u32 Size, XAie_AsyncRes *AsyncRes)
 {
 	const XAie_Backend *Backend = DevInst->Backend;
@@ -2020,7 +2032,7 @@ int XAie_BlockSet32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Data,
 	if (Backend->Ops.BlockSet32Async == NULL) {
 		XAIE_ERROR("Asynchronous block set32 operation is not "
 				"supported by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 
@@ -2219,7 +2231,7 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 *
 ******************************************************************************/
 
-int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst) {
+s32 XAie_RequestCustomTxnOp(XAie_DevInst *DevInst) {
 
 	XAie_TxnInst *Inst;
 	const XAie_Backend *Backend = DevInst->Backend;
@@ -2228,7 +2240,7 @@ int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst) {
 	if(Inst == NULL) {
 		XAIE_ERROR("Failed to get the correct transaction instance "
 				"from internal list\n");
-		return (int)XAIE_ERR;
+		return (s32)XAIE_ERR;
 	}
 	if(Inst->NextCustomOp < (u8)XAIE_IO_CUSTOM_OP_MAX) {
 		XAIE_DBG("New Custom OP allocated %d\n", Inst->NextCustomOp);
@@ -2237,7 +2249,7 @@ int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst) {
 		return -1;
 	}
 
-	return (int)(Inst->NextCustomOp)++;
+	return (s32)(Inst->NextCustomOp)++;
 }
 
 
@@ -2620,16 +2632,18 @@ AieRC XAie_PrintDmaStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dm
 	u32 s2mm_val, mm2s_val;
 	AieRC RC;
 
-        for (u8 Chan = 0; Chan < DmaMod->NumChannels; Chan++) {
-			RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan, DMA_S2MM, &s2mm_val);
-			if (RC != XAIE_OK)
-					return RC;
+	for (u8 Chan = 0; Chan < DmaMod->NumChannels; Chan++) {
+		       RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan, DMA_S2MM, &s2mm_val);
+		       if (RC != XAIE_OK) {
+				       return RC;
+		       }
 
-			RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan, DMA_MM2S, &mm2s_val);
-			if (RC != XAIE_OK)
-					return RC;
-			XAIE_DBG("Tile[%u,%u] Chan[%d]: S2MM=0x%x | MM2S=0x%x\n", Loc.Col, Loc.Row, Chan, s2mm_val, mm2s_val);
-        }
+		       RC = XAie_DmaGetChannelStatus(DevInst, Loc, Chan, DMA_MM2S, &mm2s_val);
+		       if (RC != XAIE_OK) {
+				       return RC;
+		       }
+		       XAIE_DBG("Tile[%u,%u] Chan[%d]: S2MM=0x%x | MM2S=0x%x\n", Loc.Col, Loc.Row, Chan, s2mm_val, mm2s_val);
+	}
 
         return XAIE_OK;
 }
@@ -2640,20 +2654,21 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 	u32 bd_val;
 	AieRC RC;
 
-		for(u8 BD=0; BD < DmaMod->NumBds; BD++){
-			BdAddr = (u64)DmaMod->BaseAddr +
-						(u64)XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + (u64)(BD * DmaMod->IdxOffset);
-			for(u8 i = 0; i < BdWordCount; i++) {
-				RC = XAie_Read32(DevInst, BdAddr, &bd_val);
-				if (RC != XAIE_OK)
-						return RC;
-
-				XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
-				BdAddr += 4U;
+	for(u8 BD=0; BD < DmaMod->NumBds; BD++){
+		BdAddr = (u64)DmaMod->BaseAddr +
+			(u64)XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + ((u64)BD * DmaMod->IdxOffset);
+		for(u8 i = 0; i < BdWordCount; i++) {
+			RC = XAie_Read32(DevInst, BdAddr, &bd_val);
+			if (RC != XAIE_OK) {
+				return RC;
 			}
-			printf("\n");
+
+			XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
+			BdAddr += 4U;
 		}
-        return XAIE_OK;
+		printf("\n");
+	}
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -2672,56 +2687,63 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 ******************************************************************************/
 AieRC XAie_DmaStatusDump(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols)
 {
-        u8 NumRows = DevInst->NumRows;
-        u32 RC = (u32)XAIE_ERR;
+	u8 NumRows = DevInst->NumRows;
+	AieRC RC = XAIE_ERR;
 
-        for (u8 Col = StartCol; Col < (StartCol + NumCols); Col++) {
-                for (u8 Row = 0; Row < NumRows; Row++) {
-                        XAie_LocType Loc = {.Col = Col, .Row = Row};
-                        u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
+	for (u8 Col = StartCol; Col < (StartCol + NumCols); Col++) {
+		for (u8 Row = 0; Row < NumRows; Row++) {
+			XAie_LocType Loc = {.Col = Col, .Row = Row};
+			u8 TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
-                        if (TileType >= XAIEGBL_TILE_TYPE_MAX || TileType == XAIEGBL_TILE_TYPE_SHIMPL)
-                                continue;
-
-                        const XAie_DmaMod *DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
-                        if (DmaMod == NULL)
-                                return XAIE_ERR;
-
-                        RC = XAie_PrintDmaStatus(DevInst, Loc, DmaMod);
-                        if (RC != XAIE_OK)
-                                return RC;
-
-			switch (TileType) {
-				case XAIEGBL_TILE_TYPE_AIETILE:
-					if (DevInst->DevProp.DevGen == 1)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE_TILEDMA_NUM_BD_WORDS);
-					else if (DevInst->DevProp.DevGen == 2)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_TILEDMA_NUM_BD_WORDS);
-					else if (DevInst->DevProp.DevGen == 5)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_TILEDMA_NUM_BD_WORDS);
-					break;
-				case XAIEGBL_TILE_TYPE_MEMTILE:
-					if (DevInst->DevProp.DevGen == 2)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_MEMTILEDMA_NUM_BD_WORDS);
-					else if (DevInst->DevProp.DevGen == 5)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_MEMTILEDMA_NUM_BD_WORDS);
-					break;
-				case XAIEGBL_TILE_TYPE_SHIMNOC:
-					if (DevInst->DevProp.DevGen == 1)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE_SHIMDMA_NUM_BD_WORDS);
-					else if (DevInst->DevProp.DevGen == 2)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_SHIMDMA_NUM_BD_WORDS);
-					else if (DevInst->DevProp.DevGen == 5)
-						RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_SHIMDMA_NUM_BD_WORDS);
-					break;
+			if (TileType >= XAIEGBL_TILE_TYPE_MAX || TileType == XAIEGBL_TILE_TYPE_SHIMPL) {
+				continue;
 			}
 
-			if (RC != XAIE_OK)
-				return RC;
-                }
-        }
+			const XAie_DmaMod *DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
+			if (DmaMod == NULL) {
+				return XAIE_ERR;
+			}
 
-        return XAIE_OK;
+			RC = XAie_PrintDmaStatus(DevInst, Loc, DmaMod);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+
+		       switch (TileType) {
+			       case XAIEGBL_TILE_TYPE_AIETILE:
+				       if (DevInst->DevProp.DevGen == 1U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE_TILEDMA_NUM_BD_WORDS);
+				       } else if (DevInst->DevProp.DevGen == 2U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_TILEDMA_NUM_BD_WORDS);
+				       } else if (DevInst->DevProp.DevGen == 5U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_TILEDMA_NUM_BD_WORDS);
+				       }
+				       break;
+			       case XAIEGBL_TILE_TYPE_MEMTILE:
+				       if (DevInst->DevProp.DevGen == 2U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_MEMTILEDMA_NUM_BD_WORDS);
+				       } else if (DevInst->DevProp.DevGen == 5U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_MEMTILEDMA_NUM_BD_WORDS);
+				       }
+				       break;
+			       case XAIEGBL_TILE_TYPE_SHIMNOC:
+				       if (DevInst->DevProp.DevGen == 1U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE_SHIMDMA_NUM_BD_WORDS);
+				       } else if (DevInst->DevProp.DevGen == 2U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIEML_SHIMDMA_NUM_BD_WORDS);
+				       } else if (DevInst->DevProp.DevGen == 5U) {
+					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_SHIMDMA_NUM_BD_WORDS);
+				       }
+				       break;
+		       }
+
+		       if (RC != (u32)XAIE_OK) {
+			       return (AieRC)RC;
+		       }
+		}
+	}
+
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -2768,8 +2790,8 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 				continue;
 			}
 
-			RC |= (u32)_XAie_DmaStatusDump(DevInst, Status, Loc);
-			RC |= (u32)_XAie_LockValueStatusDump(DevInst, Status, Loc);
+			RC |= _XAie_DmaStatusDump(DevInst, Status, Loc);
+			RC |= _XAie_LockValueStatusDump(DevInst, Status, Loc);
 		}
 	}
 	return (AieRC)RC;

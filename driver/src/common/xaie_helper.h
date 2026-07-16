@@ -66,38 +66,44 @@ extern XAieLogLevel AieLogLevel;
 
 #define XAIE_FATAL(...) \
     do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_FATAL) \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_FATAL) { \
             XAie_Log(stderr, "[AIE FATAL]", __func__, __LINE__, __VA_ARGS__); \
+        } \
     } while(0)
 
 #define XAIE_ERROR(...) \
     do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_ERROR) \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_ERROR) { \
             XAie_Log(stderr, "[AIE ERROR]", __func__, __LINE__, __VA_ARGS__); \
+        } \
     } while(0)
 
 #define XAIE_WARN(...) \
     do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_WARN) \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_WARN) { \
             XAie_Log(stdout, "[AIE WARNING]", __func__, __LINE__, __VA_ARGS__); \
+        } \
     } while(0)
 
 #define XAIE_INFO(...) \
     do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_INFO) \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_INFO) { \
             XAie_Log(stdout, "[AIE INFO]", __func__, __LINE__, __VA_ARGS__); \
+        } \
     } while(0)
 
 #define XAIE_DBG(...) \
     do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_DEBUG) \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_DEBUG) { \
             XAie_Log(stdout, "[AIE DEBUG]", __func__, __LINE__, __VA_ARGS__); \
+        } \
     } while(0)
 
 #define XAIE_TRACE(...) \
     do { \
-        if (AieLogLevel >= XAIE_LOG_LEVEL_TRACE) \
+        if (AieLogLevel >= XAIE_LOG_LEVEL_TRACE) { \
             XAie_Log(stdout, "[AIE TRACE]", __func__, __LINE__, __VA_ARGS__); \
+        } \
     } while(0)
 
 #if  defined(__microblaze__)
@@ -228,28 +234,28 @@ AieRC XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
                 XAie_LocType *Locs);
 AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value);
-int XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRes *AsyncRes);
+s32 XAie_Write32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Value, XAie_AsyncRes *AsyncRes);
 AieRC XAie_AsyncWait(XAie_DevInst *DevInst);
 AieRC XAie_AsyncWaitNr(XAie_DevInst *DevInst, u32 Nr);
 AieRC XAie_Read32(XAie_DevInst *DevInst, u64 RegOff, u32 *Data);
 AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value);
-int XAie_MaskWrite32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
+s32 XAie_MaskWrite32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			  XAie_AsyncRes *AsyncRes);
 AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs);
 AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 			u32 Size);
-int XAie_BlockWrite32Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
+s32 XAie_BlockWrite32Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 			   u32 Size, XAie_AsyncRes *AsyncRes);
-int XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
+s32 XAie_BlockWrite64Async(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data,
 			   u32 Size, XAie_AsyncRes *AsyncRes);
 AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size);
-int XAie_BlockSet32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Data,
+s32 XAie_BlockSet32Async(XAie_DevInst *DevInst, u64 RegOff, u32 Data,
 			 u32 Size, XAie_AsyncRes *AsyncRes);
 AieRC XAie_CmdWrite(XAie_DevInst *DevInst, u8 Col, u8 Row, u8 Command,
 		u32 CmdWd0, u32 CmdWd1, const char *CmdStr);
 void BuffHexDump(char* buff,u32 size);
-int XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
+s32 XAie_RequestCustomTxnOp(XAie_DevInst *DevInst);
 AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t size);
 AieRC XAie_AddressPatching(XAie_DevInst *DevInst, u32 Arg_Offset, u8 Num_BDs);
 AieRC XAie_WaitUCDMA(XAie_DevInst *DevInst);

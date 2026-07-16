@@ -63,7 +63,7 @@ static AieRC _XAie_LoadProgMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ELF;
 	}
 
-	Addr = (u64)(UcMod->ProgMemHostOffset + Phdr->p_paddr) +
+	Addr = (u64)UcMod->ProgMemHostOffset + Phdr->p_paddr +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/*
@@ -105,7 +105,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u32 BytesToWrite;
 	u32 OverFlowBytes;
 	const XAie_UcMod *UcMod;
-	unsigned char *Tmp = XAIE_NULL;
+	u8 *Tmp = XAIE_NULL;
 	u32 AddrMask, MemSize;
 	u8 Inv = 1U, MemType;
 	const unsigned char *Buffer = SectionPtr;
@@ -126,16 +126,16 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		   < (UcMod->PrivDataMemAddr - UcMod->ProgMemHostOffset
 		   + UcMod->PrivDataMemSize))) {
 			Inv = 0;
-			MemType = XAIE_PRIVATE_DATA_MEMORY;
+			MemType = (u8)XAIE_PRIVATE_DATA_MEMORY;
 		} else if ((Phdr->p_paddr >=
 			 UcMod->DataMemUcOffset) && ((Phdr->p_paddr + Phdr->p_memsz) <
 			 (UcMod->DataMemUcOffset + UcMod->DataMemSize))) {
 			Inv = 0;
-			MemType = XAIE_MODULE_DATA_MEMORY;
+			MemType = (u8)XAIE_MODULE_DATA_MEMORY;
 		}
 	}
 
-	if(Inv) {
+	if(Inv != 0U) {
 		XAIE_ERROR("Invalid section starting at 0x%x\n", Phdr->p_paddr);
 		return XAIE_INVALID_ELF;
 	}
@@ -146,23 +146,23 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Check if file size is 0. If yes, allocate memory and init to 0 */
 	if(Phdr->p_filesz == 0U) {
-		Buffer = (const unsigned char *)calloc(Phdr->p_memsz,
+		Buffer = (const u8 *)calloc(Phdr->p_memsz,
 				sizeof(char));
 		if(Buffer == XAIE_NULL) {
 			XAIE_ERROR("Memory allocation failed for buffer\n");
 			return XAIE_ERR;
 		}
 		/* Copy pointer to free allocated memory in case of error. */
-		Tmp = (unsigned char *)Buffer;
+		Tmp = (u8 *)Buffer;
 	}
 
-	if(MemType == XAIE_PRIVATE_DATA_MEMORY) {
-		AddrMask = UcMod->PrivDataMemSize - 1;
+	if(MemType == (u32)XAIE_PRIVATE_DATA_MEMORY) {
+		AddrMask = UcMod->PrivDataMemSize - 1U;
 		MemSize = UcMod->PrivDataMemSize;
 		BlockWrite = XAie_DataMemBlockWrite;
 
-	} else if(MemType == XAIE_MODULE_DATA_MEMORY) {
-		AddrMask = UcMod->DataMemSize - 1;
+	} else if(MemType == (u32)XAIE_MODULE_DATA_MEMORY) {
+		AddrMask = UcMod->DataMemSize - 1U;
 		MemSize = UcMod->DataMemSize;
 		BlockWrite = XAie_SharedDataMemBlockWrite;
 	}
@@ -170,7 +170,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	while(SectionSize > 0U) {
 		/*Bytes to write in this section */
 		OverFlowBytes = 0U;
-		if((SectionAddr & AddrMask) + SectionSize > MemSize) {
+		if(((SectionAddr & AddrMask) + SectionSize) > MemSize) {
 			OverFlowBytes = (SectionAddr & AddrMask) + SectionSize -
 					 MemSize;
 		}
@@ -261,7 +261,7 @@ static AieRC _XAie_LoadElfFromMem(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AieRC RC;
 	const Elf32_Ehdr *Ehdr;
 	const Elf32_Phdr *Phdr;
-	const unsigned char *SectionPtr;
+	const u8 *SectionPtr;
 
 	Ehdr = (const Elf32_Ehdr *) ElfMem;
 	_XAie_PrintElfHdr(Ehdr);
@@ -341,8 +341,8 @@ AieRC XAie_LoadUc(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr)
 {
 	u8 TileType;
 	FILE *Fd;
-	int Ret;
-	unsigned char *ElfMem;
+	s32 Ret;
+	u8 *ElfMem;
 	u64 ElfSz;
 	AieRC RC;
 
@@ -376,7 +376,7 @@ AieRC XAie_LoadUc(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr)
 	if(Ret != 0) {
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 			errno, strerror(errno));
-		fclose(Fd);
+		(void)fclose(Fd);
 		return XAIE_INVALID_ELF;
 	}
 
@@ -385,22 +385,22 @@ AieRC XAie_LoadUc(XAie_DevInst *DevInst, XAie_LocType Loc, const char *ElfPtr)
 	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
 
 	/* Read entire elf file into memory */
-	ElfMem = (unsigned char*) malloc(ElfSz);
+	ElfMem = (u8*) malloc(ElfSz);
 	if(ElfMem == NULL) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		XAIE_ERROR("Memory allocation failed\n");
 		return XAIE_ERR;
 	}
 
-	Ret = (int)fread((void*)ElfMem, ElfSz, 1U, Fd);
+	Ret = (s32)fread((void*)ElfMem, ElfSz, 1U, Fd);
 	if(Ret == 0) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		free(ElfMem);
 		XAIE_ERROR("Failed to read Elf into memory\n");
 		return XAIE_ERR;
 	}
 
-	fclose(Fd);
+	(void)fclose(Fd);
 
 	RC = _XAie_LoadElfFromMem(DevInst, Loc, ElfMem);
 	free(ElfMem);

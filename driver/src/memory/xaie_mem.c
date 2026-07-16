@@ -70,8 +70,8 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
-			(XAie_IsUcModulePresent(DevInst, TileType) == 0)){
-		XAIE_ERROR("Invalid Tile Type. Col:%u Row:%u TileType:%u\n",Loc.Col,Loc.Row,TileType);
+		(XAie_IsUcModulePresent(DevInst, TileType) == 0U)) {
+		XAIE_ERROR("Invalid Tile Type\n");
 		return XAIE_INVALID_TILE;
 	}
 
@@ -177,23 +177,23 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 *
 *******************************************************************************/
 static AieRC _XAie_DataMemoryBlockWrite(XAie_DevInst* DevInst, XAie_LocType Loc,
-		u32 Offset, u32 DMBaseAddr, unsigned char *Src, u32 Size) {
-	AieRC RC;
+		u32 Offset, u32 DMBaseAddr, const unsigned char *Src, u32 Size) {
+	AieRC RC = XAIE_OK;
 	u32 BytePtr = 0, RemBytes = Size, TempWord = 0, Mask = 0;
 	u64 DmAddrRoundDown, DmAddrRoundUp;
 	u8 FirstWriteOffset = (u8)(Offset & XAIE_MEM_WORD_ALIGN_MASK);
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
-	DmAddrRoundDown = (u64)(DMBaseAddr + XAIE_MEM_WORD_ROUND_DOWN(Offset)) +
+	DmAddrRoundDown =  ((u64)DMBaseAddr + XAIE_MEM_WORD_ROUND_DOWN(Offset)) +
 			    XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
-	DmAddrRoundUp = (u64)(DMBaseAddr + XAIE_MEM_WORD_ROUND_UP(Offset)) +
+	DmAddrRoundUp = ((u64)DMBaseAddr + XAIE_MEM_WORD_ROUND_UP(Offset)) +
 			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 
 	/* Unaligned start bytes */
-	if(FirstWriteOffset) {
+	if(FirstWriteOffset != 0U) {
 		/*
 		 * Construct 4-byte word along with bit mask to read-modify
 		 * write at unaligned offset
@@ -222,7 +222,7 @@ static AieRC _XAie_DataMemoryBlockWrite(XAie_DevInst* DevInst, XAie_LocType Loc,
 		}
 	}
 	/* Remaining unaligned bytes */
-	if(RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) {
+	if((RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) != 0U) {
 		DmAddrRoundDown = DmAddrRoundUp + (u64)(XAIE_MEM_WORD_ALIGN_SIZE *
 					(RemBytes / XAIE_MEM_WORD_ALIGN_SIZE));
 		BytePtr += XAIE_MEM_WORD_ALIGN_SIZE *
@@ -233,8 +233,8 @@ static AieRC _XAie_DataMemoryBlockWrite(XAie_DevInst* DevInst, XAie_LocType Loc,
 		for (u32 UnalignedByte = 0;
 			 UnalignedByte < RemBytes % XAIE_MEM_WORD_ALIGN_SIZE;
 			 UnalignedByte++) {
-			TempWord |= (u32)(Src[BytePtr++] << (UnalignedByte * 8U));
-			Mask |= (u32)(0xFFU << (UnalignedByte * 8U));
+			TempWord |= (u32)Src[BytePtr ++] << (UnalignedByte * 8U);
+			Mask |= (u32)0xFFU << (UnalignedByte * 8U);
 		}
 
 		RC = XAie_MaskWrite32(DevInst, DmAddrRoundDown, Mask, TempWord);
@@ -282,7 +282,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
-			(XAie_IsUcModulePresent(DevInst, TileType) == 0)) {
+			(XAie_IsUcModulePresent(DevInst, TileType) == 0U)) {
 		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -298,7 +298,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Check for any size overflow */
-	if((u64)Addr + Size > MemSize) {
+	if(((u64)Addr + Size) > MemSize) {
 		XAIE_ERROR("Size of source block overflows tile data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
@@ -387,7 +387,7 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	u32 TempWord;
 	u8 FirstReadOffset = (u8)Addr & XAIE_MEM_WORD_ALIGN_MASK;
 	u8 TileType;
-	unsigned char *CharDst = (unsigned char *)Dst;
+	u8 *CharDst = (u8 *)Dst;
 	const XAie_UcMod *UcMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -397,7 +397,7 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Invalid tile type Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -407,21 +407,21 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	MemAddr = UcMod->DataMemAddr;
 
 	/* Check for any size overflow */
-	if((u64)Addr + Size > MemSize) {
+	if(((u64)Addr + Size) > MemSize) {
 		XAIE_ERROR("Size of read block overflows shared data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
-	DmAddrRoundDown = (u64)(MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
+	DmAddrRoundDown = ((u64)MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
 			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
-	DmAddrRoundUp = (u64)(MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
+	DmAddrRoundUp = ((u64)MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
 				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* First unaligned byte read into destination block */
-	if(FirstReadOffset) {
+	if(FirstReadOffset != 0U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundDown, &TempWord);
 		if(RC != XAIE_OK) {
 			return RC;
@@ -429,7 +429,7 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	}
 
 	/* Aligned bytes */
-	for(u32 AlignedWord = 0; AlignedWord < RemBytes / 4U;
+	for(u32 AlignedWord = 0; AlignedWord < (RemBytes / 4U);
 		AlignedWord++, BytePtr += 4U, DmAddrRoundUp += 4U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundUp,
 				(u32 *)(CharDst + BytePtr));
@@ -439,7 +439,7 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	}
 
 	/* Remaining bytes */
-	if(RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) {
+	if((RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) != 0U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundUp, &TempWord);
 		if(RC != XAIE_OK) {
 			return RC;
@@ -484,7 +484,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	u32 TempWord;
 	u8 FirstReadOffset = (u8)Addr & XAIE_MEM_WORD_ALIGN_MASK;
 	u8 TileType;
-	unsigned char *CharDst = (unsigned char *)Dst;
+	u8 *CharDst = (u8 *)Dst;
 	const XAie_MemMod *MemMod;
 	const XAie_UcMod *UcMod;
 
@@ -498,7 +498,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 	if((TileType != XAIEGBL_TILE_TYPE_AIETILE) &&
 			(TileType != XAIEGBL_TILE_TYPE_MEMTILE) &&
-			(XAie_IsUcModulePresent(DevInst, TileType) == 0)) {
+			(XAie_IsUcModulePresent(DevInst, TileType) == 0U)) {
 		XAIE_ERROR("Invalid tile type Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -514,21 +514,21 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Check for any size overflow */
-	if((u64)Addr + Size > MemSize) {
+	if(((u64)Addr + Size) > MemSize) {
 		XAIE_ERROR("Size of read block overflows tile data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
 
 	/* Absolute 4-byte aligned AXI-MM address to write */
-	DmAddrRoundDown = (u64)(MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
+	DmAddrRoundDown = ((u64)MemAddr + XAIE_MEM_WORD_ROUND_DOWN(Addr)) +
 			XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Round-up unaligned Addr */
-	DmAddrRoundUp = (u64)(MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
+	DmAddrRoundUp = ((u64)MemAddr + XAIE_MEM_WORD_ROUND_UP(Addr)) +
 				XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* First unaligned byte read into destination block */
-	if(FirstReadOffset) {
+	if(FirstReadOffset != 0U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundDown, &TempWord);
 		if(RC != XAIE_OK) {
 			return RC;
@@ -543,7 +543,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Aligned bytes */
-	for(u32 AlignedWord = 0; AlignedWord < RemBytes / 4U;
+	for(u32 AlignedWord = 0; AlignedWord < (RemBytes / 4U);
 		AlignedWord++, BytePtr += 4U, DmAddrRoundUp += 4U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundUp,
 				(u32 *)(CharDst + BytePtr));
@@ -553,7 +553,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Remaining bytes */
-	if(RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) {
+	if((RemBytes % XAIE_MEM_WORD_ALIGN_SIZE) != 0U) {
 		RC = XAie_Read32(DevInst, DmAddrRoundUp, &TempWord);
 		if(RC != XAIE_OK) {
 			return RC;

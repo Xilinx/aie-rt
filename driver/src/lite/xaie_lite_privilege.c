@@ -311,8 +311,8 @@ static void _XAie_PrivilegeSetL2ErrIrq(XAie_DevInst *DevInst)
 *		- zeroize memory if it is requested
 *
 *******************************************************************************/
-AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
-									XAie_DevicePartInfo *DevPartInfo)
+AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, const XAie_PartInitOpts *Opts,
+									const XAie_DevicePartInfo *DevPartInfo)
 {
 	XAie_PartInitOpts SoftPartOpts;
 	AieRC RC;
@@ -554,8 +554,9 @@ static inline AieRC _XAie_LPartIsShimDmaIdle(XAie_DevInst *DevInst)
 		TType = _XAie_LGetTTypefromLoc(DevInst, XAie_TileLoc(C, 0));
 		if(TType == XAIEGBL_TILE_TYPE_SHIMNOC) {
 			RC = _XAie_LIsShimDmaIdle(DevInst, XAie_TileLoc(C, 0));
-			if(RC != XAIE_OK)
+			if(RC != XAIE_OK) {
 				return RC;
+			}
 		}
 	}
 
@@ -623,8 +624,9 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 	_XAie_LSetPartIsolationAfterRst(DevInst, XAIE_INIT_ISOLATION);
 
 	RC = _XAie_LPartDataMemZeroInit(DevInst);
-	if (RC != XAIE_OK)
+	if (RC != XAIE_OK) {
 		return RC;
+	}
 
 	_XAie_PrivilegeSetL2ErrIrq(DevInst);
 

@@ -167,12 +167,14 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 	for(p = slist; p != NULL; p = p->ai_next) {
 
 		SocketFd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-		if(SocketFd < 0)
+		if(SocketFd < 0) {
 			continue;
+		}
 
 		ret = connect(SocketFd, p->ai_addr, p->ai_addrlen);
-		if(ret != -1)
+		if(ret != -1) {
 			break;
+		}
 
 		close(SocketFd);
 	}
@@ -394,8 +396,9 @@ static AieRC XAie_SocketIO_BlockWrite32(void *IOInst, u64 RegOff,
 static AieRC XAie_SocketIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 		u32 Size)
 {
-	for(u32 i = 0U; i < Size; i++)
+	for(u32 i = 0U; i < Size; i++) {
 		XAie_SocketIO_Write32(IOInst, RegOff+ i * 4U, Data);
+	}
 
 	return XAIE_OK;
 }

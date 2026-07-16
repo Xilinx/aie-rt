@@ -74,7 +74,7 @@ static XAie_NpiMod *_XAie_NpiGetMod(XAie_DevInst *DevInst)
 *******************************************************************************/
 static AieRC _XAie_NpiSetLock(XAie_DevInst *DevInst, u8 Lock)
 {
-	XAie_NpiMod *NpiMod;
+	const XAie_NpiMod *NpiMod;
 	XAie_BackendNpiWrReq Req;
 	XAie_BackendNpiMaskPollReq MPReq;
 	u32 LockVal;
@@ -116,7 +116,7 @@ static AieRC _XAie_NpiSetLock(XAie_DevInst *DevInst, u8 Lock)
 *******************************************************************************/
 static AieRC _XAie_NpiWritePcsr(XAie_DevInst *DevInst, u32 RegVal, u32 Mask)
 {
-	XAie_NpiMod *NpiMod;
+	const XAie_NpiMod *NpiMod;
 	XAie_BackendNpiWrReq Req;
 	XAie_BackendNpiMaskPollReq MPReq;
 	AieRC RC;
@@ -166,7 +166,7 @@ static AieRC _XAie_NpiWritePcsr(XAie_DevInst *DevInst, u32 RegVal, u32 Mask)
 AieRC _XAie_NpiSetShimReset(XAie_DevInst *DevInst, u8 RstEnable)
 {
 	u32 RegVal, Mask;
-	XAie_NpiMod *NpiMod;
+	const XAie_NpiMod *NpiMod;
 
 	NpiMod = _XAie_NpiGetMod(DevInst);
 	if (NpiMod == NULL) {
@@ -196,7 +196,7 @@ AieRC _XAie_NpiSetProtectedRegEnable(XAie_DevInst *DevInst,
 				    XAie_NpiProtRegReq *Req)
 {
 	u32 RegVal;
-	XAie_NpiMod *NpiMod;
+	const XAie_NpiMod *NpiMod;
 	XAie_BackendNpiWrReq IOReq;
 	XAie_BackendNpiMaskPollReq MPReq;
 	AieRC RC;

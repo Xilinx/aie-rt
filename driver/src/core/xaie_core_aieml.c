@@ -74,7 +74,7 @@ AieRC _XAieMl_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
-	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlEn.Lsb);
+	Value = 1U << CoreMod->CoreCtrl->CtrlEn.Lsb;
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -106,7 +106,7 @@ AieRC _XAieMl_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 
 	Mask = CoreMod->CoreSts->Done.Mask;
-	Value = (u32)(1U << CoreMod->CoreSts->Done.Lsb);
+	Value = 1U << CoreMod->CoreSts->Done.Lsb;
 
 	RegAddr = CoreMod->CoreSts->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);

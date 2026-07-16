@@ -217,8 +217,8 @@ AieRC _XAieMl_DmaSetMultiDim(XAie_DmaDesc *DmaDesc, XAie_DmaTensor *Tensor)
 ******************************************************************************/
 static AieRC _XAieMl_DmaMemTileCheckPaddingConfig(XAie_DmaDesc *DmaDesc)
 {
-	XAie_AieMlDimDesc *DDesc = DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc;
-	XAie_PadDesc *PDesc = DmaDesc->PadDesc;
+	const XAie_AieMlDimDesc *DDesc = DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc;
+	const XAie_PadDesc *PDesc = DmaDesc->PadDesc;
 
 	for(u8 Dim = 0U; Dim < XAIEML_DMA_PAD_NUM_DIMS; Dim++) {
 		u8 Before = PDesc[Dim].Before;
@@ -1234,7 +1234,7 @@ AieRC _XAieMl_DmaGetPendingBdCount(XAie_DevInst *DevInst, XAie_LocType Loc,
 		DmaMod->ChProp->DmaChStatus->AieMlDmaChStatus.StalledTCT.Mask;
 
 	/* Check if BD is being used by a channel */
-	if(StatusReg & Mask) {
+	if((StatusReg & Mask) != 0U) {
 		TaskQSize++;
 	}
 
@@ -1367,8 +1367,9 @@ AieRC _XAieMl_DmaWaitForBdTaskQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Poll for the MSB bit of Task_queue_size bits to ensure
 	 * queue is not full*/
-	Status = XAie_MaskPoll(DevInst, Addr, (1U << XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB),
-		 0, TimeOutUs);
+	Status = XAie_MaskPoll(DevInst, Addr,
+		(1U << XAIEML_DMA_STATUS_TASK_Q_SIZE_MSB),
+		0U, TimeOutUs);
 
 	if (Status != XAIE_OK) {
 		XAIE_DBG("Wait for task queue timed out\n");

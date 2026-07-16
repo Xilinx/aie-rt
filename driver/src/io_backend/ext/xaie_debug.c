@@ -105,7 +105,7 @@ static AieRC XAie_DebugIO_Init(XAie_DevInst *DevInst)
 *******************************************************************************/
 static AieRC XAie_DebugIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 {
-	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	const XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	PRINT("W: %p, 0x%x\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr + RegOff), Value);
 
@@ -128,7 +128,7 @@ static AieRC XAie_DebugIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 *******************************************************************************/
 static AieRC XAie_DebugIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 {
-	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	const XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	*Data = 0U;
 	PRINT("R: %p, 0x%x\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr + RegOff), 0);
@@ -155,7 +155,7 @@ static AieRC XAie_DebugIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 static AieRC XAie_DebugIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 		u32 Value)
 {
-	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	const XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	PRINT("MW: %p, 0x%x, 0x%x\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr + RegOff),
 			Mask, Value);
@@ -182,7 +182,7 @@ static AieRC XAie_DebugIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
 static AieRC XAie_DebugIO_MaskPoll(void *IOInst, u64 RegOff, u32 Mask, u32 Value,
 		u32 TimeOutUs)
 {
-	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	const XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (char *)(uintptr_t)(DebugIOInst->BaseAddr +
 			RegOff), Mask, Value, TimeOutUs);
@@ -274,7 +274,7 @@ static AieRC XAie_DebugIO_CmdWrite(void *IOInst, u8 Col, u8 Row, u8 Command,
 static void _XAie_DebugIO_NpiWrite32(void *IOInst, u32 RegOff,
 		u32 RegVal)
 {
-	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	const XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 	u64 RegAddr;
 
 	RegAddr = DebugIOInst->NpiBaseAddr + RegOff;
@@ -300,7 +300,7 @@ static void _XAie_DebugIO_NpiWrite32(void *IOInst, u32 RegOff,
 static AieRC _XAie_DebugIO_NpiMaskPoll(void *IOInst, u64 RegOff, u32 Mask,
 		u32 Value, u32 TimeOutUs)
 {
-	XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
+	const XAie_DebugIO *DebugIOInst = (XAie_DebugIO *)IOInst;
 
 	PRINT("MP: %p, 0x%x, 0x%x, 0x%d\n", (char *)(uintptr_t)(DebugIOInst->NpiBaseAddr +
 			RegOff), Mask, Value, TimeOutUs);
@@ -333,7 +333,7 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 	switch(Op) {
 		case XAIE_BACKEND_OP_NPIWR32:
 		{
-			XAie_BackendNpiWrReq *Req = Arg;
+			const XAie_BackendNpiWrReq *Req = Arg;
 
 			_XAie_DebugIO_NpiWrite32(IOInst, Req->NpiRegOff,
 					Req->Val);
@@ -341,7 +341,7 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_NPIMASKPOLL32:
 		{
-			XAie_BackendNpiMaskPollReq *Req = Arg;
+			const XAie_BackendNpiMaskPollReq *Req = Arg;
 
 			return _XAie_DebugIO_NpiMaskPoll(IOInst, Req->NpiRegOff,
 					Req->Mask, Req->Val, Req->TimeOutUs);
@@ -360,7 +360,7 @@ static AieRC XAie_DebugIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 		}
 		case XAIE_BACKEND_OP_CONFIG_SHIMDMABD:
 		{
-			XAie_ShimDmaBdArgs *BdArgs =
+			const XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
 
 			XAie_DebugIO_BlockWrite32(IOInst, BdArgs->Addr,

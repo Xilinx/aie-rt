@@ -688,8 +688,9 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
 				if(RegVal &
 				   (XAIE_TILE_DMA_S2MM_CHANNEL_STATUS_MASK |
-				    XAIE_TILE_DMA_S2MM_CHANNEL_RUNNING_MASK))
+				    XAIE_TILE_DMA_S2MM_CHANNEL_RUNNING_MASK)) {
 					return XAIE_ERR;
+				}
 
 				/* MM2S Channel */
 				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
@@ -697,8 +698,9 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
 				if(RegVal &
 				   (XAIE_TILE_DMA_MM2S_CHANNEL_STATUS_MASK |
-				    XAIE_TILE_DMA_MM2S_CHANNEL_RUNNING_MASK))
+				    XAIE_TILE_DMA_MM2S_CHANNEL_RUNNING_MASK)) {
 					return XAIE_ERR;
+				}
 			}
 
 		}
@@ -713,8 +715,9 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
 				if(RegVal &
 				   (XAIE_MEM_TILE_DMA_S2MM_CHANNEL_STATUS_MASK |
-				    XAIE_MEM_TILE_DMA_S2MM_CHANNEL_RUNNING_MASK))
+				    XAIE_MEM_TILE_DMA_S2MM_CHANNEL_RUNNING_MASK)) {
 					return XAIE_ERR;
+				}
 
 				/* MM2S Channel */
 				RegAddr = _XAie_LGetTileAddr(R, C) + Ch * 4 +
@@ -722,8 +725,9 @@ static inline AieRC _XAie_LPartIsDmaIdle(XAie_DevInst *DevInst)
 				RegVal = _XAie_LPartRead32(DevInst, RegAddr);
 				if(RegVal &
 				   (XAIE_MEM_TILE_DMA_MM2S_CHANNEL_STATUS_MASK |
-				    XAIE_MEM_TILE_DMA_MM2S_CHANNEL_RUNNING_MASK))
+				    XAIE_MEM_TILE_DMA_MM2S_CHANNEL_RUNNING_MASK)) {
 					return XAIE_ERR;
+				}
 			}
 		}
 	}
@@ -755,15 +759,17 @@ static inline AieRC _XAie_LIsShimDmaIdle(XAie_DevInst *DevInst,
 		RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + Ch * 4 +
 			XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_REGOFF;
 		RegVal = _XAie_LPartRead32(DevInst, RegAddr);
-		if(RegVal & XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_MASK)
+		if(RegVal & XAIE_SHIM_DMA_S2MM_CHANNEL_STATUS_MASK) {
 			return XAIE_ERR;
+		}
 
 		/* MM2S Channel */
 		RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + Ch * 4 +
 			XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_REGOFF;
 		RegVal = _XAie_LPartRead32(DevInst, RegAddr);
-		if(RegVal & XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_MASK)
+		if(RegVal & XAIE_SHIM_DMA_MM2S_CHANNEL_STATUS_MASK) {
 			return XAIE_ERR;
+		}
 	}
 
 	return XAIE_OK;
@@ -778,8 +784,9 @@ static inline int _XAie_LMemBarrier(XAie_DevInst *DevInst, XAie_LocType Loc)
 	RegAddr = _XAie_LGetTileAddr(0, Loc.Col) + XAIE_PL_MODULE_SPARE_REG;
 	_XAie_LPartWrite32(DevInst, RegAddr, Value);
 	Ret = _XAie_LPartPoll32(DevInst, RegAddr, 0xFFFF, Value, 800);
-	if (Ret < 0)
+	if (Ret < 0) {
 		return Ret;
+	}
 
 	_XAie_LPartWrite32(DevInst, RegAddr, 0U);
 	return 0;
@@ -814,23 +821,26 @@ static inline AieRC _XAie_LPartDataMemZeroInit(XAie_DevInst *DevInst)
 
 	for(u8 C = 0; C < DevInst->NumCols; C++) {
 		Ret = _XAie_LMemBarrier(DevInst, XAie_TileLoc(C, 0));
-		if (Ret < 0)
+		if (Ret < 0) {
 			return XAIE_ERR;
+		}
 
 		/* Poll last mem module and last mem tile mem module */
 		RegAddr = _XAie_LGetTileAddr(XAIE_NUM_ROWS - 1, C) +
 				XAIE_MEM_MOD_MEM_CNTR_REGOFF;
 		Ret = _XAie_LPartPoll32(DevInst, RegAddr,
 				XAIE_MEM_MOD_MEM_CNTR_ZEROISATION_MASK, 0, 800);
-		if (Ret < 0)
+		if (Ret < 0) {
 			return XAIE_ERR;
+		}
 
 		RegAddr = _XAie_LGetTileAddr(XAIE_AIE_TILE_ROW_START - 1, C) +
 				XAIE_MEM_TILE_MOD_MEM_CNTR_REGOFF;
 		Ret = _XAie_LPartPoll32(DevInst, RegAddr,
 				XAIE_MEM_TILE_MEM_CNTR_ZEROISATION_MASK, 0, 800);
-		if (Ret < 0)
+		if (Ret < 0) {
 			return XAIE_ERR;
+		}
 	}
 }
 

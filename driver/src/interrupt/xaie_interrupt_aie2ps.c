@@ -42,7 +42,7 @@ u8 _XAie2ps_IntrCtrlL1IrqId(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	(void)DevInst;
 	(void)Loc;
-	return Switch;
+	return (u8)Switch;
 }
 
 #endif /* XAIE_FEATURE_INTR_INIT_ENABLE */

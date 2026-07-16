@@ -644,7 +644,7 @@ static AieRC _XAie_ConfigShimNocMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 
-	FldVal = (u32)(InputConnectionType << PlIfMod->ShimNocMux[PortNum].Lsb);
+	FldVal = (u32)InputConnectionType << PlIfMod->ShimNocMux[PortNum].Lsb;
 	FldMask = PlIfMod->ShimNocMux[PortNum].Mask;
 
 	RegAddr = PlIfMod->ShimNocMuxOff +
@@ -715,7 +715,7 @@ static AieRC _XAie_ConfigShimNocDeMux(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	PlIfMod = DevInst->DevProp.DevMod[TileType].PlIfMod;
 
-	FldVal = (u32)(OutputConnectionType << PlIfMod->ShimNocDeMux[PortNum].Lsb);
+	FldVal = (u32)OutputConnectionType << PlIfMod->ShimNocDeMux[PortNum].Lsb;
 	FldMask = PlIfMod->ShimNocDeMux[PortNum].Mask;
 
 	RegAddr = PlIfMod->ShimNocDeMuxOff +

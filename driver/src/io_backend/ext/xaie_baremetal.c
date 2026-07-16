@@ -452,8 +452,9 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
 	Ret = btree4_insert(&IOInst->btree, MemInst);
-	if (Ret)
+	if (Ret) {
 		goto free_meminst;
+	}
 	/*
 	 * TODO: Cache is not handled at the moment for baremetal. The allocated
 	 * memory is always cached.

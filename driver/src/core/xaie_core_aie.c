@@ -91,7 +91,7 @@ AieRC _XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Clear the disable event occurred bit */
 	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask |
 		CoreMod->CoreEvent->EnableEventOccurred.Mask;
-	Value = (u32)(1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb);
+	Value = 1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb;
 	RegAddr = CoreMod->CoreEvent->EnableEventOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -102,7 +102,7 @@ AieRC _XAie_CoreEnable(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Enable the core */
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
-	Value = (u32)(1U << CoreMod->CoreCtrl->CtrlEn.Lsb);
+	Value = 1U << CoreMod->CoreCtrl->CtrlEn.Lsb;
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -134,7 +134,7 @@ AieRC _XAie_CoreWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 EventRegAddr;
 
 	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask;
-	Value = (u32)(1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb);
+	Value = 1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb;
 	EventRegAddr = CoreMod->CoreEvent->EnableEventOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 

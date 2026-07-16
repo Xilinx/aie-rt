@@ -91,7 +91,7 @@ static AieRC _XAie_StrmConfigSlv(const XAie_StrmMod *StrmMod,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
+	*RegOff = PortPtr->PortBaseAddr + (StrmMod->PortOffset * PortNum);
 
 	if (Enable != XAIE_ENABLE) {
 		return XAIE_OK;
@@ -141,7 +141,7 @@ static AieRC _StrmConfigMstr(const XAie_StrmMod *StrmMod,
 		return XAIE_ERR_STREAM_PORT;
 	}
 
-	*RegOff = PortPtr->PortBaseAddr + StrmMod->PortOffset * PortNum;
+	*RegOff = PortPtr->PortBaseAddr + (StrmMod->PortOffset * PortNum);
 	if (Enable != XAIE_ENABLE) {
 		return XAIE_OK;
 	}

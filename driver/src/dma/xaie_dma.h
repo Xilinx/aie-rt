@@ -88,7 +88,7 @@ AieRC XAie_DmaSetBdIteration(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr);
 AieRC XAie_DmaSetBdIteration_16(XAie_DmaDesc *DmaDesc, u32 StepSize, u16 Wrap,
 		u8 IterCurr);
-AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, XAie_DmaPadTensor *PadTensor);
+AieRC XAie_DmaSetPadding(XAie_DmaDesc *DmaDesc, const XAie_DmaPadTensor *PadTensor);
 AieRC XAie_DmaEnableCompression(XAie_DmaDesc *DmaDesc);
 AieRC XAie_DmaConfigFifoMode(XAie_DmaDesc *DmaDesc,
 		XAie_DmaFifoCounter Counter);
@@ -105,7 +105,7 @@ AieRC XAie_DmaWriteBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum);
 AieRC XAie_DmaWriteBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum);
-int XAie_DmaWriteBdAsync(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
+s32 XAie_DmaWriteBdAsync(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 			 XAie_LocType Loc, u16 BdNum, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaReadBd(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		XAie_LocType Loc, u16 BdNum);
@@ -123,15 +123,15 @@ AieRC XAie_DmaChannelPushBdToQueue(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum);
 AieRC XAie_DmaChannelPushBdToQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum);
-int XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaChannelPushBdToQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 				      XAie_DmaDirection Dir, u16 BdNum, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaChannelEnable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
-int XAie_DmaChannelEnableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaChannelEnableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaChannelDisable(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir);
-int XAie_DmaChannelDisableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaChannelDisableAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaWaitForDone(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		XAie_DmaDirection Dir, u32 TimeOutUs);
@@ -150,16 +150,16 @@ AieRC XAie_DmaChannelSetStartQueue_16(XAie_DevInst *DevInst, XAie_LocType Loc,
 AieRC XAie_DmaChannelSetStartQueueGeneric(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc);
-int XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
+s32 XAie_DmaChannelSetStartQueueAsync(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u16 BdNum, u32 RepeatCount,
 		u8 EnTokenIssue, XAie_AsyncRes *AsyncRes);
-int XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
+s32 XAie_DmaChannelSetStartQueueGenericAsync(XAie_DevInst *DevInst,
 		XAie_LocType Loc, u8 ChNum, XAie_DmaDirection Dir,
 		XAie_DmaQueueDesc *DmaQueueDesc, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaWriteChannel(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir);
-int XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
+s32 XAie_DmaWriteChannelAsync(XAie_DevInst *DevInst,
 		XAie_DmaChannelDesc *DmaChannelDesc, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaChannelSetFoTMode(XAie_DmaChannelDesc *DmaChannelDesc,
@@ -190,7 +190,7 @@ AieRC XAie_DmaUpdateBdAddr_16(XAie_DevInst *DevInst, XAie_LocType Loc, u64 Addr,
 		u16 BdNum);
 AieRC XAie_DmaSetPadValue(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		u32 PadValue);
-int XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
+s32 XAie_DmaSetPadValueAsync(XAie_DevInst *DevInst, XAie_LocType Loc, u8 ChNum,
 		u32 PadValue, XAie_AsyncRes *AsyncRes);
 AieRC XAie_DmaGetChannelStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u32 *Status);
@@ -198,7 +198,7 @@ AieRC XAie_DmaUpdateBdAddrOff(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offse
 		u16 BdNum);
 AieRC XAie_DmaUpdateBdAddrOff_16(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
 		u16 BdNum);
-int XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
+s32 XAie_DmaUpdateBdAddrOffAsync(XAie_MemInst *MemInst, XAie_LocType Loc, u32 Offset,
 				 u16 BdNum, XAie_AsyncRes *AsyncRes);
 
 #endif		/* end of protection macro */

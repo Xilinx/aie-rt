@@ -291,10 +291,11 @@ AieRC XAie_TracePktConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	if(Pkt.PktId > XAIE_PACKET_ID_MAX || Pkt.PktType > XAIE_PACKET_TYPE_MAX)
 	{
@@ -360,10 +361,12 @@ AieRC XAie_TraceModeConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	}
+	else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	if(Mode > XAIE_TRACE_INST_EXEC ||
 			TraceMod->ModeConfig.Mask == XAIE_FEATURE_UNAVAILABLE) {
@@ -424,10 +427,12 @@ AieRC XAie_TraceGetState(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	}
+	else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	RegOffset = TraceMod->StatusRegOff;
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -489,10 +494,12 @@ AieRC XAie_TraceGetMode(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	}
+	else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	RegOffset = TraceMod->StatusRegOff;
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -575,8 +582,9 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(TraceMod->ModeConfig.Mask == XAIE_FEATURE_UNAVAILABLE)
+	if(TraceMod->ModeConfig.Mask == XAIE_FEATURE_UNAVAILABLE) {
 		Mode = 0U;
+	}
 
 	RegVal = XAie_SetField(Mode, TraceMod->ModeConfig.Lsb,
 			TraceMod->ModeConfig.Mask) |
@@ -633,10 +641,11 @@ AieRC XAie_TraceControlConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	} else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TraceMod->CtrlRegOff;
@@ -686,10 +695,12 @@ AieRC XAie_TracePktConfigReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	}
+	else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		TraceMod->PktConfigRegOff;
@@ -785,10 +796,12 @@ AieRC XAie_TraceEventReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Module == XAIE_PL_MOD)
+	if(Module == XAIE_PL_MOD) {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[0U];
-	else
+	}
+	else {
 		TraceMod = &DevInst->DevProp.DevMod[TileType].TraceMod[Module];
+	}
 
 	EventRegOffId = SlotId / TraceMod->NumEventsPerSlot;
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +

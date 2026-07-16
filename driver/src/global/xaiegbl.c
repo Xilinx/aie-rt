@@ -178,7 +178,7 @@ AieRC XAie_SetXprodEnable(XAie_DevInst *DevInst, u8 Enable)
 *		may access gated tiles.
 *
 ******************************************************************************/
-AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
+AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, const XAie_Config *ConfigPtr)
 {
 	AieRC RC;
 
@@ -188,7 +188,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		return XAIE_INVALID_ARGS;
 	}
 
-	if (InstPtr->IsReady) {
+	if (InstPtr->IsReady != 0U) {
 		return XAIE_OK;
 	}
 
@@ -224,7 +224,7 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 		InstPtr->BaseAddr = ConfigPtr->BaseAddr;
 		InstPtr->StartCol = 0;
 		InstPtr->NumCols = ConfigPtr->NumCols;
-	} else if((u32)InstPtr->StartCol + (u32)InstPtr->NumCols >
+	} else if(((u32)InstPtr->StartCol + (u32)InstPtr->NumCols) >
 			(u32)ConfigPtr->NumCols) {
 		XAIE_ERROR("Invalid Partition location or size. StartCol: %u numcols:%u\n",
 				InstPtr->StartCol, InstPtr->NumCols);
@@ -287,7 +287,8 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr)
 * @return	XAIE_OK on success and error code on failure.
 *
 ******************************************************************************/
-AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo)
+AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
+		const XAie_PartInitOpts *Opts, const XAie_DevicePartInfo *DevPartInfo)
 {
 	XAie_PartInitOpts SoftPartOpts;
 	AieRC RC;
@@ -326,15 +327,15 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 				Loc = XAie_TileLoc(C, 1);
 				ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 				_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-					       ColClockStatus, DevInst->NumRows - 1);
+					       ColClockStatus, (u32)(DevInst->NumRows - 1U));
 			}
 		}
 		if(DevPartInfo->BaseAddr == DevInst->BaseAddr) {
 			IsolationFlags |= XAIE_INIT_WEST_ISOLATION;
 		}
-		if((DevInst->BaseAddr + XAie_GetTileAddr(DevInst, 0u, (DevInst->NumCols - 1))) ==
-			(DevPartInfo->BaseAddr + XAie_GetTileAddr(DevInst, 0u, (DevPartInfo->NumCols - 1)))) {
-			IsolationFlags |= XAIE_INIT_EAST_ISOLATION;
+		if((DevInst->BaseAddr + XAie_GetTileAddr(DevInst, 0U, ((u8)(DevInst->NumCols - 1U)))) ==
+			(DevPartInfo->BaseAddr + XAie_GetTileAddr(DevInst, 0U, ((u8)(DevPartInfo->NumCols - 1U))))) {
+			IsolationFlags |= (u8)XAIE_INIT_EAST_ISOLATION;
 		}
 		RC = DevInst->DevOps->SetPartIsolationAfterRst(DevInst, IsolationFlags);
 
@@ -348,7 +349,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opt
 				Loc = XAie_TileLoc(C, 1);
 				ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 				_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-					       ColClockStatus, DevInst->NumRows - 1);
+					       ColClockStatus, (u32)(DevInst->NumRows - 1U));
 			}
 		}
 	}
@@ -420,10 +421,10 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 * @return	Number of SQEs submitted on success, or 0 on failure.
 *
 ******************************************************************************/
-int XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
+s32 XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
 				  XAie_AsyncRes *AsyncRes)
 {
-	int ret;
+	s32 ret;
 
 	if (AsyncRes == NULL) {
 		XAIE_ERROR("Invalid Async Result argument\n");
@@ -432,13 +433,13 @@ int XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts
 
 	if((DevInst == XAIE_NULL) || (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Device Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if (DevInst->Backend->Ops.PartitionInitAsync == NULL) {
 		XAIE_ERROR("Partition Initialize Async operation is not supported by the backend\n");
-		AsyncRes->res = XAIE_ERR;
+		AsyncRes->res = (s32)XAIE_ERR;
 		return 0;
 	}
 
@@ -662,7 +663,7 @@ AieRC XAie_PartitionTeardown_v2(XAie_DevInst *DevInst,
 * @return	Number of SQEs submitted on success, or 0 on failure.
 *
 ******************************************************************************/
-int XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes)
+s32 XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes)
 {
 	if (AsyncRes == XAIE_NULL) {
 		XAIE_ERROR("AsyncRes pointer cannot be NULL\n");
@@ -673,14 +674,14 @@ int XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes)
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 			(DevInst->Backend == XAIE_NULL)) {
 		XAIE_ERROR("Invalid Device Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if (DevInst->Backend->Ops.PartitionTeardownAsync == NULL) {
 		XAIE_ERROR("Partition Teardown Async operation is not supported "
 				"by the backend\n");
-		AsyncRes->res = XAIE_ERR;
+		AsyncRes->res = (s32)XAIE_ERR;
 		return 0;
 	}
 
@@ -734,7 +735,7 @@ AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst)
 * @return	Number of SQEs submitted on success, or 0 on failure.
 *
 ******************************************************************************/
-int XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst,
+s32 XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst,
 				    XAie_AsyncRes *AsyncRes)
 {
 	if (AsyncRes == XAIE_NULL) {
@@ -746,14 +747,14 @@ int XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst,
 	   (DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 	   (DevInst->Backend == XAIE_NULL)) {
 		XAIE_ERROR("Invalid Device Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if (DevInst->Backend->Ops.PartClearContextAsync == NULL) {
 		XAIE_ERROR("Partition Clear Context Async operation is not "
 				"supported by the backend\n");
-		AsyncRes->res = XAIE_ERR;
+		AsyncRes->res = (s32)XAIE_ERR;
 		return 0;
 	}
 
@@ -776,7 +777,7 @@ int XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst,
 * 		be deprecated in the future.
 *
 ******************************************************************************/
-AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
+static AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
@@ -854,7 +855,7 @@ AieRC XAie_DestroyPartitionList(XAie_DevInst *DevInst)
 * @return	Partition Fd on  success and negetive values on failure.
 *
 ******************************************************************************/
-int XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId)
+s32 XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId)
 {
 	return  _XAie_MatchPartitionList(DevInst, PartitionId);
 }
@@ -1205,7 +1206,7 @@ void* XAie_MemGetVAddr(XAie_MemInst *MemInst)
 * @return	Physical address of the memory instance.
 *
 *******************************************************************************/
-u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst)
+u64 XAie_MemGetDevAddr(const XAie_MemInst *MemInst)
 {
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance, MemInst is NULL\n");
@@ -1289,7 +1290,7 @@ AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
 * @return	Number of SQEs submitted on success (0 in this case), or < 0 on failure.
 *
 *******************************************************************************/
-int XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
+s32 XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
 			u64 DevAddr, u64 VAddr, u64 Size, XAie_MemCacheProp Cache,
 			u64 MemHandle, XAie_AsyncRes *AsyncRes)
 {
@@ -1302,26 +1303,26 @@ int XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
 	   (DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 	   (DevInst->Backend == XAIE_NULL)) {
 		XAIE_ERROR("Invalid Device Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if(Cache > XAIE_MEM_NONCACHEABLE) {
 		XAIE_ERROR("Invalid cache property\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if(DevInst->Backend->Ops.MemAttachAsync == NULL) {
 		XAIE_ERROR("Asynchronous memory attach is not supported "
 				"by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 
@@ -1380,7 +1381,7 @@ AieRC XAie_MemDetach(XAie_MemInst *MemInst)
 * @return	Number of SQEs submitted on success (0 in this case), or < 0 on failure.
 *
 *******************************************************************************/
-int XAie_MemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
+s32 XAie_MemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
 {
 	XAie_DevInst *DevInst;
 
@@ -1391,7 +1392,7 @@ int XAie_MemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
 
 	if(MemInst == XAIE_NULL) {
 		XAIE_ERROR("Invalid memory instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
@@ -1400,14 +1401,14 @@ int XAie_MemDetachAsync(XAie_MemInst *MemInst, XAie_AsyncRes *AsyncRes)
 		(DevInst->IsReady != XAIE_COMPONENT_IS_READY) ||
 		(DevInst->Backend == XAIE_NULL)) {
 		XAIE_ERROR("Invalid Device Instance\n");
-		AsyncRes->res = XAIE_INVALID_ARGS;
+		AsyncRes->res = (s32)XAIE_INVALID_ARGS;
 		return 0;
 	}
 
 	if(DevInst->Backend->Ops.MemDetachAsync == NULL) {
 		XAIE_ERROR("Asynchronous memory detach is not supported "
 				"by the backend\n");
-		AsyncRes->res = XAIE_INVALID_DEVICE;
+		AsyncRes->res = (s32)XAIE_INVALID_DEVICE;
 		return 0;
 	}
 

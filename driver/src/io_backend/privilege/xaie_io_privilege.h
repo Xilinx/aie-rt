@@ -35,7 +35,7 @@ AieRC _XAie_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		XAie_BackendTilesArray *Args);
 AieRC _XAie_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		XAie_BackendColumnReq *Args);
-AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
+AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, const XAie_LocType *Loc,
 		UcDmaDir_enum Dir, u8 Pause);
 AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 Pause);

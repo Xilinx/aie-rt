@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdint.h>
 
 /*    [data0, data1, data2]
  *    /      |      |     \
@@ -29,7 +30,7 @@ struct btree4_node {
 
 struct btree4 {
 	struct btree4_node *root;
-	int (*cmp)(void *a, void *b);
+	int32_t (*cmp)(void *a, void *b);
 };
 
 #define BTREE4_DECLARE(name, cmp)	struct btree4 name = {.root = NULL, .cmp = cmp}
@@ -39,9 +40,9 @@ void btree4_inorder_visit(struct btree4 *tree,
 			  void (*visit)(void *data, void *priv),
 			  void *priv);
 
-int btree4_insert(struct btree4 *tree, void *data);
+int32_t btree4_insert(struct btree4 *tree, void *data);
 
-void *btree4_search(struct btree4 *tree, void *data);
+void *btree4_search(const struct btree4 *tree, void *data);
 void *btree4_delete(struct btree4 *tree, void *data);
 
 #endif /* _BTREE4_H_ */

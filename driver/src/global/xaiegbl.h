@@ -79,7 +79,7 @@ typedef struct XAie_TxnCmd XAie_TxnCmd;
 typedef struct XAie_ResourceManager XAie_ResourceManager;
 
 typedef struct XAie_AsyncRes {
-	int res;
+	s32 res;
 	u64 res2;
 	u64 res3;
 	u8 io_vec_inuse;
@@ -233,11 +233,11 @@ typedef struct {
 
 /* This typedef captures partition information available in the kernel */
 typedef struct {
-	XAie_Range ColRange;
-	u32 PartitionId;
-	u32 Uid;
-	int PartitionFd;
-	XAie_List Node;
+        XAie_Range ColRange;
+        u32 PartitionId;
+        u32 Uid;
+        s32 PartitionFd;
+        XAie_List Node;
 }XAie_PartitionList;
 
 /*
@@ -649,7 +649,7 @@ typedef enum {
  */
 typedef struct {
 	XAie_LocType Loc;
-	uint8_t PerfCnt[2];
+	u8 PerfCnt[2];
 	float KernelUtil;
 } XAie_Occupancy;
 
@@ -669,20 +669,20 @@ typedef struct {
 AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
 AieRC XAie_SetXprodEnable(XAie_DevInst *DevInst, u8 Enable);
-AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
+AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, const XAie_Config *ConfigPtr);
 AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts);
-int XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
+s32 XAie_PartitionInitializeAsync(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts,
 				  XAie_AsyncRes *AsyncRes);
 AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
-		XAie_PartInitOpts *Opts, XAie_DevicePartInfo *DevPartInfo);
+		const XAie_PartInitOpts *Opts, const XAie_DevicePartInfo *DevPartInfo);
 AieRC XAie_PartitionTeardown(XAie_DevInst *DevInst);
-int XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
+s32 XAie_PartitionTeardownAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
 AieRC XAie_PartitionInitialize_v2(XAie_DevInst *DevInst,
 		XAie_PartInitOpts_v2 *Opts);
 AieRC XAie_PartitionTeardown_v2(XAie_DevInst *DevInst,
 		XAie_PartInitOpts_v2 *Opts);
 AieRC XAie_ClearPartitionContext(XAie_DevInst *DevInst);
-int XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
+s32 XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst, XAie_AsyncRes *AsyncRes);
 AieRC XAie_Finish(XAie_DevInst *DevInst);
 AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend);
 XAie_MemInst* XAie_MemAllocate(XAie_DevInst *DevInst, u64 Size,
@@ -694,16 +694,16 @@ AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
 AieRC XAie_MemSyncForDev(XAie_MemInst *MemInst);
 AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size);
 void* XAie_MemGetVAddr(XAie_MemInst *MemInst);
-u64 XAie_MemGetDevAddr(XAie_MemInst *MemInst);
+u64 XAie_MemGetDevAddr(const XAie_MemInst *MemInst);
 AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *DevAddr);
 AieRC XAie_MemAttach(XAie_DevInst *DevInst, XAie_MemInst *MemInst, u64 DevAddr,
                 u64 VAddr, u64 Size, XAie_MemCacheProp Cache, u64 MemHandle);
-int XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
+s32 XAie_MemAttachAsync(XAie_DevInst *DevInst, XAie_MemInst *MemInst,
 			u64 DevAddr, u64 VAddr, u64 Size,
 			XAie_MemCacheProp Cache, u64 MemHandle,
 			XAie_AsyncRes *AsyncRes);
 AieRC XAie_MemDetach(XAie_MemInst *MemInst);
-int XAie_MemDetachAsync(XAie_MemInst *MemInst,
+s32 XAie_MemDetachAsync(XAie_MemInst *MemInst,
 			XAie_AsyncRes *AsyncRes);
 AieRC XAie_TurnEccOff(XAie_DevInst *DevInst);
 AieRC XAie_TurnEccOn(XAie_DevInst *DevInst);
@@ -732,7 +732,7 @@ AieRC XAie_ControlCodeAddAnnotation(XAie_DevInst *DevInst,
 AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad);
 AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst);
 AieRC XAie_EnquirePartitions(XAie_DevInst *DevInst);
-int XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId);
+s32 XAie_SelectPartitionFromList(XAie_DevInst *DevInst, u32 PartitionId);
 AieRC XAie_DestroyPartitionList(XAie_DevInst *DevInst);
 AieRC XAie_GetPartitionFdList(XAie_DevInst *DevInst);
 /*****************************************************************************/

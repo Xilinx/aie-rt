@@ -70,7 +70,8 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAie_ModuleType Module, u32 LowEventValue, u32 HighEventValue)
 {
 	u64 RegAddr;
-	u8 TileType, RC;
+	u8 TileType;
+	AieRC RC;
 	const XAie_TimerMod *TimerMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -93,9 +94,7 @@ AieRC XAie_SetTimerTrigEventVal(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[0U];
-	}
-
-	else {
+	} else {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
 	}
 
@@ -157,9 +156,7 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[0U];
-	}
-
-	else {
+	} else {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
 	}
 
@@ -228,9 +225,7 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(Module == XAIE_PL_MOD) {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[0U];
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	}
-
-	else {
+	} else {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Module];
 	}
@@ -301,9 +296,7 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	if(Module == XAIE_PL_MOD) {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[0U];
-	}
-
-	else {
+	} else {
 		TimerMod = &DevInst->DevProp.DevMod[TileType].TimerMod[Module];
 	}
 
@@ -446,10 +439,11 @@ static XAie_Events _XAie_GetBroadcastEventfromRscId(XAie_DevInst *DevInst,
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
 
-	if(Mod == XAIE_PL_MOD)
+	if(Mod == XAIE_PL_MOD) {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[0U];
-	else
+	} else {
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Mod];
+	}
 
 	return EvntMod->BroadcastEventMap->Event + RscId;
 }
@@ -470,7 +464,7 @@ static XAie_Events _XAie_GetBroadcastEventfromRscId(XAie_DevInst *DevInst,
 *
 *******************************************************************************/
 static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
-		XAie_LocType *Locs, u8 BcastId)
+		const XAie_LocType *Locs, u8 BcastId)
 {
 	AieRC RC = XAIE_OK;
 	u8 TileType;
@@ -482,32 +476,32 @@ static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 			if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
 				/* Checkerboard structure for AIE1 */
-				if((Locs[i].Row % 2) == 0) {
+				if((Locs[i].Row % 2U) == 0) {
 					RC |= XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_MEM_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						XAIE_EVENT_BROADCAST_WEST);
+						(u8)XAIE_EVENT_BROADCAST_WEST);
 					RC |= XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_CORE_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						XAIE_EVENT_BROADCAST_EAST);
+						(u8)XAIE_EVENT_BROADCAST_EAST);
 				} else {
 					RC |= XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_MEM_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						XAIE_EVENT_BROADCAST_EAST);
+						(u8)XAIE_EVENT_BROADCAST_EAST);
 					RC |= XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_CORE_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						XAIE_EVENT_BROADCAST_WEST);
+						(u8)XAIE_EVENT_BROADCAST_WEST);
 				}
 			} else {
 				RC |= XAie_EventBroadcastBlockDir(
@@ -515,15 +509,15 @@ static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 					XAIE_MEM_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					XAIE_EVENT_BROADCAST_EAST);
+					(u8)XAIE_EVENT_BROADCAST_EAST);
 				RC |= XAie_EventBroadcastBlockDir(
 					DevInst, Locs[i],
 					XAIE_CORE_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					XAIE_EVENT_BROADCAST_WEST);
+					(u8)XAIE_EVENT_BROADCAST_WEST);
 			}
-		} else if(Locs[i].Row != 0) {
+		} else if(Locs[i].Row != 0U) {
 			RC |= XAie_EventBroadcastBlockDir(
 				DevInst, Locs[i],
 				XAIE_MEM_MOD,
@@ -557,7 +551,7 @@ static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 *
 *******************************************************************************/
 static AieRC _XAie_SetupTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
-		XAie_LocType *Locs, u8 BcastId)
+		const XAie_LocType *Locs, u8 BcastId)
 {
 	XAie_Events BcastEvent;
 	AieRC RC = XAIE_OK;
@@ -625,7 +619,7 @@ static void _XAie_ClearShimBroadcast(XAie_DevInst *DevInst, u8 StartCol,
 	for(u32 i = StartCol; i < EndCol; i++) {
 		XAie_LocType Loc = XAie_TileLoc(i, 0);
 		XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-			BcastChannelId, XAIE_EVENT_NONE_PL);
+			(u8)BcastChannelId, XAIE_EVENT_NONE_PL);
 	}
 }
 
@@ -640,7 +634,7 @@ static void _XAie_ClearShimBroadcast(XAie_DevInst *DevInst, u8 StartCol,
 * @note		Internal only.
 *******************************************************************************/
 static void _XAie_ClearTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
-		XAie_LocType *Locs)
+		const XAie_LocType *Locs)
 {
 	const XAie_EvntMod *EvntMod;
 	u8 TType;
@@ -680,7 +674,7 @@ static void _XAie_ClearTimerConfig(XAie_DevInst *DevInst, u32 NumTiles,
 * @note		Internal only.
 *******************************************************************************/
 static void _XAie_ClearBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
-		XAie_LocType *Locs, u8 BcastId)
+		const XAie_LocType *Locs, u8 BcastId)
 {
 	u8 TileType;
 
@@ -698,15 +692,15 @@ static void _XAie_ClearBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 					XAIE_CORE_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					XAIE_EVENT_BROADCAST_WEST |
-					XAIE_EVENT_BROADCAST_EAST);
-		} else if(Locs[i].Row != 0) {
+					((u32)XAIE_EVENT_BROADCAST_WEST |
+					(u32)XAIE_EVENT_BROADCAST_EAST));
+		} else if(Locs[i].Row != 0U) {
 			XAie_EventBroadcastUnblockDir(DevInst, Locs[i],
 					XAIE_MEM_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					XAIE_EVENT_BROADCAST_WEST |
-					XAIE_EVENT_BROADCAST_EAST);
+					((u32)XAIE_EVENT_BROADCAST_WEST |
+					(u32)XAIE_EVENT_BROADCAST_EAST));
 		}
 	}
 }
@@ -766,7 +760,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId1, ShimBcastEvent);
-		if (i == 0) {
+		if (i == 0U) {
 			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 					BcastChannelId2, ShimBcastEvent);
 		}
@@ -855,16 +849,16 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	}
 
 	ShimBcastEvent = _XAie_GetBroadcastEventfromRscId(DevInst,
-			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId + 1);
+			XAie_TileLoc(0, 0), XAIE_PL_MOD, (u8)(BcastChannelId + 1U));
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
 		XAie_LocType Loc = XAie_TileLoc(i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId, ShimBcastEvent);
-		if (i == 0) {
+		if (i == 0U) {
 			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
-					BcastChannelId + 1, ShimBcastEvent);
+					(u8)(BcastChannelId + 1U), ShimBcastEvent);
 		}
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Unable to configure shim broadcast event for timer sync,BcastChannelId:%d\n",BcastChannelId);

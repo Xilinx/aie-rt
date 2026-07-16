@@ -31,12 +31,14 @@
 /************************** Constant Definitions *****************************/
 #define UPDT_NEXT_NOC_TILE_LOC(Loc)			\
 ({							\
-	if ((Loc).Col <= 1)				\
+	if ((Loc).Col <= 1) {				\
 		(Loc).Col = 2;				\
-	else if ((((Loc).Col + 1) % 4) / 2)		\
+	}						\
+	else if ((((Loc).Col + 1) % 4) / 2) {		\
 		(Loc).Col += 1;				\
-	else if ((((Loc).Col + 2) % 4) / 2)		\
+	} else if ((((Loc).Col + 2) % 4) / 2) {		\
 		(Loc).Col += 2;				\
+	}						\
 	else						\
 		(Loc).Col += 3;				\
 })
@@ -68,8 +70,9 @@ static inline u8 _XAie_LGetShimTTypefromLoc(XAie_DevInst *DevInst,
 {
 	u8 ColType = (DevInst->StartCol + Loc.Col) % 4U;
 
-	if((ColType == 0U) || (ColType == 1U))
+	if((ColType == 0U) || (ColType == 1U)) {
 		return XAIEGBL_TILE_TYPE_SHIMPL;
+	}
 
 	return XAIEGBL_TILE_TYPE_SHIMNOC;
 }

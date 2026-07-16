@@ -59,12 +59,12 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(NumTiles > (u32)(DevInst->NumRows * DevInst->NumCols)) {
+	if(NumTiles > ((u32)DevInst->NumRows * DevInst->NumCols)) {
 		XAIE_ERROR("Invalid NumTiles, NumTile:%u\n", NumTiles);
 		return XAIE_INVALID_ARGS;
 	}
 
-	if (NumTiles != 0U && Loc == NULL) {
+	if ((NumTiles != 0U) && (Loc == NULL)) {
 		XAIE_ERROR("NumTiles is not 0, but Location array is empty.\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -119,7 +119,7 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIE_ENABLE;
 	}
 
-	TileBit = (u32)(Loc.Col * (DevInst->NumRows - 1U) + Loc.Row - 1U);
+	TileBit = (((u32)Loc.Col * (DevInst->NumRows - 1U)) + Loc.Row - 1U);
 	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit)) {
 		return XAIE_ENABLE;
 	}
