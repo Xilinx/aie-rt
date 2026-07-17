@@ -879,16 +879,19 @@ AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 	AieRC RC;
 
 	u32 TileStatus, NumTiles, Ops;
-	u32 PartEndCol = (u32)(DevInst->StartCol + DevInst->NumCols - 1U);
+	u32 AbsStartCol;
 
-	if((Args->StartCol < DevInst->StartCol) || (Args->StartCol > PartEndCol) ||
-			((Args->StartCol + Args->NumCols - 1U) > PartEndCol) ) {
+	if((Args->NumCols == 0U) || (Args->StartCol >= DevInst->NumCols) ||
+			((Args->StartCol + Args->NumCols) > DevInst->NumCols)) {
 		XAIE_ERROR("Invalid Start Column/Numcols. StartCol:%u NumCols:%u \n",Args->StartCol, Args->NumCols);
 		return XAIE_ERR;
 	}
 
+	/* Args->StartCol is partition-relative; firmware ops expect absolute column */
+	AbsStartCol = DevInst->StartCol + Args->StartCol;
+
 	Ops = Args->Enable ? AIE_OPS_ENB_COL_CLK_BUFF: AIE_OPS_DIS_COL_CLK_BUFF;
-	RC = _XAie_BaremetalIO_PrivilegeWrite32(Args->StartCol, Args->NumCols,Ops);
+	RC = _XAie_BaremetalIO_PrivilegeWrite32(AbsStartCol, Args->NumCols,Ops);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to enable clock for column. StartCol:%u NumCols:%u\n",Args->StartCol, Args->NumCols);
 		return RC;
