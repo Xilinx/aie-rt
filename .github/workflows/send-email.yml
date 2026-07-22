@@ -16,6 +16,12 @@ on:
       - "main-aie-next"
     types: [submitted]
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: read
+
 jobs:
   check-target-branch:
     runs-on: self-hosted
@@ -40,7 +46,7 @@ jobs:
     - name: Retrieve PR Data for Branch Check
       id: check-branch
       env:
-        GH_TOKEN: ${{ secrets.GHB_TKN }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ steps.set-pr-number.outputs.pr_number }})
         TARGET_BRANCH=$(echo "$PR_DATA" | jq -r '.base.ref')
@@ -74,7 +80,7 @@ jobs:
       if: github.event_name == 'issue_comment'
       id: retrieve-pr-data
       env:
-        GH_TOKEN: ${{ secrets.GHB_TKN }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         PR_DATA=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }})
         PR_BASE_REF=$(echo "$PR_DATA" | jq -r .base.ref)
@@ -87,6 +93,7 @@ jobs:
       id: approval-check
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ github.token }}
       run: |
         sleep 5
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }}  # Use the output from set-pr-number step here
@@ -215,8 +222,8 @@ jobs:
       if: steps.approval-check.outputs.all_conditions_met == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GH_TOKEN: ${{ secrets.GHB_TKN }}
-        CI_GITHUB_TOKEN: ${{ secrets.GHB_TKN }}
+        GH_TOKEN: ${{ github.token }}
+        CI_GITHUB_TOKEN: ${{ github.token }}
       run: |
         # Extract Information from GitHub Event
         PR_NUMBER=${{ steps.set-pr-number.outputs.pr_number }} 
@@ -254,8 +261,9 @@ jobs:
         # Fetch PR details using gh API with PR_NUMBER
         PR_DETAILS=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER)
 
-        # Extract Pull Request Description
-        PR_DESCRIPTION=$(echo "$PR_DETAILS" | jq -r '.body')
+        # Extract Pull Request Description. Coalesce a null/empty body to "" so
+        # it never renders the literal string "null" in the patch.
+        PR_DESCRIPTION=$(echo "$PR_DETAILS" | jq -r '.body // ""')
         echo "Pull Request Description: $PR_DESCRIPTION"
 
         ABOVE=$(echo "$PR_DESCRIPTION" | awk '/---/{exit} {print}')
@@ -267,7 +275,13 @@ jobs:
         ABOVE=$(echo "$ABOVE" | fold -s -w 80)
 
         FORMATTED_DESCRIPTION=$(echo "$ABOVE" | sed ':a;N;$!ba;s/\n*$//')
-        
+
+        # Fall back to the PR title if the body was empty, so the patch never
+        # ships an empty/"null" description.
+        if [ -z "$FORMATTED_DESCRIPTION" ]; then
+          FORMATTED_DESCRIPTION=$(echo "$PR_DETAILS" | jq -r '.title // ""')
+        fi
+
         # Extract source repository URL and source branch name
         SOURCE_REPO_URL=$(echo "$PR_DETAILS" | jq --raw-output .head.repo.clone_url)
         SOURCE_BRANCH=$(echo "$PR_DETAILS" | jq --raw-output .head.ref)
@@ -300,7 +314,7 @@ jobs:
           if [[ "$LOGIN" == *bot* ]]; then
             continue
           fi
-          EMAIL="${LOGIN}@amd.com"
+          EMAIL="${LOGIN%_amdeng}@amd.com"
           CC_EMAILS_ARRAY+=( "--cc" "${EMAIL}" )
         done
 
@@ -318,15 +332,17 @@ jobs:
         SUBMITTER_NAME=$(echo "$SUBMITTER_DETAILS" | jq -r ".name // .login") # Use login as a fallback
         echo "Submitter Name: $SUBMITTER_NAME"
 
-        # Format Submitter Name, replacing spaces with dots
-        FORMATTED_SUBMITTER_NAME=$(echo "$SUBMITTER_NAME" | tr ' ' '.')
-        
-        # Build submitter email ID
-        SUBMITTER_EMAIL="${FORMATTED_SUBMITTER_NAME}@amd.com"
+        # Build submitter email ID from the login (EMU logins carry the _amdeng
+        # suffix; the real mailbox is <ntid>@amd.com). Deriving from the display
+        # name breaks when it contains commas/spaces (e.g. "Satpute, Sandeep").
+        SUBMITTER_EMAIL="${SUBMITTER_LOGIN%_amdeng}@amd.com"
         echo "Submitter Email: $SUBMITTER_EMAIL"
+
+        # CC the author too, mirroring the manual send-email flow.
+        CC_EMAILS_ARRAY+=( "--cc" "${SUBMITTER_EMAIL}" )
         
         echo "PR Details: $PR_DETAILS"
-        PR_BODY=$(echo "$PR_DETAILS" | jq -r '.body')
+        PR_BODY=$(echo "$PR_DETAILS" | jq -r '.body // ""')
         echo "PR Body: $PR_BODY"
         ID_INFOS=$(echo "$PR_BODY" | grep -oiP '^((jira)[-:])?\s*((cr|pr)[-: ]?)?\s*\d+' \
           | sed -E 's/^jira[-:]?\s*/CR-/I' \
@@ -346,7 +362,7 @@ jobs:
         SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
         # Modify PR Patch with additional details
         # Insert PR Description at the top of the patch
-        echo -e "From: ${SUBMITTER_NAME}  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
+        echo -e "From: \"${SUBMITTER_NAME}\"  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
         echo -e "PR Description:\n$FORMATTED_DESCRIPTION\n$SIGN_OFF\n" >> pr.patch
                 
         FOOTER="---\n"
@@ -383,8 +399,13 @@ jobs:
         git config --global user.email "${SUBMITTER_EMAIL}"
         git config --global user.name "${SUBMITTER_NAME}"
 
-        # Send the email with the patch
-        git send-email --confirm=never --force --to "git_aiengine_dev@amd.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
+        # Send the email with the patch. The runner's local MTA is broken, so
+        # send directly through the internal SMTP relay (same transport as the
+        # CI summary email and aiebaremetal).
+        git config --global sendemail.smtpauth none
+        git send-email --confirm=never --force --suppress-cc=all \
+          --smtp-server ATLSMTP10.amd.com --smtp-server-port 25 --smtp-encryption none \
+          --to "git_aiengine_dev@amd.com" "${CC_EMAILS_ARRAY[@]}" --attach pr.patch
 
         # Comment on the PR
         gh pr comment $PR_NUMBER --body "**[GITHUB ACTIONS]** :white_check_mark: Patch approved! Patch E-Mail/s Sent out! :white_check_mark:"
