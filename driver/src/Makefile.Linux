@@ -102,7 +102,7 @@ lib$(NAME).so.$(VERSION): ${LIBURING_A} $(OUTS)
 		-shared -Wl,-soname,lib$(NAME).so.$(MAJOR) -o lib$(NAME).so.$(VERSION)
 
 %.o: %.c ${LIBURING_A} include include_liburing
-	$(CC) $(CFLAGS) -D__AIELINUX__ -Wall -Wextra --std=c11 $(EXTRA_CFLAGS) \
+	$(CC) $(CFLAGS) -D__AIELINUX__ -Wall -Wextra -Werror=incompatible-pointer-types --std=c11 $(EXTRA_CFLAGS) \
 		-I$(INTERNALDIR) -I$(INTERNALDIR)/xaiengine \
 		-I$(LIBURING_INCLUDE) \
 		-I$(INTERNALDIR)/liburing \
