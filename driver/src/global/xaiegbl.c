@@ -242,12 +242,8 @@ AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, const XAie_Config *ConfigPtr)
 	InstPtr->AieTileNumRows = ConfigPtr->AieTileNumRows;
 	InstPtr->EccStatus = XAIE_ENABLE;
 	InstPtr->TxnList.Next = NULL;
-	/*
-	 * Resolve IsProd before backend init: sentinel -> XAIE_DISABLE,
-	 * anything else (including zero-init) -> XAIE_ENABLE (default).
-	 */
-	InstPtr->IsProd = (InstPtr->IsProd == XAIE_PROD_USER_DISABLE) ?
-				XAIE_DISABLE : XAIE_ENABLE;
+	/* Disable IsProd by default, user can enable it by calling XAie_SetXprodEnable() */
+	InstPtr->IsProd = XAIE_DISABLE;
 
 	memcpy(&InstPtr->PartProp, &ConfigPtr->PartProp,
 		sizeof(ConfigPtr->PartProp));
