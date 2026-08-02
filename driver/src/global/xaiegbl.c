@@ -85,6 +85,46 @@ extern const XAie_DeviceOps Aie2PDevOps;
 /*****************************************************************************/
 /**
 *
+* This API selects the I/O backend used during device initialization.
+*
+* @param	DevInst: Global AIE device instance pointer.
+* @param	Backend: Backend I/O type to initialize.
+*
+* @return	XAIE_OK on success and error code on failure.
+*
+* @note		This function must be called before XAie_CfgInitialize(). If it
+*		is not called, the compile-time default backend is used.
+*
+*******************************************************************************/
+AieRC XAie_SetupBackendConfig(XAie_DevInst *DevInst,
+		XAie_BackendType Backend)
+{
+	const XAie_Backend *BackendPtr;
+
+	if (DevInst == XAIE_NULL || DevInst->IsReady != 0U) {
+		XAIE_ERROR("Invalid Device instance to set backend config.\n");
+		return XAIE_INVALID_DEVICE;
+	}
+
+	if ((u32)Backend >= (u32)XAIE_IO_BACKEND_MAX) {
+		XAIE_ERROR("Invalid backend request.\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	BackendPtr = _XAie_GetBackendPtr(Backend);
+	if (BackendPtr == XAIE_NULL) {
+		XAIE_ERROR("Requested backend is unavailable.\n");
+		return XAIE_INVALID_ARGS;
+	}
+
+	DevInst->Backend = BackendPtr;
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API is to set up AI engine partition instance location and size.
 *
 * @param	Inst: Pointer of AI engine partition instance
@@ -425,6 +465,7 @@ AieRC XAie_Finish(XAie_DevInst *DevInst)
 	}
 
 	DevInst->IsReady = 0;
+	DevInst->Backend = XAIE_NULL;
 
 	return XAIE_OK;
 }
