@@ -98,6 +98,19 @@ typedef struct {
 	uint32_t TxnSize;
 } XAie_TxnHeader;
 
+/* Recorded commands that emit no serialized operation map to this value. */
+#define XAIE_TXN_CMD_NO_SERIALIZED_OP ((u32)UINT_MAX)
+
+/*
+ * Serializer-owned result metadata returned to the caller. CmdToOp contains
+ * NumCmds entries and must be released with XAie_FreeTxnCmdOpMap().
+ */
+typedef struct {
+	u32 NumCmds;
+	u32 NumOps;
+	u32 *CmdToOp;
+} XAie_TxnCmdOpMap;
+
 typedef struct {
 	uint8_t Op;
 	uint8_t Col;
@@ -334,6 +347,15 @@ XAIE_AIG_EXPORT AieRC XAie_SubmitTransaction(XAie_DevInst *DevInst, XAie_TxnInst
 XAie_TxnInst* XAie_ExportTransactionInstance(XAie_DevInst *DevInst);
 XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
+/*
+ * On success, Map describes the returned serialized transaction. The caller
+ * owns Map->CmdToOp and must release it with XAie_FreeTxnCmdOpMap() before
+ * reusing the same map object.
+ */
+XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransactionWithCmdOpMap(
+		XAie_DevInst *DevInst, u8 NumConsumers, u32 Flags,
+		XAie_TxnCmdOpMap *Map);
+XAIE_AIG_EXPORT void XAie_FreeTxnCmdOpMap(XAie_TxnCmdOpMap *Map);
 XAIE_AIG_EXPORT u8* XAie_ExportSerializedTransaction_opt(XAie_DevInst *DevInst,
 		u8 NumConsumers, u32 Flags);
 XAIE_AIG_EXPORT bool XAie_ReserializeTransaction(XAie_DevInst *DevInst, u8* SrcTxn, u8** ReserTxn);
