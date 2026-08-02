@@ -544,6 +544,8 @@ typedef struct {
 
 
 /**************************** Function prototypes ***************************/
+XAIE_AIG_EXPORT AieRC XAie_SetupBackendConfig(XAie_DevInst *DevInst,
+		XAie_BackendType Backend);
 XAIE_AIG_EXPORT AieRC XAie_SetupPartitionConfig(XAie_DevInst *DevInst,
 		u64 PartBaseAddr, u8 PartStartCol, u8 PartNumCols);
 XAIE_AIG_EXPORT AieRC XAie_CfgInitialize(XAie_DevInst *InstPtr, XAie_Config *ConfigPtr);
