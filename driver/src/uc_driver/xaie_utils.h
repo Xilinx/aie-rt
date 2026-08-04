@@ -114,7 +114,7 @@ static inline uint64_t time_elapsed(uint32_t end_high, uint32_t end_low, uint32_
   return ((((uint64_t)end_high << 32) + end_low) - (((uint64_t)begin_high << 32) + begin_low));
 }
 
-void log_init();
+void log_init(void);
 #endif
 
 /** @} */

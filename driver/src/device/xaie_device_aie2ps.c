@@ -24,6 +24,7 @@
 #include "xaie_helper.h"
 #include "xaie_helper_internal.h"
 #include "xaie2psgbl_params.h"
+#include "xaie_device_aie2ps.h"
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/

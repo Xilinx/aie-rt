@@ -22,6 +22,7 @@
 ******************************************************************************/
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
+#include "xaie_ss_aieml.h"
 
 #ifdef XAIE_FEATURE_SS_ENABLE
 

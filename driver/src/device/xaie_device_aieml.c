@@ -28,6 +28,7 @@
 #include "xaie_reset_aie.h"
 #include "xaie_tilectrl.h"
 #include "xaiemlgbl_params.h"
+#include "xaie_device_aieml.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 /***************************** Macro Definitions *****************************/

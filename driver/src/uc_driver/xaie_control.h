@@ -99,8 +99,8 @@ control_state_t;
 volatile uint32_t fw_state;
 control_state_t control_state;
 
-int interrupt_init();
-void interrupt_fini();
+int interrupt_init(void);
+void interrupt_fini(void);
 void control_init(uint8_t partition_col_start, uint8_t col_self);
 uint32_t control_run_task(uint64_t task_page_ext_mem_address, const uint32_t *args, uint32_t args_len);
 #endif

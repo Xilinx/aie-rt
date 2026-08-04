@@ -16,6 +16,7 @@
 #include "xaie_feature_config.h"
 #include "xaie_helper.h"
 #include "xaiegbl.h"
+#include "xaie_reset_aie.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 

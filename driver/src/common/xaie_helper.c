@@ -39,6 +39,7 @@
 #include "xaie_helper.h"
 #include "xaie_reset_aie.h"
 #include "xaie_txn.h"
+#include "xaie_helper_internal.h"
 
 /************************** Constant Definitions *****************************/
 #define XAIE_DEFAULT_NUM_CMDS 1024U

@@ -17,6 +17,7 @@
 #include "xaie_helper.h"
 #include "xaie_npi.h"
 #include "xaiegbl.h"
+#include "xaie_reset_aieml.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 

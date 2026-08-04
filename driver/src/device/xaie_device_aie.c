@@ -26,6 +26,7 @@
 #include "xaie_helper_internal.h"
 #include "xaie_clock.h"
 #include "xaie_tilectrl.h"
+#include "xaie_device_aie.h"
 
 #ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
 

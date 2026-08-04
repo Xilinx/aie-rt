@@ -52,19 +52,19 @@ static queue_t uc_dma_dm2mm_active_tasks PRIVATE_DM_NOINIT;
 static uc_dma_active_task_t _uc_dma_mm2dm_active_tasks[UC_DMA_TASK_QUEUE_DEPTH] PRIVATE_DM_NOINIT;
 static queue_t uc_dma_mm2dm_active_tasks PRIVATE_DM_NOINIT;
 
-static inline uint32_t uc_dma_dm2mm_pop_response()
+static inline uint32_t uc_dma_dm2mm_pop_response(void)
 {
     return reg_read32(REG_UC_DMA_DM2MM_RESPONSE_QUEUE_POP);
 }
-static inline uint32_t uc_dma_mm2dm_pop_response()
+static inline uint32_t uc_dma_mm2dm_pop_response(void)
 {
     return reg_read32(REG_UC_DMA_MM2DM_RESPONSE_QUEUE_POP);
 }
-static inline uint32_t uc_dma_dm2mm_status()
+static inline uint32_t uc_dma_dm2mm_status(void)
 {
     return reg_read32((void *)(uintptr_t)(REGDB_UC_MODULE_CORE_REGISTER(ARRAY_AXI_MM) | (column_index_rel << 25) | REGDB_UC_MODULE_REGISTER(DMA_DM2MM_STATUS)));
 }
-static inline uint32_t uc_dma_mm2dm_status()
+static inline uint32_t uc_dma_mm2dm_status(void)
 {
     return reg_read32((void *)(uintptr_t)(REGDB_UC_MODULE_CORE_REGISTER(ARRAY_AXI_MM) | (column_index_rel << 25) | REGDB_UC_MODULE_REGISTER(DMA_MM2DM_STATUS)));
 }

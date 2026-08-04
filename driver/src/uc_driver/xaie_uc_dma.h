@@ -35,10 +35,10 @@ enum hsa_location_t
   INTERNAL_AXI_MM = 1, //for bringup test purpose
 };
 
-void uc_dma_init();
+void uc_dma_init(void);
 
-void uc_dma_process_responses();
-void uc_dma_process_dm2mm_responses();
+void uc_dma_process_responses(void);
+void uc_dma_process_dm2mm_responses(void);
 
 void uc_dma_create_bd(void *dest,
                       uint16_t length,
@@ -56,7 +56,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
 void copy_mm2dm(void *dest, uint32_t src_high, uint32_t src_low, unsigned int length);
 
 void copy_mm2dm_async(void *dest, uint32_t src_high, uint32_t src_low, unsigned int length);
-void copy_mm2dm_wait_done();
+void copy_mm2dm_wait_done(void);
 
 void copy_dm2mm(uint32_t dest_high, uint32_t dest_low, void *src, unsigned int length);
 

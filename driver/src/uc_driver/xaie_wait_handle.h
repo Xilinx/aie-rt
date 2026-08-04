@@ -107,8 +107,8 @@ wait_handle_state_t;
 
 wait_handle_state_t wait_handle_state;
 
-void wait_handle_init();
-void wait_handle_reset();
+void wait_handle_init(void);
+void wait_handle_reset(void);
 
 static inline void wait_handle_attach_job(uint16_t index)
 {
@@ -123,7 +123,7 @@ static inline wait_handle_entry_t *wait_handle_get(uint16_t wait_handle)
   return &wait_handle_state.handles[wait_handle];
 }
 
-static inline uint16_t wait_handle_acquire()
+static inline uint16_t wait_handle_acquire(void)
 {
   if (LIKELY(wait_handle_state.max_index != MAX_WAIT_HANDLES))
   {

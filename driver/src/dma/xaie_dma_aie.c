@@ -27,6 +27,7 @@
 #include "xaie_io.h"
 #include "xaiegbl.h"
 #include "xaiegbl_regdef.h"
+#include "xaie_dma_aie.h"
 
 #ifdef XAIE_FEATURE_DMA_ENABLE
 

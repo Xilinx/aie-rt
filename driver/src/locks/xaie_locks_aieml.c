@@ -28,6 +28,7 @@
 #include "xaie_helper.h"
 #include "xaie_locks.h"
 #include "xaiegbl_defs.h"
+#include "xaie_locks_aieml.h"
 
 #ifdef XAIE_FEATURE_LOCK_ENABLE
 /************************** Constant Definitions *****************************/
