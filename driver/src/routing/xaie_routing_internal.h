@@ -22,7 +22,7 @@
 #include <xaiegbl.h>
 
 //internal functions
-static void _XAie_printBitfield(int value, int bits);
+static void _XAie_printBitfield(int32_t value, int32_t bits);
 static const char* _XAie_StrmSwPortTypeToString(StrmSwPortType type);
 static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const XAie_LocType *path, int pathLength,
          XAie_LocType source, XAie_LocType destination);
@@ -35,7 +35,7 @@ static void _XAie_updatePortAvailabilityForStrmConn(const XAie_RoutingInstance *
 s32 _XAie_findFirstMatchingStream(XAie_RoutingInstance* RoutingInstance, XAie_LocType tile,
         StrmSwPortType direction, bool isEndTile);
 static void _XAie_resetBDAvailability(const XAie_RoutingInstance *routingInstance, XAie_LocType tile, u8 bdID);
-static int _XAie_findAvailableBufferID(const XAie_RoutingInstance *routingInstance, XAie_LocType tile);
+static int32_t _XAie_findAvailableBufferID(const XAie_RoutingInstance *routingInstance, XAie_LocType tile);
 static bool _XAie_isAdjTileValidForCurrTile(const XAie_RoutingInstance* RoutingInstance, XAie_RouteConstraints *RouteConstraints,
                     XAie_LocType currentTile, XAie_LocType adjTile, StrmSwPortType direction, bool** visited);
 static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination, const XAie_LocType *path, int pathLength);
