@@ -360,10 +360,20 @@ jobs:
         fi
 
         SIGN_OFF="Signed-off-by: ${SUBMITTER_NAME} <${SUBMITTER_EMAIL}>"
-        # Modify PR Patch with additional details
-        # Insert PR Description at the top of the patch
-        echo -e "From: \"${SUBMITTER_NAME}\"  <${SUBMITTER_EMAIL}>\nSubject: [AIENGINE PATCH] ${ISSUE_TITLE}\n" >> pr.patch
-        echo -e "PR Description:\n$FORMATTED_DESCRIPTION\n$SIGN_OFF\n" >> pr.patch
+
+        # Build a proper git-am-able mbox patch, matching the output of
+        # `git format-patch --subject-prefix="AIENGINE PATCH"`. From:/Date:/
+        # Subject: are mbox headers (set the commit author/subject) and do NOT
+        # appear inside the commit message. The commit message is just the PR
+        # description body followed by the sign-off - no "From:"/"PR Description:"
+        # lines leak into it.
+        PR_SHA=$(echo "$PR_DETAILS" | jq --raw-output .head.sha)
+        echo "From ${PR_SHA} Mon Sep 17 00:00:00 2001" > pr.patch
+        echo "From: \"${SUBMITTER_NAME}\" <${SUBMITTER_EMAIL}>" >> pr.patch
+        echo "Date: $(date -R)" >> pr.patch
+        echo "Subject: [AIENGINE PATCH] ${ISSUE_TITLE}" >> pr.patch
+        echo "" >> pr.patch
+        echo -e "$FORMATTED_DESCRIPTION\n\n$SIGN_OFF" >> pr.patch
                 
         FOOTER="---\n"
 
