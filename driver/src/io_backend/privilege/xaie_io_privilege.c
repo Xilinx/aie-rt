@@ -357,6 +357,78 @@ static AieRC _XAie_PrivilegeSetPartProtectedRegs(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
+* This API reads and clears the interrupt module hardware error status for a
+* given column.
+*
+* @param	DevInst: AI engine partition device instance pointer
+* @param	Col: Column of the SHIM NoC tile to check.
+* @param	HwErrorStatus: Pointer to return the masked HW error status
+*			register value. A non-zero value indicates the HW error
+*			bits that were set (and cleared); 0 indicates no HW
+*			error bits were set. The value read so far is returned
+*			even when a subsequent step fails.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note	Failure cases are reported via XAIE_ERROR log messages.
+*
+*******************************************************************************/
+AieRC XAie_HwErrorCheck(XAie_DevInst *DevInst, u32 Col, u32 *HwErrorStatus)
+{
+	u64 RegAddr;
+	u32 RegVal = 0;
+	u32 RegOffset;
+	const XAie_L2IntrMod *IntrMod;
+	AieRC RC;
+
+	if (HwErrorStatus == NULL) {
+		XAIE_ERROR("Invalid HW error status pointer\n");
+		return XAIE_INVALID_ARGS;
+	}
+	*HwErrorStatus = 0;
+
+	IntrMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_SHIMNOC].L2IntrMod;
+	if (IntrMod == NULL) {
+		XAIE_ERROR("Invalid L2 interrupt module\n");
+		return XAIE_ERR;
+	}
+	RegOffset = IntrMod->HwErrorStatusRegOff;
+	if (RegOffset == 0) {
+		XAIE_ERROR("Invalid L2 interrupt module register offset\n");
+		return XAIE_ERR;
+	}
+	RegAddr = XAie_GetTileAddr(DevInst, 0 /* Row */, Col) + RegOffset;
+	RC = XAie_Read32(DevInst, RegAddr, &RegVal);
+	if (RC != XAIE_OK) {
+		XAIE_ERROR("Failed to read L2 interrupt module\n");
+		return RC;
+	}
+	RegVal &= IntrMod->HwErrorStatusMask;
+	*HwErrorStatus = RegVal;
+	if (RegVal != 0) {
+		XAIE_ERROR("Hw Error status: 0x%x on col: %d\n", RegVal, Col);
+		RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to enable protected registers.\n");
+			return RC;
+		}
+		RC = XAie_Write32(DevInst, RegAddr, RegVal);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to clear Hw Error status: %d\n", RC);
+		}
+		RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to disable protected registers.\n");
+			return RC;
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API sets NoC interrupt ID to which the interrupt from second level
 * interrupt controller shall be driven to.
 *

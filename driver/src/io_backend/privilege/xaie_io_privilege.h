@@ -39,7 +39,8 @@ AieRC XAie_UcDmaPause(XAie_DevInst *DevInst, const XAie_LocType *Loc,
 		UcDmaDir_enum Dir, u8 Pause);
 AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 		u8 ChNum, XAie_DmaDirection Dir, u8 Pause);
-AieRC XAie_Privi2egeSetAxiMMIsolation(XAie_DevInst *DevInst, u8 IsolationFlags);
+AieRC XAie_PrivilegeSetAxiMMIsolation(XAie_DevInst *DevInst, u8 IsolationFlags);
+AieRC XAie_HwErrorCheck(XAie_DevInst *DevInst, u32 Col, u32 *HwErrorStatus);
 #endif /* XAIE_IO_PRIVILEGE_H */
 
 /** @} */

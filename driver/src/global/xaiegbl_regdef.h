@@ -988,6 +988,9 @@ typedef struct XAie_L2IntrMod {
 	u32 IrqRegOff;
 	u8 NumBroadcastIds;
 	u8 NumNoCIntr;
+	u32 HwErrorStatusRegOff;
+	u32 HwErrorStatusMask;
+	u32 HwErrorMaskRegOff;
 } XAie_L2IntrMod;
 
 /*
