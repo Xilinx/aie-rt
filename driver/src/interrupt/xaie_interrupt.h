@@ -70,6 +70,9 @@ AieRC XAie_IntrCtrlL2Ack(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Status);
 
 AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 		XAie_ErrorMetaData *MData);
+AieRC XAie_BacktrackErrorInterruptsCb(XAie_DevInst *DevInst,
+						      void (*cb)(XAie_ErrorPayload *Payload, void *priv),
+						      void *priv);
 void XAie_IntrCtrlL1Ack(XAie_DevInst *DevInst,
 			XAie_LocType Loc, XAie_BroadcastSw Switch,
 			u32 ChannelBitMap);

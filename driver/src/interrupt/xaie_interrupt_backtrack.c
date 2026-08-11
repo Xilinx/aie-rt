@@ -27,6 +27,10 @@
 #include "xaie_helper.h"
 #include "xaie_interrupt.h"
 
+#ifdef XAIE_FEATURE_PRIVILEGED_ENABLE
+#include "xaie_io_privilege.h"
+#endif /* XAIE_FEATURE_PRIVILEGED_ENABLE */
+
 #if defined(XAIE_FEATURE_INTR_BTRK_ENABLE) && defined(XAIE_FEATURE_LITE)
 
 #include "xaie_lite.h"
@@ -989,6 +993,131 @@ static inline void _XAie_GroupErrorControl(XAie_DevInst *DevInst,
 /*****************************************************************************/
 /**
 *
+* This API backtracks the source of error interrupt within a tile. It reads
+* the group error event broadcast on the error channel, and for every error
+* event asserted in the group, invokes the user callback with the error
+* payload. Backtracked errors are removed from the group error mask before
+* the group event status is cleared.
+*
+* @param	DevInst: Device Instance.
+* @param	Loc: Location of AIE tile.
+* @param	Module: Module type.
+* @param	cb: Callback invoked for each error event backtracked. May be
+*		    NULL.
+* @param	priv: Private data passed back to the callback.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_Col1ShimBacktrack_Aie2PS(XAie_DevInst *DevInst, XAie_LocType Loc,
+					    XAie_ModuleType Module,
+					    void (*cb)(XAie_ErrorPayload *Payload, void *priv),
+					    void *priv)
+{
+	XAie_ErrorPayload ErrorPayload;
+	u32 Value, Index, ErrorsMap;
+	u8 GroupEvent, Event;
+
+	/* Read event being broadcast on error channel */
+	GroupEvent = (u8)_XAie_ReadArrayErrorBroadcastEvent(DevInst, Loc, Module,
+							    XAIE_ERROR_BROADCAST_ID);
+
+	if (XAie_EventReadStatusHw(DevInst, Loc, Module, GroupEvent) == 0U) {
+		return XAIE_OK;
+	}
+
+	ErrorsMap = _XAie_ReadGroupErrors(DevInst, Loc, Module);
+	Value = ErrorsMap;
+
+	for_each_set_bit(Index, Value, 32U) {
+		Event = _XAie_MapGroupErrorsToEventId(DevInst, Loc, Module, (u8)Index);
+
+		if (XAie_EventReadStatusHw(DevInst, Loc, Module, Event) == 0U) {
+			continue;
+		}
+
+		XAIE_DBG("Error event %d asserted in module %d at (%d, %d)\n",
+			 Event, Module, Loc.Col, Loc.Row);
+
+		ErrorsMap &= ~((u32)1U << Index);
+
+		ErrorPayload.Loc = Loc;
+		ErrorPayload.Module = Module;
+		ErrorPayload.EventId = Event;
+		if (cb != NULL) {
+			cb(&ErrorPayload, priv);
+		}
+	}
+
+	/* Disable backtracked error event broadcast */
+	_XAie_GroupErrorControl(DevInst, Loc, Module, ErrorsMap);
+
+	/*
+	 * Clear group error event status only if all active errors were
+	 * backtracked and disabled.
+	 */
+	XAie_EventClearStatus(DevInst, Loc, Module, GroupEvent);
+
+	return XAIE_OK;
+}
+
+static AieRC _XAie_BacktrackTile_Aie2PS(XAie_DevInst *DevInst, XAie_LocType Loc,
+					XAie_ModuleType Module,
+					void (*cb)(XAie_ErrorPayload *Payload, void *priv),
+					void *priv)
+{
+	XAie_ErrorPayload ErrorPayload;
+	u32 Value, Index, ErrorsMap;
+	u8 GroupEvent, Event;
+
+	/* Read event being broadcast on error channel */
+	GroupEvent = (u8)_XAie_ReadErrorBroadcastEvent(DevInst, Loc, Module,
+						       XAIE_ERROR_BROADCAST_ID);
+
+	if (XAie_EventReadStatusHw(DevInst, Loc, Module, GroupEvent) == 0U) {
+		return XAIE_OK;
+	}
+
+	ErrorsMap = _XAie_ReadGroupErrors(DevInst, Loc, Module);
+	Value = ErrorsMap;
+
+	for_each_set_bit(Index, Value, 32U) {
+		Event = _XAie_MapGroupErrorsToEventId(DevInst, Loc, Module, (u8)Index);
+
+		if (XAie_EventReadStatusHw(DevInst, Loc, Module, Event) == 0U) {
+			continue;
+		}
+
+		XAIE_ERROR("Error event %d asserted in module %d at (%d, %d)\n",
+			   Event, Module, Loc.Col, Loc.Row);
+
+		ErrorsMap &= ~((u32)1U << Index);
+
+		ErrorPayload.Loc = Loc;
+		ErrorPayload.Module = Module;
+		ErrorPayload.EventId = Event;
+		if (cb != NULL) {
+			cb(&ErrorPayload, priv);
+		}
+	}
+
+	/* Disable backtracked error event broadcast */
+	_XAie_GroupErrorControl(DevInst, Loc, Module, ErrorsMap);
+
+	/*
+	 * Clear group error event status only if all active errors were
+	 * backtracked and disabled.
+	 */
+	XAie_EventClearStatus(DevInst, Loc, Module, GroupEvent);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
 * This API backtracks the source of error interrupt within a tile.
 *
 * @param	DevInst: Device Instance.
@@ -1058,6 +1187,136 @@ static AieRC _XAie_BacktrackTile(XAie_DevInst *DevInst,
 	 * backtracked and disabled.
 	 */
 	XAie_EventClearStatus(DevInst, Loc, Module, GroupEvent);
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API backtracks the source of error interrupt within a column, starting
+* from the given first-level interrupt controller. The shim tile is
+* backtracked first, followed by the mem tiles (switch A only) and the array
+* tiles above it, walking upwards until no incoming broadcast signal is seen.
+* Each error event found is reported through the user callback.
+*
+* @param	DevInst: Device Instance.
+* @param	L1Loc: Location of the shim tile hosting the first-level
+*		       interrupt controller.
+* @param	Switch: Broadcast switch.
+* @param	cb: Callback invoked for each error event backtracked. May be
+*		    NULL.
+* @param	priv: Private data passed back to the callback.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		Internal only.
+*
+******************************************************************************/
+static AieRC _XAie_BacktrackIntrCtrlL1_Aie2PS(XAie_DevInst *DevInst, XAie_LocType L1Loc,
+					      XAie_BroadcastSw Switch,
+					      void (*cb)(XAie_ErrorPayload *Payload, void *priv),
+					      void *priv)
+{
+	AieRC RC;
+	u32 Status;
+	XAie_LocType Loc = L1Loc;
+
+	Status = XAie_IntrCtrlL1Status(DevInst, Loc, Switch);
+
+	if (L1Loc.Col == (DevInst->StartCol + 1U)) {
+		RC = _XAie_Col1ShimBacktrack_Aie2PS(DevInst, L1Loc, XAIE_PL_MOD, cb, priv);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+	}
+
+	/* Backtrack shim's internal events */
+	if ((Status & XAIE_ERROR_SHIM_INTR_MASK) != 0U) {
+		XAie_IntrCtrlL1Ack(DevInst, Loc, Switch, XAIE_ERROR_SHIM_INTR_MASK);
+		RC = _XAie_BacktrackTile_Aie2PS(DevInst, Loc, XAIE_PL_MOD, cb, priv);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+	}
+
+	/* Backtrack array tile's internal events. */
+	if ((!(Status & XAIE_ERROR_BROADCAST_MASK) != 0U) &&
+	    (L1Loc.Col != (DevInst->StartCol + 1U))) {
+		return XAIE_OK;
+	}
+
+	if (L1Loc.Col != (DevInst->StartCol + 1U)) {
+		XAie_IntrCtrlL1Ack(DevInst, Loc, Switch, XAIE_ERROR_BROADCAST_MASK);
+	}
+
+	if (Switch != XAIE_EVENT_SWITCH_A) {
+		goto backtrack_aie_tile;
+	}
+	for (Loc.Row = DevInst->MemTileRowStart;
+	     Loc.Row < (DevInst->MemTileRowStart + DevInst->MemTileNumRows);
+	     Loc.Row++)
+	{
+		u32 EventId = (u32)XAIE_EVENT_BROADCAST_0_MEM_TILE;
+		const XAie_EvntMod *EvntMod;
+
+		if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
+			continue;
+		}
+
+		RC = _XAie_BacktrackTile_Aie2PS(DevInst, Loc, XAIE_MEM_MOD, cb, priv);
+		if (RC != XAIE_OK) {
+			return RC;
+		}
+
+		EvntMod = &DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_MEMTILE].EvntMod[XAIE_MEM_MOD];
+
+		/*
+		 * TODO: In SystemC model, incoming broadcast status bit
+		 *	 reported is off by a bit position. For switch A, skip
+		 *	 backtracking above array tiles when this bug is fixed.
+		 */
+		EventId = (u8)EvntMod->XAie_EventNumber[EventId];
+		XAie_EventClearStatus(DevInst, Loc, XAIE_MEM_MOD, (u8)EventId);
+	}
+
+backtrack_aie_tile:
+	for (Loc.Row = DevInst->AieTileRowStart;
+	     Loc.Row < (DevInst->AieTileRowStart + DevInst->AieTileNumRows);
+	     Loc.Row++)
+	{
+		const XAie_EvntMod *EvntMod;
+		XAie_ModuleType Module;
+		u32 Event;
+
+		if (Switch == XAIE_EVENT_SWITCH_A) {
+			Module = (XAie_ModuleType)XAIE_CORE_MOD;
+			Event = (u16)XAIE_EVENT_BROADCAST_0_CORE;
+		} else {
+			Module = (XAie_ModuleType)XAIE_MEM_MOD;
+			Event = (u16)XAIE_EVENT_BROADCAST_0_MEM;
+		}
+
+		if (_XAie_PmIsTileRequested(DevInst, Loc) == (u8)XAIE_DISABLE) {
+			continue;
+		}
+
+		RC = _XAie_BacktrackTile_Aie2PS(DevInst, Loc, Module, cb, priv);
+		if (RC == XAIE_INSUFFICIENT_BUFFER_SIZE) {
+			return RC;
+		}
+		EvntMod = &DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].EvntMod[Module];
+		Event = EvntMod->XAie_EventNumber[Event];
+		/*
+		 * Skip backtracking above array tiles if no broadcast signal
+		 * was received and the last backtrack operation was successful.
+		 */
+		if (!(XAie_EventReadStatusHw(DevInst, Loc, Module, (u8)Event) != 0U)) {
+			break;
+		}
+
+		XAie_EventClearStatus(DevInst, Loc, Module, (u8)Event);
+	}
 
 	return XAIE_OK;
 }
@@ -1371,6 +1630,97 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 	MData->IsNextInfoValid = 0U;
 
 	return XAIE_OK;
+}
+
+static void XAie_BacktrackHwErrors(XAie_DevInst *DevInst)
+{
+	const u32 StartCol = DevInst->StartCol;
+	const u32 EndCol = StartCol + DevInst->NumCols;
+	u32 HwError;
+
+	for (u32 Col = StartCol; Col < EndCol; Col++) {
+		XAie_HwErrorCheck(DevInst, Col, &HwError);
+	}
+}
+
+static AieRC XAie_BacktrackErrorInterrupts_Aie2PS(XAie_DevInst *DevInst,
+						  void (*cb)(XAie_ErrorPayload *Payload, void *priv),
+						  void *priv)
+{
+	AieRC RC;
+	u32 ColEnd;
+	XAie_LocType Loc;
+
+	XAie_BacktrackHwErrors(DevInst);
+	ColEnd = DevInst->StartCol + DevInst->NumCols;
+
+	Loc.Row = DevInst->ShimRow;
+	for (Loc.Col = DevInst->StartCol; Loc.Col < ColEnd; Loc.Col++) {
+		u32 L2Status;
+
+		L2Status = XAie_IntrCtrlL2Status(DevInst, Loc);
+		if ((L2Status != 0U) ||
+		    (Loc.Col == (DevInst->StartCol + 1U))) {
+			XAie_IntrCtrlL2Ack(DevInst, Loc, L2Status);
+			RC = _XAie_BacktrackIntrCtrlL1_Aie2PS(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+							      cb, priv);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+			RC = _XAie_BacktrackIntrCtrlL1_Aie2PS(DevInst, Loc, XAIE_EVENT_SWITCH_B,
+							      cb, priv);
+			if (RC != XAIE_OK) {
+				return RC;
+			}
+		}
+	}
+
+	return XAIE_OK;
+}
+
+/*****************************************************************************/
+/**
+*
+* This API backtracks the source of error interrupts and reports each error to
+* the caller through a callback. Every column in the partition is scanned; for
+* each error event found, the callback is invoked with a payload describing
+* the tile, module and event ID of the error.
+*
+* Any active error is backtracked only once: backtracked errors are removed
+* from the group error mask and their event status is cleared.
+*
+* @param	DevInst: Device Instance. Passing a valid partition device
+*			 instance will only backtrack errors in the given
+*			 partition.
+* @param	cb: Callback invoked for each error backtracked. The payload
+*		    passed to the callback is valid only for the duration of
+*		    the call.
+* @param	priv: Private data passed back to the callback.
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		This API is currently supported on AIE2PS only. Before invoking
+*		it, AIE error interrupts need to be disabled.
+*
+******************************************************************************/
+AieRC XAie_BacktrackErrorInterruptsCb(XAie_DevInst *DevInst,
+				      void (*cb)(XAie_ErrorPayload *Payload, void *priv),
+				      void *priv)
+{
+	if (DevInst == NULL) {
+		return XAIE_INVALID_DEVICE;
+	}
+	if (cb == NULL) {
+		return XAIE_INVALID_ARGS;
+	}
+
+	switch (DevInst->DevProp.DevGen) {
+	case XAIE_DEV_GEN_AIE2PS:
+		return XAie_BacktrackErrorInterrupts_Aie2PS(DevInst, cb, priv);
+	default:
+		XAIE_ERROR("Unsupported device generation: %d\n", DevInst->DevProp.DevGen);
+		return XAIE_INVALID_DEVICE;
+	}
 }
 
 #endif /* XAIE_FEATURE_INTR_BTRK_ENABLE */
