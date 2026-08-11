@@ -690,7 +690,7 @@ AieRC XAie_BacktrackErrorInterrupts(XAie_DevInst *DevInst,
 	return XAIE_OK;
 }
 
-#elif defined(XAIE_FEATURE_INTR_BTRK_ENABLE)
+#elif defined(XAIE_FEATURE_INTR_BTRK_ENABLE) /* #if defined(XAIE_FEATURE_INTR_BTRK_ENABLE) && defined(XAIE_FEATURE_LITE) */
 #include "xaie_reset_aie.h"
 
 /*****************************************************************************/
@@ -1283,7 +1283,7 @@ static AieRC XAie_BacktrackErrorInterruptsIPU(XAie_DevInst *DevInst,
 	MData->IsNextInfoValid = 0U;
 	return XAIE_OK;
 }
-#endif
+#endif /* __AIEIPU__ */
 
 /*****************************************************************************/
 /**
