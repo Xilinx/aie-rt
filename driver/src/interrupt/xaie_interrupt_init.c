@@ -595,6 +595,7 @@ u32 XAie_IntrCtrlL1Status(XAie_DevInst *DevInst,
 		  XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	RC = XAie_Read32(DevInst, RegAddr, &StatusVal);
 	if (RC != XAIE_OK) {
+		XAIE_ERROR("Failed to read L1 status for tile [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		StatusVal = 0;
 	}
 
@@ -769,6 +770,135 @@ AieRC XAie_IntrCtrlL2Disable(XAie_DevInst *DevInst, XAie_LocType Loc,
 		u32 ChannelBitMap)
 {
 	return _XAie_IntrCtrlL2Config(DevInst, Loc, ChannelBitMap, XAIE_DISABLE);
+}
+
+/*****************************************************************************/
+/**
+* This API enables default group error events which are marked as fatal errors.
+* It also channels them on broadcast line #0.
+*
+* @param	DevInst: Device Instance
+*
+* @return	XAIE_OK on success, error code on failure.
+*
+* @note		None.
+*
+******************************************************************************/
+static AieRC _XAie_GroupErrorInit_Aie2PS(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u32 GroupErrorEnableMask, GroupEvent;;
+	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
+	XAie_LocType Loc;
+
+	MemTileStart = DevInst->MemTileRowStart;
+	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
+	AieRowStart = DevInst->AieTileRowStart;
+	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+        GroupEvent = (u32)XAIE_EVENT_GROUP_ERRORS_PL;
+
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			Loc = XAie_TileLoc(Col, Row);
+
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
+				continue;
+			}
+
+			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
+									 XAIE_MEM_MOD);
+			RC = XAie_EventGroupControl(DevInst, Loc, XAIE_MEM_MOD,
+						    XAIE_EVENT_GROUP_ERRORS_MEM,
+						    GroupErrorEnableMask);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure group errors in memory module\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_MEM_MOD,
+						 XAIE_ERROR_BROADCAST_ID,
+						 XAIE_EVENT_GROUP_ERRORS_MEM);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for memory module\n");
+				return RC;
+			}
+
+			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
+									 XAIE_CORE_MOD);
+			RC = XAie_EventGroupControl(DevInst, Loc, XAIE_CORE_MOD,
+						    XAIE_EVENT_GROUP_ERRORS_0_CORE,
+						    GroupErrorEnableMask);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure group error in core module\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_CORE_MOD,
+					XAIE_ERROR_BROADCAST_ID,
+					XAIE_EVENT_GROUP_ERRORS_0_CORE);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for core module\n");
+				return RC;
+			}
+		}
+
+		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
+			Loc = XAie_TileLoc(Col, MemRow);
+
+			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
+				continue;
+			}
+
+			GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc,
+									 XAIE_MEM_MOD);
+			RC = XAie_EventGroupControl(DevInst, Loc, XAIE_MEM_MOD,
+						    XAIE_EVENT_GROUP_ERRORS_MEM_TILE,
+						    GroupErrorEnableMask);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to configure group error in mem tile\n");
+				return RC;
+			}
+
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_MEM_MOD,
+						 XAIE_ERROR_BROADCAST_ID,
+						 XAIE_EVENT_GROUP_ERRORS_MEM_TILE);
+			if(RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for mem tile\n");
+				return RC;
+			}
+		}
+
+		/*
+		 * Shim tile only needs to setup error notification with first
+		 * level interrupt controller.
+		 */
+
+		Loc = XAie_TileLoc(Col, DevInst->ShimRow);
+		GroupErrorEnableMask = _XAie_GetFatalGroupErrors(DevInst, Loc, XAIE_PL_MOD);
+		RC = XAie_EventGroupControl(DevInst, Loc, XAIE_PL_MOD, (XAie_Events)GroupEvent,
+					    GroupErrorEnableMask);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to configure group error in shim tile\n");
+			return RC;
+		}
+
+		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD, XAIE_ERROR_BROADCAST_ID,
+					 GroupEvent);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to setup error broadcast for shim tile: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
+			return RC;
+		}
+		if (Loc.Col != (DevInst->StartCol + 1)) {
+			RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD, XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+						 XAIE_EVENT_USER_EVENT_1_PL);
+			if (RC != XAIE_OK) {
+				XAIE_ERROR("Failed to setup error broadcast for shim tile: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
+				return RC;
+			}
+		}
+	}
+
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -988,20 +1118,18 @@ static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_Lo
 
 	/* Block broadcast 0 from propagating to north, east and west
 	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_WEST;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
-		   XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_EAST |
+			    (u32)XAIE_EVENT_BROADCAST_WEST;
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
+					 XAIE_ERROR_BROADCAST_ID, BroadcastBlockDir);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts in core module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
+					 XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts in memory module. Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
@@ -1010,16 +1138,14 @@ static AieRC _XAie_ErrorHandlingInitAie2psAieTile(XAie_DevInst *DevInst, XAie_Lo
 	 */
 	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
 			  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
-		   BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_CORE_MOD, XAIE_EVENT_SWITCH_A,
+					    BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module, Col:%u Row:%u\n",Loc.Col, Loc.Row);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
+					    BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
@@ -1054,38 +1180,34 @@ static AieRC _XAie_ErrorHandlingInitAie2psMemTile(XAie_DevInst *DevInst, XAie_Lo
 	}
 	/* Block broadcast 0 from propagating to north, east and west
 	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_WEST;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_EAST |
+			    (u32)XAIE_EVENT_BROADCAST_WEST;
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
+					 XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts in mem tile switch A Col:%u Row:%u\n",Loc.Col, Loc.Row);
 		return RC;
 	}
 
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
-		   XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
+					 XAIE_ERROR_BROADCAST_ID, (u8)BroadcastBlockDir);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts in mem tile switch B, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
 	/* Block broadcast 1 and 2 from propagating to north, west, south, east
 	 */
-	BroadcastBitMap = XAIE_ERROR_BROADCAST_ID_UC_EVENT |
-			  XAIE_ERROR_BROADCAST_ID_USER_EVENT1;
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
-		   BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
+	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
+			  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_MEM_MOD, XAIE_EVENT_SWITCH_A,
+					    BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts 1, 2  in core module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-		   XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
-		   BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_MEM_MOD, XAIE_EVENT_SWITCH_B,
+					    BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts 1, 2  in mem module, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 		return RC;
@@ -1125,21 +1247,19 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTileCol0(XAie_DevInst *DevInst, XA
 	}
 	/* For Col 0, propagate broadcast 2 east only
 	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			(u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_WEST |
+			    (u32)XAIE_EVENT_BROADCAST_SOUTH;
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
+					 XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					 (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			(u8)BroadcastBlockDir);
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
+					 XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					 (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
@@ -1148,21 +1268,17 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTileCol0(XAie_DevInst *DevInst, XA
 	 */
 	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
 			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			BroadcastBitMap,
-			(u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_WEST |
+			    (u32)XAIE_EVENT_BROADCAST_SOUTH;
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
+					    BroadcastBitMap, (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			BroadcastBitMap,
-			(u8)XAIE_EVENT_BROADCAST_ALL);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
+					    BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
@@ -1209,16 +1325,14 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTileLeadCol(XAie_DevInst *DevInst,
 			    XAIE_EVENT_BROADCAST_EAST |
 			    XAIE_EVENT_BROADCAST_SOUTH;
 
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			BroadcastBitMap, (u8)BroadcastBlockDir);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
+					    BroadcastBitMap, (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts in switch A Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			BroadcastBitMap, (u8)BroadcastBlockDir);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
+					    BroadcastBitMap, (u8)BroadcastBlockDir);
 
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts in switch B Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
@@ -1226,21 +1340,19 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTileLeadCol(XAie_DevInst *DevInst,
 	}
 	/* For column 1, block broadcast for id 2 in all directions
 	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			(u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_WEST |
+			    (u32)XAIE_EVENT_BROADCAST_SOUTH;
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
+					 XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					 (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			(u8)XAIE_EVENT_BROADCAST_ALL);
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
+					 XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					 (u8)XAIE_EVENT_BROADCAST_ALL);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
@@ -1283,42 +1395,36 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTile(XAie_DevInst *DevInst, XAie_L
 	 */
 	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
 			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_WEST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			BroadcastBitMap,
-			(u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_WEST |
+			    (u32)XAIE_EVENT_BROADCAST_SOUTH;
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
+					    BroadcastBitMap, (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			BroadcastBitMap,
-			(u8)XAIE_EVENT_BROADCAST_ALL);
+	RC = XAie_EventBroadcastBlockMapDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
+					    BroadcastBitMap, (u8)XAIE_EVENT_BROADCAST_ALL);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
 	/* Propagate broadcast 2 west only
 	 */
-	BroadcastBlockDir = XAIE_EVENT_BROADCAST_NORTH |
-			    XAIE_EVENT_BROADCAST_EAST |
-			    XAIE_EVENT_BROADCAST_SOUTH;
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			(u8)BroadcastBlockDir);
+	BroadcastBlockDir = (u32)XAIE_EVENT_BROADCAST_NORTH |
+			    (u32)XAIE_EVENT_BROADCAST_EAST |
+			    (u32)XAIE_EVENT_BROADCAST_SOUTH;
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_A,
+					 XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					 (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
 	}
-	RC = XAie_EventBroadcastBlockDir(DevInst, Loc,
-			XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
-			(u8)BroadcastBlockDir);
+	RC = XAie_EventBroadcastBlockDir(DevInst, Loc, XAIE_PL_MOD, XAIE_EVENT_SWITCH_B,
+					 XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					 (u8)BroadcastBlockDir);
 	if (RC != XAIE_OK) {
 		XAIE_ERROR("Failed to block broadcasts Loc: [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 		return RC;
@@ -1344,97 +1450,106 @@ static AieRC _XAie_ErrorHandlingInitAie2psShimTile(XAie_DevInst *DevInst, XAie_L
 static AieRC _XAie_ErrorHandlingInitAie2psL1Ctrl(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
 	AieRC RC;
-	u8 TileType;
-	u8 L1IrqA, L1IrqB;
 	u32 BroadcastBitMap;
-	const XAie_L1IntrMod *L1IntrMod;
-
-	/*
-	 * Block direct broadcast from AIE array to the
-	 * broadcast network in shim tiles.
-	 */
-	BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
-			  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
-	RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
-			XAIE_EVENT_SWITCH_A, BroadcastBitMap);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block direct broadcasts from AIE array, Col:%u Row:%u\n", Loc.Col, Loc.Row);
-		return RC;
-	}
-	RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc,
-			XAIE_EVENT_SWITCH_B, BroadcastBitMap);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to block direct broadcasts from AIE array, Col:%u Row:%u\n", Loc.Col, Loc.Row);
-		return RC;
-	}
 
 	if (Loc.Col == 1U) {
+		/*
+		 * Block direct broadcast from AIE array to the
+		 * broadcast network in shim tiles.
+		 */
+		BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
+				  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+						   BroadcastBitMap);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			return RC;
+		}
+		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc, XAIE_EVENT_SWITCH_B,
+						   BroadcastBitMap);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			return RC;
+		}
+
+		RC = XAie_IntrCtrlL1Event(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+					  XAIE_ERROR_BROADCAST_ID_USER_EVENT1,
+					  XAIE_EVENT_USER_EVENT_1_PL);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
+			return RC;
+		}
+
 		/* Enable l1 ctrl for broadcast 2
 		 */
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+					   XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+
+		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+					   XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 	} else {
+		/*
+		 * Block direct broadcast from AIE array to the
+		 * broadcast network in shim tiles.
+		 */
+		BroadcastBitMap = BIT(XAIE_ERROR_BROADCAST_ID) |
+				  BIT(XAIE_ERROR_BROADCAST_ID_UC_EVENT) |
+				  BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+						   BroadcastBitMap);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			return RC;
+		}
+		RC = XAie_IntrCtrlL1BroadcastBlock(DevInst, Loc, XAIE_EVENT_SWITCH_B,
+						   BroadcastBitMap);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to block direct broadcasts from AIE array\n");
+			return RC;
+		}
+
 		/* Enable l1 ctrl for broadcast 0 and 1
 		 */
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID);
+					   XAIE_ERROR_BROADCAST_ID);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID);
+					   XAIE_ERROR_BROADCAST_ID);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
+			return RC;
+		}
+		RC = XAie_IntrCtrlL1Event(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+					  XAIE_ERROR_BROADCAST_ID,
+					  XAIE_EVENT_GROUP_ERRORS_PL);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to setup L1 internal error interrupt in shim tile\n");
 			return RC;
 		}
 		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_A,
-			XAIE_ERROR_BROADCAST_ID_UC_EVENT);
+					   XAIE_ERROR_SHIM_INTR_ID);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
-		RC = XAie_IntrCtrlL1Enable(DevInst, Loc, XAIE_EVENT_SWITCH_B,
-			XAIE_ERROR_BROADCAST_ID_UC_EVENT);
-		if(RC != XAIE_OK) {
+		RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A,
+					   XAIE_ERROR_BROADCAST_ID);
+		if (RC != XAIE_OK) {
 			XAIE_ERROR("Failed to enable interrupts to L1, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 			return RC;
 		}
-
 	}
-
-	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
-	if (L1IntrMod == NULL) {
-		XAIE_ERROR("Invalid module type\n");
-		return XAIE_INVALID_ARGS;
-	}
-
-	L1IrqA = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc, XAIE_EVENT_SWITCH_A);
-	RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_A, L1IrqA);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to configure L1 IRQ line, Col:%u Row:%u\n", Loc.Col, Loc.Row);
-		return RC;
-	}
-
-	L1IrqB = L1IntrMod->IntrCtrlL1IrqId(DevInst, Loc, XAIE_EVENT_SWITCH_B);
-	RC = XAie_IntrCtrlL1IrqSet(DevInst, Loc, XAIE_EVENT_SWITCH_B, L1IrqB);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to configure L1 IRQ line, Col:%u Row:%u\n", Loc.Col, Loc.Row);
-		return RC;
-	}
-
 
 	return XAIE_OK;
 }
@@ -1465,16 +1580,15 @@ static AieRC _XAie_ErrorHandlingInitAie2ps(XAie_DevInst *DevInst)
 	AieRC RC;
 	u8 TileType;
 	XAie_LocType Loc;
+	u32 l2_enable;
 
 	for (Loc.Col = 0; Loc.Col < DevInst->NumCols; Loc.Col++) {
 		for (Loc.Row = 0; Loc.Row < DevInst->NumRows; Loc.Row++) {
-
 			if (_XAie_PmIsTileRequested(DevInst, Loc) == XAIE_DISABLE) {
 				continue;
 			}
 
 			TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-
 			switch (TileType) {
 			case XAIEGBL_TILE_TYPE_SHIMNOC:
 			case XAIEGBL_TILE_TYPE_SHIMPL:
@@ -1483,13 +1597,17 @@ static AieRC _XAie_ErrorHandlingInitAie2ps(XAie_DevInst *DevInst)
 					XAIE_ERROR("Failed to config L1 ctrl [%d, %d]: %d\n", Loc.Col, Loc.Row, RC);
 					return RC;
 				}
-				RC = XAie_IntrCtrlL2Enable(DevInst, Loc,
-						XAIE_ERROR_L2_ENABLE);
+				if (Loc.Col == (DevInst->StartCol + 1)) {
+					l2_enable = BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+				} else {
+					l2_enable = BIT(XAIE_ERROR_BROADCAST_ID) |
+						    BIT(XAIE_ERROR_BROADCAST_ID_USER_EVENT1);
+				}
+				RC = XAie_IntrCtrlL2Enable(DevInst, Loc, l2_enable);
 				if(RC != XAIE_OK) {
 					XAIE_ERROR("Failed to enable interrupts to L2, Col:%u Row:%u\n", Loc.Col, Loc.Row);
 					return RC;
 				}
-
 
 				switch (Loc.Col) {
 				case 1:
@@ -1820,20 +1938,28 @@ AieRC XAie_ErrorHandlingInit(XAie_DevInst *DevInst)
 	switch (DevInst->DevProp.DevGen) {
 	case XAIE_DEV_GEN_AIE2PS:
 		RC = _XAie_ErrorHandlingInitAie2ps(DevInst);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to initialize error handling\n");
+			return RC;
+		}
+		RC =  _XAie_GroupErrorInit_Aie2PS(DevInst);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to initialize group errors\n");
+			return RC;
+		}
 		break;
 	default:
 		RC = _XAie_ErrorHandlingInitAie(DevInst);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to initialize error handling\n");
+			return RC;
+		}
+		RC =  _XAie_GroupErrorInit(DevInst);
+		if(RC != XAIE_OK) {
+			XAIE_ERROR("Failed to initialize group errors\n");
+			return RC;
+		}
 		break;
-	}
-	if (RC != XAIE_OK) {
-		XAIE_ERROR("Failed to set Broadcast network: %d\n", RC);
-		return RC;
-	}
-
-	RC =  _XAie_GroupErrorInit(DevInst);
-	if(RC != XAIE_OK) {
-		XAIE_ERROR("Failed to initialize group errors\n");
-		return RC;
 	}
 
 	RC = _XAie_ErrorHandlingEventHaltCore(DevInst);
