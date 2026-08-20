@@ -296,16 +296,25 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	SectionSize = Phdr->p_memsz;
 	SectionAddr = Phdr->p_paddr;
 	AddrMask = CoreMod->DataMemSize - 1U;
-	/* Check if file size is 0. If yes, allocate memory and init to 0 */
-	if(Phdr->p_filesz == 0U) {
-		Buffer = (const unsigned char *)calloc(Phdr->p_memsz,
-				sizeof(char));
-		if(Buffer == XAIE_NULL) {
+	/*
+	 * The ELF spec defines the bytes between p_filesz and p_memsz to hold the
+	 * value 0 -- that gap is how .bss is represented in a loadable segment.
+	 * Materialise a p_memsz buffer whose initialised prefix is copied from the
+	 * file and whose remainder is zero, so the write loop below never reads
+	 * past the segment's file contents. A mixed .data+.bss segment
+	 * (0 < p_filesz < p_memsz) is the ordinary case; p_filesz == 0 (pure .bss)
+	 * falls out as the degenerate case where nothing is copied.
+	 */
+	if(Phdr->p_memsz > Phdr->p_filesz) {
+		Tmp = (unsigned char *)calloc(Phdr->p_memsz, sizeof(char));
+		if(Tmp == XAIE_NULL) {
 			XAIE_ERROR("Memory allocation failed for buffer\n");
 			return XAIE_ERR;
 		}
-		/* Copy pointer to free allocated memory in case of error. */
-		Tmp = (unsigned char *)Buffer;
+		if(Phdr->p_filesz > 0U) {
+			memcpy(Tmp, SectionPtr, Phdr->p_filesz);
+		}
+		Buffer = (const unsigned char *)Tmp;
 	}
 
 	while(SectionSize > 0U) {
@@ -314,7 +323,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			XAIE_ERROR("Failed to get target "\
 					"location for p_paddr 0x%x\n",
 					SectionAddr);
-			if(Phdr->p_filesz == 0U) {
+			if(Tmp != XAIE_NULL) {
 				free(Tmp);
 			}
 			return RC;
@@ -336,7 +345,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			RC = _XAie_EccOnDM(DevInst, TgtLoc);
 			if(RC != XAIE_OK) {
 				XAIE_ERROR("Unable to turn ECC On for Data Memory\n");
-				if(Phdr->p_filesz == 0U) {
+				if(Tmp != XAIE_NULL) {
 					free(Tmp);
 				}
 				return RC;
@@ -347,7 +356,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 				(const void*)Buffer, BytesToWrite);
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Write to data memory failed\n");
-			if(Phdr->p_filesz == 0U) {
+			if(Tmp != XAIE_NULL) {
 				free(Tmp);
 			}
 			return RC;
@@ -358,7 +367,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		Buffer += BytesToWrite;
 	}
 
-	if(Phdr->p_filesz == 0U) {
+	if(Tmp != XAIE_NULL) {
 		free(Tmp);
 	}
 
