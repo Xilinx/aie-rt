@@ -29,7 +29,6 @@
 *
 ******************************************************************************/
 /***************************** Include Files *********************************/
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -37,6 +36,10 @@
 #include "xaie_feature_config.h"
 #include "xaie_ecc.h"
 #include "xaie_mem.h"
+
+#ifdef XAIE_FEATURE_ELF_FILE_ENABLE
+#include <errno.h>
+#endif
 
 #ifdef XAIE_FEATURE_ELF_ENABLE
 /************************** Constant Definitions *****************************/
@@ -296,7 +299,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	AddrMask = CoreMod->DataMemSize - 1U;
 	/* Check if file size is 0. If yes, allocate memory and init to 0 */
 	if(Phdr->p_filesz == 0U) {
-		Buffer = (const u8 *)calloc(Phdr->p_memsz,
+		Buffer = (const u8 *)XAIE_CALLOC(Phdr->p_memsz,
 				sizeof(char));
 		if(Buffer == XAIE_NULL) {
 			XAIE_ERROR("Memory allocation failed for buffer\n");
@@ -313,7 +316,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 					"location for p_paddr 0x%x Col: %u Row: %u\n",
 					SectionAddr, Loc.Col, Loc.Row);
 			if(Phdr->p_filesz == 0U) {
-				free(Tmp);
+				XAIE_FREE(Tmp);
 			}
 			return RC;
 		}
@@ -336,7 +339,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 				XAIE_ERROR("Unable to turn ECC On for Data Memory. Target loc, Col: %u"\
 						"Row.: %u\n",TgtLoc.Col, TgtLoc.Row);
 				if(Phdr->p_filesz == 0U) {
-					free(Tmp);
+					XAIE_FREE(Tmp);
 				}
 				return RC;
 			}
@@ -348,7 +351,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 			XAIE_ERROR("Write to data memory failed. Col: %u Row: %u,"\
 				       "BytesToWrite: %lu\n", TgtLoc.Col, TgtLoc.Row, BytesToWrite);
 			if(Phdr->p_filesz == 0U) {
-				free(Tmp);
+				XAIE_FREE(Tmp);
 			}
 			return RC;
 		}
@@ -359,7 +362,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(Phdr->p_filesz == 0U) {
-		free(Tmp);
+		XAIE_FREE(Tmp);
 	}
 
 	return XAIE_OK;
@@ -574,10 +577,20 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		const char* ElfPtr, u8 Sections, u8 LoadSym)
 {
+#ifndef XAIE_FEATURE_ELF_FILE_ENABLE
+	(void)DevInst;
+	(void)Loc;
+	(void)ElfPtr;
+	(void)Sections;
+	(void)LoadSym;
+	XAIE_ERROR("File-based ELF loading is not supported in this "
+			"configuration (no filesystem). Use XAie_LoadElfMem().\n");
+	return XAIE_FEATURE_NOT_SUPPORTED;
+#else
+	u8 TileType;
 	FILE *Fd;
 	s32 Ret;
 	u8 *ElfMem;
-	u8 TileType;
 	u64 ElfSz;
 	AieRC RC;
 
@@ -611,7 +624,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	XAieSim_StackSz StackSz;
 
 	/* Get the stack range */
-	MapPath = malloc(strlen(ElfPtr) + strlen(MapPathSuffix) + 1);
+	MapPath = XAIE_MALLOC(strlen(ElfPtr) + strlen(MapPathSuffix) + 1);
 	if (MapPath == NULL) {
 		XAIE_ERROR("failed to malloc for .map file path.\n");
 		return XAIE_ERR;
@@ -619,7 +632,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	strcpy(MapPath, ElfPtr);
 	strcat(MapPath, MapPathSuffix);
 	Status = XAieSim_GetStackRange(MapPath, &StackSz);
-	free(MapPath);
+	XAIE_FREE(MapPath);
 	XAIE_DBG("Stack start:%08x, end:%08x\n", StackSz.start,
 			StackSz.end);
 	if(Status != XAIE_OK) {
@@ -668,7 +681,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	XAIE_DBG("Elf size is %ld bytes\n", ElfSz);
 
 	/* Read entire elf file into memory */
-	ElfMem = (u8*) malloc(ElfSz);
+	ElfMem = (u8*) XAIE_MALLOC(ElfSz);
 	if(ElfMem == NULL) {
 		fclose(Fd);
 		XAIE_ERROR("Memory allocation failed\n");
@@ -678,7 +691,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	Ret = (s32)fread((void*)ElfMem, ElfSz, 1U, Fd);
 	if(Ret == 0) {
 		fclose(Fd);
-		free(ElfMem);
+		XAIE_FREE(ElfMem);
 		XAIE_ERROR("Failed to read Elf into memory\n");
 		return XAIE_ERR;
 	}
@@ -686,9 +699,10 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	fclose(Fd);
 
 	RC = _XAie_LoadElfFromMem(DevInst, Loc, ElfMem, Sections);
-	free(ElfMem);
+	XAIE_FREE(ElfMem);
 
 	return RC;
+#endif /* XAIE_FEATURE_ELF_FILE_ENABLE */
 }
 
 /*****************************************************************************/

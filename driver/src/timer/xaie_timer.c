@@ -733,7 +733,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 
 	/* Get all ungated tiles to broadcast to */
 	NumTiles = DevInst->NumCols * DevInst->NumRows;
-	Locs = (XAie_LocType *)calloc(NumTiles, sizeof(XAie_LocType));
+	Locs = (XAie_LocType *)XAIE_CALLOC(NumTiles, sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
 		return XAIE_ERR;
@@ -741,14 +741,14 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 
 	RC = XAie_GetUngatedLocsInPartition(DevInst, &NumTiles, Locs);
 	if(RC != XAIE_OK) {
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
 	RC = _XAie_SetupBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId1);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to setup broadcast network for timer sync, NumTile:%d BcastChnnID1:%d\n", NumTiles, BcastChannelId1);
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
@@ -766,7 +766,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 		}
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Unable to configure shim broadcast event for timer sync,Tile{%d,%d}, Bcast ChanId 1:%d Bcast ChanId 2:%d\n",Loc.Col, Loc.Row, BcastChannelId1, BcastChannelId2);
-			free(Locs);
+			XAIE_FREE(Locs);
 			return RC;
 		}
 	}
@@ -775,7 +775,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 	RC = _XAie_SetupTimerConfig(DevInst, NumTiles, Locs, BcastChannelId1);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to setup timer reset events,BcastChannelId1:%d\n", BcastChannelId1);
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
@@ -784,7 +784,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 			ShimBcastEvent);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to trigger event\n");
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
@@ -797,7 +797,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 	/* Clear shim broadcast configuration */
 	_XAie_ClearShimBroadcast(DevInst, 0, DevInst->NumCols, BcastChannelId1);
 
-	free(Locs);
+	XAIE_FREE(Locs);
 	return XAIE_OK;
 }
 
@@ -829,7 +829,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 
 	/* Get all ungated tiles to broadcast to */
 	NumTiles = DevInst->NumCols * DevInst->NumRows;
-	Locs = (XAie_LocType *)malloc(NumTiles * sizeof(XAie_LocType));
+	Locs = (XAie_LocType *)XAIE_MALLOC(NumTiles * sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
 		return XAIE_ERR;
@@ -837,14 +837,14 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 
 	RC = XAie_GetUngatedLocsInPartition(DevInst, &NumTiles, Locs);
 	if(RC != XAIE_OK) {
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
 	RC = _XAie_SetupBroadcastConfig(DevInst, NumTiles, Locs, BcastChannelId);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to setup broadcast network for timer sync, BcastChannelId:%d\n", BcastChannelId);
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
@@ -862,7 +862,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 		}
 		if(RC != XAIE_OK) {
 			XAIE_ERROR("Unable to configure shim broadcast event for timer sync,BcastChannelId:%d\n",BcastChannelId);
-			free(Locs);
+			XAIE_FREE(Locs);
 			return RC;
 		}
 	}
@@ -871,7 +871,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	RC = _XAie_SetupTimerConfig(DevInst, NumTiles, Locs, BcastChannelId);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to setup timer reset events,BcastChannelId1:%d\n",BcastChannelId);
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
@@ -880,7 +880,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 			ShimBcastEvent);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to trigger event\n");
-		free(Locs);
+		XAIE_FREE(Locs);
 		return RC;
 	}
 
@@ -893,7 +893,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	/* Clear shim broadcast configuration */
 	_XAie_ClearShimBroadcast(DevInst, 0, DevInst->NumCols, BcastChannelId);
 
-	free(Locs);
+	XAIE_FREE(Locs);
 	return XAIE_OK;
 }
 

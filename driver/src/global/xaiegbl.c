@@ -550,7 +550,7 @@ AieRC XAie_PartitionInitialize_v2(XAie_DevInst *DevInst,
 						(u32)Rows->Num;
 			}
 
-			ExpandedLocs = (XAie_LocType *)malloc(
+			ExpandedLocs = (XAie_LocType *)XAIE_MALLOC(
 					(size_t)ExpandedCount *
 					sizeof(XAie_LocType));
 			if (ExpandedLocs == XAIE_NULL) {
@@ -589,7 +589,7 @@ AieRC XAie_PartitionInitialize_v2(XAie_DevInst *DevInst,
 	}
 
 	RC = XAie_PartitionInitialize(DevInst, LegacyOptsPtr);
-	free(ExpandedLocs);
+	XAIE_FREE(ExpandedLocs);
 	if (RC != XAIE_OK) {
 		return RC;
 	}

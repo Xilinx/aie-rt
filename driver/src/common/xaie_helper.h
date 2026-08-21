@@ -35,6 +35,8 @@
 /***************************** Include Files *********************************/
 #include <limits.h>
 #include <stddef.h>
+#include "xaie_feature_config.h"
+#include "xaie_mem_alloc.h"
 #include "xaie_io.h"
 #include "xaiegbl_regdef.h"
 #include "xaie_core.h"
@@ -54,6 +56,24 @@ typedef enum {
     XAIE_LOG_LEVEL_TRACE
 } XAieLogLevel;
 
+/*
+ * Compile-time default log level, used to initialize AieLogLevel.
+ * When XAIE_FEATURE_STDIO_LOGGING_ENABLE is set, this default can still be
+ * overridden at runtime via the "XAIE_LOG_LEVEL" environment variable or an
+ * explicit call to XAie_LoggerInit(). When it is not set (FuSa builds with
+ * no hosted getenv()), this macro is the only way to change the default
+ * level, e.g. by defining -DXAIE_LOG_LEVEL_DEFAULT=XAIE_LOG_LEVEL_WARN on
+ * the compiler command line.
+ */
+#ifndef XAIE_LOG_LEVEL_DEFAULT
+#define XAIE_LOG_LEVEL_DEFAULT XAIE_LOG_LEVEL_ERROR
+#endif
+
+/* Bound on the size of a single formatted log/print message. */
+#ifndef XAIE_LOG_BUF_SIZE
+#define XAIE_LOG_BUF_SIZE 256U
+#endif
+
 extern XAieLogLevel AieLogLevel;
 
 /***************************** Macro Definitions *****************************/
@@ -64,57 +84,147 @@ extern XAieLogLevel AieLogLevel;
 #define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
 				(u32)(1U << (u64)(pos) % (sizeof((bitmap)[0]) * 8U)))
 
+#ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
+/*
+ * Hosted path: XAie_Log() takes a real FILE* and formats with
+ * fprintf()/vfprintf(), so it needs a real <stdio.h> (and the va_list
+ * variant of printf) from a full hosted C library.
+ */
+#include <stdio.h>
+#define XAIE_LOG_STDOUT stdout
+#define XAIE_LOG_STDERR stderr
+
 #define XAIE_FATAL(...) \
     do { \
         if (AieLogLevel >= XAIE_LOG_LEVEL_FATAL) { \
-            XAie_Log(stderr, "[AIE FATAL]", __func__, __LINE__, __VA_ARGS__); \
+            XAie_Log(XAIE_LOG_STDERR, "[AIE FATAL]", __func__, __LINE__, __VA_ARGS__); \
         } \
     } while(0)
 
 #define XAIE_ERROR(...) \
     do { \
         if (AieLogLevel >= XAIE_LOG_LEVEL_ERROR) { \
-            XAie_Log(stderr, "[AIE ERROR]", __func__, __LINE__, __VA_ARGS__); \
+            XAie_Log(XAIE_LOG_STDERR, "[AIE ERROR]", __func__, __LINE__, __VA_ARGS__); \
         } \
     } while(0)
 
 #define XAIE_WARN(...) \
     do { \
         if (AieLogLevel >= XAIE_LOG_LEVEL_WARN) { \
-            XAie_Log(stdout, "[AIE WARNING]", __func__, __LINE__, __VA_ARGS__); \
+            XAie_Log(XAIE_LOG_STDOUT, "[AIE WARNING]", __func__, __LINE__, __VA_ARGS__); \
         } \
     } while(0)
 
 #define XAIE_INFO(...) \
     do { \
         if (AieLogLevel >= XAIE_LOG_LEVEL_INFO) { \
-            XAie_Log(stdout, "[AIE INFO]", __func__, __LINE__, __VA_ARGS__); \
+            XAie_Log(XAIE_LOG_STDOUT, "[AIE INFO]", __func__, __LINE__, __VA_ARGS__); \
         } \
     } while(0)
 
 #define XAIE_DBG(...) \
     do { \
         if (AieLogLevel >= XAIE_LOG_LEVEL_DEBUG) { \
-            XAie_Log(stdout, "[AIE DEBUG]", __func__, __LINE__, __VA_ARGS__); \
+            XAie_Log(XAIE_LOG_STDOUT, "[AIE DEBUG]", __func__, __LINE__, __VA_ARGS__); \
         } \
     } while(0)
 
 #define XAIE_TRACE(...) \
     do { \
         if (AieLogLevel >= XAIE_LOG_LEVEL_TRACE) { \
-            XAie_Log(stdout, "[AIE TRACE]", __func__, __LINE__, __VA_ARGS__); \
+            XAie_Log(XAIE_LOG_STDOUT, "[AIE TRACE]", __func__, __LINE__, __VA_ARGS__); \
         } \
     } while(0)
+#else /* !XAIE_FEATURE_STDIO_LOGGING_ENABLE */
+/*
+ * FuSa path: the Arm Certified FuSa C library has no FILE type/streams and
+ * no vsnprintf()/vfprintf() (those are C++-extension-only, not part of the
+ * plain-C interface) -- only snprintf(const char *, ...) with a literal
+ * format is available. So these macros must build the final message with
+ * a single direct snprintf() call at the call site (where the format
+ * string and argument types are known at compile time) instead of going
+ * through a variadic wrapper function that would need a va_list-based
+ * formatter to re-expand "..." into text.
+ */
+#include <stdio.h>
+#define XAIE_LOG_IMPL(Level, Tag, Format, ...) \
+    do { \
+        if (AieLogLevel >= (Level)) { \
+            char XAieLogBuf_[XAIE_LOG_BUF_SIZE]; \
+            (void)snprintf(XAieLogBuf_, sizeof(XAieLogBuf_), \
+                    Tag " %s():" U32_FORMAT ": " Format, \
+                    __func__, __LINE__, ##__VA_ARGS__); \
+            _XAie_LogSink(XAieLogBuf_); \
+        } \
+    } while(0)
+
+#define XAIE_FATAL(Format, ...) \
+        XAIE_LOG_IMPL(XAIE_LOG_LEVEL_FATAL, "[AIE FATAL]", Format, ##__VA_ARGS__)
+#define XAIE_ERROR(Format, ...) \
+        XAIE_LOG_IMPL(XAIE_LOG_LEVEL_ERROR, "[AIE ERROR]", Format, ##__VA_ARGS__)
+#define XAIE_WARN(Format, ...) \
+        XAIE_LOG_IMPL(XAIE_LOG_LEVEL_WARN, "[AIE WARNING]", Format, ##__VA_ARGS__)
+#define XAIE_INFO(Format, ...) \
+        XAIE_LOG_IMPL(XAIE_LOG_LEVEL_INFO, "[AIE INFO]", Format, ##__VA_ARGS__)
+#define XAIE_DBG(Format, ...) \
+        XAIE_LOG_IMPL(XAIE_LOG_LEVEL_DEBUG, "[AIE DEBUG]", Format, ##__VA_ARGS__)
+#define XAIE_TRACE(Format, ...) \
+        XAIE_LOG_IMPL(XAIE_LOG_LEVEL_TRACE, "[AIE TRACE]", Format, ##__VA_ARGS__)
+#endif /* XAIE_FEATURE_STDIO_LOGGING_ENABLE */
 
 #if  defined(__microblaze__)
 #define PRINT xil_printf
 #define UINTPTR_T (uintptr_t)
 #define U32_FORMAT "%ld"
+#elif !defined(XAIE_FEATURE_STDIO_LOGGING_ENABLE)
+/*
+ * Same reasoning as XAIE_LOG_IMPL() above: no vsnprintf() in the FuSa
+ * C library, so PRINT() must resolve to a single direct snprintf() call
+ * at the call site rather than a variadic wrapper function.
+ */
+#define PRINT(Format, ...) \
+    do { \
+        char XAiePrintBuf_[XAIE_LOG_BUF_SIZE]; \
+        (void)snprintf(XAiePrintBuf_, sizeof(XAiePrintBuf_), Format, ##__VA_ARGS__); \
+        _XAie_LogSink(XAiePrintBuf_); \
+    } while(0)
+#define UINTPTR_T
+#define U32_FORMAT "%d"
 #else
 #define PRINT printf
 #define UINTPTR_T
 #define U32_FORMAT "%d"
 #endif
+
+#ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
+#define XAIE_PUTCHAR(c) putchar(c)
+#else
+#define XAIE_PUTCHAR(c) _XAie_SafePutChar(c)
+/*
+ * FuSa-safe putchar, used in place of hosted putchar() when
+ * XAIE_FEATURE_STDIO_LOGGING_ENABLE is not set. Hands a single-char string
+ * to _XAie_LogSink(). (PRINT()'s formatting is handled by a macro above,
+ * not a function -- see the comment there for why.)
+ */
+void _XAie_SafePutChar(char c);
+/*
+ * FuSa-safe log sink. The formatted log/print message is handed to this
+ * function instead of being written via hosted stdio. The default
+ * implementation (in xaie_helper.c) is a weak no-op, so a FuSa build is
+ * silent unless a platform integrator supplies a real sink.
+ *
+ * To enable output, provide a non-weak (ordinary) definition of this
+ * function in BSP/application code and link it in; the linker will use it
+ * in place of the weak default automatically -- no registration call is
+ * needed. For example, in a BSP source file:
+ *
+ *   void _XAie_LogSink(const char *Str)
+ *   {
+ *       MyPlatform_UartWriteString(Str);
+ *   }
+ */
+void _XAie_LogSink(const char *Str);
+#endif /* XAIE_FEATURE_STDIO_LOGGING_ENABLE */
 
 /* Compute offset of field within a structure */
 #define XAIE_OFFSET_OF(structure, member) \
@@ -226,8 +336,10 @@ static inline u32 first_set_bit(u64 Value)
 	return Index;
 }
 
+#ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
 void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 		const char *Format, ...);
+#endif
 u8 XAie_GetTileTypefromLoc(XAie_DevInst *DevInst, XAie_LocType Loc);
 AieRC XAie_CheckModule(XAie_DevInst *DevInst, XAie_LocType Loc,
                 XAie_ModuleType Module);

@@ -120,7 +120,7 @@ static AieRC XAie_BaremetalIO_Finish(void *IOInst)
 		XAIE_ERROR("Trying to free IOInst while Meminsts exists.\n");
 		return XAIE_ERR;
 	}
-	free(IOInst);
+	XAIE_FREE(IOInst);
 	return XAIE_OK;
 }
 
@@ -144,7 +144,7 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 	int Ret;
 #endif
 
-	IOInst = (XAie_BaremetalIO *)malloc(sizeof(*IOInst));
+	IOInst = (XAie_BaremetalIO *)XAIE_MALLOC(sizeof(*IOInst));
 	if(IOInst == NULL) {
 		XAIE_ERROR("Baremetal backend init failed. failed to allocate memory\n");
 		return XAIE_ERR;
@@ -436,16 +436,16 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	int Ret;
 
 	(void)Cache;
-	MemInst = (XAie_MemInst *)malloc(sizeof(*MemInst));
+	MemInst = (XAie_MemInst *)XAIE_MALLOC(sizeof(*MemInst));
 	if(MemInst == NULL) {
 		XAIE_ERROR("memory allocation failed\n");
 		return NULL;
 	}
 
-	MemInst->VAddr = (void *)aligned_alloc(16, Size);
+	MemInst->VAddr = (void *)XAIE_ALIGNED_ALLOC(16, Size);
 	if(MemInst->VAddr == NULL) {
 		XAIE_ERROR("malloc failed\n");
-		free(MemInst);
+		XAIE_FREE(MemInst);
 		return NULL;
 	}
 	MemInst->DevAddr = (u64)(uintptr_t)MemInst->VAddr;
@@ -463,8 +463,8 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	return MemInst;
 
 free_meminst:
-	free(MemInst->VAddr);
-	free(MemInst);
+	XAIE_FREE(MemInst->VAddr);
+	XAIE_FREE(MemInst);
 	return NULL;
 }
 
@@ -484,8 +484,8 @@ static AieRC XAie_BaremetalMemFree(XAie_MemInst *MemInst)
 {
 	XAie_BaremetalIO *IOInst = (XAie_BaremetalIO *)MemInst->DevInst->IOInst;
 	btree4_delete(&IOInst->btree, MemInst);
-	free(MemInst->VAddr);
-	free(MemInst);
+	XAIE_FREE(MemInst->VAddr);
+	XAIE_FREE(MemInst);
 
 	return XAIE_OK;
 }

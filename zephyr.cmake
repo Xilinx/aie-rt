@@ -7,6 +7,7 @@ function(add_aie_rt_library TARGET_NAME)
 
   target_sources(${TARGET_NAME} PRIVATE
     ${AIE_RT_SRC_DIR}/driver/src/common/xaie_helper.c
+    ${AIE_RT_SRC_DIR}/driver/src/common/xaie_mem_alloc.c
 
     ${AIE_RT_SRC_DIR}/driver/src/core/xaie_core.c
     ${AIE_RT_SRC_DIR}/driver/src/core/xaie_core_aie.c

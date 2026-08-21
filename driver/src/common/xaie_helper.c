@@ -70,7 +70,7 @@ static const u8 TransactionHeaderVersion_Minor = 1;
  Define the global log level variable with a default value.
  If the environment variable isn't set, this level will be used.
  ***************************************************************/
-XAieLogLevel AieLogLevel = XAIE_LOG_LEVEL_ERROR;
+XAieLogLevel AieLogLevel = XAIE_LOG_LEVEL_DEFAULT;
 /***************************** Macro Definitions *****************************/
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -388,18 +388,23 @@ static s32 xaie_strcasecmp(const char *s1, const char *s2) {
 	return (s32)(c1 - c2);
 }
 
+#ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
 /**
  * This function is automatically executed when the shared library is loaded.
  * It reads the "XAIE_LOG_LEVEL" environment variable to configure the logger.
  * Note: __attribute__((constructor)) is a GCC/Clang language extension.
  * If the environment variable is not set or has an invalid value,
- * the default AieLogLevel (XAIE_LOG_LEVEL_ERROR) remains active.
+ * the default AieLogLevel (XAIE_LOG_LEVEL_DEFAULT) remains active.
+ * Not available when XAIE_FEATURE_STDIO_LOGGING_ENABLE is unset (FuSa
+ * builds), since it relies on getenv(). Use XAIE_LOG_LEVEL_DEFAULT or an
+ * explicit call to XAie_LoggerInit() instead in that configuration.
  */
 __attribute__((constructor))
 static void _XAie_LoggerInit(void) {
     const char *AieLevelEnv = getenv("XAIE_LOG_LEVEL");
 	XAie_LoggerInit(AieLevelEnv);
 }
+#endif /* XAIE_FEATURE_STDIO_LOGGING_ENABLE */
 
 void XAie_LoggerInit(const char *AieLevelEnv) {
 	if (AieLevelEnv != NULL) {
@@ -419,15 +424,39 @@ void XAie_LoggerInit(const char *AieLevelEnv) {
 	}
 }
 
+#ifndef XAIE_FEATURE_STDIO_LOGGING_ENABLE
+__attribute__((weak)) void _XAie_LogSink(const char *Str)
+{
+	(void)Str;
+}
+
+/*
+ * PRINT() and the XAIE_* log macros (xaie_helper.h) build their message
+ * with a direct snprintf() call at the call site instead of a variadic
+ * wrapper function -- the Arm Certified FuSa C library has no
+ * vsnprintf()/vfprintf() (those are C++-extension-only), so there is no
+ * portable way for a function taking "..." to re-format it into a
+ * bounded buffer. Only the trivial, non-variadic putchar equivalent
+ * remains a real function here.
+ */
+void _XAie_SafePutChar(char c)
+{
+	char Buf[2] = { c, '\0' };
+
+	_XAie_LogSink(Buf);
+}
+#else /* XAIE_FEATURE_STDIO_LOGGING_ENABLE */
 void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 		const char *Format, ...)
 {
 	va_list ArgPtr;
+
 	va_start(ArgPtr, Format);
 	fprintf(Fd, "%s %s():"U32_FORMAT": ", prefix, func, line);
 	vfprintf(Fd, Format, ArgPtr);
 	va_end(ArgPtr);
 }
+#endif /* !XAIE_FEATURE_STDIO_LOGGING_ENABLE */
 
 /*****************************************************************************/
 /**
@@ -630,7 +659,7 @@ AieRC _XAie_DestroyPartitionFdList(XAie_DevInst *DevInst)
 		DeleteNode = ListNode;
 		NodePtr = NodePtr->Next;
 
-		free(DeleteNode);
+		XAIE_FREE(DeleteNode);
 	}
 
 	DevInst->PartitionList.Next = NULL;
@@ -663,9 +692,9 @@ AieRC _XAie_PrintPartitionList(XAie_DevInst *DevInst)
 		ListNode = XAIE_CONTAINER_OF(NodePtr, XAie_PartitionList, Node);
 
 		PRINT("Partition ID:   "U32_FORMAT"\n",ListNode->PartitionId);
-		printf("\tStart Col:    %d \n", ListNode->ColRange.Start);
-		printf("\tNum Cols:     %d\n", ListNode->ColRange.Num);
-		printf("\tPartition Fd: %d\n", ListNode->PartitionFd);
+		PRINT("\tStart Col:    %d \n", ListNode->ColRange.Start);
+		PRINT("\tNum Cols:     %d\n", ListNode->ColRange.Num);
+		PRINT("\tPartition Fd: %d\n", ListNode->PartitionFd);
 
 		NodePtr = NodePtr->Next;
         }
@@ -769,9 +798,9 @@ static AieRC _XAie_RemoveTxnInstFromList(XAie_DevInst *DevInst, u64 Tid)
 void BuffHexDump(char* buff,u32 size) {
 	XAIE_DBG("Buff Info %p %d\n",buff,size);
 	for (u32 i = 0; i < size; ++i) {
-		printf("0x%x ",(u8)buff[i]&0xffU);
+		PRINT("0x%x ",(u8)buff[i]&0xffU);
 	}
-	printf("\n");
+	PRINT("\n");
 }
 
 static s32 TxnCmdDump(XAie_TxnCmd* cmd) {
@@ -795,7 +824,7 @@ static s32 TxnCmdDump(XAie_TxnCmd* cmd) {
 ******************************************************************************/
 static AieRC _XAie_ReallocCmdBuf(XAie_TxnInst *TxnInst)
 {
-	TxnInst->CmdBuf = (XAie_TxnCmd *)realloc((void *)TxnInst->CmdBuf,
+	TxnInst->CmdBuf = (XAie_TxnCmd *)XAIE_REALLOC((void *)TxnInst->CmdBuf,
 			sizeof(XAie_TxnCmd) *
 			((u64)TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS));
 	if(TxnInst->CmdBuf == NULL) {
@@ -828,17 +857,17 @@ AieRC _XAie_Txn_Start(XAie_DevInst *DevInst, u32 Flags)
 	XAie_TxnInst *Inst;
 	const XAie_Backend *Backend = DevInst->Backend;
 
-	Inst = (XAie_TxnInst*)malloc(sizeof(*Inst));
+	Inst = (XAie_TxnInst*)XAIE_MALLOC(sizeof(*Inst));
 	if(Inst == NULL) {
 		XAIE_ERROR("Failed to allocate memory for txn instance\n");
 		return XAIE_ERR;
 	}
 
-	Inst->CmdBuf = (XAie_TxnCmd*)calloc(XAIE_DEFAULT_NUM_CMDS,
+	Inst->CmdBuf = (XAie_TxnCmd*)XAIE_CALLOC(XAIE_DEFAULT_NUM_CMDS,
 			sizeof(*Inst->CmdBuf));
 	if(Inst->CmdBuf == NULL) {
 		XAIE_ERROR("Failed to allocate memory for command buffer\n");
-		free(Inst);
+		XAIE_FREE(Inst);
 		return XAIE_ERR;
 	}
 
@@ -918,7 +947,7 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 			}
 
 			if((Flags & XAIE_TXN_INST_EXPORTED_MASK) == 0U) {
-				free((void *)(uintptr_t)Cmd->DataPtr);
+				XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 			}
 			break;
 		case XAIE_IO_BLOCKSET:
@@ -1042,8 +1071,8 @@ AieRC _XAie_Txn_Submit(XAie_DevInst *DevInst, XAie_TxnInst *TxnInst)
 		return RC;
 	}
 
-	free(Inst->CmdBuf);
-	free(Inst);
+	XAIE_FREE(Inst->CmdBuf);
+	XAIE_FREE(Inst);
 	return XAIE_OK;
 }
 
@@ -1074,17 +1103,17 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 		return NULL;
 	}
 
-	Inst = (XAie_TxnInst *)malloc(sizeof(*Inst));
+	Inst = (XAie_TxnInst *)XAIE_MALLOC(sizeof(*Inst));
 	if(Inst == NULL) {
 		XAIE_ERROR("Failed to allocate memory for txn instance\n");
 		return NULL;
 	}
 
-	Inst->CmdBuf = (XAie_TxnCmd *)calloc(TmpInst->NumCmds,
+	Inst->CmdBuf = (XAie_TxnCmd *)XAIE_CALLOC(TmpInst->NumCmds,
 			sizeof(*Inst->CmdBuf));
 	if(Inst->CmdBuf == NULL) {
 		XAIE_ERROR("Failed to allocate memory for command buffer\n");
-		free(Inst);
+		XAIE_FREE(Inst);
 		return NULL;
 	}
 
@@ -1096,13 +1125,13 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 		XAie_TxnCmd *TmpCmd = &TmpInst->CmdBuf[i];
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
 		if(TmpCmd->Opcode == XAIE_IO_BLOCKWRITE) {
-			Cmd->DataPtr = (u64)(uintptr_t)malloc(
+			Cmd->DataPtr = (u64)(uintptr_t)XAIE_MALLOC(
 					sizeof(u32) * TmpCmd->Size);
 			if((void *)(uintptr_t)Cmd->DataPtr == NULL) {
 				XAIE_ERROR("Failed to allocate memory to copy "
 						"command %d\n", i);
-				free(Inst->CmdBuf);
-				free(Inst);
+				XAIE_FREE(Inst->CmdBuf);
+				XAIE_FREE(Inst);
 				return NULL;
 			}
 
@@ -1241,7 +1270,7 @@ static inline void _XAie_AppendCustomOp(XAie_TxnCmd *Cmd, u8 *TxnPtr)
 static u8* _XAie_ReallocTxnBuf(u8 *TxnPtr, u32 NewSize)
 {
 	u8 *Tmp;
-	Tmp =  (u8*)realloc((void*)TxnPtr, NewSize);
+	Tmp =  (u8*)XAIE_REALLOC((void*)TxnPtr, NewSize);
 	if(Tmp == NULL) {
 		XAIE_ERROR("Reallocation failed for txn buffer\n");
 		return NULL;
@@ -1286,7 +1315,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		return NULL;
 	}
 
-	TxnPtr = malloc(AllocatedBuffSize);
+	TxnPtr = XAIE_MALLOC(AllocatedBuffSize);
 	if(TxnPtr == NULL) {
 		XAIE_ERROR("Failed to allocate memory for alocated buffer\n");
 		return NULL;
@@ -1450,7 +1479,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 
 void _XAie_FreeTxnPtr(void *Ptr)
 {
-	free(Ptr);
+	XAIE_FREE(Ptr);
 }
 
 /*****************************************************************************/
@@ -1477,12 +1506,12 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst)
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
 		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
 				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
-			free((void *)(uintptr_t)Cmd->DataPtr);
+			XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 		}
 	}
 
-	free(Inst->CmdBuf);
-	free(Inst);
+	XAIE_FREE(Inst->CmdBuf);
+	XAIE_FREE(Inst);
 
 	return XAIE_OK;
 }
@@ -1516,13 +1545,13 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 			//TBD handle custom OP as well
 			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
 					((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
-				free((void *)(uintptr_t)Cmd->DataPtr);
+				XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 			}
 		}
 
 		NodePtr = NodePtr->Next;
-		free(TxnInst->CmdBuf);
-		free(TxnInst);
+		XAIE_FREE(TxnInst->CmdBuf);
+		XAIE_FREE(TxnInst);
 	}
 }
 
@@ -1926,7 +1955,7 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 			}
 		}
 
-		Buf = (u32 *)malloc(sizeof(u32) * Size);
+		Buf = (u32 *)XAIE_MALLOC(sizeof(u32) * Size);
 		if(Buf == NULL) {
 			XAIE_ERROR("Memory allocation for block write failed\n");
 			return XAIE_ERR;
@@ -2204,7 +2233,7 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
 		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
 			XAIE_DBG("free DataPtr %p\n", (void *)(uintptr_t)Cmd->DataPtr);
-			free((void *)(uintptr_t)Cmd->DataPtr);
+			XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 		}
 	}
 
@@ -2213,8 +2242,8 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 		return RC;
 	}
 
-	free(Inst->CmdBuf);
-	free(Inst);
+	XAIE_FREE(Inst->CmdBuf);
+	XAIE_FREE(Inst);
 
 	return XAIE_OK;
 }
@@ -2292,7 +2321,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		}
 
 		/* check memory allocation before increase Cmd vector */
-		char* tmpBuff = malloc(size);
+		char* tmpBuff = XAIE_MALLOC(size);
 		if(tmpBuff == XAIE_NULL) {
 			XAIE_ERROR("Fail to malloc %d size memory for DataPtr\n", size);
 			return XAIE_ERR;
@@ -2667,7 +2696,7 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 			XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
 			BdAddr += 4U;
 		}
-		printf("\n");
+		PRINT("\n");
 	}
 	return XAIE_OK;
 }

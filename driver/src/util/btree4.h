@@ -12,6 +12,24 @@
 #include <errno.h>
 #include <stdint.h>
 
+/*
+ * The Arm Certified FuSa C library's <errno.h> only defines the ISO C
+ * minimum (EDOM, ERANGE) -- no EINVAL/ENOMEM/EEXIST. These are used below
+ * purely as distinct negative-return status codes (never read back via the
+ * actual errno object), so a local fallback with the conventional
+ * POSIX/glibc values is sufficient and does not conflict with a full
+ * hosted <errno.h> that already defines them.
+ */
+#ifndef EINVAL
+#define EINVAL 22
+#endif
+#ifndef ENOMEM
+#define ENOMEM 12
+#endif
+#ifndef EEXIST
+#define EEXIST 17
+#endif
+
 /*    [data0, data1, data2]
  *    /      |      |     \
  *   c0     c1     c2     c3

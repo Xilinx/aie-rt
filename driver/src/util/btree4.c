@@ -4,6 +4,8 @@
 ******************************************************************************/
 
 #include "btree4.h"
+#include "xaie_feature_config.h"
+#include "xaie_mem_alloc.h"
 
 static int32_t btree4_data_count(const struct btree4_node *node)
 {
@@ -70,7 +72,9 @@ static int32_t btree4_insert_data_child(const struct btree4 *tree, struct btree4
 	pos = btree4_data_count(node);
 
 	if (pos == 3) {
+#ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
 		printf("ERROR: no space. Please slit the node\n");
+#endif
 		return -EINVAL;
 	}
 
@@ -109,7 +113,7 @@ static int32_t btree4_split(struct btree4 *tree, struct btree4_node *node)
 	}
 	(void)btree4_split(tree, node->parent);
 
-	new_node = (struct btree4_node *)calloc(1, sizeof(*new_node));
+	new_node = (struct btree4_node *)XAIE_CALLOC(1, sizeof(*new_node));
 	if ((new_node == NULL)) {
 		return -ENOMEM;
 	}
@@ -133,7 +137,7 @@ static int32_t btree4_split(struct btree4 *tree, struct btree4_node *node)
 	node->data[1] = NULL;
 
 	if ((node->parent == NULL)) {
-		parent = (struct btree4_node *)calloc(1, sizeof(*parent));
+		parent = (struct btree4_node *)XAIE_CALLOC(1, sizeof(*parent));
 		if ((parent == NULL)) {
 			return -ENOMEM;
 		}
@@ -188,7 +192,7 @@ int32_t btree4_insert(struct btree4 *tree, void *data)
 	struct btree4_node *node = tree->root;
 
 	if ((node == NULL)) {
-		tree->root = (struct btree4_node *)calloc(1, sizeof(*tree->root));
+		tree->root = (struct btree4_node *)XAIE_CALLOC(1, sizeof(*tree->root));
 		if ((tree->root == NULL)) {
 			return -ENOMEM;
 		}
@@ -310,9 +314,9 @@ static void btree4_merge_root(struct btree4 *tree, struct btree4_node *node,
 					child->child[i]->parent = child;
 				}
 			}
-			free(other);
+			XAIE_FREE(other);
 			other = NULL;
-			free(node);
+			XAIE_FREE(node);
 			node = NULL;
 		} else {
 			/*	[n]                       [o1]
@@ -361,9 +365,9 @@ static void btree4_merge_root(struct btree4 *tree, struct btree4_node *node,
 					child->child[i]->parent = child;
 				}
 			}
-			free(other);
+			XAIE_FREE(other);
 			other = NULL;
-			free(node);
+			XAIE_FREE(node);
 			node = NULL;
 		} else {
 			/*	       [n]                    [o3]
@@ -467,7 +471,7 @@ static void btree4_merge(struct btree4 *tree, struct btree4_node *node,
 			if (node->child[0] != NULL) {
 				node->child[0]->parent = node;
 			}
-			free(other);
+			XAIE_FREE(other);
 			parent->child[i - 1] = node;
 			parent->child[i] = NULL;
 		/* ci, which is data count should never be 0 */
@@ -510,7 +514,7 @@ static void btree4_merge(struct btree4 *tree, struct btree4_node *node,
 			if (node->child[3] != NULL) {
 				node->child[3]->parent = node;
 			}
-			free(other);
+			XAIE_FREE(other);
 			other = NULL;
 			for (; i < (BTREE4_DATA_NUM - 1); i++) {
 				parent->data[i] = parent->data[i + 1];
@@ -601,7 +605,7 @@ void *btree4_delete(struct btree4 *tree, void *data)
 		/* Node is root node and empty */
 		if (node->parent == NULL) {
 			tree->root = NULL;
-			free(node);
+			XAIE_FREE(node);
 			return value;
 		}
 		/* Node is empty and not root node */
@@ -671,7 +675,7 @@ void *btree4_delete(struct btree4 *tree, void *data)
 		parent->child[i + 1] = NULL;
 	}
 	btree4_insert(tree, insert_value);
-	free(merge_node);
+	XAIE_FREE(merge_node);
 
 	return value;
 }
