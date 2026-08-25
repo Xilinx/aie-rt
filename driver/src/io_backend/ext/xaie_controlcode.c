@@ -372,7 +372,8 @@ static AieRC XAie_ConfigMode(void *IOInst, XAie_ModeSelect Mode)
 		case XAIE_WRITE_DES_ASYNC_ENABLE:
 			break;
 		default:
-			break;
+			XAIE_ERROR("Invalid mode: %u.\n", Mode);
+			return XAIE_ERR;
 	}
 	return XAIE_OK;
 }

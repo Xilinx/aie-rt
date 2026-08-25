@@ -864,6 +864,7 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 			break;
 		default:
 			XAIE_ERROR("Invalid dma direction selected\n");
+			break;
 		}
 		break;
 	case 1/*Ch1*/:
@@ -878,6 +879,7 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 			break;
 		default:
 			XAIE_ERROR("Invalid dma direction selected\n");
+			break;
 	}
 	break;
 	default:

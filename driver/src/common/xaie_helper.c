@@ -2765,6 +2765,9 @@ AieRC XAie_DmaStatusDump(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols)
 					       RC = XAie_PrintBdStatus(DevInst, Loc, DmaMod, XAIE2PS_SHIMDMA_NUM_BD_WORDS);
 				       }
 				       break;
+			       default:
+				       XAIE_ERROR("Invalid tile type: %u\n", TileType);
+				       return XAIE_ERR;
 		       }
 
 		       if (RC != (u32)XAIE_OK) {

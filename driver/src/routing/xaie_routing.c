@@ -1088,7 +1088,8 @@ AieRC XAie_RoutingSwitchReset(const XAie_RoutingInstance *routingInstance,
 					slavePortBitfield = tileConstraint->ShimMM2S_State;
 					break;
 				default:
-					break;
+					XAIE_ERROR("Invalid slave direction: %u.\n", slaveDir);
+					return XAIE_ERR;
 			}
 
 			for (int32_t masterIdx = 0; masterIdx < dirCount; ++masterIdx) {
@@ -1114,7 +1115,8 @@ AieRC XAie_RoutingSwitchReset(const XAie_RoutingInstance *routingInstance,
 						masterPortBitfield = tileConstraint->ShimS2MM_State;
 						break;
 					default:
-						break;
+						XAIE_ERROR("Invalid master direction: %u.\n", masterDir);
+						return XAIE_ERR;
 				}
 
 				/* Iterate through bitfields to find set bits and disable connection

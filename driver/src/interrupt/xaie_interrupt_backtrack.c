@@ -1479,6 +1479,7 @@ static void _XAie_MapL2MaskToL1(XAie_DevInst *DevInst, u32 Index,
 	default:
 		*L1Col = L2Col;
 		*Switch = ((Index % 2U) == 0U) ? XAIE_EVENT_SWITCH_A : XAIE_EVENT_SWITCH_B;
+		break;
 	}
 }
 

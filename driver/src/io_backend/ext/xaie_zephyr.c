@@ -1005,7 +1005,6 @@ static AieRC XAie_ZephyrIO_RunOp(void *IOInst, XAie_DevInst *DevInst,
 				return _XAie_PrivilegeSetColumnClk(DevInst,
 						(XAie_BackendColumnReq *)Arg);
 			}
-
 		default:
 			XAIE_ERROR("Zephyr backend doesn't support operation"
 					" %d\n", Op);

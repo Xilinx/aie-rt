@@ -1643,6 +1643,9 @@ static AieRC _XAie_ErrorHandlingInitAie2ps(XAie_DevInst *DevInst)
 					return RC;
 				}
 				break;
+			default:
+				XAIE_ERROR("Invalid tile type: %d\n", TileType);
+				return XAIE_INVALID_TILE;
 			}
 		}
 	}
