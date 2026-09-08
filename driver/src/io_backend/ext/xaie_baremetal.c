@@ -156,8 +156,9 @@ static AieRC XAie_BaremetalIO_Init(XAie_DevInst *DevInst)
 	DevInst->IOInst = (void *)IOInst;
 
 #if defined(XAIE_PROD)
-	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS)
+	if (DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE2PS) {
 		XAie_BaremetalUseIoctl2 = 1U;
+	}
 
 	if (DevInst->DevProp.DevGen <= XAIE_DEV_GEN_AIE2PS) {
 		DevInst->IsProd = 1U;

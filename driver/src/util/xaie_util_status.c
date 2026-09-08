@@ -130,7 +130,7 @@ static s32 _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
 	len++;
     }
 
-    if (CommaNeeded)
+    if (CommaNeeded != 0U)
     {
         *Destination = ',';
         len++;
@@ -201,24 +201,27 @@ s32 XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
     u32 Val 	= 0;
     u32 TempReg = Reg;
 
-    if((TempReg & 0x01U)) // if bit 0 is set then Enabled state.
+    if((TempReg & 0x01U) != 0U) { // if bit 0 is set then Enabled state.
         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], XAie_CoreStatus_Strings[Shift], TRUE);
+    }
 
     Shift++;
     TempReg     = TempReg >> 1;
     Val = TempReg & 0x01U;
-    if(Val) // if bit 1 is set then Reset state.
+    if(Val != 0U) { // if bit 1 is set then Reset state.
         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], XAie_CoreStatus_Strings[Shift], TRUE);
+    }
 
-    if((Reg&0x01U) || (Reg&0x02U) == 0U) // if neither bit 0 nor bit  1 is set, Disabled is output.
+    if((Reg&0x01U) || (Reg&0x02U) == 0U) { // if neither bit 0 nor bit  1 is set, Disabled is output.
         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Disabled", TRUE);
+    }
 
     TempReg     = TempReg >> 1;
 
     while(TempReg!=0){
 	Shift++;
 	Val = TempReg & 0x1U;
-	if (Val){
+	if (Val != 0U){
             CharsWritten += _XAie_strcpy(&Buf[CharsWritten], XAie_CoreStatus_Strings[Shift], TRUE);
 	}
 	TempReg >>= 1;
@@ -326,7 +329,7 @@ s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 		    break;
 		default:
 		    Val &= 0x1U;
-		    if (Val) {
+		    if (Val != 0U) {
 			CharsWritten += _XAie_strcpy(&Buf[CharsWritten], XAie_DmaS2MMStatus_Strings[Flag], TRUE);
 		    }
 		    break;
@@ -439,7 +442,7 @@ s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
                     break;
                 default:
                     Val &= 0x1U;
-                    if (Val) {
+                    if (Val != 0U) {
                         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], XAie_DmaMM2SStatus_Strings[Flag], TRUE);
                     }
                     break;

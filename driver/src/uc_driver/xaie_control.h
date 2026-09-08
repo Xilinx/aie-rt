@@ -52,7 +52,7 @@
 
 typedef struct control_job_context_t
 {
-#if LOG_LEVEL < LOG_LEVEL_NONE
+#if defined(LOG_LEVEL) && defined(LOG_LEVEL_NONE) && (LOG_LEVEL < LOG_LEVEL_NONE)
   uint16_t id;
 #endif
 

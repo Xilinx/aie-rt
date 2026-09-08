@@ -226,7 +226,7 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 
 	munmap(LinuxIOInst->ProgMem.VAddr, LinuxIOInst->ProgMem.MapSize);
 	munmap(LinuxIOInst->DataMem.VAddr, LinuxIOInst->DataMem.MapSize);
-	if (UcMod) {
+	if (UcMod != NULL) {
 		munmap(LinuxIOInst->UcProgMem.VAddr, LinuxIOInst->UcProgMem.MapSize);
 		munmap(LinuxIOInst->UcPrivDataMem.VAddr, LinuxIOInst->UcPrivDataMem.MapSize);
 		munmap(LinuxIOInst->UcDataMem.VAddr, LinuxIOInst->UcDataMem.MapSize);
@@ -237,7 +237,7 @@ static AieRC XAie_LinuxIO_Finish(void *IOInst)
 	if(MemTileMod != NULL) {
 		close(LinuxIOInst->MemTileMem.Fd);
 	}
-	if (UcMod) {
+	if (UcMod != NULL) {
 		close(LinuxIOInst->UcProgMem.Fd);
 		close(LinuxIOInst->UcPrivDataMem.Fd);
 		close(LinuxIOInst->UcDataMem.Fd);
@@ -514,7 +514,7 @@ static AieRC _XAie_LinuxIO_MapMemory(XAie_DevInst *DevInst,
 	XAIE_DBG("Prog memory mapped to %p\n", IOInst->ProgMem.VAddr);
 	XAIE_DBG("Data memory mapped to %p\n", IOInst->DataMem.VAddr);
 	XAIE_DBG("Mem tile memory mapped to %p\n", IOInst->MemTileMem.VAddr);
-	if (UcMod) {
+	if (UcMod != NULL) {
 		XAIE_DBG("UcProgMem mapped to %p\n", IOInst->UcProgMem.VAddr);
 		XAIE_DBG("UcPrivDataMem mapped to %p\n", IOInst->UcPrivDataMem.VAddr);
 		XAIE_DBG("UcDataMem mapped to %p\n", IOInst->UcDataMem.VAddr);
@@ -580,12 +580,12 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 			       IORING_SETUP_SQPOLL;
 
 	IOInst->Params.sq_thread_idle = 1;
-	if (DevInst->RingSize) {
+	if (DevInst->RingSize != 0U) {
 		RingSize = DevInst->RingSize;
 	}
 	DevInst->RingSize = RingSize;
 	ret = io_uring_queue_init_params(RingSize, &IOInst->Ring, &IOInst->Params);
-	if (ret) {
+	if (ret != 0) {
 		XAIE_ERROR("Uring init failed: %d\n", ret);
 		RC = XAIE_ERR;
 		goto free_IOInst;
@@ -619,7 +619,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 	IOInst->DevInst = DevInst;
 
 	ret = io_uring_register_files(&IOInst->Ring, &IOInst->PartitionFd, 1);
-	if (ret) {
+	if (ret != 0) {
 		XAIE_ERROR("Failed to register fd for uring sqpoll: %d\n", ret);
 		RC = XAIE_ERR;
 		goto queue_exit;
@@ -643,7 +643,7 @@ static AieRC XAie_LinuxIO_Init(XAie_DevInst *DevInst)
 		IOInst->IoVecs[i].iov_len = PgSize;
 	}
 	ret = io_uring_register_buffers(&IOInst->Ring, IOInst->IoVecs, IOInst->IoVecsCount);
-	if (ret) {
+	if (ret != 0) {
 		XAIE_ERROR("Failed to register buffers for uring: %d\n", ret);
 		RC = XAIE_ERR;
 		goto free_iovecs;
@@ -2175,7 +2175,7 @@ static s32 XAie_LinuxIO_PartitionInitAsync(void *IOInst, XAie_PartInitOpts *Opts
 	if (ret < 0) {
 		XAIE_ERROR("Failed to submit async partition init: %d\n", ret);
 		AsyncRes->res = ret;
-		if (AsyncRes->io_vec_inuse) {
+		if (AsyncRes->io_vec_inuse != 0U) {
 			_XAie_LinuxIO_IoVecDecHead(LinuxIOInst);
 		}
 		return 0;

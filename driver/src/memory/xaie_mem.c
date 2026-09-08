@@ -75,7 +75,7 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	if(XAie_IsUcModulePresent(DevInst, TileType)) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) != 0U) {
 		UcMod = DevInst->DevProp.DevMod[TileType].UcMod;
 		MemSize = UcMod->PrivDataMemSize;
 		MemAddr = UcMod->PrivDataMemAddr;
@@ -135,7 +135,7 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_TILE;
 	}
 
-	if(XAie_IsUcModulePresent(DevInst, TileType)) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) != 0U) {
 		UcMod = DevInst->DevProp.DevMod[TileType].UcMod;
 		MemSize = UcMod->PrivDataMemSize;
 		MemAddr = UcMod->PrivDataMemAddr;
@@ -287,7 +287,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		return XAIE_INVALID_TILE;
 	}
 
-	if(XAie_IsUcModulePresent(DevInst, TileType)) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) != 0U) {
 		UcMod = DevInst->DevProp.DevMod[TileType].UcMod;
 		MemSize = UcMod->PrivDataMemSize;
 		MemAddr = UcMod->PrivDataMemAddr;
@@ -503,7 +503,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		return XAIE_INVALID_TILE;
 	}
 
-	if(XAie_IsUcModulePresent(DevInst, TileType)) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) != 0U) {
 		UcMod = DevInst->DevProp.DevMod[TileType].UcMod;
 		MemSize = UcMod->PrivDataMemSize;
 		MemAddr = UcMod->PrivDataMemAddr;

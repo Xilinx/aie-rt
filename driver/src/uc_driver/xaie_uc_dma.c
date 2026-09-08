@@ -230,8 +230,9 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
 
     // Wait for response in queue
     uint32_t response_value;
-    while (!UC_DMA_RESPONSE_IS_VALID(response_value = reg_read32(REG_UC_DMA_DM2MM_RESPONSE_QUEUE_POP)))
+    while (!UC_DMA_RESPONSE_IS_VALID(response_value = reg_read32(REG_UC_DMA_DM2MM_RESPONSE_QUEUE_POP))) {
         ;
+    }
 
     // Verify response value
     assert(UC_DMA_RESPONSE_GET_BD_PTR(response_value) == DRIVER_BD_OFFSET);
