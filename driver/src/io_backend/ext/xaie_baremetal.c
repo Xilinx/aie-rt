@@ -751,6 +751,13 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 					    AIE_OPS_ALL_MEM_ZEROIZATION);
 	}
 
+	if ((OptFlags & XAIE_PART_INIT_OPT_CTRL_TLASTERROR_DISABLE) != 0U) {
+		//todo: Implement the control for TLAST error disable
+		//RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol,
+		//			    DevInst->NumCols,
+		//			    AIE_OPS_CTRL_TLASTERROR_DISABLE);
+	}
+
 	RC = _XAie_BaremetalIO_PrivilegeWrite32(DevInst->StartCol, DevInst->NumCols,
 				    AIE_OPS_SET_L2_CTRL_NPI_INTR);
 

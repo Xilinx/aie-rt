@@ -44,6 +44,26 @@
 #define XAIE_ISOLATE_ALL_MASK	((1U << 4) - 1)
 
 #define XAIE_ERROR_NPI_INTR_ID	0x1U
+
+/*
+ * TLAST error disable register offsets and masks (AIE2PS only).
+ *
+ * Each tile's module clock control register carries a "control TLAST error
+ * disable" field at bit 4. Writing 0 to this bit disables the TLAST error so
+ * the control-packet handler accepts packets without requiring a TLAST after
+ * every packet. Register offsets mirror the AIE2PS register spec
+ * (see xaie2psgbl_params.h):
+ *   XAIE2PSGBL_CORE_MODULE_MODULE_CLOCK_CONTROL                    = 0x00060000
+ *   XAIE2PSGBL_MEM_TILE_MODULE_MODULE_CLOCK_CONTROL                = 0x000FFF00
+ *   XAIE2PSGBL_PL_MODULE_MODULE_CLOCK_CONTROL_0                    = 0x0007FF00
+ */
+#define XAIE_AIE_TILE_CLOCK_CONTROL_REGOFF				0x00060000U
+#define XAIE_AIE_TILE_CLOCK_CONTROL_TLAST_ERROR_DISABLE_MASK		(1U << 4)
+#define XAIE_MEM_TILE_CLOCK_CONTROL_REGOFF				0x000FFF00U
+#define XAIE_MEM_TILE_CLOCK_CONTROL_TLAST_ERROR_DISABLE_MASK		(1U << 4)
+#define XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_REGOFF			0x0007FF00U
+#define XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_TLAST_ERROR_DISABLE_MASK	(1U << 4)
+
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
 /**
@@ -79,6 +99,80 @@ static AieRC _XAie_PrivilegeSetColReset(XAie_DevInst *DevInst,
 			PlIfMod->ColRst.Mask);
 
 	return XAie_Write32(DevInst, RegAddr, FldVal);
+}
+
+/*****************************************************************************/
+/**
+ *
+ * This API Disable TLAST Error Enable Field in Module Clock Control register.
+ * By disabling this bit, control packet can be processed without the need
+ * for TLAST to be present after each packet.
+ *
+ * @param	DevInst: Device Instance
+ *
+ * @return	XAIE_OK on success, error code on failure.
+ *
+ * @note	None.
+ *
+ *****************************************************************************/
+static AieRC _XAie_DisableTlast(XAie_DevInst *DevInst)
+{
+	AieRC RC;
+	u8 MemTileStart, MemTileEnd, AieRowStart, AieRowEnd;
+	u64 RegAddr;
+
+	/* TLAST error control only exists on AIE2PS devices. */
+	if(DevInst->DevProp.DevGen != XAIE_DEV_GEN_AIE2PS) {
+		XAIE_DBG("TLAST error control is only available on AIE2PS devices.\n");
+		return XAIE_OK;
+	}
+
+	AieRowStart = DevInst->AieTileRowStart;
+	AieRowEnd = DevInst->AieTileRowStart + DevInst->AieTileNumRows;
+	MemTileStart = DevInst->MemTileRowStart;
+	MemTileEnd = DevInst->MemTileRowStart + DevInst->MemTileNumRows;
+
+	for(u8 Col = 0; Col < DevInst->NumCols; Col++) {
+		for(u8 Row = AieRowStart; Row < AieRowEnd; Row++) {
+			RegAddr = XAIE_AIE_TILE_CLOCK_CONTROL_REGOFF +
+				XAie_GetTileAddr(DevInst, Row, Col);
+			RC = XAie_MaskWrite32(DevInst, RegAddr,
+				XAIE_AIE_TILE_CLOCK_CONTROL_TLAST_ERROR_DISABLE_MASK,
+				XAIE_DISABLE);
+			if(RC != XAIE_OK) {
+				XAIE_DBG("Failed to disable TLAST error for AIE "
+					"tile (%u, %u)\n", Col, Row);
+				return RC;
+			}
+		}
+		for(u8 MemRow = MemTileStart; MemRow < MemTileEnd; MemRow++) {
+			RegAddr = XAIE_MEM_TILE_CLOCK_CONTROL_REGOFF +
+				XAie_GetTileAddr(DevInst, MemRow, Col);
+			RC = XAie_MaskWrite32(DevInst, RegAddr,
+				XAIE_MEM_TILE_CLOCK_CONTROL_TLAST_ERROR_DISABLE_MASK,
+				XAIE_DISABLE);
+			if(RC != XAIE_OK) {
+				XAIE_DBG("Failed to disable TLAST error for mem "
+					"tile (%u, %u)\n", Col, MemRow);
+				return RC;
+			}
+		}
+		/*
+		 * Shim tile Clock Control TLAST Error disabled
+		 */
+		RegAddr = XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_REGOFF +
+			XAie_GetTileAddr(DevInst, 0U, Col);
+		RC = XAie_MaskWrite32(DevInst, RegAddr,
+			XAIE_SHIM_TILE_MOD_CLOCK_CONTROL_0_TLAST_ERROR_DISABLE_MASK,
+			XAIE_DISABLE);
+		if(RC != XAIE_OK) {
+			XAIE_DBG("Failed to disable TLAST error for shim "
+				"tile (%u, 0)\n", Col);
+			return RC;
+		}
+	}
+
+	return XAIE_OK;
 }
 
 /*****************************************************************************/
@@ -633,6 +727,14 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
                 }
         }
 
+	if ((OptFlags & XAIE_PART_INIT_OPT_CTRL_TLASTERROR_DISABLE) != 0U) {
+		RC = _XAie_DisableTlast(DevInst);
+		if (RC != XAIE_OK) {
+			XAIE_ERROR("Failed to disable control TLAST error\n");
+			_XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_DISABLE);
+			return RC;
+		}
+	}
 	/*
 	 * This is a temporary workaround to unblock rel-v2023.1 and make
 	 * XAie_PartitionInitialize() consistent with XAie_ResetPartition().
