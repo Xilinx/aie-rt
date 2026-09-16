@@ -159,7 +159,7 @@ static AieRC XAie_ControlCodeIO_Finish(void *IOInst)
 		XAie_CloseControlCodeFile(DevInst);
 	}
 
-	if(IOInst) {
+	if(IOInst != NULL) {
 		free(IOInst);
 	}
 
@@ -985,7 +985,7 @@ static AieRC XAie_ControlCodeIO_AddressPatching(void *IOInst, u32 Arg_Index, u8 
 		ControlCodeInst->UcPageSize += ISA_OPSIZE_APPLY_OFFSET_57;
 	}
 
-        if(ControlCodeInst->ScrachpadName) {
+        if(ControlCodeInst->ScrachpadName != NULL) {
                 free(ControlCodeInst->ScrachpadName);
         }
         ControlCodeInst->ScrachpadName = NULL;
@@ -1254,13 +1254,13 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 		ControlCodeInst->ControlCodedatafp == NULL ||
 		ControlCodeInst->ControlCodedata2fp == NULL) {
 
-		if(ControlCodeInst->ControlCodefp) {
+		if(ControlCodeInst->ControlCodefp != NULL) {
 			fclose(ControlCodeInst->ControlCodefp);
 		}
-		if (ControlCodeInst->ControlCodedatafp) {
+		if (ControlCodeInst->ControlCodedatafp != NULL) {
 			fclose(ControlCodeInst->ControlCodedatafp);
 		}
-		if (ControlCodeInst->ControlCodedata2fp) {
+		if (ControlCodeInst->ControlCodedata2fp != NULL) {
 			fclose(ControlCodeInst->ControlCodedata2fp);
 		}
 

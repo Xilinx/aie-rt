@@ -29,6 +29,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,7 +117,7 @@ void _XAie_MetalIO_MapNpi(XAie_MetalIO *IOInst, u64 NpiBaseAddr)
 		return;
 	}
 
-	if(IOInst->NpiBaseAddr) {
+	if(IOInst->NpiBaseAddr != NULL) {
 		munmap(IOInst->NpiBaseAddr, IOInst->NpiMapSize);
 		IOInst->NpiBaseAddr = NULL;
 		IOInst->NpiMapSize = 0;
@@ -175,7 +176,7 @@ static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 			errno, strerror(errno));
 		return XAIE_ERR;
 	}
-	while(1U) {
+	while (true) {
 		DirEntry = readdir(Dir);
 		if(DirEntry == NULL) {
 			XAIE_ERROR("UIO device for aie not found, %d: %s\n",

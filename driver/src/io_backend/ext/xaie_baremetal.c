@@ -453,7 +453,7 @@ static XAie_MemInst* XAie_BaremetalMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	MemInst->Size = Size;
 	MemInst->DevInst = DevInst;
 	Ret = btree4_insert(&IOInst->btree, MemInst);
-	if (Ret) {
+	if (Ret != 0) {
 		goto free_meminst;
 	}
 	/*

@@ -102,7 +102,7 @@ static AieRC XAie_SimIO_Finish(void *IOInst)
 
 	SimIOInst->DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod = SimIOInst->OrigCoreMod;
 	Pos = &SimIOInst->DevMem;
-	while (Pos) {
+	while (Pos != NULL) {
 		if (!Pos->Free) {
 			XAIE_ERROR("Freeing SimIO while MemInst not freed!\n");
 			return XAIE_OK;
@@ -512,7 +512,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	}
 
 	Pos = Head;
-	while (Pos) {
+	while (Pos != NULL) {
 		if (Pos->Free && Pos->Size > Size) {
 			struct XAie_DevMem *Node = calloc(1, sizeof(*Node));
 			struct XAie_DevMem *Next = Pos->Next;
@@ -536,7 +536,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			Node->Prev = Pos;
 			Node->Next = Next;
 			Pos->Next = Node;
-			if (Next) {
+			if (Next != NULL) {
 				Next->Prev = Node;
 			}
 			Ret = btree4_insert(&IOInst->btree, MemInst);
@@ -577,7 +577,7 @@ ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
 
 	Pos = DevMem;
 
-	while (Pos) {
+	while (Pos != NULL) {
 		if (Pos->Free) {
 			Free += Pos->Size;
 		}
@@ -596,7 +596,7 @@ ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
 
 	Pos = DevMem;
 
-	while (Pos) {
+	while (Pos != NULL) {
 		if (!Pos->Free) {
 			use += Pos->Size;
 		}
@@ -617,7 +617,7 @@ void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
 
 	Pos = DevMem;
 
-	while (Pos) {
+	while (Pos != NULL) {
 		if (Pos->Free) {
 			Free += Pos->Size;
 		} else {
@@ -651,7 +651,7 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	if (Next && Next->Free) {
 		Node->Size += Next->Size;
 		Node->Next = Next->Next;
-		if (Next->Next) {
+		if (Next->Next != NULL) {
 			Next->Next->Prev = Node;
 		}
 		free(Next);
@@ -660,7 +660,7 @@ static AieRC XAie_SimMemFree(XAie_MemInst *MemInst)
 	if (Prev && Prev->Free) {
 		Prev->Size += Node->Size;
 		Prev->Next = Next;
-		if (Next) {
+		if (Next != NULL) {
 			Next->Prev = Prev;
 		}
 		free(Node);
