@@ -776,7 +776,8 @@ s32 XAie_ClearPartitionContextAsync(XAie_DevInst *DevInst,
 * 		be deprecated in the future.
 *
 ******************************************************************************/
-static AieRC _XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
+static AieRC __attribute__((unused))
+_XAie_PartitionIsolationInitialize(XAie_DevInst *DevInst)
 {
 	if((DevInst == XAIE_NULL) ||
 			(DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {

@@ -79,7 +79,9 @@ typedef struct {
 	u16 Len;
 } XAie_PmOpTypeLen __attribute__((aligned(4)));
 
+#ifdef XAIE_PROD
 static u8 XAie_BaremetalUseIoctl2 = 0U;
+#endif
 
 /************************** Function Definitions *****************************/
 
@@ -257,6 +259,10 @@ static AieRC _XAie_BaremetalIO_PrivilegeWrite32(u32 StartCol,
 		XAIE_ERROR("Failed to write to privileged register. NumCols: %u StartCol: %u PLM Op ID:%u\n", NumCols, StartCol, Ops);
 		return XAIE_ERR;
 	}
+#else
+	(void)StartCol;
+	(void)NumCols;
+	(void)Ops;
 #endif
 	return XAIE_OK;
 }
@@ -799,6 +805,8 @@ static AieRC _XAie_BaremetalIO_PrivilegeInitPart(XAie_DevInst *DevInst,
 
 	return RC;
 #else
+	(void)DevInst;
+	(void)Opts;
 	return XAIE_OK;
 #endif
 }
@@ -876,6 +884,7 @@ static AieRC _XAie_BaremetalIO_PrivilegeTeardownPart(XAie_DevInst *DevInst)
 
 	return RC;
 #else
+	(void)DevInst;
 	return XAIE_OK;
 #endif
 }
@@ -919,6 +928,9 @@ AieRC _XAie_BaremetalIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
 				TileStatus, NumTiles);
 	}
+#else
+	(void)DevInst;
+	(void)Args;
 #endif
 
 	return XAIE_OK;
@@ -995,6 +1007,9 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
 			ColClockStatus, (u32)(DevInst->NumRows - 1U));
 	}
+#else
+	(void)DevInst;
+	(void)Args;
 #endif
 	return XAIE_OK;
 }

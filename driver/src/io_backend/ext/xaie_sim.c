@@ -937,19 +937,24 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	return NULL;
 }
 
-static ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
+/*
+ * Not part of SimBackend.Ops. These need external linkage to match the
+ * __AIESIM__ definitions above, as callers such as the aiebaremetal testaie
+ * example reference them irrespective of the simulator configuration.
+ */
+ssize_t XAie_SimDevmemFreeSize(XAie_DevInst *DevInst)
 {
 	(void)DevInst;
 	return 0;
 }
 
-static ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
+ssize_t XAie_SimDevmemUsedSize(XAie_DevInst *DevInst)
 {
 	(void)DevInst;
 	return 0;
 }
 
-static void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
+void XAie_SimDumpDevMem(XAie_DevInst *DevInst)
 {
 	(void)DevInst;
 }

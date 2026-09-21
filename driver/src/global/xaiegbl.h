@@ -871,7 +871,7 @@ static inline void XAie_SetupConfigPartProp(XAie_Config *ConfigPtr, u32 Nid,
 			.MemTileNumRows = _MemTileNumRows,\
 			.AieTileRowStart = _AieTileRowStart,\
 			.AieTileNumRows = _AieTileNumRows,\
-			.PartProp = {0}, \
+			.PartProp = {0U, 0U, 0U, 0U}, \
 		}\
 
 /*****************************************************************************/
