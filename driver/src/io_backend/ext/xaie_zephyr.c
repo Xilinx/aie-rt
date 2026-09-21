@@ -81,7 +81,7 @@ static AieRC XAie_ZephyrIO_Finish(void *IOInst)
 {
 	XAie_ZephyrIO *Zephyr_IOInst = (XAie_ZephyrIO *)IOInst;
 
-	if (Zephyr_IOInst->btree.root) {
+	if (Zephyr_IOInst->btree.root != NULL) {
 		XAIE_ERROR("Trying to free IOInst while Meminsts exists.\n");
 		return XAIE_ERR;
 	}
@@ -831,7 +831,7 @@ AieRC _XAie_ZephyrIO_PrivilegeSetColumnClk(XAie_DevInst *DevInst,
 			XAie_TileLoc((u8)Args->StartCol, 1));
 	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
 
-	if(Args->Enable) {
+	if(Args->Enable != 0U) {
 		/*
 		 * Set bitmap from start column to Start+Number of columns
 		 */
@@ -899,7 +899,7 @@ AieRC _XAie_ZephyrIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		 */
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 				XAie_TileLoc(Args->Locs[i].Col, 1));
-		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+		if (CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus) != 0U) {
 			continue;
 		}
 

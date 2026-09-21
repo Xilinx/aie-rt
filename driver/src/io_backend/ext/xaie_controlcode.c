@@ -249,7 +249,7 @@ static void _XAie_EndJob(XAie_ControlCodeIO  *ControlCodeInst) {
 *******************************************************************************/
 static void _XAie_EndPage(XAie_ControlCodeIO  *ControlCodeInst) {
 
-	if(ControlCodeInst->IsPageOpen) {
+	if(ControlCodeInst->IsPageOpen != 0U) {
 		_XAie_EndJob(ControlCodeInst);
 		fprintf(ControlCodeInst->ControlCodefp, ".eop\n\n");
 		ControlCodeInst->UcPageSize 	= 0;
@@ -272,7 +272,7 @@ static void _XAie_EndPage(XAie_ControlCodeIO  *ControlCodeInst) {
 *******************************************************************************/
 static void _XAie_StartNewPage(XAie_ControlCodeIO  *ControlCodeInst) {
 
-	if(ControlCodeInst->IsPageOpen) {
+	if(ControlCodeInst->IsPageOpen != 0U) {
 		_XAie_EndPage(ControlCodeInst);
 	}
 
@@ -313,7 +313,7 @@ static void _XAie_StartNewJob(XAie_ControlCodeIO  *ControlCodeInst) {
 	}
 
 	// close current job on current page
-	if (ControlCodeInst->IsJobOpen) {
+	if (ControlCodeInst->IsJobOpen != 0U) {
 		_XAie_EndJob(ControlCodeInst);
 	}
 
@@ -456,7 +456,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 				_XAie_StartNewJob(ControlCodeInst);
 			}
 
-			if(ControlCodeInst->CombineCommands) {
+			if(ControlCodeInst->CombineCommands != 0U) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
 				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			} else {
@@ -698,7 +698,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 					_XAie_StartNewJob(ControlCodeInst);
 					ControlCodeInst->IsAdjacentMemWrite = 0;
 				}
-				if(ControlCodeInst->IsShimBd) {
+				if(ControlCodeInst->IsShimBd != 0U) {
 					ControlCodeInst->IsAdjacentMemWrite = 0;
 				}
 			}
@@ -726,7 +726,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 					ControlCodeInst->CombineCommands = 0;
 				}
 
-				if(ControlCodeInst->CombineCommands) {
+				if(ControlCodeInst->CombineCommands != 0U) {
 					fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
 					fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 				} else {
@@ -756,7 +756,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 					}
 				}
 
-				if(ControlCodeInst->IsShimBd){
+				if(ControlCodeInst->IsShimBd != 0U){
 					if(ControlCodeInst->Mode == XAIE_SHIM_BD_CHAINING_ENABLE) {
 						ControlCodeInst->CombineCommands = 1;
 						ControlCodeInst->NumShimBDsChained++;
@@ -879,7 +879,7 @@ static AieRC XAie_ControlCodeIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u
 				_XAie_StartNewJob(ControlCodeInst);
 			}
 
-			if(ControlCodeInst->CombineCommands) {
+			if(ControlCodeInst->CombineCommands != 0U) {
 				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
 				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			} else {

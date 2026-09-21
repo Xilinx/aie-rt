@@ -507,7 +507,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 	u64 Align = Size % 4;
 	s32 Ret;
 
-	if (Align) {
+	if (Align != 0U) {
 		Size = Size + (4 - Align);
 	}
 
@@ -540,7 +540,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 				Next->Prev = Node;
 			}
 			Ret = btree4_insert(&IOInst->btree, MemInst);
-			if (Ret) {
+			if (Ret != 0) {
 				XAie_SimMemFree(MemInst);
 				return NULL;
 			}
@@ -557,7 +557,7 @@ static XAie_MemInst* XAie_SimMemAllocate(XAie_DevInst *DevInst, u64 Size,
 			MemInst->Size = Size;
 			MemInst->Cache = Cache;
 			MemInst->DevInst = DevInst;
-			if (Ret) {
+			if (Ret != 0) {
 				XAie_SimMemFree(MemInst);
 				return NULL;
 			}

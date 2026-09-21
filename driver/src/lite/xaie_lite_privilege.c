@@ -451,7 +451,7 @@ AieRC XAie_PartitionInitialize(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 #ifndef __AIEIPU__
 			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 					Opts->Locs[i]);
-			if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus)) {
+			if(CheckBit(DevInst->DevOps->TilesInUse, ColClockStatus) != 0U) {
 				continue;
 			}
 #endif

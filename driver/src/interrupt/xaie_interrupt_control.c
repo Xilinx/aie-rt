@@ -124,7 +124,7 @@ void XAie_DisableErrorInterrupts(u8 IrqId)
 		Status = _XAie_LIntrCtrlL2Status(Loc);
 
 		/* Only disable L2s that are reporting errors. */
-		if (Status) {
+		if (Status != 0U) {
 			_XAie_LIntrCtrlL2Disable(Loc, Status);
 			_XAie_LIntrCtrlL2Ack(Loc, Status);
 		}
