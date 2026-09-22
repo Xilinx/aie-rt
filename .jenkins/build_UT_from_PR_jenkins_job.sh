@@ -4,6 +4,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=ci_common.sh
 source "${SCRIPT_DIR}/ci_common.sh"
 
+# CMake 4+ dropped compatibility with cmake_minimum_required < 3.5.
+# cpputest, driver, and fal still declare older minima.
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
 # CI provides these variables; the workspace already contains the merged PR code.
 echo "GITHUB_PR_TRIGGER_SENDER_AUTHOR: $GITHUB_PR_TRIGGER_SENDER_AUTHOR"
 echo "GITHUB_PR_URL: $GITHUB_PR_URL"
