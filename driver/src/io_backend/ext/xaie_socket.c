@@ -124,7 +124,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 
 	ret = fseek(Fd, 0L, SEEK_END);
 	if(ret != 0U) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 			errno, strerror(errno));
 		return XAIE_ERR;
@@ -135,7 +135,7 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 
 	PortNum = (char *)malloc(FileSize + 1U);
 	if(PortNum == NULL) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		XAIE_ERROR("Memory allocation failedi. Unable to read port"
 				" number\n");
 		return XAIE_ERR;
@@ -143,17 +143,17 @@ static AieRC XAie_SocketIO_Init(XAie_DevInst *DevInst)
 
 	ret = fread((void *)PortNum, FileSize, 1U, Fd);
 	if(ret == 0U) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		free(PortNum);
 		XAIE_ERROR("Failed to read port number from file\n");
 		return XAIE_ERR;
 	}
 
-	fclose(Fd);
+	(void)fclose(Fd);
 	PortNum[FileSize] = '\0';
-	printf("[AIE INFO]: Connecting to simulator - localhost:%s\n", PortNum);
+	(void)printf("[AIE INFO]: Connecting to simulator - localhost:%s\n", PortNum);
 
-	memset(&hints, 0, sizeof(struct addrinfo));
+	(void)memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
@@ -249,7 +249,7 @@ static AieRC XAie_SocketIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 	size_t Len;
 	int Ret;
 
-	sprintf(CmdBuf, "R 0X%016lX\n", SocketIOInst->BaseAddr + RegOff);
+	(void)sprintf(CmdBuf, "R 0X%016lX\n", SocketIOInst->BaseAddr + RegOff);
 	Len = write(SocketIOInst->SocketFd, CmdBuf, strlen(CmdBuf));
 	if(Len != strlen(CmdBuf)) {
 		XAIE_ERROR("Failed to submit socket command: %s\n", CmdBuf);
@@ -457,7 +457,7 @@ static AieRC _XAie_SocketIO_NpiRead32(void *IOInst, u64 RegOff, u32 *Data)
 	size_t Len;
 	int Ret;
 
-	sprintf(CmdBuf, "R 0X%016lX\n", SocketIOInst->NpiBaseAddr + RegOff);
+	(void)sprintf(CmdBuf, "R 0X%016lX\n", SocketIOInst->NpiBaseAddr + RegOff);
 	Len = write(SocketIOInst->SocketFd, CmdBuf, strlen(CmdBuf));
 	if(Len != strlen(CmdBuf)) {
 		XAIE_ERROR("Failed to submit socket command: %s\n", CmdBuf);

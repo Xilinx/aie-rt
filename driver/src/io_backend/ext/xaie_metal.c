@@ -153,7 +153,7 @@ void _XAie_MetalIO_MapNpi(XAie_MetalIO *IOInst, u64 NpiBaseAddr)
 *******************************************************************************/
 static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 {
-	u64 Size = 0x100000000;
+	u64 Size = 0x100000000ULL;
 	XAie_MetalIO *MetalIOInst;
 	DIR *Dir;
 	struct dirent *DirEntry;
@@ -191,15 +191,15 @@ static AieRC XAie_MetalIO_Init(XAie_DevInst *DevInst)
 		sprintf(path, "%s/%s/name", XAIE_UIO_SYSFS_PATH,
 				DirEntry->d_name);
 		DevFile = fopen(path, "r");
-		fgets(DevName, XAIE_UIO_DRIVER_PATH_MAX, DevFile);
-		fclose(DevFile);
+		(void)fgets(DevName, XAIE_UIO_DRIVER_PATH_MAX, DevFile);
+		(void)fclose(DevFile);
 		if(strncmp(DevName, "xilinx-aiengine",
 					strlen("xilinx-aiengine")) == 0) {
 			break;
 		}
 	}
 
-	sprintf(path, "/dev/%s", DirEntry->d_name);
+	(void)sprintf(path, "/dev/%s", DirEntry->d_name);
 	closedir(Dir);
 	Fd = open(path, O_RDWR);
 	if(Fd < 0) {

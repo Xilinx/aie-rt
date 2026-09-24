@@ -535,7 +535,7 @@ static AieRC XAieSim_GetStackRange(const char *MapPtr,
 		}
 	}
 
-	fclose(Fd);
+	(void)fclose(Fd);
 
 	if(StackSzPtr->start == 0xFFFFFFFFU) {
 		return XAIE_ERR;
@@ -629,8 +629,8 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 		XAIE_ERROR("failed to malloc for .map file path.\n");
 		return XAIE_ERR;
 	}
-	strcpy(MapPath, ElfPtr);
-	strcat(MapPath, MapPathSuffix);
+	(void)strcpy(MapPath, ElfPtr);
+	(void)strcat(MapPath, MapPathSuffix);
 	Status = XAieSim_GetStackRange(MapPath, &StackSz);
 	XAIE_FREE(MapPath);
 	XAIE_DBG("Stack start:%08x, end:%08x\n", StackSz.start,
@@ -672,7 +672,7 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	if(Ret != 0) {
 		XAIE_ERROR("Failed to get end of file, %d: %s\n",
 				errno, strerror(errno));
-		fclose(Fd);
+		(void)fclose(Fd);
 		return XAIE_INVALID_ELF;
 	}
 
@@ -683,20 +683,20 @@ AieRC XAie_LoadElfPartial(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Read entire elf file into memory */
 	ElfMem = (u8*) XAIE_MALLOC(ElfSz);
 	if(ElfMem == NULL) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		XAIE_ERROR("Memory allocation failed\n");
 		return XAIE_ERR;
 	}
 
 	Ret = (s32)fread((void*)ElfMem, ElfSz, 1U, Fd);
 	if(Ret == 0) {
-		fclose(Fd);
+		(void)fclose(Fd);
 		XAIE_FREE(ElfMem);
 		XAIE_ERROR("Failed to read Elf into memory\n");
 		return XAIE_ERR;
 	}
 
-	fclose(Fd);
+	(void)fclose(Fd);
 
 	RC = _XAie_LoadElfFromMem(DevInst, Loc, ElfMem, Sections);
 	XAIE_FREE(ElfMem);

@@ -452,8 +452,8 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 	va_list ArgPtr;
 
 	va_start(ArgPtr, Format);
-	fprintf(Fd, "%s %s():"U32_FORMAT": ", prefix, func, line);
-	vfprintf(Fd, Format, ArgPtr);
+	(void)fprintf(Fd, "%s %s():"U32_FORMAT": ", prefix, func, line);
+	(void)vfprintf(Fd, Format, ArgPtr);
 	va_end(ArgPtr);
 }
 #endif /* !XAIE_FEATURE_STDIO_LOGGING_ENABLE */
@@ -691,10 +691,10 @@ AieRC _XAie_PrintPartitionList(XAie_DevInst *DevInst)
 	while (NodePtr != NULL) {
 		ListNode = XAIE_CONTAINER_OF(NodePtr, XAie_PartitionList, Node);
 
-		PRINT("Partition ID:   "U32_FORMAT"\n",ListNode->PartitionId);
-		PRINT("\tStart Col:    %d \n", ListNode->ColRange.Start);
-		PRINT("\tNum Cols:     %d\n", ListNode->ColRange.Num);
-		PRINT("\tPartition Fd: %d\n", ListNode->PartitionFd);
+		(void)PRINT("Partition ID:   "U32_FORMAT"\n",ListNode->PartitionId);
+		(void)PRINT("\tStart Col:    %d \n", ListNode->ColRange.Start);
+		(void)PRINT("\tNum Cols:     %d\n", ListNode->ColRange.Num);
+		(void)PRINT("\tPartition Fd: %d\n", ListNode->PartitionFd);
 
 		NodePtr = NodePtr->Next;
         }
@@ -798,9 +798,9 @@ static AieRC _XAie_RemoveTxnInstFromList(XAie_DevInst *DevInst, u64 Tid)
 void BuffHexDump(char* buff,u32 size) {
 	XAIE_DBG("Buff Info %p %d\n",buff,size);
 	for (u32 i = 0; i < size; ++i) {
-		PRINT("0x%x ",(u8)buff[i]&0xffU);
+		(void)PRINT("0x%x ",(u8)buff[i]&0xffU);
 	}
-	PRINT("\n");
+	(void)PRINT("\n");
 }
 
 static s32 TxnCmdDump(XAie_TxnCmd* cmd) {
@@ -2338,7 +2338,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		TxnInst->CmdBuf[TxnInst->NumCmds].Opcode = (XAie_TxnOpcode)OpNumber;
 		TxnInst->CmdBuf[TxnInst->NumCmds].Size = (u32)size;
 
-		memcpy(tmpBuff, Args, size);
+		(void)memcpy(tmpBuff, Args, size);
 		TxnInst->CmdBuf[TxnInst->NumCmds].DataPtr = (u64)(uintptr_t)tmpBuff;
 
 		if (TX_DUMP_ENABLE) {
@@ -2696,7 +2696,7 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 			XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
 			BdAddr += 4U;
 		}
-		PRINT("\n");
+		(void)PRINT("\n");
 	}
 	return XAIE_OK;
 }

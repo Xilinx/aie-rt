@@ -2654,7 +2654,7 @@ s32 XAie_LinuxIO_Write64Bytes_Async(void *IOInst, u64 RegOff, const u32 *Data,
 	Sqe->user_data = (u64)AsyncRes;
 	Args = (struct aie_block_write64 *)Sqe->cmd;
 	Args->size = Size;
-	memcpy(Args->data, Data, Size * sizeof(u32));
+	(void)memcpy(Args->data, Data, Size * sizeof(u32));
 
 	Ret = io_uring_submit(&LinuxIOInst->Ring);
 	if (Ret < 0) {
@@ -2723,7 +2723,7 @@ static s32 XAie_LinuxIO_BlockWrite32Async(void *IOInst, u64 RegOff,
 	}
 
 	BufIdx = _XAie_LinuxIO_IoVecIncHead(LinuxIOInst);
-	memcpy(LinuxIOInst->IoVecs[BufIdx].iov_base, Data, Size * sizeof(u32));
+	(void)memcpy(LinuxIOInst->IoVecs[BufIdx].iov_base, Data, Size * sizeof(u32));
 	AsyncRes->io_vec_inuse = 1;
 
 	Sqe = io_uring_get_sqe(&LinuxIOInst->Ring);

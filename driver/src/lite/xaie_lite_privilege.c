@@ -318,7 +318,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst, const XAie_PartInitOpt
 	AieRC RC;
 	u8 IsolationFlags;
 
-	memset(&SoftPartOpts,0, sizeof(SoftPartOpts));
+	(void)memset(&SoftPartOpts,0, sizeof(SoftPartOpts));
 
 	if (DevPartInfo->StartCol <= DevInst->StartCol &&
 		DevPartInfo->NumCols >= DevInst->NumCols) {

@@ -109,10 +109,10 @@ static AieRC _XAie_UpdateDataLengthDmaBd(XAie_ControlCodeIO *ControlCodeInst, u3
         int Count = 0;
         char Data;
 
-        fseek(ControlCodeInst->ControlCodedatafp, 0, SEEK_END);
+        (void)fseek(ControlCodeInst->ControlCodedatafp, 0, SEEK_END);
 
         while (Position >= 0U) {
-                fseek(ControlCodeInst->ControlCodedatafp, Position, SEEK_SET);
+                (void)fseek(ControlCodeInst->ControlCodedatafp, Position, SEEK_SET);
                 Data = fgetc(ControlCodeInst->ControlCodedatafp);
 
                 if (Data == ',') {
@@ -120,8 +120,8 @@ static AieRC _XAie_UpdateDataLengthDmaBd(XAie_ControlCodeIO *ControlCodeInst, u3
                 }
 
                 if (Count == 3U) {
-                        fseek(ControlCodeInst->ControlCodedatafp, Position + 1, SEEK_SET);
-                        fprintf(ControlCodeInst->ControlCodedatafp, " 0x%x, 0, 0\n", Datalength);
+                        (void)fseek(ControlCodeInst->ControlCodedatafp, Position + 1, SEEK_SET);
+                        (void)fprintf(ControlCodeInst->ControlCodedatafp, " 0x%x, 0, 0\n", Datalength);
                         break;
                 }
 
@@ -132,7 +132,7 @@ static AieRC _XAie_UpdateDataLengthDmaBd(XAie_ControlCodeIO *ControlCodeInst, u3
                 Position--;
         }
 
-        fseek(ControlCodeInst->ControlCodedatafp, 0, SEEK_END);
+        (void)fseek(ControlCodeInst->ControlCodedatafp, 0, SEEK_END);
 
         return XAIE_OK;
 }
@@ -188,7 +188,7 @@ static AieRC XAie_ControlCodeIO_Init(XAie_DevInst *DevInst)
 		return XAIE_ERR;
 	}
 
-	memset(IOInst, 0, sizeof(XAie_ControlCodeIO));
+	(void)memset(IOInst, 0, sizeof(XAie_ControlCodeIO));
 	IOInst->BaseAddr = DevInst->BaseAddr;
 	IOInst->NpiBaseAddr = XAIE_NPI_BASEADDR;
 	IOInst->ScrachpadName = NULL;
@@ -214,7 +214,7 @@ static void _XAie_EndJob(XAie_ControlCodeIO  *ControlCodeInst) {
 
 	if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE)
 	{
-		fprintf(ControlCodeInst->ControlCodefp,"WAIT_UC_DMA\t $r0\n");
+		(void)fprintf(ControlCodeInst->ControlCodefp,"WAIT_UC_DMA\t $r0\n");
 		ControlCodeInst->UcPageTextSize += ISA_OPSIZE_WAIT_UC_DMA;
 		ControlCodeInst->UcPageSize += ISA_OPSIZE_WAIT_UC_DMA;
 	} else if(ControlCodeInst->NumShimBDsChained > 0) {
@@ -229,7 +229,7 @@ static void _XAie_EndJob(XAie_ControlCodeIO  *ControlCodeInst) {
 	}
 
 	if(ControlCodeInst->IsPageOpen && ControlCodeInst->IsJobOpen) {
-		fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
+		(void)fprintf(ControlCodeInst->ControlCodefp, "END_JOB\n\n");
 		ControlCodeInst->IsJobOpen 		= 0;
 		ControlCodeInst->CombineCommands 	= 0;
 	}
@@ -251,7 +251,7 @@ static void _XAie_EndPage(XAie_ControlCodeIO  *ControlCodeInst) {
 
 	if(ControlCodeInst->IsPageOpen != 0U) {
 		_XAie_EndJob(ControlCodeInst);
-		fprintf(ControlCodeInst->ControlCodefp, ".eop\n\n");
+		(void)fprintf(ControlCodeInst->ControlCodefp, ".eop\n\n");
 		ControlCodeInst->UcPageSize 	= 0;
 		ControlCodeInst->UcPageTextSize = 0;
 		ControlCodeInst->IsPageOpen 	= 0;
@@ -457,8 +457,8 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 			}
 
 			if(ControlCodeInst->CombineCommands != 0U) {
-				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
-				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
+				(void)fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
+				(void)fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			} else {
 				if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
 					if((ControlCodeInst->UcPageSize + OpSize + ISA_OPSIZE_WAIT_UC_DMA +
@@ -500,7 +500,7 @@ static AieRC XAie_ControlCodeIO_Write32(void *IOInst, u64 RegOff, u32 Value)
 			ControlCodeInst->UcbdDataNum++;
 
 		}
-		fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", Value);
+		(void)fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", Value);
 		ControlCodeInst->UcPageSize += UC_DMA_WORD_LEN;
 	}
 
@@ -727,8 +727,8 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 				}
 
 				if(ControlCodeInst->CombineCommands != 0U) {
-					fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
-					fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
+					(void)fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
+					(void)fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 				} else {
 					if(ControlCodeInst->Mode != XAIE_SHIM_BD_CHAINING_ENABLE) {
 						if(ControlCodeInst->Mode == XAIE_WRITE_DES_ASYNC_ENABLE) {
@@ -798,7 +798,7 @@ static AieRC XAie_ControlCodeIO_BlockWrite32(void *IOInst, u64 RegOff, const u32
 					PageBreakOccured = 1;
 					break;
 				 }
-				fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", *(Data+IterationSize));
+				(void)fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", *(Data+IterationSize));
 				ControlCodeInst->UcPageSize += UC_DMA_WORD_LEN;
 			}
 
@@ -880,8 +880,8 @@ static AieRC XAie_ControlCodeIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u
 			}
 
 			if(ControlCodeInst->CombineCommands != 0U) {
-				fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
-				fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
+				(void)fseek(ControlCodeInst->ControlCodedatafp, -3, SEEK_CUR);
+				(void)fprintf(ControlCodeInst->ControlCodedatafp, " 1\n");
 			} else {
 				fprintf(ControlCodeInst->ControlCodefp,
 						"UC_DMA_WRITE_DES_SYNC\t @UCBD_label_%d\n",
@@ -907,7 +907,7 @@ static AieRC XAie_ControlCodeIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data, u
 				(ControlCodeInst->UcPageSize + UC_DMA_WORD_LEN + ControlCodeInst->DataAligner)
 				<= ControlCodeInst->PageSizeMax; IterationSize++)
 			{
-				fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", Data);
+				(void)fprintf(ControlCodeInst->ControlCodedata2fp, "\t.long 0x%08x\n", Data);
 				ControlCodeInst->UcPageSize += UC_DMA_WORD_LEN;
 			}
 
@@ -1022,7 +1022,7 @@ static AieRC XAie_ControlCodeIO_WaitUcDMA(void *IOInst)
 			return XAIE_ERR;
 	}
 
-	fprintf(ControlCodeInst->ControlCodefp,"WAIT_UC_DMA\t $r0\n");
+	(void)fprintf(ControlCodeInst->ControlCodefp,"WAIT_UC_DMA\t $r0\n");
 	ControlCodeInst->UcPageTextSize += ISA_OPSIZE_WAIT_UC_DMA;
 	ControlCodeInst->UcPageSize += ISA_OPSIZE_WAIT_UC_DMA;
 
@@ -1242,7 +1242,7 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 		return XAIE_INVALID_BACKEND;
 	}
 
-	memset(ControlCodeInst, 0, sizeof(XAie_ControlCodeIO));
+	(void)memset(ControlCodeInst, 0, sizeof(XAie_ControlCodeIO));
 	ControlCodeInst->ScrachpadName = NULL;
 	ControlCodeInst->Mode = (u8)XAIE_INVALID_MODE;
 	ControlCodeInst->ControlCodefp      = fopen(FileName, "w");
@@ -1255,32 +1255,32 @@ AieRC XAie_OpenControlCodeFile(XAie_DevInst *DevInst, const char *FileName, u32 
 		ControlCodeInst->ControlCodedata2fp == NULL) {
 
 		if(ControlCodeInst->ControlCodefp != NULL) {
-			fclose(ControlCodeInst->ControlCodefp);
+			(void)fclose(ControlCodeInst->ControlCodefp);
 		}
 		if (ControlCodeInst->ControlCodedatafp != NULL) {
-			fclose(ControlCodeInst->ControlCodedatafp);
+			(void)fclose(ControlCodeInst->ControlCodedatafp);
 		}
 		if (ControlCodeInst->ControlCodedata2fp != NULL) {
-			fclose(ControlCodeInst->ControlCodedata2fp);
+			(void)fclose(ControlCodeInst->ControlCodedata2fp);
 		}
 
 		//printf("File could not be opened, fopen Error: %s\n", strerror(errno));
 		return XAIE_ERR;
 	}
-	printf("Generating: %s\n", FileName);
-	fprintf(ControlCodeInst->ControlCodefp, ".partition\t %dcolumn\n",DevInst->NumCols);
-	fprintf(ControlCodeInst->ControlCodefp, ";\n");
-	fprintf(ControlCodeInst->ControlCodefp, ";text\n");
-	fprintf(ControlCodeInst->ControlCodefp, ";\n");
+	(void)printf("Generating: %s\n", FileName);
+	(void)fprintf(ControlCodeInst->ControlCodefp, ".partition\t %dcolumn\n",DevInst->NumCols);
+	(void)fprintf(ControlCodeInst->ControlCodefp, ";\n");
+	(void)fprintf(ControlCodeInst->ControlCodefp, ";text\n");
+	(void)fprintf(ControlCodeInst->ControlCodefp, ";\n");
 	ControlCodeInst->UcPageTextSize += ISA_OPSIZE_EOF;
 	ControlCodeInst->UcPageSize += PAGE_HEADER_SIZE + ISA_OPSIZE_EOF;
 	ControlCodeInst->IsPageOpen = 1;
 
-	fprintf(ControlCodeInst->ControlCodedatafp, ";\n");
-	fprintf(ControlCodeInst->ControlCodedatafp, ";data\n");
-	fprintf(ControlCodeInst->ControlCodedatafp, ";\n");
-	fprintf(ControlCodeInst->ControlCodedatafp, ".align    16\n");
-	fprintf(ControlCodeInst->ControlCodedata2fp, ".align    4\n");
+	(void)fprintf(ControlCodeInst->ControlCodedatafp, ";\n");
+	(void)fprintf(ControlCodeInst->ControlCodedatafp, ";data\n");
+	(void)fprintf(ControlCodeInst->ControlCodedatafp, ";\n");
+	(void)fprintf(ControlCodeInst->ControlCodedatafp, ".align    16\n");
+	(void)fprintf(ControlCodeInst->ControlCodedata2fp, ".align    4\n");
 
 	return XAIE_OK;
 }
@@ -1359,15 +1359,15 @@ static void _XAie_MegreFiles(FILE *SrcFp, FILE *DesFp) {
 	char TempBuf;
 
 	if (!SrcFp || !DesFp) {
-		printf("Files not opened\n");
+		(void)printf("Files not opened\n");
 		return;
 	}
 
-	fseek(SrcFp, 0, SEEK_SET);
-	fseek(DesFp, 0, SEEK_END);
+	(void)fseek(SrcFp, 0, SEEK_SET);
+	(void)fseek(DesFp, 0, SEEK_END);
 
 	while ((TempBuf = fgetc(SrcFp)) != EOF) {
-		fputc(TempBuf, DesFp);
+		(void)fputc(TempBuf, DesFp);
 	}
 
 }
@@ -1383,18 +1383,18 @@ void XAie_CloseControlCodeFile(XAie_DevInst *DevInst) {
 
 	if (ControlCodeInst->ControlCodefp != NULL) {
 		_XAie_EndPage(ControlCodeInst);
-		fprintf(ControlCodeInst->ControlCodefp, "EOF\n\n");
+		(void)fprintf(ControlCodeInst->ControlCodefp, "EOF\n\n");
 
 		_XAie_MegreFiles(ControlCodeInst->ControlCodedatafp, ControlCodeInst->ControlCodefp);
 		_XAie_MegreFiles(ControlCodeInst->ControlCodedata2fp, ControlCodeInst->ControlCodefp);
 
-		fclose(ControlCodeInst->ControlCodefp);
-		fclose(ControlCodeInst->ControlCodedatafp);
-		fclose(ControlCodeInst->ControlCodedata2fp);
+		(void)fclose(ControlCodeInst->ControlCodefp);
+		(void)fclose(ControlCodeInst->ControlCodedatafp);
+		(void)fclose(ControlCodeInst->ControlCodedata2fp);
 
-		remove(TEMP_ASM_FILE1);
-		remove(TEMP_ASM_FILE2);
-		remove(TEMP_ASM_FILE3);
+		(void)remove(TEMP_ASM_FILE1);
+		(void)remove(TEMP_ASM_FILE2);
+		(void)remove(TEMP_ASM_FILE3);
 
 		ControlCodeInst->ControlCodefp		= NULL;
 		ControlCodeInst->ControlCodedatafp	= NULL;
@@ -1482,10 +1482,10 @@ AieRC XAie_ControlCodeAddAnnotation(XAie_DevInst *DevInst,
         XAie_ControlCodeIO  *ControlCodeInst = (XAie_ControlCodeIO *)DevInst->IOInst;
 
         if (ControlCodeInst->ControlCodefp != NULL) {
-                fprintf(ControlCodeInst->ControlCodefp,".section annotation\n");
-                fprintf(ControlCodeInst->ControlCodefp,"id: %d\n", Id);
-                fprintf(ControlCodeInst->ControlCodefp,"name: %s\n", Name);
-                fprintf(ControlCodeInst->ControlCodefp,"description: %s\n", Description);
+                (void)fprintf(ControlCodeInst->ControlCodefp,".section annotation\n");
+                (void)fprintf(ControlCodeInst->ControlCodefp,"id: %d\n", Id);
+                (void)fprintf(ControlCodeInst->ControlCodefp,"name: %s\n", Name);
+                (void)fprintf(ControlCodeInst->ControlCodefp,"description: %s\n", Description);
                 return XAIE_OK;
         } else {
                 return XAIE_ERR;
@@ -1511,7 +1511,7 @@ AieRC XAie_ControlCodeSetScrachPad(XAie_DevInst *DevInst, const char *Scrachpad)
         if(ControlCodeInst->ScrachpadName == NULL) {
                 return XAIE_ERR;
         } else {
-                strncpy(ControlCodeInst->ScrachpadName, Scrachpad, strlen(Scrachpad));
+                (void)strncpy(ControlCodeInst->ScrachpadName, Scrachpad, strlen(Scrachpad));
                 return XAIE_OK;
         }
 }
@@ -1541,7 +1541,7 @@ static AieRC XAie_ControlCodeIO_SetPadInteger(void *IOInst, char* BuffName, u32 
         return XAIE_ERR;
     }
     if(ControlCodeInst->ControlCodefp != NULL) {
-        fprintf(ControlCodeInst->ControlCodefp, ".setpad\t %s, 0x%x\n",BuffName, BuffSize);
+        (void)fprintf(ControlCodeInst->ControlCodefp, ".setpad\t %s, 0x%x\n",BuffName, BuffSize);
         ControlCodeInst->CombineCommands = 0;
         return XAIE_OK;
     } else {
@@ -1575,7 +1575,7 @@ static AieRC XAie_ControlCodeIO_SetPadString(void *IOInst, char* BuffName, char*
         return XAIE_ERR;
     }
     if(ControlCodeInst->ControlCodefp != NULL) {
-        fprintf(ControlCodeInst->ControlCodefp, ".setpad\t %s, %s\n",BuffName, BuffBlobPath);
+        (void)fprintf(ControlCodeInst->ControlCodefp, ".setpad\t %s, %s\n",BuffName, BuffBlobPath);
         ControlCodeInst->CombineCommands = 0;
         return XAIE_OK;
     } else {

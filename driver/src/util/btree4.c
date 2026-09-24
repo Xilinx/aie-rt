@@ -73,7 +73,7 @@ static int32_t btree4_insert_data_child(const struct btree4 *tree, struct btree4
 
 	if (pos == 3) {
 #ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
-		printf("ERROR: no space. Please slit the node\n");
+		(void)printf("ERROR: no space. Please slit the node\n");
 #endif
 		return -EINVAL;
 	}
@@ -151,7 +151,7 @@ static int32_t btree4_split(struct btree4 *tree, struct btree4_node *node)
 
 		tree->root = parent;
 	} else {
-		btree4_insert_data_child(tree, node->parent, new_data, new_node);
+		(void)btree4_insert_data_child(tree, node->parent, new_data, new_node);
 	}
 
 	return 0;
@@ -206,7 +206,7 @@ again:
 		return -EEXIST;
 	}
 	if (btree4_data_count(node) == BTREE4_DATA_NUM) {
-		btree4_split(tree, node);
+		(void)btree4_split(tree, node);
 		goto again;
 	}
 	return btree4_insert_data_child(tree, node, data, NULL);
@@ -674,7 +674,7 @@ void *btree4_delete(struct btree4 *tree, void *data)
 		parent->child[i] = parent->child[i + 1];
 		parent->child[i + 1] = NULL;
 	}
-	btree4_insert(tree, insert_value);
+	(void)btree4_insert(tree, insert_value);
 	XAIE_FREE(merge_node);
 
 	return value;

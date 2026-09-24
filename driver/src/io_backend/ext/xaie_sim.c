@@ -150,7 +150,7 @@ static AieRC XAie_SimIO_Init(XAie_DevInst *DevInst)
 	/* 3GB MEM SIZE
 	 * 0xfffffffc appears to be max
 	 */
-	Head->Size = 0xc0000000;
+	Head->Size = 0xc0000000U;
 	return XAIE_OK;
 }
 

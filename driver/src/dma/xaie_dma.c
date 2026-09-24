@@ -82,7 +82,7 @@ AieRC XAie_DmaDescInit(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 
-	memset((void *)DmaDesc, 0, sizeof(XAie_DmaDesc));
+	(void)memset((void *)DmaDesc, 0, sizeof(XAie_DmaDesc));
 
 	DmaMod->DmaBdInit(DmaDesc);
 	DmaDesc->TileType = TileType;
@@ -962,7 +962,7 @@ AieRC XAie_DmaReadBd_16(XAie_DevInst *DevInst, XAie_DmaDesc *DmaDesc,
 		return XAIE_INVALID_BD_NUM;
 	}
 
-	memset((void *)DmaDesc, 0, sizeof(XAie_DmaDesc));
+	(void)memset((void *)DmaDesc, 0, sizeof(XAie_DmaDesc));
 	DmaDesc->DmaMod = DmaMod;
 
 	return DmaMod->ReadBd(DevInst, DmaDesc, Loc, BdNum);
@@ -2314,7 +2314,7 @@ AieRC XAie_DmaChannelDescInit(XAie_DevInst *DevInst,
 
 	DmaMod = DevInst->DevProp.DevMod[TileType].DmaMod;
 
-	memset((void *)DmaChannelDesc, 0, sizeof(XAie_DmaChannelDesc));
+	(void)memset((void *)DmaChannelDesc, 0, sizeof(XAie_DmaChannelDesc));
 
 	DmaChannelDesc->TileType = TileType;
 	DmaChannelDesc->IsReady = XAIE_COMPONENT_IS_READY;

@@ -294,7 +294,7 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 	AieRC RC;
 	u32 OptFlags;
 	u8 IsolationFlags = XAIE_CLEAR_ISOLATION;
-	memset(&SoftPartOpts, 0, sizeof(SoftPartOpts));
+	(void)memset(&SoftPartOpts, 0, sizeof(SoftPartOpts));
 
 	if(Opts != NULL) {
 		OptFlags = (Opts->InitOpts & (~XAIE_PART_INIT_OPT_ISOLATE));

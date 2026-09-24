@@ -130,14 +130,14 @@ void uc_dma_create_bd(void *dest,
                       uint32_t remote_ptr_high, uint32_t remote_ptr_low)
 {
     uint32_t *dest_ = (uint32_t *)dest;
-    dest_[3] = (remote_ptr_high & 0x1FFFFFF);
+    dest_[3] = (remote_ptr_high & 0x1FFFFFFU);
     dest_[2] = remote_ptr_low;
     dest_[1] = local_ptr;
-    dest_[0] = ((uint32_t)length & 0x7FFF)
-             | ((ctrl_next_BD & 1) << 16)
-             | ((ctrl_external & 1) << 17)
-             | ((ctrl_local_relative & 1) << 18)
-             | ((ctrl_axi_mm_axuser & 0xF) << 19);
+    dest_[0] = ((uint32_t)length & 0x7FFFU)
+             | (((uint32_t)ctrl_next_BD & 1U) << 16)
+             | (((uint32_t)ctrl_external & 1U) << 17)
+             | (((uint32_t)ctrl_local_relative & 1U) << 18)
+             | (((uint32_t)ctrl_axi_mm_axuser & 0xFU) << 19);
 }
 
 void uc_dma_create_bd_simple(void *dest, uint16_t length, uint32_t local_ptr, uint32_t remote_ptr_low)
@@ -146,7 +146,7 @@ void uc_dma_create_bd_simple(void *dest, uint16_t length, uint32_t local_ptr, ui
     dest_[3] = 0;
     dest_[2] = remote_ptr_low;
     dest_[1] = local_ptr;
-    dest_[0] = (uint32_t)length & 0x7FFF;
+    dest_[0] = (uint32_t)length & 0x7FFFU;
 }
 
 uint16_t uc_dma_dm2mm_push_task(const uint32_t bd_ptr)
@@ -326,7 +326,7 @@ void copy_mm2dm(void *dest, uint32_t src_high, uint32_t src_low, unsigned int le
     assert(length % 4 == 0);
     assert(queue_empty(&uc_dma_mm2dm_active_tasks));
 
-    uc_dma_create_bd(DRIVER_BD_POINTER, length >> 2, false, 1, false, 0, dest - SHARED_DM_BASE, src_high, src_low);
+    uc_dma_create_bd(DRIVER_BD_POINTER, length >> 2, false, true, false, 0U, dest - SHARED_DM_BASE, src_high, src_low);
     mbar(1);
 
     reg_write32(REG_UC_DMA_MM2DM_TASK_QUEUE_PUSH, DRIVER_BD_OFFSET);
@@ -343,7 +343,7 @@ void copy_mm2dm_async(void *dest, uint32_t src_high, uint32_t src_low, unsigned 
     assert(length % 4 == 0);
     assert(queue_empty(&uc_dma_mm2dm_active_tasks));
 
-    uc_dma_create_bd(DRIVER_BD_POINTER, length >> 2, false, CTRL_EXTERNAL, false, 0, dest - SHARED_DM_BASE, src_high, src_low);
+    uc_dma_create_bd(DRIVER_BD_POINTER, length >> 2, false, CTRL_EXTERNAL, false, 0U, dest - SHARED_DM_BASE, src_high, src_low);
     mbar(1);
 
     reg_write32(REG_UC_DMA_MM2DM_TASK_QUEUE_PUSH, DRIVER_BD_OFFSET);
@@ -385,7 +385,7 @@ void copy_dm2mm(uint32_t dest_high, uint32_t dest_low, void *src, unsigned int l
     assert(length % 4 == 0);
     assert(queue_empty(&uc_dma_dm2mm_active_tasks));
 
-    uc_dma_create_bd(DRIVER_BD_POINTER, length >> 2, false, 1, false, 0, src - SHARED_DM_BASE, dest_high, dest_low);
+    uc_dma_create_bd(DRIVER_BD_POINTER, length >> 2, false, true, false, 0U, src - SHARED_DM_BASE, dest_high, dest_low);
     mbar(1);
 
     reg_write32(REG_UC_DMA_DM2MM_TASK_QUEUE_PUSH, DRIVER_BD_OFFSET);

@@ -345,7 +345,7 @@ static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const X
 			XAIE_DBG("Grid alloc failed.\n");
 			goto out;
 		}
-		memset(Grid[i], '.', routingInstance->NumCols * sizeof(char));
+		(void)memset(Grid[i], '.', routingInstance->NumCols * sizeof(char));
 	}
 
 	/* Mark the path on the grid */
@@ -456,7 +456,7 @@ AieRC XAie_RoutesReveal(const XAie_RoutingInstance *routingInstance, XAie_LocTyp
 			Rc = XAIE_ERR;
 			goto out;
 		}
-		memset(Grid[i], '.', routingInstance->NumCols * sizeof(char));
+		(void)memset(Grid[i], '.', routingInstance->NumCols * sizeof(char));
 	}
 
 	if (constraint == NULL) {
@@ -2058,7 +2058,7 @@ static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 		Ret = false;
 		goto free_pred;
 	}
-	memset(visited, 0, MAX_COLS * sizeof(bool*));
+	(void)memset(visited, 0, MAX_COLS * sizeof(bool*));
 
 	for (u32 i = 0; i < MAX_COLS; i++) {
 		visited[i] = (bool*)XAIE_ALIGNED_ALLOC(16, MAX_ROWS * sizeof(bool));
@@ -2069,7 +2069,7 @@ static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 			Ret = false;
 			goto free_visited;
 		}
-		memset(visited[i], 0, MAX_ROWS * sizeof(bool));
+		(void)memset(visited[i], 0, MAX_ROWS * sizeof(bool));
 	}
 
 	XAIE_DBG("Finding shortest path from (%d, %d) to (%d, %d)\n",
