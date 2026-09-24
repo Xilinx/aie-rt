@@ -4,6 +4,8 @@
 #
 ###############################################################################
 
+cmake_minimum_required (VERSION 3.5)
+
 if(NOT ${YOCTO})
 	add_library(aiefal INTERFACE)
 
