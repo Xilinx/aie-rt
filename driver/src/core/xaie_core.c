@@ -864,7 +864,7 @@ AieRC XAie_CoreConfigureErrorHaltEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u64 RegAddr;
 	const XAie_EvntMod *EvntMod;
-	u16 HwEvent;
+	u16 HwEvent = 0U;
 	u8 TileType;
 	AieRC RC;
 

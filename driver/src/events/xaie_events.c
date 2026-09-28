@@ -1787,7 +1787,7 @@ AieRC XAie_EventReadStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	u64 RegAddr;
 	u32 RegOff, RegVal;
 	u8 TileType;
-	u16 PhyEvent;
+	u16 PhyEvent = 0U;
 	const XAie_EvntMod *EvntMod;
 
 	if((Status == XAIE_NULL) || (DevInst == XAIE_NULL) ||

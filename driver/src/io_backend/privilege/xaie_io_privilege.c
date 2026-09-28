@@ -939,7 +939,7 @@ AieRC XAie_NocDmaPause(XAie_DevInst *DevInst, XAie_LocType *Loc,
 {
 	AieRC RC;
 	volatile   u64 RegAddr;
-	volatile   u32 Mask, FldVal, Lsb;
+	volatile   u32 Mask = 0U, FldVal = 0U, Lsb = 0U;
 	const struct XAie_DmaMod *NocDma = NULL;
 
 	if (DevInst == NULL) {
