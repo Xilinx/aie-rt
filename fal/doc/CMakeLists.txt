@@ -18,7 +18,7 @@ install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
   DESTINATION share/doc/${PROJECT_NAME})
 install (FILES ${PROJECT_SOURCE_DIR}/README.md
   DESTINATION share/doc/${PROJECT_NAME})
-install (FILES ${PROJECT_SOURCE_DIR}/license.txt
+install (FILES ${PROJECT_SOURCE_DIR}/../license.txt
   DESTINATION share/doc/${PROJECT_NAME})
 
 endif (DOXYGEN_FOUND)
