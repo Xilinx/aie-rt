@@ -173,7 +173,7 @@ extern XAieLogLevel AieLogLevel;
 #endif /* XAIE_FEATURE_STDIO_LOGGING_ENABLE */
 
 #if  defined(__microblaze__)
-#define PRINT xil_printf
+#define PRINT(...) do { (void)xil_printf(__VA_ARGS__); } while(0)
 #define UINTPTR_T (uintptr_t)
 #define U32_FORMAT "%ld"
 #elif !defined(XAIE_FEATURE_STDIO_LOGGING_ENABLE)
@@ -191,7 +191,7 @@ extern XAieLogLevel AieLogLevel;
 #define UINTPTR_T
 #define U32_FORMAT "%d"
 #else
-#define PRINT printf
+#define PRINT(...) do { (void)printf(__VA_ARGS__); } while(0)
 #define UINTPTR_T
 #define U32_FORMAT "%d"
 #endif

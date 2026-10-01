@@ -691,10 +691,10 @@ AieRC _XAie_PrintPartitionList(XAie_DevInst *DevInst)
 	while (NodePtr != NULL) {
 		ListNode = XAIE_CONTAINER_OF(NodePtr, XAie_PartitionList, Node);
 
-		(void)PRINT("Partition ID:   "U32_FORMAT"\n",ListNode->PartitionId);
-		(void)PRINT("\tStart Col:    %d \n", ListNode->ColRange.Start);
-		(void)PRINT("\tNum Cols:     %d\n", ListNode->ColRange.Num);
-		(void)PRINT("\tPartition Fd: %d\n", ListNode->PartitionFd);
+		PRINT("Partition ID:   "U32_FORMAT"\n",ListNode->PartitionId);
+		PRINT("\tStart Col:    %d \n", ListNode->ColRange.Start);
+		PRINT("\tNum Cols:     %d\n", ListNode->ColRange.Num);
+		PRINT("\tPartition Fd: %d\n", ListNode->PartitionFd);
 
 		NodePtr = NodePtr->Next;
         }
@@ -798,9 +798,9 @@ static AieRC _XAie_RemoveTxnInstFromList(XAie_DevInst *DevInst, u64 Tid)
 void BuffHexDump(char* buff,u32 size) {
 	XAIE_DBG("Buff Info %p %d\n",buff,size);
 	for (u32 i = 0; i < size; ++i) {
-		(void)PRINT("0x%x ",(u8)buff[i]&0xffU);
+		PRINT("0x%x ",(u8)buff[i]&0xffU);
 	}
-	(void)PRINT("\n");
+	PRINT("\n");
 }
 
 static s32 TxnCmdDump(XAie_TxnCmd* cmd) {
@@ -829,7 +829,7 @@ static AieRC _XAie_ReallocCmdBuf(XAie_TxnInst *TxnInst)
 			((u64)TxnInst->MaxCmds + XAIE_DEFAULT_NUM_CMDS));
 	if(TxnInst->CmdBuf == NULL) {
 		XAIE_ERROR("Failed reallocate memory for transaction buffer "
-				"with id: %d\n", TxnInst->Tid);
+				"with id: %llu\n", (unsigned long long)TxnInst->Tid);
 		return XAIE_ERR;
 	}
 
@@ -1435,7 +1435,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				TxnCmdDump(Cmd);
 			}
 
-			XAIE_DBG("Size of the CustomOp Hdr being exported: %u bytes\n", sizeof(XAie_CustomOpHdr));
+			XAIE_DBG("Size of the CustomOp Hdr being exported: %zu bytes\n", sizeof(XAie_CustomOpHdr));
 
 			if((BuffSize + sizeof(XAie_CustomOpHdr) +
 						Cmd->Size) > AllocatedBuffSize) {
@@ -1457,7 +1457,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 	}
 
 	BuffSize = ((BuffSize % 4U) != 0U) ? (BuffSize / 4U + 1U) : BuffSize;
-	XAIE_DBG("Size of the Txn Hdr being exported: %u bytes\n",
+	XAIE_DBG("Size of the Txn Hdr being exported: %zu bytes\n",
 			sizeof(XAie_TxnHeader));
 	XAIE_DBG("Size of the transaction buffer being exported: %u bytes\n",
 			BuffSize);
@@ -2323,7 +2323,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 		/* check memory allocation before increase Cmd vector */
 		char* tmpBuff = XAIE_MALLOC(size);
 		if(tmpBuff == XAIE_NULL) {
-			XAIE_ERROR("Fail to malloc %d size memory for DataPtr\n", size);
+			XAIE_ERROR("Fail to malloc %zu size memory for DataPtr\n", size);
 			return XAIE_ERR;
 		}
 
@@ -2672,7 +2672,8 @@ AieRC XAie_PrintDmaStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dm
 		       if (RC != XAIE_OK) {
 				       return RC;
 		       }
-		       XAIE_DBG("Tile[%u,%u] Chan[%d]: S2MM=0x%x | MM2S=0x%x\n", Loc.Col, Loc.Row, Chan, s2mm_val, mm2s_val);
+		       XAIE_DBG("Tile[%u,%u] Chan[%d]: S2MM=0x%lx | MM2S=0x%lx\n", Loc.Col, Loc.Row, Chan,
+				(unsigned long)s2mm_val, (unsigned long)mm2s_val);
 	}
 
         return XAIE_OK;
@@ -2693,10 +2694,10 @@ AieRC XAie_PrintBdStatus(XAie_DevInst *DevInst, XAie_LocType Loc, const XAie_Dma
 				return RC;
 			}
 
-			XAIE_DBG("BD_%d_%d: 0x%x \n", BD, i, bd_val);
+			XAIE_DBG("BD_%d_%d: 0x%lx \n", BD, i, (unsigned long)bd_val);
 			BdAddr += 4U;
 		}
-		(void)PRINT("\n");
+		PRINT("\n");
 	}
 	return XAIE_OK;
 }
@@ -2882,7 +2883,7 @@ AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv)
 		UcMod->MemPrivilegedOffset;
 	RC = XAie_Read32(DevInst, Offset, &RegVal);
 	if(RC != XAIE_OK) {
-		XAIE_ERROR("Privileged memory register. Failed to read register value. Offset: %lu\n", Offset);
+		XAIE_ERROR("Privileged memory register. Failed to read register value. Offset: %llu\n", (unsigned long long)Offset);
 		return RC;
 	}
 
