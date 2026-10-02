@@ -803,7 +803,8 @@ AieRC _XAie_TileDmaWriteBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 		(_XAie_CheckPrecisionExceeds(BdProp->DoubleBuffer->EnIntrleaved.Lsb,
 			_XAie_MaxBitsNeeded(DmaDesc->MultiDimDesc.AieMultiDimDesc.EnInterleaved),MAX_VALID_AIE_REG_BIT_INDEX))||
 		(_XAie_CheckPrecisionExceeds(BdProp->DoubleBuffer->IntrleaveCnt.Lsb,
-			_XAie_MaxBitsNeeded(DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveCount - 1U),MAX_VALID_AIE_REG_BIT_INDEX))||
+			_XAie_MaxBitsNeeded(DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveCount ?
+				(DmaDesc->MultiDimDesc.AieMultiDimDesc.IntrleaveCount - 1U) : 0U),MAX_VALID_AIE_REG_BIT_INDEX))||
 		(_XAie_CheckPrecisionExceeds(BdProp->BdEn->NxtBd.Lsb,
 			_XAie_MaxBitsNeeded(DmaDesc->BdEnDesc.NxtBd),MAX_VALID_AIE_REG_BIT_INDEX))||
 		(_XAie_CheckPrecisionExceeds(BdProp->BufferLen.Lsb,
