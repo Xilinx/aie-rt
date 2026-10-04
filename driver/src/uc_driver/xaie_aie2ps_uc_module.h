@@ -19,22 +19,22 @@
 // Register AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY
 #define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY                        0x00080000
 #define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY_WIDTH                  32
-#define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY_MASK                   0xFFFFFFFF
+#define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY_MASK                   0xFFFFFFFFU
 #define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY__A__LSB                0     /* A */
 #define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY__A__WIDTH              32     /* A */
-#define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY__A__MASK               0xFFFFFFFF /* A */
+#define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY__A__MASK               0xFFFFFFFFU /* A */
 #define AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY__A__DEFVAL             0x0   /* A */
-#define value__AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY(a)   ((a & 0xffffffff))
+#define value__AIE2PS_UC_MODULE__CORE_PROGRAM_MEMORY(a)   ((a & 0xffffffffU))
 
 // Register AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY
 #define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY                   0x00088000
 #define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY_WIDTH             32
-#define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY_MASK              0xFFFFFFFF
+#define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY_MASK              0xFFFFFFFFU
 #define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY__A__LSB           0     /* A */
 #define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY__A__WIDTH         32     /* A */
-#define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY__A__MASK          0xFFFFFFFF /* A */
+#define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY__A__MASK          0xFFFFFFFFU /* A */
 #define AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY__A__DEFVAL        0x0   /* A */
-#define value__AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY(a)   ((a & 0xffffffff))
+#define value__AIE2PS_UC_MODULE__CORE_PRIVATE_DATA_MEMORY(a)   ((a & 0xffffffffU))
 
 // Register AIE2PS_UC_MODULE__MDM_DBG_CTRL_STATUS
 #define AIE2PS_UC_MODULE__MDM_DBG_CTRL_STATUS                        0x000B0010
@@ -65,12 +65,12 @@
 // Register AIE2PS_UC_MODULE__MDM_DBG_DATA
 #define AIE2PS_UC_MODULE__MDM_DBG_DATA                               0x000B0014
 #define AIE2PS_UC_MODULE__MDM_DBG_DATA_WIDTH                         32
-#define AIE2PS_UC_MODULE__MDM_DBG_DATA_MASK                          0xFFFFFFFF
+#define AIE2PS_UC_MODULE__MDM_DBG_DATA_MASK                          0xFFFFFFFFU
 #define AIE2PS_UC_MODULE__MDM_DBG_DATA__DEBUG_DATA__LSB              0     /* DEBUG_DATA */
 #define AIE2PS_UC_MODULE__MDM_DBG_DATA__DEBUG_DATA__WIDTH            32     /* DEBUG_DATA */
-#define AIE2PS_UC_MODULE__MDM_DBG_DATA__DEBUG_DATA__MASK             0xFFFFFFFF /* DEBUG_DATA */
+#define AIE2PS_UC_MODULE__MDM_DBG_DATA__DEBUG_DATA__MASK             0xFFFFFFFFU /* DEBUG_DATA */
 #define AIE2PS_UC_MODULE__MDM_DBG_DATA__DEBUG_DATA__DEFVAL           0x0   /* DEBUG_DATA */
-#define value__AIE2PS_UC_MODULE__MDM_DBG_DATA(Debug_Data)   ((Debug_Data & 0xffffffff))
+#define value__AIE2PS_UC_MODULE__MDM_DBG_DATA(Debug_Data)   ((Debug_Data & 0xffffffffU))
 
 // Register AIE2PS_UC_MODULE__MDM_DBG_LOCK
 #define AIE2PS_UC_MODULE__MDM_DBG_LOCK                               0x000B0018
@@ -135,22 +135,22 @@
 // Register AIE2PS_UC_MODULE__MDM_PCDRR
 #define AIE2PS_UC_MODULE__MDM_PCDRR                                  0x000B5580
 #define AIE2PS_UC_MODULE__MDM_PCDRR_WIDTH                            32
-#define AIE2PS_UC_MODULE__MDM_PCDRR_MASK                             0xFFFFFFFF
+#define AIE2PS_UC_MODULE__MDM_PCDRR_MASK                             0xFFFFFFFFU
 #define AIE2PS_UC_MODULE__MDM_PCDRR__PCDRR__LSB                      0     /* PCDRR */
 #define AIE2PS_UC_MODULE__MDM_PCDRR__PCDRR__WIDTH                    32     /* PCDRR */
-#define AIE2PS_UC_MODULE__MDM_PCDRR__PCDRR__MASK                     0xFFFFFFFF /* PCDRR */
+#define AIE2PS_UC_MODULE__MDM_PCDRR__PCDRR__MASK                     0xFFFFFFFFU /* PCDRR */
 #define AIE2PS_UC_MODULE__MDM_PCDRR__PCDRR__DEFVAL                   0x0   /* PCDRR */
-#define value__AIE2PS_UC_MODULE__MDM_PCDRR(PCDRR)   ((PCDRR & 0xffffffff))
+#define value__AIE2PS_UC_MODULE__MDM_PCDRR(PCDRR)   ((PCDRR & 0xffffffffU))
 
 // Register AIE2PS_UC_MODULE__MDM_PCWR
 #define AIE2PS_UC_MODULE__MDM_PCWR                                   0x000B55C0
 #define AIE2PS_UC_MODULE__MDM_PCWR_WIDTH                             32
-#define AIE2PS_UC_MODULE__MDM_PCWR_MASK                              0xFFFFFFFF
+#define AIE2PS_UC_MODULE__MDM_PCWR_MASK                              0xFFFFFFFFU
 #define AIE2PS_UC_MODULE__MDM_PCWR__PCWR__LSB                        0     /* PCWR */
 #define AIE2PS_UC_MODULE__MDM_PCWR__PCWR__WIDTH                      32     /* PCWR */
-#define AIE2PS_UC_MODULE__MDM_PCWR__PCWR__MASK                       0xFFFFFFFF /* PCWR */
+#define AIE2PS_UC_MODULE__MDM_PCWR__PCWR__MASK                       0xFFFFFFFFU /* PCWR */
 #define AIE2PS_UC_MODULE__MDM_PCWR__PCWR__DEFVAL                     0x0   /* PCWR */
-#define value__AIE2PS_UC_MODULE__MDM_PCWR(PCWR)   ((PCWR & 0xffffffff))
+#define value__AIE2PS_UC_MODULE__MDM_PCWR(PCWR)   ((PCWR & 0xffffffffU))
 
 // Register AIE2PS_UC_MODULE__CORE_STATUS
 #define AIE2PS_UC_MODULE__CORE_STATUS                                0x000C0000
@@ -197,12 +197,12 @@
 // Register AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET
 #define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET                        0x000C0020
 #define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET_WIDTH                  32
-#define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET_MASK                   0xFFFFFFFF
+#define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET_MASK                   0xFFFFFFFFU
 #define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET__AXIMM_OFFSET__LSB     0     /* AXIMM_OFFSET */
 #define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET__AXIMM_OFFSET__WIDTH   32     /* AXIMM_OFFSET */
-#define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET__AXIMM_OFFSET__MASK    0xFFFFFFFF /* AXIMM_OFFSET */
+#define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET__AXIMM_OFFSET__MASK    0xFFFFFFFFU /* AXIMM_OFFSET */
 #define AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET__AXIMM_OFFSET__DEFVAL  0x0   /* AXIMM_OFFSET */
-#define value__AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET(AXIMM_Offset)   ((AXIMM_Offset & 0xffffffff))
+#define value__AIE2PS_UC_MODULE__MODULE_AXIMM_OFFSET(AXIMM_Offset)   ((AXIMM_Offset & 0xffffffffU))
 
 // Register AIE2PS_UC_MODULE__MODULE_AXI_MM_OUTSTANDING_TRANSACTIONS
 #define AIE2PS_UC_MODULE__MODULE_AXI_MM_OUTSTANDING_TRANSACTIONS     0x000C0024

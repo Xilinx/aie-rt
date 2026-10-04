@@ -135,7 +135,7 @@ AieRC XAie_CoreDisable(XAie_DevInst *DevInst, XAie_LocType Loc)
 	CoreMod = DevInst->DevProp.DevMod[TileType].CoreMod;
 
 	Mask = CoreMod->CoreCtrl->CtrlEn.Mask;
-	Value = 0U << CoreMod->CoreCtrl->CtrlEn.Lsb;
+	Value = (u32)0U << CoreMod->CoreCtrl->CtrlEn.Lsb;
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -215,7 +215,7 @@ AieRC XAie_CoreReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
-	Value = 1U << CoreMod->CoreCtrl->CtrlRst.Lsb;
+	Value = (u32)1U << CoreMod->CoreCtrl->CtrlRst.Lsb;
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -259,7 +259,7 @@ AieRC XAie_CoreUnreset(XAie_DevInst *DevInst, XAie_LocType Loc)
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreCtrl->CtrlRst.Mask;
-	Value = 0U << CoreMod->CoreCtrl->CtrlRst.Lsb;
+	Value = (u32)0U << CoreMod->CoreCtrl->CtrlRst.Lsb;
 	RegAddr = CoreMod->CoreCtrl->RegOff +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
@@ -341,7 +341,7 @@ AieRC XAie_CoreWaitForDisable(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	CoreMod = DevInst->DevProp.DevMod[XAIEGBL_TILE_TYPE_AIETILE].CoreMod;
 	Mask = CoreMod->CoreSts->En.Mask;
-	Value = 0U << CoreMod->CoreSts->En.Lsb;
+	Value = (u32)0U << CoreMod->CoreSts->En.Lsb;
 	return _XAie_CoreWaitStatus(DevInst, Loc, TimeOut, Mask, Value);
 }
 
@@ -971,7 +971,7 @@ AieRC XAie_ClearCoreDisableEventOccurred(XAie_DevInst *DevInst,
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	Mask = CoreMod->CoreEvent->DisableEventOccurred.Mask;
-	Value = 1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb;
+	Value = (u32)1U << CoreMod->CoreEvent->DisableEventOccurred.Lsb;
 
 	return XAie_MaskWrite32(DevInst, RegAddr, Mask, Value);
 }
@@ -1019,8 +1019,8 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 		return XAIE_FEATURE_NOT_SUPPORTED;
 	}
 
-	if ((InDir != NORTH && InDir != WEST) ||
-		(OutDir != SOUTH && OutDir != EAST)) {
+	if (((InDir != NORTH) && (InDir != WEST)) ||
+		((OutDir != SOUTH) && (OutDir != EAST))) {
 		XAIE_ERROR("Configure accum control failed, invalid direction."\
 			       "Col: %u Row:%u InDir: %d OutDir: %d\n",Loc.Col, Loc.Row, InDir, OutDir);
 		return XAIE_INVALID_ARGS;
@@ -1035,10 +1035,10 @@ AieRC XAie_CoreConfigAccumulatorControl(XAie_DevInst *DevInst,
 	 *  * For input , 0 == NORTH, 1 == WEST
 	 *  * For output, 0 == SOUTH, 1 == EAST
 	 */
-	RegVal = XAie_SetField(((u8)InDir - (u8)SOUTH) % 2U,
+	RegVal = XAie_SetField(((u32)InDir - (u32)SOUTH) % 2U,
 			AccumCtrl->CascadeInput.Lsb,
 			AccumCtrl->CascadeInput.Mask) |
-		XAie_SetField(((u8)OutDir - (u8)SOUTH) % 2U,
+		XAie_SetField(((u32)OutDir - (u32)SOUTH) % 2U,
 			AccumCtrl->CascadeOutput.Lsb,
 			AccumCtrl->CascadeOutput.Mask);
 

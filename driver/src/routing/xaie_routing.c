@@ -103,7 +103,7 @@ static XAie_LocType _XAie_dequeue(Queue* queue)
 
 static void reversePath(XAie_LocType *path, int32_t pathLength)
 {
-	for (int32_t i = 0; i < pathLength / 2; i++) {
+	for (int32_t i = 0; i < (pathLength / 2); i++) {
 		XAie_LocType temp = path[i];
 		path[i] = path[pathLength - 1 - i];
 		path[pathLength - 1 - i] = temp;
@@ -125,7 +125,7 @@ static void freeQueue(Queue *queue)
 static void _XAie_printBitfield(int32_t value, int32_t bits)
 {
 	for (int32_t i = bits - 1; i >= 0; i--) {
-		(void)XAIE_PUTCHAR((((u32)value & (((u32)1U) << (u32)i)) != 0U) ? '1' : '0');
+		(void)XAIE_PUTCHAR((((u32)value & (((u32)1U) << (u32)i)) != 0U) ? (int)'1' : (int)'0');
 	}
 }
 
@@ -146,7 +146,7 @@ static void _XAie_printBitfield(int32_t value, int32_t bits)
 
 AieRC XAie_dumpConstraintsToPrint(XAie_RoutingInstance* RoutingInstance)
 {
-	if (RoutingInstance == NULL) {
+	if ((RoutingInstance == NULL)) {
 		XAIE_DBG("Invalid input to dumpConstraintsToPrint\n");
 		return XAIE_ERR;
 	}
@@ -159,8 +159,8 @@ AieRC XAie_dumpConstraintsToPrint(XAie_RoutingInstance* RoutingInstance)
 				CoreConstraintPerCore[col][row];
 			(void)XAie_coreConstraintToPrint(RoutingInstance, constraint, row, col);
 
-			if (row < RoutingInstance->NumRows - 1U ||
-					col < RoutingInstance->NumCols - 1U) {
+			if ((row < RoutingInstance->NumRows - 1U) ||
+					(col < RoutingInstance->NumCols - 1U)) {
 				XAIE_DBG(",\n");
 			}
 		}
@@ -186,8 +186,8 @@ AieRC XAie_dumpConstraintsToPrint(XAie_RoutingInstance* RoutingInstance)
  ******************************************************************************/
 AieRC XAie_dumpSpecificConstraintToPrint(XAie_RoutingInstance* RoutingInstance, u8 row, u8 col)
 {
-	if (RoutingInstance == NULL || row >= RoutingInstance->NumRows ||
-			col >= RoutingInstance->NumCols) {
+	if ((RoutingInstance == NULL) || (row >= RoutingInstance->NumRows) ||
+			(col >= RoutingInstance->NumCols)) {
 		XAIE_ERROR("XAie_dumpSpecificConstraintToPrint backend failed!.Invalid input or "
 				"out of bounds row/col to dumpSpecificConstraintToPrint\n");
 		return XAIE_ERR;
@@ -339,18 +339,18 @@ static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const X
 		XAIE_DBG("Grid alloc failed.\n");
 		return;
 	}
-	for (s32 i = 0; i < routingInstance->NumRows; i++) {
+	for (s32 i = 0; i < (s32)routingInstance->NumRows; i++) {
 		Grid[i] = XAIE_CALLOC(routingInstance->NumCols, sizeof(char));
 		if (Grid[i] == NULL) {
 			XAIE_DBG("Grid alloc failed.\n");
 			goto out;
 		}
-		(void)memset(Grid[i], '.', routingInstance->NumCols * sizeof(char));
+		(void)memset(Grid[i], (int)'.', routingInstance->NumCols * sizeof(char));
 	}
 
 	/* Mark the path on the grid */
 	for (int32_t i = 0; i < pathLength; i++) {
-		int32_t gridRow = routingInstance->NumRows - 1U - path[i].Row;
+		int32_t gridRow = (s32)routingInstance->NumRows - 1 - (s32)path[i].Row;
 		int32_t gridCol = (s32)path[i].Col;
 
 		/* Default mark for the path */
@@ -361,27 +361,27 @@ static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const X
 		} else if (i == (pathLength - 1)) {
 			/* Mark for destination */
 			mark = 'D';
-		} else if (i > 0 && i < pathLength - 1) {
+		} else if ((i > 0) && (i < pathLength - 1)) {
 			/* Optional: Add arrows to indicate direction */
-			int32_t dRow = path[i].Row - path[i-1].Row;
-			int32_t dCol = path[i].Col - path[i-1].Col;
-			if (dRow == -1 && dCol == 0) {
+			int32_t dRow = (s32)path[i].Row - (s32)path[i-1].Row;
+			int32_t dCol = (s32)path[i].Col - (s32)path[i-1].Col;
+			if ((dRow == -1) && (dCol == 0)) {
 				/* Down */
 				mark = 'v';
-			} else if (dRow == 1 && dCol == 0) {
+			} else if ((dRow == 1) && (dCol == 0)) {
 				/* Up */
 				mark = '^';
-			} else if (dRow == 0 && dCol == -1) {
+			} else if ((dRow == 0) && (dCol == -1)) {
 				/* Left */
 				mark = '<';
-			} else if (dRow == 0 && dCol == 1) {
+			} else if ((dRow == 0) && (dCol == 1)) {
 				/* Right */
 				mark = '>';
 			}
 		}
 
-		if (gridCol < routingInstance->NumCols && gridRow >= 0 &&
-				gridRow < routingInstance->NumRows) {
+		if ((gridCol < (s32)routingInstance->NumCols) && (gridRow >= 0) &&
+				(gridRow < (s32)routingInstance->NumRows)) {
 			Grid[gridRow][gridCol] = mark;
 		}
 	}
@@ -391,17 +391,17 @@ static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const X
 			source.Col, source.Row, destination.Col, destination.Row);
 	/* Top left corner of the box */
 	XAIE_DBG(" +");
-	for (int32_t col = 0; col < routingInstance->NumCols; col++) {
+	for (int32_t col = 0; col < (s32)routingInstance->NumCols; col++) {
 		/* Top border of the box */
 		XAIE_DBG("--");
 	}
 	/* Top right corner of the box */
 	XAIE_DBG("+\n");
 
-	for (int32_t row = 0; row < routingInstance->NumRows; row++) {
+	for (int32_t row = 0; row < (s32)routingInstance->NumRows; row++) {
 		/* Left border of the box */
 		XAIE_DBG(" | ");
-		for (int32_t col = 0; col < routingInstance->NumCols; col++) {
+		for (int32_t col = 0; col < (s32)routingInstance->NumCols; col++) {
 			XAIE_DBG("%c ", Grid[row][col]);
 		}
 		/* Right border of the box */
@@ -410,14 +410,14 @@ static void _XAie_drawRoute(const XAie_RoutingInstance *routingInstance, const X
 
 	/* Bottom left corner of the box */
 	XAIE_DBG(" +");
-	for (int32_t col = 0; col < routingInstance->NumCols; col++) {
+	for (int32_t col = 0; col < (s32)routingInstance->NumCols; col++) {
 		/* Bottom border of the box */
 		XAIE_DBG("--");
 	}
 	/* Bottom right corner of the box */
 	XAIE_DBG("+\n");
 out:
-	for (int32_t i = 0; i < routingInstance->NumRows; i++) {
+	for (int32_t i = 0; i < (s32)routingInstance->NumRows; i++) {
 		XAIE_FREE(Grid[i]);
 	}
 	XAIE_FREE(Grid);
@@ -449,14 +449,14 @@ AieRC XAie_RoutesReveal(const XAie_RoutingInstance *routingInstance, XAie_LocTyp
 		XAIE_DBG("Grid alloc failed.\n");
 		return XAIE_ERR;
 	}
-	for (int32_t i = 0; i < routingInstance->NumRows; i++) {
+	for (int32_t i = 0; i < (s32)routingInstance->NumRows; i++) {
 		Grid[i] = XAIE_CALLOC(routingInstance->NumCols, sizeof(char));
 		if (Grid[i] == NULL) {
 			XAIE_DBG("Grid alloc failed.\n");
 			Rc = XAIE_ERR;
 			goto out;
 		}
-		(void)memset(Grid[i], '.', routingInstance->NumCols * sizeof(char));
+		(void)memset(Grid[i], (int)'.', routingInstance->NumCols * sizeof(char));
 	}
 
 	if (constraint == NULL) {
@@ -479,11 +479,11 @@ AieRC XAie_RoutesReveal(const XAie_RoutingInstance *routingInstance, XAie_LocTyp
 
 	const XAie_RoutingStep *currentStep = routingPath->nextStep;
 	while (currentStep != NULL) {
-		int32_t gridRowSource = routingInstance->NumRows - 1U - currentStep->sourceTile.Row;
+		int32_t gridRowSource = (s32)routingInstance->NumRows - 1 - (s32)currentStep->sourceTile.Row;
 		int32_t gridColSource = (s32)(currentStep->sourceTile.Col);
 
-		if (gridColSource < routingInstance->NumCols && gridRowSource >= 0
-				&& gridRowSource < routingInstance->NumRows) {
+		if ((gridColSource < (s32)routingInstance->NumCols) && (gridRowSource >= 0)
+				&& (gridRowSource < (s32)routingInstance->NumRows)) {
 			Grid[gridRowSource][gridColSource] = '*';
 		}
 
@@ -491,14 +491,14 @@ AieRC XAie_RoutesReveal(const XAie_RoutingInstance *routingInstance, XAie_LocTyp
 	}
 
 	/* Print the grid */
-	for (int32_t row = 0; row < routingInstance->NumRows; row++) {
-		for (int32_t col = 0; col < routingInstance->NumCols; col++) {
+	for (int32_t row = 0; row < (s32)routingInstance->NumRows; row++) {
+		for (int32_t col = 0; col < (s32)routingInstance->NumCols; col++) {
 			XAIE_DBG("%c ", Grid[row][col]);
 		}
 		XAIE_DBG("\n");
 	}
 out:
-	for (int32_t i = 0; i < routingInstance->NumRows; i++) {
+	for (int32_t i = 0; i < (s32)routingInstance->NumRows; i++) {
 		XAIE_FREE(Grid[i]);
 	}
 	XAIE_FREE(Grid);
@@ -522,7 +522,7 @@ static bool _XAie_isShimTile(const XAie_RoutingInstance* RoutingInstance, XAie_L
 {
 	const XAie_CoreConstraint* constraint = RoutingInstance->
 				CoreConstraintPerCore[tile.Col][tile.Row];
-	return ((constraint != NULL) && (constraint->tile_type == (u32)XAIE_AIE_SHIM));
+	return ((constraint != NULL) && (constraint->tile_type == XAIE_AIE_SHIM));
 }
 
 /*****************************************************************************/
@@ -541,7 +541,7 @@ static bool _XAie_isMemTile(const XAie_RoutingInstance* RoutingInstance, XAie_Lo
 {
 	const XAie_CoreConstraint* constraint = RoutingInstance->
 					CoreConstraintPerCore[tile.Col][tile.Row];
-	return ((constraint != NULL) && (constraint->tile_type == (u32)XAIE_AIE_MEM));
+	return ((constraint != NULL) && (constraint->tile_type == XAIE_AIE_MEM));
 }
 
 /*****************************************************************************/
@@ -569,8 +569,8 @@ static AieRC _XAie_updatePortAvailabilityForShimDmaToAie(XAie_RoutingInstance *r
 		return XAIE_ERR;
 	}
 
-	for (int32_t i = 0; i < constraint->Host2AIEPortCount; i++) {
-		if (constraint->Host2AIEPorts[i].port == port) {
+	for (u32 i = 0U; i < constraint->Host2AIEPortCount; i++) {
+		if (constraint->Host2AIEPorts[i].port == (u32)port) {
 			constraint->Host2AIEPorts[i].availability = SetOrUnset;
 		}
 	}
@@ -602,8 +602,8 @@ static AieRC _XAie_updatePortAvailabilityForAieToShimDma(XAie_RoutingInstance *r
 		return XAIE_ERR;
 	}
 
-	for (int32_t i = 0; i < constraint->AIE2HostPortCount; i++) {
-		if (constraint->AIE2HostPorts[i].port == port) {
+	for (u32 i = 0U; i < constraint->AIE2HostPortCount; i++) {
+		if (constraint->AIE2HostPorts[i].port == (u32)port) {
 			constraint->AIE2HostPorts[i].availability = SetOrUnset;
 		}
 	}
@@ -630,15 +630,15 @@ static int32_t findAvailableChannelIDforShimTile(const XAie_RoutingInstance *rou
 	const XAie_CoreConstraint* constraint =
 		routingInstance->CoreConstraintPerCore[tile.Col][tile.Row];
 	if (HostToAie) {
-		for (int32_t i = 0; i < constraint->Host2AIEPortCount; i++) {
-			if (constraint->Host2AIEPorts[i].port == port) {
+		for (u32 i = 0U; i < constraint->Host2AIEPortCount; i++) {
+			if (constraint->Host2AIEPorts[i].port == (u32)port) {
 				// Found a matching stream
 				return (s32)(constraint->Host2AIEPorts[i].channel);
 			}
 		}
 	} else {
-		for (int32_t i = 0; i < constraint->AIE2HostPortCount; i++) {
-			if (constraint->AIE2HostPorts[i].port == port) {
+		for (u32 i = 0U; i < constraint->AIE2HostPortCount; i++) {
+			if (constraint->AIE2HostPorts[i].port == (u32)port) {
 				// Found a matching stream
 				return (s32)(constraint->AIE2HostPorts[i].channel);
 			}
@@ -784,8 +784,8 @@ static int32_t findFirstMatchingStreamForDestination(const XAie_RoutingInstance*
 	 * portAvailabilitySourceTile and portAvailabilityDestinationTile
 	 */
 	for (int32_t i = 0; i < 8; i++) {
-		if (((u8)portAvailabilitySourceTile & (((u32)1U) << (u8)i)) &&
-			((u8)portAvailabilityDestinationTile & (((u32)1U) << (u8)i))) {
+		if ((((u8)portAvailabilitySourceTile & (((u32)1U) << (u8)i)) != 0U) &&
+			(((u8)portAvailabilityDestinationTile & (((u32)1U) << (u8)i)) != 0U)) {
 			/* Found a matching stream */
 			return i;
 		}
@@ -836,14 +836,14 @@ s32 _XAie_findFirstMatchingStream(XAie_RoutingInstance* RoutingInstance, XAie_Lo
 		 * can only be done on very specific ports
 		 */
 		if (isEndTile ){
-			for (int32_t i = 0; i < constraint->AIE2HostPortCount; i++) {
+			for (u32 i = 0U; i < constraint->AIE2HostPortCount; i++) {
 				if (constraint->AIE2HostPorts[i].availability) {
 					// Found a available port
 					return (s32)(constraint->AIE2HostPorts[i].port);
 				}
 			}
 		} else {
-			for (int32_t i = 0; i < constraint->Host2AIEPortCount; i++) {
+			for (u32 i = 0U; i < constraint->Host2AIEPortCount; i++) {
 				if (constraint->Host2AIEPorts[i].availability) {
 					/* Found a available port */
 					return (s32)(constraint->Host2AIEPorts[i].port);
@@ -913,10 +913,10 @@ static void _XAie_resetBDAvailability(const XAie_RoutingInstance *routingInstanc
 
 	/* Assuming MAX_BUFFER_IDS is the maximum number of buffer IDs per tile */
 	/* Adjust this value based on your system's specification */
-	const int32_t MAX_BUFFER_IDS = 16;
+	const u32 MAX_BUFFER_IDS = 16U;
 
 	if (bdID < MAX_BUFFER_IDS) {
-		coreConstraints[col][row]->BDState |= (((u32)1U) << (u32)bdID);
+		coreConstraints[col][row]->BDState |= (((u64)1U) << (u32)bdID);
 	}
 }
 
@@ -943,9 +943,9 @@ static int32_t _XAie_findAvailableBufferID(const XAie_RoutingInstance *routingIn
 	const int32_t MAX_BUFFER_IDS = 48;
 
 	for (int32_t bufferID = 0; bufferID < MAX_BUFFER_IDS; bufferID++) {
-		if ((coreConstraints[col][row]->BDState & (((u32)1U) << (u32)bufferID)) != 0U) {
+		if ((coreConstraints[col][row]->BDState & (((u64)1U) << (u32)bufferID)) != 0U) {
 			/* Mark this buffer ID as used (not available) before returning */
-			coreConstraints[col][row]->BDState &= ~(((u32)1U) << (u32)bufferID);
+			coreConstraints[col][row]->BDState &= ~(((u64)1U) << (u32)bufferID);
 			return bufferID;
 		}
 	}
@@ -980,8 +980,8 @@ static bool _XAie_isAdjTileValidForCurrTile(const XAie_RoutingInstance* RoutingI
 {
 	XAie_CoreConstraint ***coreConstraints = RoutingInstance->CoreConstraintPerCore;
 
-	if (!(adjTile.Col < RoutingInstance->NumCols &&
-                            adjTile.Row < RoutingInstance->NumRows)) {
+	if (!((adjTile.Col < RoutingInstance->NumCols) &&
+                            (adjTile.Row < RoutingInstance->NumRows))) {
 		return false;
                             }
 
@@ -1062,7 +1062,7 @@ AieRC XAie_RoutingSwitchReset(const XAie_RoutingInstance *routingInstance,
 
 		StrmSwPortType directions[] = {DMA, SOUTH, WEST, NORTH, EAST};
 		/* Number of elements in the directions array */
-		int32_t dirCount = sizeof(directions) / sizeof(directions[0]);
+		int32_t dirCount = (int32_t)(sizeof(directions) / sizeof(directions[0]));
 
 		/* Iterate over all combinations of directions for slave and master ports */
 		for (int32_t slaveIdx = 0; slaveIdx < dirCount; ++slaveIdx) {
@@ -1314,7 +1314,7 @@ AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_LocType source,
 					CoreConstraintPerCore[destination.Col][destination.Row];
 
 	/* Ensure that the routing path exists for the given source and destination */
-	if (Sourceconstraint == NULL || Sourceconstraint->routesDB == NULL) {
+	if ((Sourceconstraint == NULL) || (Sourceconstraint->routesDB == NULL)) {
 		XAIE_ERROR("XAie_DeRoute failed!. Routing Path does not exist "
 				"between Source {%d, %d} and Destination {%d, %d}\n",
 				source.Col, source.Row, destination.Col, destination.Row);
@@ -1337,7 +1337,7 @@ AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_LocType source,
 
 	const XAie_RoutingStep *currentStep = routingPath->nextStep;
 	while (currentStep != NULL) {
-		int32_t RC = XAie_StrmConnCctDisable(DevInst, currentStep->sourceTile,
+		AieRC RC = XAie_StrmConnCctDisable(DevInst, currentStep->sourceTile,
 				currentStep->source_direction, (u8)(currentStep->sourceStream),
 				currentStep->dest_direction, (u8)(currentStep->destStream));
 
@@ -1347,7 +1347,7 @@ AieRC XAie_DeRoute(XAie_RoutingInstance *routingInstance, XAie_LocType source,
 				currentStep->sourceStream,
 				_XAie_StrmSwPortTypeToString(currentStep->dest_direction),
 				currentStep->destStream);
-		if (RC != (u32)XAIE_OK) {
+		if (RC != XAIE_OK) {
 			XAIE_ERROR("\n [COMMAND] XAie_StrmConnCctDisable( {%d,%d}, %s, %d, %s, %d)"
 				       "FAILED!!\n",
 					currentStep->sourceTile.Col,
@@ -1499,10 +1499,11 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 {
 	XAie_DevInst *DevInst = routingInstance->DeviceInstance;
 	/* Assuming XAIE_OK is a constant representing successful operation */
-	int32_t RC = (s32)XAIE_OK;
-	int32_t dirSource, dirDest, sourceStream;
+	AieRC RC = XAIE_OK;
+	StrmSwPortType dirSource, dirDest;
+	int32_t sourceStream;
 	/* Source stream for the source tile */
-	int32_t actualdirSource;
+	StrmSwPortType actualdirSource;
 	/* Used to store the last destination stream */
 	StrmSwPortType lastDir = SOUTH;
 	int32_t lastStream = -1;
@@ -1532,7 +1533,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 			s32 destStream = _XAie_findFirstMatchingStream(routingInstance, LastTile,
 							dirLast, true/*is End Tile*/);
 
-			if (destStream == -1) {
+			if ((destStream == -1)) {
 				XAIE_ERROR("Routing Failed. No available port on AIE-Tile {%d, %d} "
 				"in the direction of %s. Please check constraints "
 				"and consider re-route!\n",
@@ -1559,7 +1560,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 
 			RC = (AieRC)((u32)RC | (u32)XAie_StrmConnCctEnable(DevInst, LastTile, lastDir,
 					(u8)lastStream, dirLast, (u8)destStream));
-			if (RC != (u32)XAIE_OK) {
+			if (RC != XAIE_OK) {
 				XAIE_ERROR("Routing Failed!. XAie_StrmConnCctEnable Failed!\n");
 				return XAIE_ERR;
 			}
@@ -1592,7 +1593,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 				/* Call the function */
 				RC = (AieRC)((u32)RC | (u32)XAie_EnableAieToShimDmaStrmPort(DevInst, LastTile,
 						(u8)destStream));
-				if (RC != (u32)XAIE_OK) {
+				if (RC != XAIE_OK) {
 					XAIE_ERROR("Routing Failed!. "
 						"XAie_EnableAieToShimDmaStrmPort Failed!\n");
 					return XAIE_ERR;
@@ -1601,7 +1602,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 								LastTile, destStream, false);
 			}
 
-			if (Sourceconstraint->routesDB == NULL) {
+			if ((Sourceconstraint->routesDB == NULL)) {
 				XAIE_DBG("Adding first route to routes DB\n");
 				Sourceconstraint->routesDB = (XAie_ProgrammedRoutes *)XAIE_ALIGNED_ALLOC(16,
 								sizeof(XAie_ProgrammedRoutes));
@@ -1624,13 +1625,13 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 			}
 
 			if (_XAie_isShimTile(routingInstance, SourceTile)) {
-				actualdirSource = (s32)lastDir;
+				actualdirSource = lastDir;
 			} else {
 				actualdirSource = (i == 0) ? DMA : lastDir;
 			}
 
 			/* Destination stream for the destination tile */
-			int32_t actualdirDest = (i == pathLength - 1) ? DMA : dirSource;
+			StrmSwPortType actualdirDest = (i == pathLength - 1) ? DMA : dirSource;
 			if (_XAie_isShimTile(routingInstance, SourceTile)) {
 				if (i == 0) {
 					sourceStream = _XAie_findFirstMatchingStream(
@@ -1648,7 +1649,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 			s32 destStream = findFirstMatchingStreamForDestination(
 					routingInstance, SourceTile, DestinationTile, dirSource);
 
-			if (sourceStream == -1 || destStream == -1) {
+			if ((sourceStream == -1) || (destStream == -1)) {
 				/* Adding XAIE_DBG statement to print the command with actual values
 				 * */
 				XAIE_ERROR("\n XAie_StrmConnCctEnable cannot be programmed between"
@@ -1680,7 +1681,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 
 			RC = (AieRC)((u32)RC | (u32)XAie_StrmConnCctEnable(DevInst, SourceTile, portSource,
 						(u8)sourceStream, portDest, (u8)destStream));
-			if (RC != (u32)XAIE_OK) {
+			if (RC != XAIE_OK) {
 				XAIE_ERROR("Routing Failed!. "
 					"XAie_EnableAieToShimDmaStrmPort Failed!\n");
 				return XAIE_ERR;
@@ -1721,7 +1722,7 @@ static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, X
 				/* Call the function */
 				RC = (AieRC)((u32)RC | (u32)XAie_EnableShimDmaToAieStrmPort(DevInst,
 						SourceTile, (u8)sourceStream));
-				if (RC != (u32)XAIE_OK) {
+				if (RC != XAIE_OK) {
 					XAIE_ERROR("Routing Failed!. "
 						"XAie_EnableShimDmaToAieStrmPort Failed!\n");
 					return XAIE_ERR;
@@ -1759,7 +1760,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 		XAie_LocType destination, XAie_BDs* BDs)
 {
 	XAie_DevInst *DevInst = routingInstance->DeviceInstance;
-	int32_t RC = (s32)XAIE_OK;
+	AieRC RC = XAIE_OK;
 
 	/* Initialize buffer descriptors for the source and destination tiles */
 	XAie_DmaDesc SourceBufferDescriptor = {0};
@@ -1782,8 +1783,9 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 						(XAie_MemInst*)SourceObject, 0x0, data_size));
 		}
 	} else {
-		RC |= (u32)XAie_DmaSetAddrLen(&SourceBufferDescriptor,
+		u32 AddrStatus = (u32)RC | (u32)XAie_DmaSetAddrLen(&SourceBufferDescriptor,
 						(u64)(uintptr_t)SourceObject, data_size);
+		RC = (AieRC)AddrStatus;
 	}
 
 	RC = (AieRC)((u32)RC | (u32)(u32)XAie_DmaEnableBd(&SourceBufferDescriptor));
@@ -1792,7 +1794,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 	XAIE_DBG("\n [COMMAND] XAie_DmaWriteBd({%d,%d}, %d)\n",
 			source.Col, source.Row, sourceBufferID);
 	BDs->sourceBD = (u16)sourceBufferID;
-	if (RC != (u32)XAIE_OK) {
+	if (RC != XAIE_OK) {
 		XAIE_ERROR("Buffer Descriptor programming failed!\n");
 		return XAIE_ERR;
 	}
@@ -1814,8 +1816,9 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 						(XAie_MemInst*)DestinationObject, 0x0, data_size));
 		}
 	} else {
-		RC |= (u32)XAie_DmaSetAddrLen(&DestBufferDescriptor,
+		u32 AddrStatus = (u32)RC | (u32)XAie_DmaSetAddrLen(&DestBufferDescriptor,
 						(u64)(uintptr_t)DestinationObject, data_size);
+		RC = (AieRC)AddrStatus;
 	}
 	RC = (AieRC)((u32)RC | (u32)(u32)XAie_DmaEnableBd(&DestBufferDescriptor));
 	int32_t destBufferID = _XAie_findAvailableBufferID(routingInstance, destination);
@@ -1824,7 +1827,7 @@ static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstanc
 			destination.Col, destination.Row, destBufferID);
 	BDs->destinationBD = (u16)destBufferID;
 	/* Check for errors in the process */
-	if (RC != (u32)XAIE_OK) {
+	if (RC != XAIE_OK) {
 		XAIE_ERROR("Buffer Descriptor programming failed!\n");
 		return XAIE_ERR;
 	}
@@ -1854,7 +1857,7 @@ static AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType s
 			u32 data_size, XAie_MemInst* DestinationObject, XAie_LocType destination)
 {
 	XAie_DevInst *DevInst = routingInstance->DeviceInstance;
-	int32_t RC = (s32)XAIE_OK;
+	AieRC RC = XAIE_OK;
 	u8 sourceChannelID;
 	u8 destChannelID;
 
@@ -1905,14 +1908,14 @@ static AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType s
 			DMA_MM2S, bufferDescriptors.sourceBD));
 	RC = (AieRC)((u32)RC | (u32)(u32)XAie_DmaChannelEnable(DevInst, source, sourceChannelID, DMA_MM2S));
 
-	if (RC != (u32)XAIE_OK) {
+	if (RC != XAIE_OK) {
 		return XAIE_ERR;
 	}
 
 	/* now on the above tile (source tile) program the MM2S signatory */
 	XAie_mm2sChannelsInUse MM2S = Sourceconstraint->mm2sChannelsInUse;
 	u8 MM2S_Count = MM2S.MM2S_portCount;
-	MM2S.MM2S_ports = XAIE_REALLOC(MM2S.MM2S_ports, (MM2S_Count + 1U) * sizeof(u8));
+	MM2S.MM2S_ports = XAIE_REALLOC(MM2S.MM2S_ports, ((size_t)MM2S_Count + 1U) * sizeof(u8));
 	MM2S.MM2S_ports[MM2S_Count] = sourceChannelID;
 
 	/* Repeat the same process for destination */
@@ -1924,14 +1927,14 @@ static AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType s
 	RC = (AieRC)((u32)RC | (u32)XAie_DmaChannelPushBdToQueue(DevInst, destination, destChannelID,
 			DMA_S2MM, bufferDescriptors.destinationBD));
 	RC = (AieRC)((u32)RC | (u32)(u32)XAie_DmaChannelEnable(DevInst, destination, destChannelID, DMA_S2MM));
-	if (RC != (u32)XAIE_OK) {
+	if (RC != XAIE_OK) {
 		return XAIE_ERR;
 	}
 
 	/* now on the above tile (source tile) program the MM2S signatory */
 	XAie_s2mmChannelsInUse S2MM = Sourceconstraint->s2mmChannelsInUse;
 	u8 S2MM_Count = S2MM.S2MM_portCount;
-	S2MM.S2MM_ports = XAIE_REALLOC(S2MM.S2MM_ports, (S2MM_Count + 1U) * sizeof(u8));
+	S2MM.S2MM_ports = XAIE_REALLOC(S2MM.S2MM_ports, ((size_t)S2MM_Count + 1U) * sizeof(u8));
 	S2MM.S2MM_ports[S2MM_Count] = sourceChannelID;
 
 	/* Wait for pending BD for destination */
@@ -1947,7 +1950,7 @@ static AieRC XAie_MoveData(XAie_RoutingInstance *routingInstance, XAie_LocType s
 	}
 
 	/* Check for errors in the process */
-	if (RC != (u32)XAIE_OK) {
+	if (RC != XAIE_OK) {
 		return XAIE_ERR;
 	}
 
@@ -2032,7 +2035,7 @@ static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 	bool found = false;
 
 
-	if (source.Col == destination.Col && source.Row == destination.Row) {
+	if ((source.Col == destination.Col) && (source.Row == destination.Row)) {
 		*pathLength = 0;
 		// Source and destination are the same
 		return true;
@@ -2090,10 +2093,10 @@ static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 		/* Directions: North, South, East, West, Self */
 		int32_t dRow[] = {1, -1, 0, 0};
 		int32_t dCol[] = {0, 0, 1, -1};
-		int32_t StrmSwPort[] ={6 /*NORTH*/, 4/*SOUTH*/, 7/*EAST*/, 5/*WEST*/ };
+		StrmSwPortType StrmSwPort[] = {NORTH, SOUTH, EAST, WEST};
 		for (int32_t i = 0; i < 4; i++) {
-			XAie_LocType adj = XAie_TileLoc((u8)(current.Col + dCol[i]),
-							(u8)(current.Row + dRow[i]));
+			XAie_LocType adj = XAie_TileLoc((u8)((s32)current.Col + dCol[i]),
+							(u8)((s32)current.Row + dRow[i]));
 
 			if (_XAie_isAdjTileValidForCurrTile(routingInstance, RouteConstraints,
 						current, adj, StrmSwPort[i], visited)) {
@@ -2101,13 +2104,13 @@ static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 				_XAie_enqueue(queue, adj);
 				Pred[adj.Col][adj.Row] = current;
 
-				if (adj.Col == destination.Col && adj.Row == destination.Row) {
+				if ((adj.Col == destination.Col) && (adj.Row == destination.Row)) {
 					/* Check if the path contains all of the whitelisted cores
 					 */
 					bool allWhitelisted = true;
 					XAie_LocType temp = adj;
-					while (!(temp.Col == source.Col &&
-								temp.Row == source.Row)) {
+					while (!((temp.Col == source.Col) &&
+								(temp.Row == source.Row))) {
 						if ((RouteConstraints != NULL) &&
 							(RouteConstraints->NoOfWhiteListedCores > 0U) &&
 							(!_XAie_isTileWhitelisted(temp,
@@ -2140,7 +2143,7 @@ static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 	/* Construct and reverse the path */
 	*pathLength = 0;
 	XAie_LocType at = destination;
-	while (!(at.Col == source.Col && at.Row == source.Row)) {
+	while (!((at.Col == source.Col) && (at.Row == source.Row))) {
 		path[(*pathLength)++] = at;
 		at = Pred[at.Col][at.Row];
 	}
@@ -2214,7 +2217,7 @@ AieRC XAie_Run(const XAie_RoutingInstance* routingInstance, uint32_t count)
 			for (u8 row = 0; row < routingInstance->NumRows; row++) {
 				const XAie_CoreConstraint* coreConstraint = routingInstance->
 								CoreConstraintPerCore[col][row];
-				if (coreConstraint != NULL && coreConstraint->isCoreExecuting) {
+				if ((coreConstraint != NULL) && coreConstraint->isCoreExecuting) {
 					XAie_CoreEnable(routingInstance->DeviceInstance,
 								XAie_TileLoc(col, row));
 					XAIE_DBG("\n [PROGRAM] XAie_CoreEnable({%d,%d})\n",
@@ -2324,7 +2327,7 @@ AieRC XAie_ConfigHostEdgeConstraints(const XAie_RoutingInstance *routingInstance
 	/* iterate through all the user specified constraints and configure
 	 * appropriate constraints on the appropriate SHIM Tiles
 	 */
-	for (int32_t i = 0; i < UserResCon.ConstraintCount; i++) {
+	for (u32 i = 0U; i < UserResCon.ConstraintCount; i++) {
 		XAie_RoutingResourceConstraint Constraint = UserResCon.RoutingResourceConstraint[i];
 		XAie_LocType CurrTile = XAie_TileLoc(Constraint.column, 0);
 		XAie_CoreConstraint* coreConstraint = routingInstance->
@@ -2356,8 +2359,8 @@ AieRC XAie_ResetHostEdgeConstraints(const XAie_RoutingInstance *routingInstance)
 	/* iterate through all the user specified constraints and configure
 	 * appropriate constraints on the appropriate SHIM Tiles
 	 */
-	for (int32_t i = 0; i < routingInstance->NumCols; i++) {
-		XAie_LocType CurrTile = XAie_TileLoc(i, 0);
+	for (int32_t i = 0; i < (s32)routingInstance->NumCols; i++) {
+		XAie_LocType CurrTile = XAie_TileLoc((u8)i, 0);
 		XAie_CoreConstraint* coreConstraint = routingInstance->
 					CoreConstraintPerCore[CurrTile.Col][CurrTile.Row];
 		coreConstraint->Host2AIEPorts = NULL;
@@ -2390,7 +2393,7 @@ AieRC XAie_Route(XAie_RoutingInstance *routingInstance,  XAie_RouteConstraints* 
 	int32_t pathLength = 0;
 	const XAie_CoreConstraint* Sourceconstraint = routingInstance->
 					CoreConstraintPerCore[source.Col][source.Row];
-	if (Sourceconstraint == NULL) {
+	if ((Sourceconstraint == NULL)) {
 		XAIE_ERROR("XAie_Route backend failed!.\n");
 		return XAIE_ERR;
 	}
@@ -2402,7 +2405,7 @@ AieRC XAie_Route(XAie_RoutingInstance *routingInstance,  XAie_RouteConstraints* 
 	}
 
 	XAie_LocType *path = (XAie_LocType *)XAIE_ALIGNED_ALLOC(16,
-			routingInstance->NumRows * routingInstance->NumCols * sizeof(XAie_LocType));
+			(size_t)routingInstance->NumRows * (size_t)routingInstance->NumCols * sizeof(XAie_LocType));
 	if (path == NULL) {
 		XAIE_ERROR("XAie_Route backend Failed!. Memory allocation failed\n");
 		return XAIE_ERR;
@@ -2465,7 +2468,7 @@ static bool _XAie_isTileWhitelisted(XAie_LocType CurrTile,
 			const XAie_LocType *whitelist, u16 whitelistCount)
 {
 	for (u16 i = 0; i < whitelistCount; i++) {
-		if (CurrTile.Col == whitelist[i].Col && CurrTile.Row == whitelist[i].Row) {
+		if ((CurrTile.Col == whitelist[i].Col) && (CurrTile.Row == whitelist[i].Row)) {
 			return true;
 		}
 	}
@@ -2495,7 +2498,7 @@ static bool _XAie_isTileBlackListed(XAie_LocType CurrTile,
 		u8 CurrTileCol = CurrTile.Col;
 		u8 CurrTileRow = CurrTile.Row;
 
-		for (int32_t i = 0 ; i < NoOfBlackListedCores; i++) {
+		for (u32 i = 0U ; i < NoOfBlackListedCores; i++) {
 			u8 col = BlackListedCores[i].Col;
 			u8 row = BlackListedCores[i].Row;
 
@@ -2526,7 +2529,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 {
 	XAie_RoutingInstance* RoutingInstance;
 	RoutingInstance = (XAie_RoutingInstance*)XAIE_ALIGNED_ALLOC(16, sizeof(XAie_RoutingInstance));
-	if (RoutingInstance == NULL) {
+	if ((RoutingInstance == NULL)) {
 		XAIE_ERROR("XAie_InitRoutingHandler backend failed!. Failed to allocate memory\n");
 		return NULL;
 	}
@@ -2578,9 +2581,9 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 	}
 
 	XAie_ChannelPortMapping* defaultHost2AIEPortChannelMapping = (XAie_ChannelPortMapping *)XAIE_ALIGNED_ALLOC
-						(16, 2*sizeof(XAie_ChannelPortMapping));
+						(16, 2U*sizeof(XAie_ChannelPortMapping));
 	XAie_ChannelPortMapping* defaultAIE2HostPortChannelMapping = (XAie_ChannelPortMapping *)XAIE_ALIGNED_ALLOC
-						(16, 2*sizeof(XAie_ChannelPortMapping));
+						(16, 2U*sizeof(XAie_ChannelPortMapping));
 
 	defaultHost2AIEPortChannelMapping[0].port = 3;
 	defaultHost2AIEPortChannelMapping[0].channel = 0;
@@ -2625,7 +2628,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 			 */
 			if (isMemTileRow && !isShimTileRow) {
 				CurrCoreConstraint->isAutoConfigured = false;
-				CurrCoreConstraint->tile_type = 1;
+				CurrCoreConstraint->tile_type = XAIE_AIE_MEM;
 				/* set 6 bits and rest 0 */
 				CurrCoreConstraint->S2MM_State = 0x3F;
 				/* set 6 bits and rest 0 */
@@ -2668,7 +2671,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 				CurrCoreConstraint->isCoreExecuting = false;
 			} else if (isAieTile) {
 				CurrCoreConstraint->isAutoConfigured = false;
-				CurrCoreConstraint->tile_type = 2;
+				CurrCoreConstraint->tile_type = XAIE_AIE_CORE;
 				/* set 2 bits and rest 0 */
 				CurrCoreConstraint->S2MM_State = 0x3;
 				/* set 2 bits and rest 0 */
@@ -2713,7 +2716,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
 				CurrCoreConstraint->isCoreExecuting = false;
 			} else if (isShimTileRow) {
 				CurrCoreConstraint->isAutoConfigured = false;
-				CurrCoreConstraint->tile_type = 0;
+				CurrCoreConstraint->tile_type = XAIE_AIE_SHIM;
 				/* 2 S2MM channels? */
 				CurrCoreConstraint->S2MM_State = 0x3;
 				/* 2 MM2S channels? */
@@ -2786,7 +2789,7 @@ XAie_RoutingInstance* XAie_InitRoutingHandler(XAie_DevInst *DevInst)
  ******************************************************************************/
 void XAieRoutingInstance_free(XAie_RoutingInstance* RoutingInstance)
 {
-	if (RoutingInstance == NULL) {
+	if ((RoutingInstance == NULL)) {
 		return;
 	}
 
@@ -2801,7 +2804,7 @@ void XAieRoutingInstance_free(XAie_RoutingInstance* RoutingInstance)
 				XAie_CoreConstraint* coreConstraint = RoutingInstance->
 								CoreConstraintPerCore[col][row];
 				/* Free each XAie_CoreConstraint */
-				if (coreConstraint != NULL) {
+				if ((coreConstraint != NULL)) {
 					/* Free the members of XAie_CoreConstraint */
 					if (coreConstraint->routesDB != NULL) {
 						_XAie_freeXAieProgrammedRoutes
@@ -2873,10 +2876,10 @@ static XAie_RoutingPath* _XAie_findRouteInRouteDB(XAie_ProgrammedRoutes* routesD
 	}
 	XAie_ProgrammedRoutes* CurrRoute = routesDB;
 	while ((CurrRoute != NULL) &&  (CurrRoute->routePath != NULL)){
-		if ((CurrRoute->routePath->source.Col == source.Col &&
-				CurrRoute->routePath->source.Row == source.Row)
-				&& (CurrRoute->routePath->destination.Col == destination.Col
-				&& CurrRoute->routePath->destination.Row == destination.Row)){
+		if (((CurrRoute->routePath->source.Col == source.Col) &&
+				(CurrRoute->routePath->source.Row == source.Row))
+				&& ((CurrRoute->routePath->destination.Col == destination.Col)
+				&& (CurrRoute->routePath->destination.Row == destination.Row))){
 			/* Route founds */
 			return CurrRoute->routePath;
 		}
@@ -2925,10 +2928,10 @@ static void _XAie_FreeRouteFromRoutesDB(XAie_ProgrammedRoutes** head,
 		XAie_LocType source, XAie_LocType destination)
 {
 	XAie_ProgrammedRoutes *temp = *head, *prev = NULL;
-	while (temp != NULL && !((temp->routePath->source.Col == source.Col &&
-				temp->routePath->source.Row == source.Row) &&
-				(temp->routePath->destination.Col == destination.Col &&
-				 temp->routePath->destination.Row == destination.Row))) {
+	while ((temp != NULL) && !(((temp->routePath->source.Col == source.Col) &&
+				(temp->routePath->source.Row == source.Row)) &&
+				((temp->routePath->destination.Col == destination.Col) &&
+				 (temp->routePath->destination.Row == destination.Row)))) {
 		prev = temp;
 		temp = temp->nextRoute;
 	}

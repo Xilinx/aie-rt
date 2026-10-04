@@ -82,7 +82,7 @@ extern XAieLogLevel AieLogLevel;
 		__ptr == NULL ? NULL : (type *)(__ptr - offsetof(type, member));	\
 	})
 #define CheckBit(bitmap, pos)   ((bitmap)[(u64)(pos) / (sizeof((bitmap)[0]) * 8U)] & \
-				(u32)(1U << (u64)(pos) % (sizeof((bitmap)[0]) * 8U)))
+				(u32)((u32)1U << ((u64)(pos) % (sizeof((bitmap)[0]) * 8U))))
 
 #ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
 /*
@@ -236,12 +236,12 @@ void _XAie_LogSink(const char *Str);
 
 /* Loop through the set bits in Value */
 #define for_each_set_bit(Index, Value, Len)				      \
-	for((Index) = first_set_bit((Value)) - 1;			      \
+	for((Index) = first_set_bit((Value)) - 1U;			      \
 	    (Index) < (Len);						      \
-	    (Value) &= (Value) - 1, (Index) = first_set_bit((Value)) - 1)
+	    (Value) &= (Value) - 1U, (Index) = first_set_bit((Value)) - 1U)
 
 /* Generate value with a set bit at given Index */
-#define BIT(Index)		(1 << (Index))
+#define BIT(Index)		((u32)1U << (Index))
 
 /*
  * __attribute is not supported for windows. remove it conditionally.

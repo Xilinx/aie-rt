@@ -90,7 +90,7 @@ AieRC XAie_DataMemWrWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
-	RegAddr = (u64)(MemAddr + Addr) +
+	RegAddr = ((u64)MemAddr + (u64)Addr) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Write32(DevInst, RegAddr, Data);
@@ -150,7 +150,7 @@ AieRC XAie_DataMemRdWord(XAie_DevInst *DevInst, XAie_LocType Loc,
 		return XAIE_INVALID_DATA_MEM_ADDR;
 	}
 
-	RegAddr = (u64)(MemAddr + Addr) +
+	RegAddr = ((u64)MemAddr + (u64)Addr) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	return XAie_Read32(DevInst, RegAddr, Data);
@@ -298,7 +298,7 @@ AieRC XAie_DataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Check for any size overflow */
-	if(((u64)Addr + Size) > MemSize) {
+	if((((u64)Addr + Size)) > MemSize) {
 		XAIE_ERROR("Size of source block overflows tile data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
@@ -338,7 +338,7 @@ AieRC XAie_SharedDataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	TileType = DevInst->DevOps->GetTTypefromLoc(DevInst, Loc);
-	if(XAie_IsUcModulePresent(DevInst, TileType) == 0) {
+	if(XAie_IsUcModulePresent(DevInst, TileType) == 0U) {
 		XAIE_ERROR("Invalid tile type, Col:%u Row:%u TileType:%u\n", Loc.Col, Loc.Row, TileType);
 		return XAIE_INVALID_TILE;
 	}
@@ -348,7 +348,7 @@ AieRC XAie_SharedDataMemBlockWrite(XAie_DevInst *DevInst, XAie_LocType Loc,
 	MemAddr = UcMod->DataMemAddr;
 
 	/* Check for any size overflow */
-	if((u64)Addr + Size > MemSize) {
+	if(((u64)Addr + Size) > MemSize) {
 		XAIE_ERROR("Size of source block overflows the data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
@@ -407,7 +407,7 @@ AieRC XAie_SharedDataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 A
 	MemAddr = UcMod->DataMemAddr;
 
 	/* Check for any size overflow */
-	if(((u64)Addr + Size) > MemSize) {
+	if((((u64)Addr + Size)) > MemSize) {
 		XAIE_ERROR("Size of read block overflows shared data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
@@ -514,7 +514,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 	}
 
 	/* Check for any size overflow */
-	if(((u64)Addr + Size) > MemSize) {
+	if((((u64)Addr + Size)) > MemSize) {
 		XAIE_ERROR("Size of read block overflows tile data memory\n");
 		return XAIE_ERR_OUTOFBOUND;
 	}
@@ -535,7 +535,7 @@ AieRC XAie_DataMemBlockRead(XAie_DevInst *DevInst, XAie_LocType Loc, u32 Addr,
 		}
 
 		for(u32 UnalignedByte = FirstReadOffset;
-			(u8)((UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE) != 0U) && (RemBytes != 0U);
+			(UnalignedByte < XAIE_MEM_WORD_ALIGN_SIZE) && (RemBytes != 0U);
 			UnalignedByte++, RemBytes--) {
 			CharDst[BytePtr++] = (u8)(TempWord >> (UnalignedByte * 8U) &
 									0xFFU);

@@ -487,7 +487,7 @@ AieRC XAie_HwErrorCheck(XAie_DevInst *DevInst, u32 Col, u32 *HwErrorStatus)
 		return XAIE_ERR;
 	}
 	RegOffset = IntrMod->HwErrorStatusRegOff;
-	if (RegOffset == 0) {
+	if (RegOffset == 0U) {
 		XAIE_ERROR("Invalid L2 interrupt module register offset\n");
 		return XAIE_ERR;
 	}
@@ -499,7 +499,7 @@ AieRC XAie_HwErrorCheck(XAie_DevInst *DevInst, u32 Col, u32 *HwErrorStatus)
 	}
 	RegVal &= IntrMod->HwErrorStatusMask;
 	*HwErrorStatus = RegVal;
-	if (RegVal != 0) {
+	if (RegVal != 0U) {
 		XAIE_ERROR("Hw Error status: 0x%x on col: %d\n", RegVal, Col);
 		RC = _XAie_PrivilegeSetPartProtectedRegs(DevInst, XAIE_ENABLE);
 		if(RC != XAIE_OK) {
@@ -613,7 +613,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	u32 OptFlags;
 	AieRC RC;
 
-	if(Opts != NULL) {
+	if((Opts != NULL)) {
 		OptFlags = Opts->InitOpts;
 	} else {
 		OptFlags = XAIE_PART_INIT_OPT_DEFAULT;
@@ -712,7 +712,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 	}
 
 	/* Enable only the tiles requested in Opts parameter */
-        if(Opts != NULL && (Opts->NumUseTiles > 0U)) {
+        if((Opts != NULL) && (Opts->NumUseTiles > 0U)) {
                 XAie_BackendTilesArray TilesArray;
 
                 TilesArray.NumTiles = Opts->NumUseTiles;
@@ -750,7 +750,7 @@ AieRC _XAie_PrivilegeInitPart(XAie_DevInst *DevInst, XAie_PartInitOpts *Opts)
 			XAie_LocType Loc;
 			u32 ColClockStatus;
 
-			Loc = XAie_TileLoc(C, 1);
+			Loc = XAie_TileLoc((u8)C, 1);
 			ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 			_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
 				       ColClockStatus, (u32)DevInst->NumRows - 1U);

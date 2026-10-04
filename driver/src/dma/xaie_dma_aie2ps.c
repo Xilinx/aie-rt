@@ -188,7 +188,7 @@ AieRC _XAie2PS_MemTileDmaWriteBdPrep(XAie_DevInst *DevInst,
 	DmaMod = DevInst->DevProp.DevMod[DmaDesc->TileType].DmaMod;
 	BdProp = DmaMod->BdProp;
 
-	BdBaseAddr = (u64)(DmaMod->BaseAddr + BdNum * DmaMod->IdxOffset);
+	BdBaseAddr = (u64)((u64)DmaMod->BaseAddr + ((u64)BdNum * (u64)DmaMod->IdxOffset));
 
 	/* Setup BdWord with the right values from DmaDesc */
 	BdWord[0U] = XAie_SetField(DmaDesc->PktDesc.PktEn,
@@ -225,10 +225,10 @@ AieRC _XAie2PS_MemTileDmaWriteBdPrep(XAie_DevInst *DevInst,
 		 XAie_SetField(((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[3U].StepSize > 0U) ? 0U : 1U),
 				BdProp->AddrMode->AieMlMultiDimAddr.StepSize_Zero.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.StepSize_Zero.Mask) |
-		 XAie_SetField((DmaDesc->PadDesc[2U].Before >> (XAIE2PS_DMA_PAD_NUM_BITS - 2U)),
+		 XAie_SetField(((u32)DmaDesc->PadDesc[2U].Before >> (XAIE2PS_DMA_PAD_NUM_BITS - 2U)),
 				 BdProp->Pad->D2_PadBeforeHigh.Lsb,
 				 BdProp->Pad->D2_PadBeforeHigh.Mask) |
-		 XAie_SetField((DmaDesc->PadDesc[1U].Before >> (XAIE2PS_DMA_PAD_NUM_BITS - 1U)),
+		 XAie_SetField(((u32)DmaDesc->PadDesc[1U].Before >> (XAIE2PS_DMA_PAD_NUM_BITS - 1U)),
 				 BdProp->Pad->D1_PadBeforeHigh.Lsb,
 				 BdProp->Pad->D1_PadBeforeHigh.Mask) |
 		 XAie_SetField(DmaDesc->TlastSuppress,
@@ -274,16 +274,16 @@ AieRC _XAie2PS_MemTileDmaWriteBdPrep(XAie_DevInst *DevInst,
 	BdWord[6U] = XAie_SetField(DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterCurr,
 			BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Lsb,
 			BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Mask) |
-		XAie_SetField((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.Wrap - 1U),
+		XAie_SetField(((u32)DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.Wrap - 1U),
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Mask) |
 		XAie_SetField((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.StepSize - 1U),
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.StepSize.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.StepSize.Mask) |
-		XAie_SetField((DmaDesc->PadDesc[2U].After >> (XAIE2PS_DMA_PAD_NUM_BITS - 2U)),
+		XAie_SetField(((u32)DmaDesc->PadDesc[2U].After >> (XAIE2PS_DMA_PAD_NUM_BITS - 2U)),
 				 BdProp->Pad->D2_PadAfterHigh.Lsb,
 				 BdProp->Pad->D2_PadAfterHigh.Mask) |
-		XAie_SetField((DmaDesc->PadDesc[1U].After >> (XAIE2PS_DMA_PAD_NUM_BITS - 1U)),
+		XAie_SetField(((u32)DmaDesc->PadDesc[1U].After >> (XAIE2PS_DMA_PAD_NUM_BITS - 1U)),
 				 BdProp->Pad->D1_PadAfterHigh.Lsb,
 				 BdProp->Pad->D1_PadAfterHigh.Mask);
 
@@ -372,7 +372,7 @@ AieRC _XAie2PS_ShimDmaWriteBdPrep(XAie_DevInst *DevInst,
 	DmaMod = DevInst->DevProp.DevMod[DmaDesc->TileType].DmaMod;
 	BdProp = DmaMod->BdProp;
 
-	BdBaseAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset);
+	BdBaseAddr = (u64)DmaMod->BaseAddr + (((u64)BdNum * (u64)DmaMod->IdxOffset));
 
 	/* Setup BdWord with the right values from DmaDesc */
 	BdWord[0U] = XAie_SetField(DmaDesc->AddrDesc.Length,
@@ -433,7 +433,7 @@ AieRC _XAie2PS_ShimDmaWriteBdPrep(XAie_DevInst *DevInst,
 	BdWord[6U] = XAie_SetField(DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterCurr,
 			BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Lsb,
 			BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Mask) |
-		XAie_SetField((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.Wrap - 1U),
+		XAie_SetField(((u32)DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.Wrap - 1U),
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Mask) |
 		XAie_SetField((DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.StepSize - 1U),
@@ -544,8 +544,8 @@ AieRC _XAie2PS_ShimDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 	const XAie_DmaBdProp *BdProp;
 
 	BdProp = DmaDesc->DmaMod->BdProp;
-	BdBaseAddr = DmaDesc->DmaMod->BaseAddr +
-			BdNum * DmaDesc->DmaMod->IdxOffset;
+	BdBaseAddr = (u64)DmaDesc->DmaMod->BaseAddr +
+			((u64)BdNum * (u64)DmaDesc->DmaMod->IdxOffset);
 	Addr = BdBaseAddr + XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 
 	/* Setup DmaDesc with values read from bd registers */
@@ -569,97 +569,94 @@ AieRC _XAie2PS_ShimDmaReadBd(XAie_DevInst *DevInst , XAie_DmaDesc *DmaDesc,
 	DmaDesc->AddrDesc.Address |= (u64)XAie_GetField(BdWord[2U],
 				BdProp->Buffer->ShimDmaBuff.AddrHigh.Lsb,
 				BdProp->Buffer->ShimDmaBuff.AddrHigh.Mask) << 32U;
-	DmaDesc->PktDesc.PktEn = XAie_GetField(BdWord[2U],
+	DmaDesc->PktDesc.PktEn = (u8)(XAie_GetField(BdWord[2U],
 				BdProp->Pkt->EnPkt.Lsb,
-				BdProp->Pkt->EnPkt.Mask);
-	DmaDesc->PktDesc.PktType = XAie_GetField(BdWord[2U],
+				BdProp->Pkt->EnPkt.Mask));
+	DmaDesc->PktDesc.PktType = (u8)(XAie_GetField(BdWord[2U],
 				BdProp->Pkt->PktType.Lsb,
-				BdProp->Pkt->PktType.Mask);
-	DmaDesc->PktDesc.PktId = XAie_GetField(BdWord[2U],
+				BdProp->Pkt->PktType.Mask));
+	DmaDesc->PktDesc.PktId = (u8)(XAie_GetField(BdWord[2U],
 				BdProp->Pkt->PktId.Lsb,
-				BdProp->Pkt->PktId.Mask);
-	DmaDesc->BdEnDesc.OutofOrderBdId = XAie_GetField(BdWord[2U],
+				BdProp->Pkt->PktId.Mask));
+	DmaDesc->BdEnDesc.OutofOrderBdId = (u8)(XAie_GetField(BdWord[2U],
 				BdProp->BdEn->OutofOrderBdId.Lsb,
-				BdProp->BdEn->OutofOrderBdId.Mask);
+				BdProp->BdEn->OutofOrderBdId.Mask));
 
-	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[0U].Wrap =
-			XAie_GetField(BdWord[3U],
+	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[0U].Wrap = (u16)(XAie_GetField(BdWord[3U],
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Lsb,
-				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Mask);
+				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].Wrap.Mask));
 	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[0U].StepSize = 1U +
 			XAie_GetField(BdWord[3U],
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[0U].StepSize.Mask);
-	DmaDesc->AxiDesc.SecureAccess = XAie_GetField(BdWord[3U],
+	DmaDesc->AxiDesc.SecureAccess = (u8)(XAie_GetField(BdWord[3U],
 				BdProp->SysProp->SecureAccess.Lsb,
-				BdProp->SysProp->SecureAccess.Mask);
+				BdProp->SysProp->SecureAccess.Mask));
 
-	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[1U].Wrap =
-			XAie_GetField(BdWord[4U],
+	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[1U].Wrap = (u16)(XAie_GetField(BdWord[4U],
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Lsb,
-				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Mask);
+				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[1U].Wrap.Mask));
 	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[1U].StepSize = 1U +
 			XAie_GetField(BdWord[4U],
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[1U].StepSize.Mask);
-	DmaDesc->AxiDesc.BurstLen = XAie_GetField(BdWord[4U],
+	DmaDesc->AxiDesc.BurstLen = (u8)(XAie_GetField(BdWord[4U],
 				BdProp->SysProp->BurstLen.Lsb,
-				BdProp->SysProp->BurstLen.Mask);
+				BdProp->SysProp->BurstLen.Mask));
 
-	DmaDesc->AxiDesc.SMID = XAie_GetField(BdWord[5U],
+	DmaDesc->AxiDesc.SMID = (u8)(XAie_GetField(BdWord[5U],
 				BdProp->SysProp->SMID.Lsb,
-				BdProp->SysProp->SMID.Mask);
-	DmaDesc->AxiDesc.AxQos = XAie_GetField(BdWord[5U],
+				BdProp->SysProp->SMID.Mask));
+	DmaDesc->AxiDesc.AxQos = (u8)(XAie_GetField(BdWord[5U],
 				BdProp->SysProp->AxQos.Lsb,
-				BdProp->SysProp->AxQos.Mask);
-	DmaDesc->AxiDesc.AxCache = XAie_GetField(BdWord[5U],
+				BdProp->SysProp->AxQos.Mask));
+	DmaDesc->AxiDesc.AxCache = (u8)(XAie_GetField(BdWord[5U],
 				BdProp->SysProp->AxCache.Lsb,
-				BdProp->SysProp->AxCache.Mask);
+				BdProp->SysProp->AxCache.Mask));
 	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.DimDesc[2U].StepSize = 1U +
 			XAie_GetField(BdWord[5U],
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.DmaDimProp[2U].StepSize.Mask);
 
-	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterCurr =
-			XAie_GetField(BdWord[6U],
+	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterCurr = (u8)(XAie_GetField(BdWord[6U],
 				BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Lsb,
-				BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Mask);
-	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.Wrap = 1U +
+				BdProp->AddrMode->AieMlMultiDimAddr.IterCurr.Mask));
+	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.Wrap = (u16)(1U +
 			XAie_GetField(BdWord[6U],
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Lsb,
-				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Mask);
+				BdProp->AddrMode->AieMlMultiDimAddr.Iter.Wrap.Mask));
 	DmaDesc->MultiDimDesc.AieMlMultiDimDesc.IterDesc.StepSize = 1U +
 			XAie_GetField(BdWord[6U],
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.StepSize.Lsb,
 				BdProp->AddrMode->AieMlMultiDimAddr.Iter.StepSize.Mask);
 
-	DmaDesc->BdEnDesc.ValidBd = XAie_GetField(BdWord[7U],
+	DmaDesc->BdEnDesc.ValidBd = (u8)(XAie_GetField(BdWord[7U],
 				BdProp->BdEn->ValidBd.Lsb,
-				BdProp->BdEn->ValidBd.Mask);
+				BdProp->BdEn->ValidBd.Mask));
 	DmaDesc->LockDesc.LockRelVal = XAie_GetField(BdWord[7U],
 				BdProp->Lock->AieMlDmaLock.LckRelVal.Lsb,
 				BdProp->Lock->AieMlDmaLock.LckRelVal.Mask);
-	DmaDesc->LockDesc.LockRelId = XAie_GetField(BdWord[7U],
+	DmaDesc->LockDesc.LockRelId = (u16)(XAie_GetField(BdWord[7U],
 				BdProp->Lock->AieMlDmaLock.LckRelId.Lsb,
-				BdProp->Lock->AieMlDmaLock.LckRelId.Mask);
-	DmaDesc->LockDesc.LockAcqId = XAie_GetField(BdWord[7U],
+				BdProp->Lock->AieMlDmaLock.LckRelId.Mask));
+	DmaDesc->LockDesc.LockAcqId = (u16)(XAie_GetField(BdWord[7U],
 				BdProp->Lock->AieMlDmaLock.LckAcqId.Lsb,
-				BdProp->Lock->AieMlDmaLock.LckAcqId.Mask);
+				BdProp->Lock->AieMlDmaLock.LckAcqId.Mask));
 	DmaDesc->LockDesc.LockAcqVal = XAie_GetField(BdWord[7U],
 				BdProp->Lock->AieMlDmaLock.LckAcqVal.Lsb,
 				BdProp->Lock->AieMlDmaLock.LckAcqVal.Mask);
-	DmaDesc->LockDesc.LockAcqEn = XAie_GetField(BdWord[7U],
+	DmaDesc->LockDesc.LockAcqEn = (u8)(XAie_GetField(BdWord[7U],
 				BdProp->Lock->AieMlDmaLock.LckAcqEn.Lsb,
-				BdProp->Lock->AieMlDmaLock.LckAcqEn.Mask);
-	DmaDesc->BdEnDesc.UseNxtBd = XAie_GetField(BdWord[7U],
+				BdProp->Lock->AieMlDmaLock.LckAcqEn.Mask));
+	DmaDesc->BdEnDesc.UseNxtBd = (u8)(XAie_GetField(BdWord[7U],
 				BdProp->BdEn->UseNxtBd.Lsb,
-				BdProp->BdEn->UseNxtBd.Mask);
-	DmaDesc->BdEnDesc.NxtBd = XAie_GetField(BdWord[7U],
+				BdProp->BdEn->UseNxtBd.Mask));
+	DmaDesc->BdEnDesc.NxtBd = (u8)(XAie_GetField(BdWord[7U],
 				BdProp->BdEn->NxtBd.Lsb,
-				BdProp->BdEn->NxtBd.Mask);
-	DmaDesc->TlastSuppress = XAie_GetField(BdWord[7U],
+				BdProp->BdEn->NxtBd.Mask));
+	DmaDesc->TlastSuppress = (u8)(XAie_GetField(BdWord[7U],
 				BdProp->BdEn->TlastSuppress.Lsb,
-				BdProp->BdEn->TlastSuppress.Mask);
+				BdProp->BdEn->TlastSuppress.Mask));
 
 	DmaDesc->AddrDesc.Address |= XAie_GetField(BdWord[8U],
 				BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Lsb,
@@ -691,9 +688,9 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 	u64 RegAddr;
 	u32 RegVal, Mask;
 
-	RegAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset) +
+	RegAddr = (u64)DmaMod->BaseAddr + (((u64)BdNum * (u64)DmaMod->IdxOffset)) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Idx * 4U;
+		(DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Idx * 4U);
 
 	Mask = DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Mask;
 	RegVal = XAie_SetField(Addr >> DmaMod->BdProp->Buffer->ShimDmaBuff.AddrLow.Lsb,
@@ -706,9 +703,9 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	RegAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset) +
+	RegAddr = (u64)DmaMod->BaseAddr + (((u64)BdNum * (u64)DmaMod->IdxOffset)) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Idx * 4U;
+		(DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Idx * 4U);
 
 	Mask = DmaMod->BdProp->Buffer->ShimDmaBuff.AddrHigh.Mask;
 	RegVal = XAie_SetField(Addr >> 32U,
@@ -722,9 +719,9 @@ AieRC _XAie2PS_ShimDmaUpdateBdAddr(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	RegAddr = DmaMod->BaseAddr + (BdNum * DmaMod->IdxOffset) +
+	RegAddr = (u64)DmaMod->BaseAddr + (((u64)BdNum * (u64)DmaMod->IdxOffset)) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
-		DmaMod->BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Idx * 4U;
+		(DmaMod->BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Idx * 4U);
 
 	Mask = DmaMod->BdProp->Buffer->ShimDmaBuff.AddrExtHigh.Mask;
 	RegVal = XAie_SetField(Addr,

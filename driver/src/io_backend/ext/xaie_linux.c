@@ -2983,7 +2983,7 @@ static AieRC XAie_LinuxIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 	(void)IOInst;
 	(void)RegOff;
 	(void)Data;
-	return 0;
+	return XAIE_OK;
 }
 
 static AieRC XAie_LinuxIO_Write32(void *IOInst, u64 RegOff, u32 Data)
@@ -3125,7 +3125,7 @@ static s32 XAie_LinuxGetPartFd(void *IOInst)
 static AieRC XAie_LinuxIO_GetPartitionList(XAie_DevInst *DevInst)
 {
         (void)DevInst;
-        return 0;
+        return XAIE_OK;
 }
 
 static AieRC XAie_LinuxSubmitTxn(void *IOInst, XAie_TxnInst *TxnInst)

@@ -246,7 +246,7 @@ static AieRC _XAie_AieToPlIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 * Field Value has to be set to 1 for 64 Bit interface
 		 * and 0 for 32 Bit interface
 		 */
-		FldVal = XAie_SetField((u8)Width >> (u8)XAIE_PLIF_WIDTH_64SHIFT,
+		FldVal = XAie_SetField((u32)Width >> (u32)XAIE_PLIF_WIDTH_64SHIFT,
 				PlIfMod->UpSzr32_64Bit[PortNum].Lsb,
 				FldMask);
 	}
@@ -346,7 +346,7 @@ static AieRC _XAie_PlToAieIntfConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 		 * and 0 for 32 Bit interface. Width is shifted to move 64(2^6)
 		 * to LSB. When width is 32, the shift results in 0.
 		 */
-		FldVal = XAie_SetField((u8)Width >> (u8)XAIE_PLIF_WIDTH_64SHIFT,
+		FldVal = XAie_SetField((u32)Width >> (u32)XAIE_PLIF_WIDTH_64SHIFT,
 				PlIfMod->DownSzr32_64Bit[PortNum].Lsb,
 				FldMask);
 	}

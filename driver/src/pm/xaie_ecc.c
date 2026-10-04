@@ -73,7 +73,6 @@ static AieRC _XAie_EccPerfCntConfig(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return RC;
 	}
 
-	/* Set reset perf counter control reg with perf cnt 0 as reset event */
 	RC = XAie_PerfCounterResetControlSet(DevInst, Loc, XAIE_CORE_MOD,
 		XAIE_ECC_PERFCOUNTER_ID, XAIE_EVENT_PERF_CNT_0_CORE);
 	if(RC != XAIE_OK) {
@@ -337,10 +336,8 @@ static AieRC _XAie_EccPerfCntConfigMemTile(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	/* Set reset perf counter control reg with perf cnt 0 as reset event */
 	RC = XAie_PerfCounterResetControlSet(DevInst, Loc, XAIE_MEM_MOD,
-		XAIE_ECC_PERFCOUNTER_ID, (XAie_Events)((u32)XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE +
-		XAIE_ECC_PERFCOUNTER_ID));
+		XAIE_ECC_PERFCOUNTER_ID, XAIE_EVENT_PERF_CNT0_EVENT_MEM_TILE);
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Unable to configure performance counter control"
 				" with reset event Col:%u Row:%u\n", Loc.Col, Loc.Row);

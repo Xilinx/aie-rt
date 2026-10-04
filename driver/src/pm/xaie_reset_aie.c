@@ -85,7 +85,7 @@ static void _XAie_RstSetShimReset(XAie_DevInst *DevInst, XAie_LocType Loc,
 ******************************************************************************/
 AieRC _XAie_RstShims(XAie_DevInst *DevInst, u32 StartCol, u32 NumCols)
 {
-	for (u8 C = StartCol; C < (StartCol + NumCols); C++) {
+	for (u8 C = (u8)StartCol; C < (StartCol + NumCols); C++) {
 		XAie_LocType Loc = XAie_TileLoc(C, 0);
 
 		_XAie_RstSetShimReset(DevInst, Loc, XAIE_ENABLE);

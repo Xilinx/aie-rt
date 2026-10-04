@@ -22,9 +22,9 @@
 // === Private ===
 
 #define UC_DMA_TASK_QUEUE_DEPTH         16U
-#define UC_DMA_RESPONSE_IS_VALID(x)     (((x) & (1UL << 31)) != 0)
+#define UC_DMA_RESPONSE_IS_VALID(x)     (((x) & (1UL << 31)) != 0U)
 #define UC_DMA_RESPONSE_GET_BD_PTR(x)   (((x) & 0x7FFFFFFF))
-#define UC_DMA_IS_RUNNING(x)  (((x) & 0x1F01) != 0)
+#define UC_DMA_IS_RUNNING(x)  (((x) & 0x1F01U) != 0U)
 
 static void * const REG_UC_DMA_DM2MM_TASK_QUEUE_PUSH       = (void *)REGDB_UC_MODULE_CORE_REGISTER(DMA_DM2MM_TASK_QUEUE_PUSH);
 static void * const REG_UC_DMA_DM2MM_RESPONSE_QUEUE_POP    = (void *)REGDB_UC_MODULE_CORE_REGISTER(DMA_DM2MM_RESPONSE_QUEUE_POP);
@@ -62,11 +62,11 @@ static inline uint32_t uc_dma_mm2dm_pop_response(void)
 }
 static inline uint32_t uc_dma_dm2mm_status(void)
 {
-    return reg_read32((void *)(uintptr_t)(REGDB_UC_MODULE_CORE_REGISTER(ARRAY_AXI_MM) | (column_index_rel << 25) | REGDB_UC_MODULE_REGISTER(DMA_DM2MM_STATUS)));
+    return reg_read32((void *)(uintptr_t)(REGDB_UC_MODULE_CORE_REGISTER(ARRAY_AXI_MM) | (column_index_rel << 25) | (uint32_t)REGDB_UC_MODULE_REGISTER(DMA_DM2MM_STATUS)));
 }
 static inline uint32_t uc_dma_mm2dm_status(void)
 {
-    return reg_read32((void *)(uintptr_t)(REGDB_UC_MODULE_CORE_REGISTER(ARRAY_AXI_MM) | (column_index_rel << 25) | REGDB_UC_MODULE_REGISTER(DMA_MM2DM_STATUS)));
+    return reg_read32((void *)(uintptr_t)(REGDB_UC_MODULE_CORE_REGISTER(ARRAY_AXI_MM) | (column_index_rel << 25) | (uint32_t)REGDB_UC_MODULE_REGISTER(DMA_MM2DM_STATUS)));
 }
 
 // === Public ===
@@ -134,9 +134,9 @@ void uc_dma_create_bd(void *dest,
     dest_[2] = remote_ptr_low;
     dest_[1] = local_ptr;
     dest_[0] = ((uint32_t)length & 0x7FFFU)
-             | (((uint32_t)ctrl_next_BD & 1U) << 16)
-             | (((uint32_t)ctrl_external & 1U) << 17)
-             | (((uint32_t)ctrl_local_relative & 1U) << 18)
+             | ((ctrl_next_BD ? 1U : 0U) << 16)
+             | ((ctrl_external ? 1U : 0U) << 17)
+             | ((ctrl_local_relative ? 1U : 0U) << 18)
              | (((uint32_t)ctrl_axi_mm_axuser & 0xFU) << 19);
 }
 
@@ -153,7 +153,7 @@ uint16_t uc_dma_dm2mm_push_task(const uint32_t bd_ptr)
 {
     assert(bd_ptr < SHARED_DM_SIZE);
 
-    if (UNLIKELY(queue_full(&uc_dma_dm2mm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH)))
+    if (UNLIKELY(queue_full(&uc_dma_dm2mm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH) != 0))
     {
         return INVALID_WAIT_HANDLE;
     }
@@ -184,7 +184,7 @@ uint16_t uc_dma_mm2dm_push_task(uint32_t bd_ptr)
 {
     assert(bd_ptr < SHARED_DM_SIZE);
 
-    if (UNLIKELY(queue_full(&uc_dma_mm2dm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH)))
+    if (UNLIKELY(queue_full(&uc_dma_mm2dm_active_tasks, UC_DMA_TASK_QUEUE_DEPTH) != 0))
     {
         return INVALID_WAIT_HANDLE;
     }
@@ -260,7 +260,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
             (void *)data_ptr,
             addr_high,
             addr_low,
-            sizeof(uint64_t));
+            (uint32_t)sizeof(uint64_t));
 
         data_ptr[0] += payload[0];
 
@@ -268,7 +268,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
             addr_high,
             addr_low,
             (void *)data_ptr,
-            sizeof(uint64_t));
+            (uint32_t)sizeof(uint64_t));
     } else if (op == ATOMICOP_SWAP)
     {
         assert(payload_dwords == 1);
@@ -279,7 +279,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
             addr_high,
             addr_low,
             (void *)data_ptr,
-            sizeof(uint64_t));
+            (uint32_t)sizeof(uint64_t));
     } else if (op == ATOMICOP_CAS)
     {
         assert(payload_dwords == 2);
@@ -288,7 +288,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
             (void *)data_ptr,
             addr_high,
             addr_low,
-            sizeof(uint64_t));
+            (uint32_t)sizeof(uint64_t));
 
         if (data_ptr[0] == payload[0])
         {
@@ -298,7 +298,7 @@ bool uc_dma_atomic_op(const uint32_t addr_high, const uint32_t addr_low,
                 addr_high,
                 addr_low,
                 (void *)data_ptr,
-                sizeof(uint64_t));
+                (uint32_t)sizeof(uint64_t));
         }
     } else
     {

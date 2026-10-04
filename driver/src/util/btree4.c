@@ -66,7 +66,7 @@ static int32_t btree4_insert_data_child(const struct btree4 *tree, struct btree4
 	int32_t res;
 	int32_t pos;
 
-	if ((node == NULL) || !data) {
+	if ((node == NULL) || (data == NULL)) {
 		return 0;
 	}
 	pos = btree4_data_count(node);
@@ -78,7 +78,7 @@ static int32_t btree4_insert_data_child(const struct btree4 *tree, struct btree4
 		return -EINVAL;
 	}
 
-	while (pos != 0U) {
+	while (pos != 0) {
 		res = tree->cmp(data, node->data[pos - 1]);
 		if (res > 0) {
 			goto out;
@@ -375,7 +375,7 @@ static void btree4_merge_root(struct btree4 *tree, struct btree4_node *node,
 			 * [o1, o2, o3]    [c]    ->   [o1, o2]   [n, c]
 			 * /   /   \   \   /  \        /  /   \   / /  \
 			 */
-			i = other->data[2] ? 2 : 1;
+			i = (other->data[2] != NULL) ? 2 : 1;
 			child->data[1] = child->data[0];
 			child->data[0] = node->data[0];
 			child->child[2] = child->child[1];
@@ -618,7 +618,7 @@ void *btree4_delete(struct btree4 *tree, void *data)
 		node->data[index] = merge_node->data[merge_index];
 		merge_node->data[merge_index] = NULL;
 		/* merge_node has at least one data */
-		if (merge_index != 0U) {
+		if (merge_index != 0) {
 			return value;
 		}
 	}

@@ -39,7 +39,7 @@
 /*****************************************************************************/
 /***************************** Macro Definitions *****************************/
 #define XAIE_TIMER_32BIT_SHIFT		32U
-#define XAIE_WAIT_CYCLE_MAX_VAL		0xFFFFFFFFFFFF
+#define XAIE_WAIT_CYCLE_MAX_VAL		0xFFFFFFFFFFFFULL
 
 /************************** Function Definitions *****************************/
 /*****************************************************************************/
@@ -133,7 +133,8 @@ AieRC XAie_ResetTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 RegVal, Mask;
 	u64 RegAddr;
-	u8 TileType, RC;
+	u8 TileType;
+	AieRC RC;
 	const XAie_TimerMod *TimerMod;
 
 	if((DevInst == XAIE_NULL) ||
@@ -194,7 +195,8 @@ AieRC XAie_SetTimerResetEvent(XAie_DevInst *DevInst, XAie_LocType Loc,
 {
 	u32 RegVal;
 	u64 RegAddr;
-	u8 TileType, RC;
+	u8 TileType;
+	AieRC RC;
 	u16 IntEvent;
 	const XAie_TimerMod *TimerMod;
 	const XAie_EvntMod *EvntMod;
@@ -335,7 +337,7 @@ AieRC XAie_ReadTimer(XAie_DevInst *DevInst, XAie_LocType Loc,
 * 		XAIE_INVALID_ARGS if any argument is invalid
 * 		XAIE_INVALID_TILE if tile type from Loc is invalid
 *
-* @note		CycleCnt has an upper limit of 0xFFFFFFFFFFFF or 300 trillion
+* @note		CycleCnt has an upper limit of 0xFFFFFFFFFFFFULL or 300 trillion
 *		cycles to prevent overflow.
 *
 ******************************************************************************/
@@ -445,7 +447,7 @@ static XAie_Events _XAie_GetBroadcastEventfromRscId(XAie_DevInst *DevInst,
 		EvntMod = &DevInst->DevProp.DevMod[TileType].EvntMod[Mod];
 	}
 
-	return EvntMod->BroadcastEventMap->Event + RscId;
+	return (XAie_Events)((u32)EvntMod->BroadcastEventMap->Event + RscId);
 }
 
 /*****************************************************************************/
@@ -476,55 +478,55 @@ static AieRC _XAie_SetupBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 		if(TileType == XAIEGBL_TILE_TYPE_AIETILE) {
 			if(DevInst->DevProp.DevGen == XAIE_DEV_GEN_AIE) {
 				/* Checkerboard structure for AIE1 */
-				if((Locs[i].Row % 2U) == 0) {
-					RC |= XAie_EventBroadcastBlockDir(
+				if((Locs[i].Row % 2U) == 0U) {
+					RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_MEM_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						(u8)XAIE_EVENT_BROADCAST_WEST);
-					RC |= XAie_EventBroadcastBlockDir(
+						(u8)XAIE_EVENT_BROADCAST_WEST));
+					RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_CORE_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						(u8)XAIE_EVENT_BROADCAST_EAST);
+						(u8)XAIE_EVENT_BROADCAST_EAST));
 				} else {
-					RC |= XAie_EventBroadcastBlockDir(
+					RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_MEM_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						(u8)XAIE_EVENT_BROADCAST_EAST);
-					RC |= XAie_EventBroadcastBlockDir(
+						(u8)XAIE_EVENT_BROADCAST_EAST));
+					RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 						DevInst, Locs[i],
 						XAIE_CORE_MOD,
 						XAIE_EVENT_SWITCH_A,
 						BcastId,
-						(u8)XAIE_EVENT_BROADCAST_WEST);
+						(u8)XAIE_EVENT_BROADCAST_WEST));
 				}
 			} else {
-				RC |= XAie_EventBroadcastBlockDir(
+				RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 					DevInst, Locs[i],
 					XAIE_MEM_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					(u8)XAIE_EVENT_BROADCAST_EAST);
-				RC |= XAie_EventBroadcastBlockDir(
+					(u8)XAIE_EVENT_BROADCAST_EAST));
+				RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 					DevInst, Locs[i],
 					XAIE_CORE_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					(u8)XAIE_EVENT_BROADCAST_WEST);
+					(u8)XAIE_EVENT_BROADCAST_WEST));
 			}
 		} else if(Locs[i].Row != 0U) {
-			RC |= XAie_EventBroadcastBlockDir(
+			RC = (AieRC)((u32)RC | (u32)XAie_EventBroadcastBlockDir(
 				DevInst, Locs[i],
 				XAIE_MEM_MOD,
 				XAIE_EVENT_SWITCH_A,
 				BcastId,
-				XAIE_EVENT_BROADCAST_WEST |
-				XAIE_EVENT_BROADCAST_EAST);
+				(u8)XAIE_EVENT_BROADCAST_WEST |
+				(u8)XAIE_EVENT_BROADCAST_EAST));
 		}
 
 		if(RC != XAIE_OK) {
@@ -617,7 +619,7 @@ static void _XAie_ClearShimBroadcast(XAie_DevInst *DevInst, u8 StartCol,
 		u8 EndCol, u32 BcastChannelId)
 {
 	for(u32 i = StartCol; i < EndCol; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
 		XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 			(u8)BcastChannelId, XAIE_EVENT_NONE_PL);
 	}
@@ -686,8 +688,8 @@ static void _XAie_ClearBroadcastConfig(XAie_DevInst *DevInst, u32 NumTiles,
 					XAIE_MEM_MOD,
 					XAIE_EVENT_SWITCH_A,
 					BcastId,
-					XAIE_EVENT_BROADCAST_WEST |
-					XAIE_EVENT_BROADCAST_EAST);
+					(u8)XAIE_EVENT_BROADCAST_WEST |
+					(u8)XAIE_EVENT_BROADCAST_EAST);
 			XAie_EventBroadcastUnblockDir(DevInst, Locs[i],
 					XAIE_CORE_MOD,
 					XAIE_EVENT_SWITCH_A,
@@ -732,7 +734,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 	}
 
 	/* Get all ungated tiles to broadcast to */
-	NumTiles = DevInst->NumCols * DevInst->NumRows;
+	NumTiles = (u32)DevInst->NumCols * (u32)DevInst->NumRows;
 	Locs = (XAie_LocType *)XAIE_CALLOC(NumTiles, sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
@@ -756,7 +758,7 @@ AieRC XAie_SyncTimerWithTwoBcstChannel(XAie_DevInst *DevInst, u8 BcastChannelId1
 			XAie_TileLoc(0, 0), XAIE_PL_MOD, BcastChannelId2);
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId1, ShimBcastEvent);
@@ -828,7 +830,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 	}
 
 	/* Get all ungated tiles to broadcast to */
-	NumTiles = DevInst->NumCols * DevInst->NumRows;
+	NumTiles = (u32)DevInst->NumCols * (u32)DevInst->NumRows;
 	Locs = (XAie_LocType *)XAIE_MALLOC(NumTiles * sizeof(XAie_LocType));
 	if(Locs == NULL) {
 		XAIE_ERROR("Unable to allocate memory for tile locations\n");
@@ -852,7 +854,7 @@ AieRC XAie_SyncTimer(XAie_DevInst *DevInst, u8 BcastChannelId)
 			XAie_TileLoc(0, 0), XAIE_PL_MOD, (u8)(BcastChannelId + 1U));
 
 	for(u32 i = 0; i < DevInst->NumCols; i++) {
-		XAie_LocType Loc = XAie_TileLoc(i, 0);
+		XAie_LocType Loc = XAie_TileLoc((u8)i, 0);
 
 		RC = XAie_EventBroadcast(DevInst, Loc, XAIE_PL_MOD,
 				BcastChannelId, ShimBcastEvent);

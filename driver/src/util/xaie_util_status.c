@@ -118,8 +118,8 @@ static s32 _XAie_strcpy(char* Destination, const char* Source, u8 CommaNeeded)
 {
     int len = 0;
 
-    if (Destination == NULL || Source == NULL) {
-        return XAIE_ERR;
+    if ((Destination == NULL) || (Source == NULL)) {
+        return (s32)XAIE_ERR;
     }
 
     while (*Source != '\0')
@@ -212,13 +212,13 @@ s32 XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], XAie_CoreStatus_Strings[Shift], TRUE);
     }
 
-    if((Reg&0x01U) || (Reg&0x02U) == 0U) { // if neither bit 0 nor bit  1 is set, Disabled is output.
+    if(((Reg&0x01U) != 0U) || (Reg&0x02U) == 0U) { // if neither bit 0 nor bit  1 is set, Disabled is output.
         CharsWritten += _XAie_strcpy(&Buf[CharsWritten], "Disabled", TRUE);
     }
 
     TempReg     = TempReg >> 1;
 
-    while(TempReg!=0){
+    while(TempReg!=0U){
 	Shift++;
 	Val = TempReg & 0x1U;
 	if (Val != 0U){
@@ -252,29 +252,29 @@ s32 XAie_CoreStatus_CSV(u32 Reg, char *Buf) {
 s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 
     int CharsWritten = 0;
-    enum DmaStatus_S2MM_enum Flag = 0;
+    enum DmaStatus_S2MM_enum Flag = XAIE_DMA_STATUS_S2MM_STATUS;
     u32 FlagVal;
     FlagVal = (u32)Flag;
 
-    for(FlagVal = (u32)XAIE_DMA_STATUS_S2MM_STATUS; FlagVal <= XAIE_DMA_STATUS_S2MM_MAX; FlagVal++) {
+    for(FlagVal = (u32)XAIE_DMA_STATUS_S2MM_STATUS; FlagVal <= (u32)XAIE_DMA_STATUS_S2MM_MAX; FlagVal++) {
 
         // Below is for bits  8, 9 in DMAS2MM for mem tile
         if( (TType != XAIEGBL_TILE_TYPE_MEMTILE) && \
-			((FlagVal == XAIE_DMA_STATUS_S2MM_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
-			 (FlagVal == XAIE_DMA_STATUS_S2MM_ERROR_DM_ACCESS_TO_UNAVAIL))
+			((FlagVal == (u32)XAIE_DMA_STATUS_S2MM_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
+			 (FlagVal == (u32)XAIE_DMA_STATUS_S2MM_ERROR_DM_ACCESS_TO_UNAVAIL))
 	  ) {
 	   continue;
 	}
 
         // Below is for bits 16,17 in DMAS2MM for shim tile
-        if( (TType != XAIEGBL_TILE_TYPE_SHIMNOC) && ((FlagVal == XAIE_DMA_STATUS_S2MM_AXI_MM_DECODE_ERROR) || \
-				   (FlagVal == XAIE_DMA_STATUS_S2MM_AXI_MM_SLAVE_ERROR)) ) {
+        if( (TType != XAIEGBL_TILE_TYPE_SHIMNOC) && ((FlagVal == (u32)XAIE_DMA_STATUS_S2MM_AXI_MM_DECODE_ERROR) || \
+				   (FlagVal == (u32)XAIE_DMA_STATUS_S2MM_AXI_MM_SLAVE_ERROR)) ) {
 	   continue;
 	}
 
-	if (FlagVal > XAIE_DMA_STATUS_S2MM_CURRENT_BD) {
+	if (FlagVal > (u32)XAIE_DMA_STATUS_S2MM_CURRENT_BD) {
 		XAIE_ERROR("Invalid FlagVal, FlagVal:%u\n", FlagVal);
-		return XAIE_ERR;
+		return (s32)XAIE_ERR;
 	}
 
 	if(XAie_DmaS2MMStatus_Strings[FlagVal] != NULL)
@@ -316,14 +316,14 @@ s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 		case (u32)XAIE_DMA_STATUS_S2MM_TASK_QUEUE_SIZE:
 		    Val &= 0x7U;
 		    CharsWritten--; // to overwrite the comma in the previous write
-		    _XAie_ToString(TempString, Val);
+		    _XAie_ToString(TempString, (s32)Val);
 		    CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Tasks_in_queue:", FALSE);
 		    CharsWritten += _XAie_strcpy(&Buf[CharsWritten], TempString, TRUE);
 		    break;
 		case (u32)XAIE_DMA_STATUS_S2MM_CURRENT_BD:
 		    Val &= 0x3FU;
 		    CharsWritten--; // to overwrite the comma in the previous write
-		    _XAie_ToString(TempString,Val);
+		    _XAie_ToString(TempString,(s32)Val);
 		    CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Current_bd:", FALSE);
 		    CharsWritten += _XAie_strcpy(&Buf[CharsWritten], TempString, TRUE);
 		    break;
@@ -362,32 +362,32 @@ s32 XAie_DmaS2MMStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
 
     int CharsWritten = 0;
-    enum DmaStatus_MM2S_enum Flag = 0;
+    enum DmaStatus_MM2S_enum Flag = XAIE_DMA_STATUS_MM2S_STATUS;
     u32 FlagVal;
     FlagVal = (u32)Flag;
 
-    for(FlagVal = XAIE_DMA_STATUS_MM2S_STATUS; FlagVal <= XAIE_DMA_STATUS_MM2S_MAX; FlagVal++) {
+    for(FlagVal = (u32)XAIE_DMA_STATUS_MM2S_STATUS; FlagVal <= (u32)XAIE_DMA_STATUS_MM2S_MAX; FlagVal++) {
 
         // Below is for bits  8, 9, 10 in DMA_MM2S for mem tile
         if( (TType != XAIEGBL_TILE_TYPE_MEMTILE) && \
-			((FlagVal == XAIE_DMA_STATUS_MM2S_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
-                         (FlagVal == XAIE_DMA_STATUS_MM2S_ERROR_DM_ACCESS_TO_UNAVAIL)   || \
-			 (FlagVal == XAIE_DMA_STATUS_MM2S_ERROR_BD_UNAVAIL))
+			((FlagVal == (u32)XAIE_DMA_STATUS_MM2S_ERROR_LOCK_ACCESS_TO_UNAVAIL) || \
+                         (FlagVal == (u32)XAIE_DMA_STATUS_MM2S_ERROR_DM_ACCESS_TO_UNAVAIL)   || \
+			 (FlagVal == (u32)XAIE_DMA_STATUS_MM2S_ERROR_BD_UNAVAIL))
 	  ) {
            continue;
 	}
 
 	// Below is for bits 16, 17 in DMA_MM2S for shim tile
 	if( (TType != XAIEGBL_TILE_TYPE_SHIMNOC) && \
-			((FlagVal == XAIE_DMA_STATUS_MM2S_AXI_MM_DECODE_ERROR) || \
-			 (FlagVal == XAIE_DMA_STATUS_MM2S_AXI_MM_SLAVE_ERROR))
+			((FlagVal == (u32)XAIE_DMA_STATUS_MM2S_AXI_MM_DECODE_ERROR) || \
+			 (FlagVal == (u32)XAIE_DMA_STATUS_MM2S_AXI_MM_SLAVE_ERROR))
 	  ) {
 	   continue;
 	}
 
-	if (FlagVal > XAIE_DMA_STATUS_MM2S_CURRENT_BD) {
+	if (FlagVal > (u32)XAIE_DMA_STATUS_MM2S_CURRENT_BD) {
 		XAIE_ERROR("Invalid FlagVal, Flagval:%u\n", FlagVal);
-		return XAIE_ERR;
+		return (s32)XAIE_ERR;
 	}
 
 	if(XAie_DmaMM2SStatus_Strings[FlagVal] != NULL)
@@ -429,14 +429,14 @@ s32 XAie_DmaMM2SStatus_CSV(u32 Reg, char *Buf, u8 TType) {
                 case (u32)XAIE_DMA_STATUS_MM2S_TASK_QUEUE_SIZE:
 		    CharsWritten--; // to overwrite the comma in the previous write
                     Val &= 0x7U;
-                    _XAie_ToString(TempString, Val);
+                    _XAie_ToString(TempString, (s32)Val);
 		    CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Tasks_in_queue:", FALSE);
                     CharsWritten += _XAie_strcpy(&Buf[CharsWritten], TempString, TRUE);
                     break;
                 case (u32)XAIE_DMA_STATUS_MM2S_CURRENT_BD:
 		    CharsWritten--; // to overwrite the comma in the previous write
                     Val &= 0x3FU;
-		    _XAie_ToString(TempString, Val);
+		    _XAie_ToString(TempString, (s32)Val);
                     CharsWritten += _XAie_strcpy(&Buf[CharsWritten], ";Current_bd:", FALSE);
                     CharsWritten += _XAie_strcpy(&Buf[CharsWritten], TempString, TRUE);
                     break;

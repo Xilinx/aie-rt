@@ -302,8 +302,8 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 		OptFlags = (XAIE_PART_INIT_OPT_DEFAULT & (~XAIE_PART_INIT_OPT_ISOLATE));
 	}
 
-	if (DevPartInfo->StartCol <= DevInst->StartCol &&
-		DevPartInfo->NumCols >= DevInst->NumCols) {
+	if ((DevPartInfo->StartCol <= DevInst->StartCol) &&
+		(DevPartInfo->NumCols >= DevInst->NumCols)) {
 		/*Isolation for soft Partition is cleared*/
 		SoftPartOpts.InitOpts = OptFlags;
 		RC = XAie_PartitionInitialize(DevInst, &SoftPartOpts);
@@ -324,10 +324,10 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 				XAie_LocType Loc;
 				u32 ColClockStatus;
 
-				Loc = XAie_TileLoc(C, 1);
+				Loc = XAie_TileLoc((u8)C, 1);
 				ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 				_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-					       ColClockStatus, (u32)(DevInst->NumRows - 1U));
+					       ColClockStatus, ((u32)DevInst->NumRows - 1U));
 			}
 		}
 		if(DevPartInfo->BaseAddr == DevInst->BaseAddr) {
@@ -346,10 +346,10 @@ AieRC XAie_SoftPartitionInitialize(XAie_DevInst *DevInst,
 				XAie_LocType Loc;
 				u32 ColClockStatus;
 
-				Loc = XAie_TileLoc(C, 1);
+				Loc = XAie_TileLoc((u8)C, 1);
 				ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 				_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-					       ColClockStatus, (u32)(DevInst->NumRows - 1U));
+					       ColClockStatus, ((u32)DevInst->NumRows - 1U));
 			}
 		}
 	} else {
@@ -919,8 +919,8 @@ AieRC XAie_SetIOBackend(XAie_DevInst *DevInst, XAie_BackendType Backend)
 		return XAIE_INVALID_ARGS;
 	}
 
-	if(Backend >= XAIE_IO_BACKEND_MAX ||
-		_XAie_GetBackendPtr(Backend) == NULL) {
+	if((Backend >= XAIE_IO_BACKEND_MAX) ||
+		(_XAie_GetBackendPtr(Backend) == NULL)) {
 		XAIE_ERROR("Invalid backend request. Backend : %d \n", Backend);
 		return XAIE_INVALID_ARGS;
 	}
@@ -1029,7 +1029,7 @@ AieRC XAie_MemFreeVAddr(XAie_DevInst *DevInst, void *VAddr)
 	}
 
 	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemFreeVAddr ?
+	RC = (Backend->Ops.MemFreeVAddr != NULL) ?
 		Backend->Ops.MemFreeVAddr(DevInst, VAddr) :
 		XAIE_FEATURE_NOT_SUPPORTED;
 
@@ -1083,7 +1083,7 @@ AieRC XAie_MemSyncForCPUVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
 	}
 
 	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemSyncForCPUVAddr ?
+	RC = (Backend->Ops.MemSyncForCPUVAddr != NULL) ?
 		Backend->Ops.MemSyncForCPUVAddr(DevInst, VAddr, size) :
 		XAIE_FEATURE_NOT_SUPPORTED;
 
@@ -1137,7 +1137,7 @@ AieRC XAie_MemSyncForDevVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t size)
 	}
 
 	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemSyncForDevVAddr ?
+	RC = (Backend->Ops.MemSyncForDevVAddr != NULL) ?
 		Backend->Ops.MemSyncForDevVAddr(DevInst, VAddr, size) :
 		XAIE_FEATURE_NOT_SUPPORTED;
 
@@ -1167,7 +1167,7 @@ AieRC XAie_MemGetDevAddrFromVAddr(XAie_DevInst *DevInst, void *VAddr, uint64_t *
 	}
 
 	Backend = DevInst->Backend;
-	RC = Backend->Ops.MemGetDevAddrFromVAddr ?
+	RC = (Backend->Ops.MemGetDevAddrFromVAddr != NULL) ?
 		Backend->Ops.MemGetDevAddrFromVAddr(DevInst, VAddr, DevAddr) :
 		XAIE_FEATURE_NOT_SUPPORTED;
 
@@ -1615,7 +1615,7 @@ AieRC XAie_IsDeviceCheckerboard(XAie_DevInst *DevInst, u8 *IsCheckerBoard)
 ******************************************************************************/
 AieRC XAie_UpdateNpiAddr(XAie_DevInst *DevInst, u64 NpiAddr)
 {
-	if((DevInst == NULL) || (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
+	if((((DevInst == NULL))) || (DevInst->IsReady != XAIE_COMPONENT_IS_READY)) {
 		XAIE_ERROR("Invalid Arguments, DevInst is NULL or XAIE_COMPONENT_IS_READY is not set\n");
 		return XAIE_INVALID_ARGS;
 	}
@@ -1735,8 +1735,8 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	if(PerfInst->Range == XAIE_NULL) {
 		XAIE_ERROR("Range parameter is NULL\n");
 		return XAIE_INVALID_ARGS;
-	} else if (PerfInst->Range->Num <= 0U ||
-			PerfInst->Range->Num > DevInst->NumCols) {
+	} else if ((PerfInst->Range->Num <= 0U) ||
+			(PerfInst->Range->Num > DevInst->NumCols)) {
 		XAIE_ERROR("Invalid range!: %u\n", PerfInst->Range->Num);
 		return XAIE_INVALID_ARGS;
 	} else if(PerfInst->Range->Start >= DevInst->NumCols) {
@@ -1745,7 +1745,7 @@ AieRC XAie_PerfUtilization(XAie_DevInst *DevInst, XAie_PerfInst *PerfInst)
 	}
 
 	Size = (u32)sizeof(XAie_Occupancy);
-	NumTiles = (DevInst->NumCols) * DevInst->AieTileNumRows;
+	NumTiles = (u32)DevInst->NumCols * (u32)DevInst->AieTileNumRows;
 	if((PerfInst->UtilSize)	< (NumTiles * Size)) {
 		XAIE_ERROR("Insufficient Buffer Size!\n");
 		return XAIE_INSUFFICIENT_BUFFER_SIZE;

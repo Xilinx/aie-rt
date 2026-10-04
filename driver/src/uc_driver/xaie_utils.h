@@ -56,7 +56,7 @@ uint32_t column_index_rel = 0; // temporarily setting it to zero but it needs to
 #define EVENT_ACTION_INTERRUPT        21
 #define GENERIC_TIMER_LOW_ID 3
 #define GENERIC_TIMER_HIGH_ID 2
-#define GENERIC_TIMER_RELOAD 0xFFFFFFFF
+#define GENERIC_TIMER_RELOAD 0xFFFFFFFFU
 
 // extern XIOModule xIOModuleInstance;
 

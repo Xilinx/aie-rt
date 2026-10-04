@@ -330,7 +330,7 @@ static AieRC _XAie_LoadDataMemSection(XAie_DevInst *DevInst, XAie_LocType Loc,
 		}
 
 		BytesToWrite = SectionSize - OverFlowBytes;
-		Addr = (u64)(SectionAddr & AddrMask);
+		Addr = ((u64)SectionAddr & (u64)AddrMask);
 
 		/* Turn ECC On if EccStatus flag is set. */
 		if(DevInst->EccStatus != 0U) {

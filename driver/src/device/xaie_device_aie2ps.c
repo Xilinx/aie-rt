@@ -94,10 +94,10 @@ AieRC _XAie2PS_SetAxiMMIsolation(XAie_DevInst* DevInst, u8 IsolationFlags)
 			}
 		}
 
-		if((Col == 0U) && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
+		if((Col == 0U) && ((IsolationFlags & XAIE_INIT_WEST_ISOLATION) != 0U)) {
 			RegVal |= AxiMMTileCtrlMod->AxiMMIsolateWest.Mask;
 		}
-		if((Col == (u8)(DevInst->NumCols - 1U)) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
+		if((Col == (u8)(DevInst->NumCols - 1U)) && ((IsolationFlags & XAIE_INIT_EAST_ISOLATION) != 0U)) {
 			RegVal |= AxiMMTileCtrlMod->AxiMMIsolateEast.Mask;
 		}
 
@@ -246,7 +246,7 @@ AieRC _XAie2PS_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 
 	/*Enable the clock control register for shims*/
 	for(u32 C = Args->StartCol; C < (Args->StartCol + Args->NumCols); C++) {
-		XAie_LocType TileLoc = XAie_TileLoc(C, 1);
+		XAie_LocType TileLoc = XAie_TileLoc((u8)C, 1);
 
 		RC = _XAie2PS_PmSetColumnClockBuffer(DevInst, TileLoc,
 				Args->Enable);
@@ -265,7 +265,7 @@ AieRC _XAie2PS_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 	}
 
 	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst, XAie_TileLoc((u8)Args->StartCol, 1));
-	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
+	NumTiles =(u32)(((u32)DevInst->NumRows - 1U) * (Args->NumCols));
 
 	if(Args->Enable != 0U) {
 		/*

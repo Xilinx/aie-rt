@@ -788,7 +788,7 @@ static inline u32 _XAie_Read_L1_IrqEvent(XAie_DevInst *DevInst,
 
 	L1IntrMod = DevInst->DevProp.DevMod[TileType].L1IntrMod;
 
-	if(L1IntrMod == NULL || IrqId >= L1IntrMod->NumIrqEvents) {
+	if((L1IntrMod == NULL) || (IrqId >= L1IntrMod->NumIrqEvents)) {
 		XAIE_ERROR("Invalid module type or IRQ event ID. Col:%u Row:%u, IrqId:%u\n", Loc.Col, Loc.Row, IrqId);
 		return 0;
 	}
@@ -1241,7 +1241,7 @@ static AieRC _XAie_BacktrackIntrCtrlL1_Aie2PS(XAie_DevInst *DevInst, XAie_LocTyp
 	}
 
 	/* Backtrack array tile's internal events. */
-	if ((!(Status & XAIE_ERROR_BROADCAST_MASK) != 0U) &&
+	if (((Status & XAIE_ERROR_BROADCAST_MASK) == 0U) &&
 	    (L1Loc.Col != (DevInst->StartCol + 1U))) {
 		return XAIE_OK;
 	}
@@ -1653,7 +1653,7 @@ static AieRC XAie_BacktrackErrorInterrupts_Aie2PS(XAie_DevInst *DevInst,
 	XAie_LocType Loc;
 
 	XAie_BacktrackHwErrors(DevInst);
-	ColEnd = DevInst->StartCol + DevInst->NumCols;
+	ColEnd = (u32)DevInst->StartCol + (u32)DevInst->NumCols;
 
 	Loc.Row = DevInst->ShimRow;
 	for (Loc.Col = DevInst->StartCol; Loc.Col < ColEnd; Loc.Col++) {

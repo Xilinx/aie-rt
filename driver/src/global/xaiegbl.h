@@ -64,10 +64,10 @@
 		XAIE_PART_INIT_OPT_BLOCK_NOCAXIMMERR | \
 		XAIE_PART_INIT_OPT_ISOLATE)
 
-#define XAIE_INIT_ISOLATION			0
+#define XAIE_INIT_ISOLATION			0U
 #define XAIE_CLEAR_ISOLATION			1
-#define XAIE_INIT_WEST_ISOLATION		2
-#define XAIE_INIT_EAST_ISOLATION		4
+#define XAIE_INIT_WEST_ISOLATION		2U
+#define XAIE_INIT_EAST_ISOLATION		4U
 #define XAIE_PERF_CORE_NUM_CYCLES		2U
 
 /**************************** Type Definitions *******************************/

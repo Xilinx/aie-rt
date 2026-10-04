@@ -71,8 +71,8 @@ AieRC XAie_PmRequestTiles(XAie_DevInst *DevInst, XAie_LocType *Loc,
 
 	/* Check validity of all tiles in the list passed to this API */
 	for(u32 j = 0; j < NumTiles; j++) {
-		if(Loc[j].Row >= DevInst->NumRows ||
-			Loc[j].Col >= DevInst->NumCols) {
+		if((Loc[j].Row >= DevInst->NumRows) ||
+			(Loc[j].Col >= DevInst->NumCols)) {
 			XAIE_ERROR("Invalid Loc Col:%d Row:%d\n", Loc[j].Col, Loc[j].Row);
 			return XAIE_INVALID_ARGS;
 		}
@@ -119,7 +119,7 @@ u8 _XAie_PmIsTileRequested(XAie_DevInst *DevInst, XAie_LocType Loc)
 		return XAIE_ENABLE;
 	}
 
-	TileBit = (((u32)Loc.Col * (DevInst->NumRows - 1U)) + Loc.Row - 1U);
+	TileBit = (((u32)Loc.Col * ((u32)DevInst->NumRows - 1U)) + Loc.Row - 1U);
 	if (CheckBit(DevInst->DevOps->TilesInUse, TileBit) != 0U) {
 		return XAIE_ENABLE;
 	}

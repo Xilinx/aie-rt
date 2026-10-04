@@ -54,7 +54,7 @@ int uc_mask_poll(uint64_t reg_offset, uint32_t mask, uint32_t value, uint32_t ti
 	 * on some profiling, and it may vary between platforms.
 	 */
 	min_timeout_us = 200;
-	count = ((uint64_t)timeout_us + min_timeout_us - 1) / min_timeout_us;
+	count = (uint32_t)(((uint64_t)timeout_us + min_timeout_us - 1U) / min_timeout_us);
 
 	while (count > 0U) {
 		uc_read32(reg_offset, &reg_val);
@@ -77,7 +77,7 @@ int uc_mask_poll(uint64_t reg_offset, uint32_t mask, uint32_t value, uint32_t ti
 void  uc_block_write32(uint64_t reg_offset, const uint32_t *data, uint32_t size)
 {
 	for(uint32_t i = 0; i < size; i++) {
-		uc_write32(reg_offset + i * 4U, *data);
+		uc_write32(reg_offset + ((uint64_t)i * 4U), *data);
 		data++;
 	}
 
@@ -87,7 +87,7 @@ void  uc_block_write32(uint64_t reg_offset, const uint32_t *data, uint32_t size)
 void uc_block_set32(uint64_t reg_offset, uint32_t data, uint32_t size)
 {
 	for(uint32_t i = 0; i < size; i++) {
-		uc_write32(reg_offset + i * 4U, data);
+		uc_write32(reg_offset + ((uint64_t)i * 4U), data);
 	}
 
 	return ;
@@ -104,7 +104,7 @@ int  uc_execute_txn_buffer_cmds(txn_cmd *cmd, uint32_t Flags, uint32_t *cmd_size
 	switch(cmd->opcode)
 	{
 		case XAIE_IO_WRITE:
-			if(!cmd->mask) {
+			if(cmd->mask == 0U) {
 				uc_write32(cmd->reg_offset, cmd->value);
 
 			} else {
@@ -163,7 +163,7 @@ int uc_load_txn_buffer(uint32_t* buf)
 
 	for(uint32_t i = 0U;i < num_ops;i++){
 
-		if (*(uint8_t*)curr_buffer == XAIE_IO_WRITE){
+		if (*(uint8_t*)curr_buffer == (uint8_t)XAIE_IO_WRITE){
 			write32_header *hdr = (write32_header*)curr_buffer;
 			cmd->opcode = XAIE_IO_WRITE;
 			cmd->mask = 0U;
@@ -180,7 +180,7 @@ int uc_load_txn_buffer(uint32_t* buf)
 
 
 		}
-		if (*(uint8_t*)curr_buffer == XAIE_IO_MASKWRITE){
+		if (*(uint8_t*)curr_buffer == (uint8_t)XAIE_IO_MASKWRITE){
 			mask_write32_header *hdr = (mask_write32_header*)curr_buffer;
 			cmd->opcode = XAIE_IO_WRITE;
 			cmd->mask = hdr->mask;
@@ -195,7 +195,7 @@ int uc_load_txn_buffer(uint32_t* buf)
 			continue;
 		}
 
-		if (*(uint8_t*)curr_buffer == XAIE_IO_MASKPOLL) {
+		if (*(uint8_t*)curr_buffer == (uint8_t)XAIE_IO_MASKPOLL) {
 
 
 			// mask_poll32_header *hdr = (mask_poll32_header*)curr_buffer;
@@ -211,7 +211,7 @@ int uc_load_txn_buffer(uint32_t* buf)
 			// ret++;
 			continue;
 		}
-		if (*(uint8_t*)curr_buffer == XAIE_IO_BLOCKWRITE) {
+		if (*(uint8_t*)curr_buffer == (uint8_t)XAIE_IO_BLOCKWRITE) {
 
 			block_write32_header *hdr = (block_write32_header*)curr_buffer;
 
@@ -227,12 +227,12 @@ int uc_load_txn_buffer(uint32_t* buf)
 
 			continue;
 		}
-		if(*(uint8_t*)curr_buffer== XAIE_IO_BLOCKSET) {
+		if(*(uint8_t*)curr_buffer== (uint8_t)XAIE_IO_BLOCKSET) {
 			// Block set gets converted to Block write by driver. This is placeholder in case behavior changes.
 			continue;
 
 		}
-		if(*(uint8_t*)curr_buffer >= XAIE_IO_CUSTOM_OP_BEGIN) {
+		if(*(uint8_t*)curr_buffer >= (uint8_t)XAIE_IO_CUSTOM_OP_BEGIN) {
 			// Do nothing
 			continue;
 		}

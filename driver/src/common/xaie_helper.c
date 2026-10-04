@@ -143,13 +143,13 @@ AieRC XAie_CheckModule(XAie_DevInst *DevInst,
 	}
 
 	if((TileType == XAIEGBL_TILE_TYPE_SHIMPL ||
-	    TileType == XAIEGBL_TILE_TYPE_SHIMNOC) && Module != XAIE_PL_MOD) {
+	    TileType == XAIEGBL_TILE_TYPE_SHIMNOC) && (Module != XAIE_PL_MOD)) {
 		XAIE_ERROR("Invalid Module.Col:%u Row:%u TileType:%u Module:%u\n",Loc.Col, Loc.Row, TileType, Module);
 		return XAIE_INVALID_ARGS;
 	}
 
 	if(TileType == XAIEGBL_TILE_TYPE_MEMTILE &&
-		Module != XAIE_MEM_MOD) {
+		(Module != XAIE_MEM_MOD)) {
 		XAIE_ERROR("Invalid Module.Col:%u Row:%u TileType:%u Module:%u\n",Loc.Col, Loc.Row, TileType, Module);
 		return XAIE_INVALID_ARGS;
 	}
@@ -355,20 +355,20 @@ u32 _XAie_GetFatalGroupErrors(XAie_DevInst *DevInst, XAie_LocType Loc,
 static s32 xaie_strcasecmp(const char *s1, const char *s2) {
 	u8 c1, c2;
 
-	while ((*s1 && *s2) != 0U) {
+	while ((*s1 != '\0') && (*s2 != '\0')) {
 		c1 = (u8)*s1;
 		c2 = (u8)*s2;
 
 		/* Convert to lowercase */
 		if (c1 >= (u8)'A' && c1 <= (u8)'Z') {
-			c1 += 'a' - 'A';
+			c1 += ((u8)'a' - (u8)'A');
 		}
 		if (c2 >= (u8)'A' && c2 <= (u8)'Z') {
-			c2 += 'a' - 'A';
+			c2 += ((u8)'a' - (u8)'A');
 		}
 
 		if (c1 != c2) {
-			return (s32)(c1 - c2);
+			return ((s32)c1 - (s32)c2);
 		}
 
 		s1++;
@@ -379,13 +379,13 @@ static s32 xaie_strcasecmp(const char *s1, const char *s2) {
 	c1 = (u8)*s1;
 	c2 = (u8)*s2;
 	if (c1 >= (u8)'A' && c1 <= (u8)'Z') {
-		c1 += 'a' - 'A';
+		c1 += ((u8)'a' - (u8)'A');
 	}
 	if (c2 >= (u8)'A' && c2 <= (u8)'Z') {
-		c2 += 'a' - 'A';
+		c2 += ((u8)'a' - (u8)'A');
 	}
 
-	return (s32)(c1 - c2);
+	return ((s32)c1 - (s32)c2);
 }
 
 #ifdef XAIE_FEATURE_STDIO_LOGGING_ENABLE
@@ -473,7 +473,7 @@ void XAie_Log(FILE *Fd, const char *prefix, const char *func, u32 line,
 ******************************************************************************/
 u32 _XAie_GetTileBitPosFromLoc(XAie_DevInst *DevInst, XAie_LocType Loc)
 {
-	return (u32)((Loc.Col + DevInst->StartCol) * (DevInst->NumRows - 1U) + Loc.Row - 1U);
+	return (u32)(((Loc.Col + DevInst->StartCol) * (DevInst->NumRows - 1U)) + Loc.Row - 1U);
 }
 
 /*****************************************************************************/
@@ -534,9 +534,9 @@ AieRC XAie_GetUngatedLocsInPartition(XAie_DevInst *DevInst, u32 *NumTiles,
 void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit,
 		u32 NumSetBit)
 {
-	for(u32 i = StartSetBit; i < StartSetBit + NumSetBit; i++) {
+	for(u32 i = StartSetBit; i < (StartSetBit + NumSetBit); i++) {
 		Bitmap[i / (sizeof(Bitmap[0]) * 8U)] |=
-			(u32)(1U << (i % (sizeof(Bitmap[0]) * 8U)));
+			(u32)((u32)1U << (i % (sizeof(Bitmap[0]) * 8U)));
 	}
 }
 
@@ -556,9 +556,9 @@ void _XAie_SetBitInBitmap(u32 *Bitmap, u32 StartSetBit,
 ******************************************************************************/
 void _XAie_ClrBitInBitmap(u32 *Bitmap, u32 StartBit, u32 NumBit)
 {
-	for(u32 i = StartBit; i < StartBit + NumBit; i++) {
+	for(u32 i = StartBit; i < (StartBit + NumBit); i++) {
 		Bitmap[i / (sizeof(Bitmap[0]) * 8U)] &=
-			(u32)(~(1U << (i % (sizeof(Bitmap[0]) * 8U))));
+			(u32)(~((u32)1U << (i % (sizeof(Bitmap[0]) * 8U))));
 	}
 }
 
@@ -910,7 +910,7 @@ static AieRC _XAie_ExecuteCmd(XAie_DevInst *DevInst, XAie_TxnCmd *Cmd,
 	AieRC RC;
 	const XAie_Backend *Backend = DevInst->Backend;
 
-	if(Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+	if((Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN)) {
 		// TBD hooking point for  custom op handler
 		XAIE_WARN("Custom OP Transaction %d handler hook point\n",Cmd->Opcode);
 		return XAIE_OK;
@@ -1124,7 +1124,7 @@ XAie_TxnInst* _XAie_TxnExport(XAie_DevInst *DevInst)
 	for(u32 i = 0U; i < TmpInst->NumCmds; i++) {
 		XAie_TxnCmd *TmpCmd = &TmpInst->CmdBuf[i];
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if(TmpCmd->Opcode == XAIE_IO_BLOCKWRITE) {
+		if((TmpCmd->Opcode == XAIE_IO_BLOCKWRITE)) {
 			Cmd->DataPtr = (u64)(uintptr_t)XAIE_MALLOC(
 					sizeof(u32) * TmpCmd->Size);
 			if((void *)(uintptr_t)Cmd->DataPtr == NULL) {
@@ -1377,7 +1377,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 			BuffSize += (u32)sizeof(XAie_MaskPoll32Hdr);
 			continue;
 		}
-		if (Cmd->Opcode == XAIE_IO_BLOCKWRITE) {
+		if ((Cmd->Opcode == XAIE_IO_BLOCKWRITE)) {
 			/**
 			 * In case of Block Write and Block Set, it is possible
 			 * that the new allocated buffer size may not be sufficient.
@@ -1430,7 +1430,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 				Cmd->Size * (u32)sizeof(u32);
 			continue;
 		}
-		if (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+		if ((Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN)) {
 			if (TX_DUMP_ENABLE) {
 				TxnCmdDump(Cmd);
 			}
@@ -1456,7 +1456,7 @@ u8* _XAie_TxnExportSerialized(XAie_DevInst *DevInst, u8 NumConsumers,
 		}
 	}
 
-	BuffSize = ((BuffSize % 4U) != 0U) ? (BuffSize / 4U + 1U) : BuffSize;
+	BuffSize = ((BuffSize % 4U) != 0U) ? ((BuffSize / 4U) + 1U) : BuffSize;
 	XAIE_DBG("Size of the Txn Hdr being exported: %zu bytes\n",
 			sizeof(XAie_TxnHeader));
 	XAIE_DBG("Size of the transaction buffer being exported: %u bytes\n",
@@ -1504,7 +1504,7 @@ AieRC _XAie_TxnFree(XAie_TxnInst *Inst)
 
 	for(u32 i = 0; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
+		if(((Cmd->Opcode == XAIE_IO_BLOCKWRITE) || (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN)) &&
 				((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 			XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 		}
@@ -1543,7 +1543,7 @@ void _XAie_TxnResourceCleanup(XAie_DevInst *DevInst)
 		for(u32 i = 0; i < TxnInst->NumCmds; i++) {
 			XAie_TxnCmd *Cmd = &TxnInst->CmdBuf[i];
 			//TBD handle custom OP as well
-			if((Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) &&
+			if(((Cmd->Opcode == XAIE_IO_BLOCKWRITE) || (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN)) &&
 					((void *)(uintptr_t)Cmd->DataPtr != NULL)) {
 				XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 			}
@@ -1663,7 +1663,7 @@ AieRC XAie_Write32(XAie_DevInst *DevInst, u64 RegOff, u32 Value)
 			return Backend->Ops.Write32((void*)(DevInst->IOInst), RegOff, Value);
 		}
 
-		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+		if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
 			if (RC != XAIE_OK) {
 				return RC;
@@ -1740,7 +1740,7 @@ AieRC XAie_MaskWrite32(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value)
 					Value);
 		}
 
-		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+		if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
 			if (RC != XAIE_OK) {
 				return RC;
@@ -1813,7 +1813,7 @@ AieRC XAie_MaskPoll(XAie_DevInst *DevInst, u64 RegOff, u32 Mask, u32 Value,
 			return Backend->Ops.MaskPoll((void*)(DevInst->IOInst), RegOff, Mask,
 					Value, TimeOutUs);
 		} else {
-			if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+			if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 				RC = _XAie_ReallocCmdBuf(TxnInst);
 				if (RC != XAIE_OK) {
 					 return RC;
@@ -1948,7 +1948,7 @@ AieRC XAie_BlockWrite32(XAie_DevInst *DevInst, u64 RegOff, const u32 *Data, u32 
 					Data, Size);
 		}
 
-		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+		if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
 			if (RC != XAIE_OK) {
 				return RC;
@@ -2010,7 +2010,7 @@ AieRC XAie_BlockSet32(XAie_DevInst *DevInst, u64 RegOff, u32 Data, u32 Size)
 					Size);
 		}
 
-		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+		if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
 			if (RC != XAIE_OK) {
 				return RC;
@@ -2114,7 +2114,7 @@ AieRC XAie_RunOp(XAie_DevInst *DevInst, XAie_BackendOpCode Op, void *Arg)
 			XAie_ShimDmaBdArgs *BdArgs =
 				(XAie_ShimDmaBdArgs *)Arg;
 			if (Backend->Type == XAIE_IO_BACKEND_LINUX) {
-				if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+				if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 					RC = _XAie_ReallocCmdBuf(TxnInst);
 					if (RC != XAIE_OK) {
 						return RC;
@@ -2231,7 +2231,7 @@ AieRC _XAie_ClearTransaction(XAie_DevInst* DevInst)
 
 	for(u32 i = 0U; i < Inst->NumCmds; i++) {
 		XAie_TxnCmd *Cmd = &Inst->CmdBuf[i];
-		if(Cmd->Opcode == XAIE_IO_BLOCKWRITE || Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN) {
+		if((Cmd->Opcode == XAIE_IO_BLOCKWRITE) || (Cmd->Opcode >= XAIE_IO_CUSTOM_OP_BEGIN)) {
 			XAIE_DBG("free DataPtr %p\n", (void *)(uintptr_t)Cmd->DataPtr);
 			XAIE_FREE((void *)(uintptr_t)Cmd->DataPtr);
 		}
@@ -2327,7 +2327,7 @@ AieRC XAie_AddCustomTxnOp(XAie_DevInst *DevInst, u8 OpNumber, void* Args, size_t
 			return XAIE_ERR;
 		}
 
-		if(TxnInst->NumCmds + 1U == TxnInst->MaxCmds) {
+		if((TxnInst->NumCmds + 1U) == TxnInst->MaxCmds) {
 			RC = _XAie_ReallocCmdBuf(TxnInst);
 			if (RC != XAIE_OK) {
 				 return RC;
@@ -2771,7 +2771,7 @@ AieRC XAie_DmaStatusDump(XAie_DevInst *DevInst, u8 StartCol, u8 NumCols)
 				       return XAIE_ERR;
 		       }
 
-		       if (RC != (u32)XAIE_OK) {
+		       if (RC != XAIE_OK) {
 			       return (AieRC)RC;
 		       }
 		}
@@ -2824,8 +2824,8 @@ AieRC XAie_StatusDump(XAie_DevInst *DevInst, XAie_ColStatus *Status)
 				continue;
 			}
 
-			RC |= _XAie_DmaStatusDump(DevInst, Status, Loc);
-			RC |= _XAie_LockValueStatusDump(DevInst, Status, Loc);
+			RC |= (u32)_XAie_DmaStatusDump(DevInst, Status, Loc);
+			RC |= (u32)_XAie_LockValueStatusDump(DevInst, Status, Loc);
 		}
 	}
 	return (AieRC)RC;
@@ -2846,7 +2846,7 @@ u8 XAie_IsUcModulePresent(XAie_DevInst *DevInst, u8 TileType)
 {
 	if(DevInst->DevProp.DevGen >= XAIE_DEV_GEN_AIE2PS &&
 			TileType == XAIEGBL_TILE_TYPE_SHIMNOC) {
-		return DevInst->DevProp.DevMod[TileType].UcMod == XAIE_NULL ? 0 : 1;
+		return DevInst->DevProp.DevMod[TileType].UcMod == XAIE_NULL ? 0U : 1U;
 	}
 	return 0;
 }
@@ -2887,7 +2887,7 @@ AieRC _XAie_IsUcPrivilegedSet(XAie_DevInst *DevInst, XAie_LocType Loc, u8 *Priv)
 		return RC;
 	}
 
-	if((RegVal & 0x1) != 0) {
+	if((RegVal & 0x1U) != 0U) {
 		*Priv = 1U;
 	}
 	*Priv = 0U;

@@ -36,7 +36,7 @@
 #endif
 
 #ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		0xF70A0000
+#define XAIE_NPI_BASEADDR		0xF70A0000U
 #endif
 
 #ifndef XAIE_NUM_ROWS
@@ -73,7 +73,7 @@
 #endif
 
 #ifndef XAIE_NPI_BASEADDR
-#define XAIE_NPI_BASEADDR		0xF6D10000
+#define XAIE_NPI_BASEADDR		0xF6D10000U
 #endif
 
 #ifndef XAIE_NUM_ROWS

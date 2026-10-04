@@ -47,7 +47,7 @@ void uc_core_enable(uint8_t row, uint8_t col)
 	/* Clear the disable event occurred bit */
 	mask = XAIE2PSGBL_CORE_MODULE_ENABLE_EVENTS_DISABLE_EVENT_OCCURRED_MASK |
 		XAIEGBL_CORE_ENAEVE_ENAEVTOCC_MASK;
-	value = (uint32_t)(1U << XAIE2PSGBL_CORE_MODULE_ENABLE_EVENTS_DISABLE_EVENT_OCCURRED_LSB);
+	value = (uint32_t)((uint32_t)1U << XAIE2PSGBL_CORE_MODULE_ENABLE_EVENTS_DISABLE_EVENT_OCCURRED_LSB);
 	reg_addr = XAIE2PSGBL_CORE_MODULE_ENABLE_EVENTS +
 		get_tile_address(row, col);
 
@@ -55,7 +55,7 @@ void uc_core_enable(uint8_t row, uint8_t col)
 
 	/* Enable the core */
 	mask = XAIE2PSGBL_CORE_MODULE_CORE_PROCESSOR_BUS_ENABLE_MASK;
-	value = (uint32_t)(1U << XAIE2PSGBL_CORE_MODULE_CORE_PROCESSOR_BUS_ENABLE_LSB);
+	value = (uint32_t)((uint32_t)1U << XAIE2PSGBL_CORE_MODULE_CORE_PROCESSOR_BUS_ENABLE_LSB);
 	reg_addr = XAIE2PSGBL_CORE_MODULE_CORE_CONTROL +
 		get_tile_address(row, col);
 

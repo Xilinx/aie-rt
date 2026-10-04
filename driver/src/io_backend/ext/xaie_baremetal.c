@@ -388,7 +388,7 @@ static AieRC XAie_BaremetalIO_BlockWrite32(void *IOInst, u64 RegOff,
 		const u32 *Data, u32 Size)
 {
 	for(u32 i = 0U; i < Size; i++) {
-		XAie_BaremetalIO_Write32(IOInst, RegOff + (u64)(i * 4U), *Data);
+		XAie_BaremetalIO_Write32(IOInst, RegOff + ((u64)i * 4U), *Data);
 		Data++;
 	}
 
@@ -415,7 +415,7 @@ static AieRC XAie_BaremetalIO_BlockSet32(void *IOInst, u64 RegOff, u32 Data,
 		u32 Size)
 {
 	for(u32 i = 0U; i < Size; i++) {
-		XAie_BaremetalIO_Write32(IOInst, RegOff+ (u64)(i * 4U), Data);
+		XAie_BaremetalIO_Write32(IOInst, RegOff+ ((u64)i * 4U), Data);
 	}
 
 	return XAIE_OK;
@@ -972,7 +972,7 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		Loc = XAie_TileLoc((u8)C, 1U);
 		ColClockStatus = _XAie_GetTileBitPosFromLoc(DevInst, Loc);
 		_XAie_ClrBitInBitmap(DevInst->DevOps->TilesInUse,
-				ColClockStatus, (u32)(DevInst->NumRows - 1U));
+				ColClockStatus, ((u32)DevInst->NumRows - 1U));
 	}
 
 	for(u32 i = 0; i < Args->NumTiles; i++) {
@@ -1005,7 +1005,7 @@ AieRC _XAie_BaremetalIO_PrivilegeRequestTiles(XAie_DevInst *DevInst,
 		 * Shim row is already set, so use NumRows-1
 		 */
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse,
-			ColClockStatus, (u32)(DevInst->NumRows - 1U));
+			ColClockStatus, ((u32)DevInst->NumRows - 1U));
 	}
 #else
 	(void)DevInst;

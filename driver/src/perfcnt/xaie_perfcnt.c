@@ -110,9 +110,9 @@ AieRC XAie_PerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
         for (u8 C = 0; C < NumCounter; C++) {
                 /* Add offset address based on Counter and read */
-                RC |= XAie_Read32(DevInst,
-                        CounterRegAddr + ((Counter)*PerfMod->PerfCounterOffsetAdd),
-                        CounterVal + C);
+                RC = (AieRC)((u32)RC | (u32)XAie_Read32(DevInst,
+                        CounterRegAddr + ((u64)Counter * (u64)PerfMod->PerfCounterOffsetAdd),
+                        CounterVal + C));
         }
         return RC;
 }
@@ -178,7 +178,7 @@ AieRC XAie_PerfCounterGetOffset(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Compute perf counter offest address */
 	CounterBaseAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 						PerfMod->PerfCounterBaseAddr;
-	*Offset = CounterBaseAddr + (Counter * PerfMod->PerfCounterOffsetAdd);
+	*Offset = CounterBaseAddr + ((u64)Counter * (u64)PerfMod->PerfCounterOffsetAdd);
 
 	return RC;
 }
@@ -260,19 +260,19 @@ AieRC XAie_PerfCounterControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	RegOffset = PerfMod->PerfCtrlBaseAddr +
-				((Counter / 2U) * PerfMod->PerfCtrlOffsetAdd) +
-				((Counter / 2U) ? PerfMod->PerfCtrlOffsetGap : 0U);
+				(((u32)Counter / 2U) * PerfMod->PerfCtrlOffsetAdd) +
+				((((u32)Counter / 2U) != 0U) ? PerfMod->PerfCtrlOffsetGap : 0U);
 
 	/* Compute mask for performance control register */
 	FldMask = (PerfMod->Start.Mask | PerfMod->Stop.Mask) <<
-				(PerfMod->StartStopShift * (Counter % 2U));
+				((u32)PerfMod->StartStopShift * ((u32)Counter % 2U));
 	/* Compute value to be written to the performance control register */
 	FldVal = XAie_SetField(IntStartEvent,
-		PerfMod->Start.Lsb + (PerfMod->StartStopShift * (Counter % 2U)),
-		PerfMod->Start.Mask << (PerfMod->StartStopShift * (Counter % 2U)))|
+		PerfMod->Start.Lsb + ((u32)PerfMod->StartStopShift * ((u32)Counter % 2U)),
+		PerfMod->Start.Mask << ((u32)PerfMod->StartStopShift * ((u32)Counter % 2U)))|
 		XAie_SetField(IntStopEvent,
-		PerfMod->Stop.Lsb + (PerfMod->StartStopShift * (Counter % 2U)),
-		PerfMod->Stop.Mask << (PerfMod->StartStopShift * (Counter % 2U)));
+		PerfMod->Stop.Lsb + ((u32)PerfMod->StartStopShift * ((u32)Counter % 2U)),
+		PerfMod->Stop.Mask << ((u32)PerfMod->StartStopShift * ((u32)Counter % 2U)));
 
 	/* Compute absolute address and write to register */
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) + RegOffset;
@@ -354,7 +354,7 @@ AieRC XAie_PerfCounterResetControlSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	ResetRegOffset = PerfMod->PerfCtrlResetBaseAddr +
-				((Counter / 2U) * PerfMod->PerfCtrlOffsetAdd);
+				(((u32)Counter / 2U) * PerfMod->PerfCtrlOffsetAdd);
 
 	/* Compute mask for performance control register */
 	CounterIdx = Counter % PerfMod->PerfCtrlResetPerReg;
@@ -434,7 +434,7 @@ AieRC XAie_PerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	CounterRegOffset = PerfMod->PerfCounterBaseAddr +
-					((Counter)*PerfMod->PerfCounterOffsetAdd);
+					((u32)Counter * (u32)PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
 	CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row ,Loc.Col) +
@@ -501,7 +501,7 @@ AieRC XAie_PerfCounterEventValueSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Get offset address based on Counter */
 	CounterRegOffset = (PerfMod->PerfCounterEvtValBaseAddr) +
-				((Counter)*PerfMod->PerfCounterOffsetAdd);
+				((u32)Counter * (u32)PerfMod->PerfCounterOffsetAdd);
 
 	/* Compute absolute address and write to register */
 	CounterRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
@@ -741,7 +741,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	/* Compute absolute address and read the start stop event register */
 	StartStopRegOffset = PerfMod->PerfCtrlBaseAddr +
-			(Counter / 2U * PerfMod->PerfCtrlOffsetAdd);
+			((u32)Counter / 2U * PerfMod->PerfCtrlOffsetAdd);
 	StartStopRegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 				StartStopRegOffset;
 	RC = XAie_Read32(DevInst, StartStopRegAddr, &StartStopEvent);
@@ -761,7 +761,7 @@ AieRC XAie_PerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	RegEvent = (StartStopEvent & PerfMod->Stop.Mask) >>
-			PerfMod->StartStopShift / 2U;
+			(PerfMod->StartStopShift / 2U);
 	RC = XAie_EventPhysicalToLogicalConv(DevInst, Loc, Module, (u16)RegEvent,
 			StopEvent);
 	if (RC != XAIE_OK) {
@@ -895,7 +895,7 @@ AieRC XAie_MdmPerfCounterGet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Reset counter access to first counter */
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
+	RC = XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Reset.Lsb) &
 			UcMdm->PerfCtrl->Reset.Mask) ;
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to reset register access\n");
@@ -1022,7 +1022,7 @@ AieRC XAie_MdmPerfCounterGetStatus(XAie_DevInst *DevInst, XAie_LocType Loc,
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
+	RC = XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Reset.Lsb) &
 			UcMdm->PerfCtrl->Reset.Mask) ;
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to reset register access\n");
@@ -1091,7 +1091,7 @@ AieRC _XAie_MdmPerfCounterControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Reset counter access to first counter */
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
+	RC = XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Reset.Lsb) &
 			UcMdm->PerfCtrl->Reset.Mask) ;
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to reset register access\n");
@@ -1246,7 +1246,7 @@ AieRC XAie_MdmPerfCounterSet(XAie_DevInst *DevInst, XAie_LocType Loc,
 	/* Reset counter access to first counter */
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
+	RC = XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Reset.Lsb) &
 			UcMdm->PerfCtrl->Reset.Mask) ;
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to reset register access\n");
@@ -1328,7 +1328,7 @@ AieRC XAie_MdmPerfCounterReset(XAie_DevInst *DevInst, XAie_LocType Loc)
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	return XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Clear.Lsb) &
+	return XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Clear.Lsb) &
 			UcMdm->PerfCtrl->Clear.Mask);
 }
 
@@ -1378,7 +1378,7 @@ AieRC XAie_MdmPerfCounterGetControlConfig(XAie_DevInst *DevInst, XAie_LocType Lo
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	RC = XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Reset.Lsb) &
+	RC = XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Reset.Lsb) &
 			UcMdm->PerfCtrl->Reset.Mask) ;
 	if(RC != XAIE_OK) {
 		XAIE_ERROR("Failed to reset register access\n");
@@ -1447,7 +1447,7 @@ AieRC XAie_MdmPerfCounterStart(XAie_DevInst *DevInst, XAie_LocType Loc)
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	return XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Start.Lsb) &
+	return XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Start.Lsb) &
 			UcMdm->PerfCtrl->Start.Mask);
 }
 
@@ -1502,11 +1502,11 @@ AieRC XAie_MdmPerfCounterStop(XAie_DevInst *DevInst, XAie_LocType Loc,
 		UcMdm->PerfCtrl->RegOff;
 
 	Mask = UcMdm->PerfCtrl->Stop.Mask;
-	FldVal = 1U << UcMdm->PerfCtrl->Stop.Lsb;
+	FldVal = (u32)1U << UcMdm->PerfCtrl->Stop.Lsb;
 	/* If sample enabled, also set sample bit */
 	if (SampleEnable != 0U) {
 		Mask |= UcMdm->PerfCtrl->Sample.Mask;
-		FldVal |= 1U << UcMdm->PerfCtrl->Sample.Lsb;
+		FldVal |= (u32)1U << UcMdm->PerfCtrl->Sample.Lsb;
 	}
 
 	return XAie_Write32(DevInst, Offset, FldVal & Mask);
@@ -1555,7 +1555,7 @@ AieRC XAie_MdmPerfCounterSample(XAie_DevInst *DevInst, XAie_LocType Loc)
 	UcMdm = DevInst->DevProp.DevMod[TileType].UcMod->UcMdm;
 	Offset = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		UcMdm->PerfCtrl->RegOff;
-	return XAie_Write32(DevInst, Offset, (1U << UcMdm->PerfCtrl->Sample.Lsb) &
+	return XAie_Write32(DevInst, Offset, ((u32)1U << UcMdm->PerfCtrl->Sample.Lsb) &
 			UcMdm->PerfCtrl->Sample.Mask);
 }
 #endif /* XAIE_FEATURE_PERFCOUNT_ENABLE */

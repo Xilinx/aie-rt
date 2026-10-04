@@ -286,21 +286,21 @@ AieRC _XAie_SetPartIsolationAfterRst(XAie_DevInst *DevInst, u8 IsolationFlags)
 		u8 Dir = 0;
 
 		if(IsolationFlags == XAIE_INIT_ISOLATION) {
-			if(C > 0U && (C < (u8)(DevInst->NumCols - 1U))) {
+			if((C > 0U) && (C < (u8)(DevInst->NumCols - 1U))) {
 				continue;
 			}
-			if(C == 0U) {
+			if((C == 0U)) {
 				Dir |= XAIE_ISOLATE_WEST_MASK;
 			}
-			if(C == (u8)(DevInst->NumCols - 1U)) {
+			if((C == (u8)(DevInst->NumCols - 1U))) {
 				Dir |= XAIE_ISOLATE_EAST_MASK;
 			}
 		}
 
-		if(C == 0U && (IsolationFlags & XAIE_INIT_WEST_ISOLATION)) {
+		if((C == 0U) && ((IsolationFlags & XAIE_INIT_WEST_ISOLATION) != 0U)) {
 			Dir |= XAIE_ISOLATE_WEST_MASK;
 		}
-		if(C == (u8)(DevInst->NumCols - 1U) && (IsolationFlags & XAIE_INIT_EAST_ISOLATION)) {
+		if((C == (u8)(DevInst->NumCols - 1U)) && ((IsolationFlags & XAIE_INIT_EAST_ISOLATION) != 0U)) {
 			Dir |= XAIE_ISOLATE_EAST_MASK;
 		}
 
@@ -458,7 +458,7 @@ AieRC _XAie_RequestTiles(XAie_DevInst *DevInst, XAie_BackendTilesArray *Args)
 		u32 NumTiles;
 
 		XAie_LocType TileLoc = XAie_TileLoc(0, 1);
-		NumTiles = (u32)(DevInst->NumRows - 1U) * (DevInst->NumCols);
+		NumTiles = (u32)((u32)DevInst->NumRows - 1U) * (DevInst->NumCols);
 
 		SetTileStatus = _XAie_GetTileBitPosFromLoc(DevInst, TileLoc);
 		_XAie_SetBitInBitmap(DevInst->DevOps->TilesInUse, SetTileStatus,
@@ -571,7 +571,7 @@ AieRC _XAie_SetColumnClk(XAie_DevInst *DevInst, XAie_BackendColumnReq *Args)
 
 	TileStatus = _XAie_GetTileBitPosFromLoc(DevInst,
 			 XAie_TileLoc((u8)Args->StartCol, 1));
-	NumTiles =(u32)((DevInst->NumRows - 1U) * (Args->NumCols));
+	NumTiles =(u32)(((u32)DevInst->NumRows - 1U) * (Args->NumCols));
 
 	if(Args->Enable != 0U) {
 		/*

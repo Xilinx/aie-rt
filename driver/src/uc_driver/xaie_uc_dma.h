@@ -20,14 +20,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define ATOMICOP_NONE           0
-#define ATOMICOP_FETCHADD       1
-#define ATOMICOP_SWAP           2
-#define ATOMICOP_CAS            3
-#define INVALID_WAIT_HANDLE         0xFFFF
+#define ATOMICOP_NONE           0U
+#define ATOMICOP_FETCHADD       1U
+#define ATOMICOP_SWAP           2U
+#define ATOMICOP_CAS            3U
+#define INVALID_WAIT_HANDLE         0xFFFFU
 
 #define HSA_LOCATION 0
-#define CTRL_EXTERNAL (HSA_LOCATION == EXTERNAL_AXI_MM)
+#define CTRL_EXTERNAL (HSA_LOCATION == (int)EXTERNAL_AXI_MM)
 
 enum hsa_location_t
 {

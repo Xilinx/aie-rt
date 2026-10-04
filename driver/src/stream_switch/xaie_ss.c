@@ -760,8 +760,8 @@ static AieRC _XAie_StrmSlaveSlotConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 
 	RegAddr = XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col) +
 		StrmMod->SlvSlotConfig[Slave].PortBaseAddr +
-		SlvPortNum * StrmMod->SlotOffsetPerPort +
-		SlotNum * StrmMod->SlotOffset;
+		(SlvPortNum * StrmMod->SlotOffsetPerPort) +
+		(SlotNum * StrmMod->SlotOffset);
 
 	if(Enable == XAIE_ENABLE) {
 		RegVal = XAie_SetField(Pkt.PktId, StrmMod->SlotPktId.Lsb,
@@ -1025,8 +1025,8 @@ AieRC XAie_StrmSwDeterministicMergeConfig(XAie_DevInst *DevInst,
 		return RC;
 	}
 
-	RegAddr = (u64)(StrmMod->DetMerge->ConfigBase +
-		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
+	RegAddr = ((u64)StrmMod->DetMerge->ConfigBase +
+		((u64)StrmMod->DetMerge->ArbConfigOffset * (u64)Arbitor)) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	if(Position > 1U) {
 		RegAddr += 0x4U;
@@ -1099,8 +1099,8 @@ static AieRC _XAie_StrmSwDeterministicMergeCtrl(XAie_DevInst *DevInst,
 		return XAIE_INVALID_ARGS;
 	}
 
-	RegAddr = (u64)(StrmMod->DetMerge->EnableBase +
-		StrmMod->DetMerge->ArbConfigOffset * Arbitor) +
+	RegAddr = ((u64)StrmMod->DetMerge->EnableBase +
+		((u64)StrmMod->DetMerge->ArbConfigOffset * (u64)Arbitor)) +
 		XAie_GetTileAddr(DevInst, Loc.Row, Loc.Col);
 	RegVal = XAie_SetField(Enable, StrmMod->DetMerge->Enable.Lsb,
 			StrmMod->DetMerge->Enable.Mask);

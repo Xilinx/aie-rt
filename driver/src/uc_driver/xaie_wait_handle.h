@@ -21,10 +21,10 @@
 #include "xaie_utils.h"
 #include "xaie_control.h"
 
-#define INVALID_WAIT_HANDLE         0xFFFF
-#define MAX_WAIT_HANDLES            255
+#define INVALID_WAIT_HANDLE         0xFFFFU
+#define MAX_WAIT_HANDLES            255U
 
-#define WH_PTR_UNUSED               0xFFFF
+#define WH_PTR_UNUSED               0xFFFFU
 #define WH_IS_USED(wh)              (wh->waiting_job_ptr != WH_PTR_UNUSED)
 
 /*
@@ -114,7 +114,7 @@ static inline void wait_handle_attach_job(uint16_t index)
 {
   wait_handle_entry_t *wh = &wait_handle_state.handles[index];
   // attach job here
-  wh->waiting_job_ptr = (uint32_t)(uintptr_t)control_state.current_job_context & 0xFFFF;
+  wh->waiting_job_ptr = (uint16_t)((uint32_t)(uintptr_t)control_state.current_job_context & 0xFFFFU);
 }
 
 static inline wait_handle_entry_t *wait_handle_get(uint16_t wait_handle)
@@ -161,7 +161,7 @@ static inline void wait_handle_release(uint16_t wait_handle)
 {
   wait_handle_entry_t *wh = wait_handle_get(wait_handle);
 
-  if (wh->waiting_job_ptr != 0)
+  if (wh->waiting_job_ptr != 0U)
   {
     job_unblock_func(wait_handle, (void *)((uintptr_t)wh->waiting_job_ptr));
   }

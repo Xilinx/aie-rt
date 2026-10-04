@@ -580,7 +580,7 @@ AieRC XAie_TraceControlConfig(XAie_DevInst *DevInst, XAie_LocType Loc,
 	}
 
 	if(TraceMod->ModeConfig.Mask == XAIE_FEATURE_UNAVAILABLE) {
-		Mode = 0U;
+		Mode = XAIE_TRACE_EVENT_TIME;
 	}
 
 	RegVal = XAie_SetField(Mode, TraceMod->ModeConfig.Lsb,

@@ -25,7 +25,7 @@
 
 #define TASK_PAGE_FLAG_HASNEXTPAGE      (1 << 0)
 
-#define CONTROL_INVALID_REG_VAL         0xDEADBEEF
+#define CONTROL_INVALID_REG_VAL         0xDEADBEEFU
 
 #define MAX_JOBS                        64
 #define INVALID_JOB_ID                  (MAX_JOBS + 1)
@@ -40,7 +40,7 @@
 #define BLOCKED_ON_REMOTE_BARRIER           3
 
 #define UPDATE_TICK() do { \
-	if (now.tick_low == 0xFFFFFFFF) \
+	if (now.tick_low == 0xFFFFFFFFU) \
 	{ \
           now.tick_low = 0; \
           now.tick_high++; \

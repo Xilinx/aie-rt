@@ -1078,9 +1078,9 @@ static inline u16 XAie_GetEventNumber(const struct XAie_EvntMod *EventMod, XAie_
 	    (EventMod->XAie_EventNumber == NULL)) {
 		return XAIE_EVENT_INVALID;
 	}
-	if ((EventId < EventMod->EventMin) ||
-	    (EventId > EventMod->EventMax) ||
-	    ((EventId != EventMod->EventMin) && (EventMod->XAie_EventNumber[(u32)EventId] == 0))) {
+	if (((u32)EventId < EventMod->EventMin) ||
+	    ((u32)EventId > EventMod->EventMax) ||
+	    (((u32)EventId != EventMod->EventMin) && (EventMod->XAie_EventNumber[(u32)EventId] == 0U))) {
 		return XAIE_EVENT_INVALID;
 	}
 

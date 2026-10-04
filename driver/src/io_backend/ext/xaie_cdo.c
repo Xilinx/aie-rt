@@ -421,7 +421,7 @@ static AieRC XAie_CdoIO_Read32(void *IOInst, u64 RegOff, u32 *Data)
 	(void)IOInst;
 	(void)RegOff;
 	(void)Data;
-	return 0;
+	return XAIE_OK;
 }
 
 static AieRC XAie_CdoIO_MaskWrite32(void *IOInst, u64 RegOff, u32 Mask,
