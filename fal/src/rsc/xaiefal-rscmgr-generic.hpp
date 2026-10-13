@@ -769,7 +769,7 @@ namespace xaiefal {
 		 */
 		uint32_t getCommonRscId(std::vector<XAieUserRsc> vRscs) {
 			std::bitset<32> RscStatus;
-			uint32_t MaxRscId;
+			uint32_t MaxRscId = 0U;
 
 			for (auto rsc : vRscs) {
 				uint8_t TType = XAie_GetTileTypefromLoc(dev(), rsc.Loc);
