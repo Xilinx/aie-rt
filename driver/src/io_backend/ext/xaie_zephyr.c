@@ -48,7 +48,7 @@ typedef struct {
 } XAie_ZephyrIO;
 /************************** Function Definitions *****************************/
 
-static int XAie_ZephyrIO_MemInst_Compare(void *a, void *b)
+static int32_t XAie_ZephyrIO_MemInst_Compare(void *a, void *b)
 {
 	XAie_MemInst *MemA = (XAie_MemInst *)a;
 	XAie_MemInst *MemB = (XAie_MemInst *)b;

@@ -41,7 +41,7 @@ static bool _XAie_isAdjTileValidForCurrTile(const XAie_RoutingInstance* RoutingI
 static AieRC _XAie_performRoutingOnPath(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_LocType destination, const XAie_LocType *path, int pathLength);
 static AieRC _XAie_programBufferDescriptors(XAie_RoutingInstance *routingInstance, XAie_LocType source, XAie_MemInst* SourceObject, u32 data_size, XAie_MemInst* DestinationObject,
                               XAie_LocType destination, XAie_BDs* BDs);
-static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance, XAie_RouteConstraints *RouteConstraints, XAie_LocType source, XAie_LocType destination, XAie_LocType *path, int *pathLength);
+static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance, XAie_RouteConstraints *RouteConstraints, XAie_LocType source, XAie_LocType destination, XAie_LocType *path, int32_t *pathLength);
 static bool _XAie_isTileBlackListed(XAie_LocType CurrTile, const XAie_RouteConstraints *RouteConstraints);
 static bool _XAie_isTileWhitelisted(XAie_LocType CurrTile, const XAie_LocType *whitelist, u16 whitelistCount);
 static bool _XAie_isMemTile(const XAie_RoutingInstance* RoutingInstance, XAie_LocType tile);

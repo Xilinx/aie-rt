@@ -2024,7 +2024,7 @@ AieRC XAie_MoveDataAie2External(XAie_RoutingInstance *routingInstance, XAie_LocT
 
 static bool _XAie_findShortestPath(XAie_RoutingInstance *routingInstance,
 		XAie_RouteConstraints* RouteConstraints, XAie_LocType source,
-		XAie_LocType destination, XAie_LocType *path, int *pathLength)
+		XAie_LocType destination, XAie_LocType *path, int32_t *pathLength)
 {
 	XAie_LocType **Pred;
 	bool Ret = true;

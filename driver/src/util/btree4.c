@@ -213,7 +213,7 @@ again:
 }
 
 static struct btree4_node *btree4_search_node(const struct btree4 *tree, void *data,
-					     int *index)
+					     int32_t *index)
 {
 	struct btree4_node *node;
 	int32_t res;
